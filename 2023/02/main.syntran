@@ -14,13 +14,6 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
-//fn parse_pair(str_: str): [i32; :]
-//{
-//	// parse a pair and return a vector, e.g. "4 blue" -> [4, 2]
-//}
-
-//==============================================================================
-
 fn parse_subgame(str_: str): [i32; :]
 {
 	//println("starting parse_subgame");
@@ -35,7 +28,6 @@ fn parse_subgame(str_: str): [i32; :]
 
 	while not end_
 	{
-		//let iend = scan(str_, ",");
 		let iend = scan(str_[ibeg+1:n], ",") + ibeg + 1;
 
 		//println("ibeg = ", ibeg);
@@ -75,10 +67,8 @@ fn parse_subgame(str_: str): [i32; :]
 			icolor = iblue;
 		}
 	
-		//ncolors[i] = parse_i32(str_[ibeg+1: icolor]);
 		ncolors[i] = parse_i32(pair[0: icolor]);
 
-		//ibeg = iend + 1;
 		ibeg = iend;
 	}
 
@@ -162,7 +152,7 @@ fn part2(): i32
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let nrmax = 0;
 		let ngmax = 0;
@@ -181,7 +171,6 @@ fn part2(): i32
 
 		while not end_
 		{
-			//let iend = scan(str_, ";");
 			let iend = scan(str_[ibeg+1:n], ";") + ibeg + 1;
 
 			if iend < ibeg + 1
@@ -193,12 +182,7 @@ fn part2(): i32
 			//println("subgame = ", str_[ibeg+1: iend]);
 
 			let ncolors = parse_subgame(str_[ibeg+1: iend]);
-			println("ncolors = ", ncolors);
-
-			//possible = possible and
-			//	ncolors[0] <= nrmax and
-			//	ncolors[1] <= ngmax and
-			//	ncolors[2] <= nbmax;
+			//println("ncolors = ", ncolors);
 
 			nrmax = max(nrmax, ncolors[0]);
 			ngmax = max(ngmax, ncolors[1]);
@@ -206,11 +190,9 @@ fn part2(): i32
 
 			ibeg = iend;
 		}
-		//println("possible = ", possible);
 
-		println("max = ", nrmax, ngmax, nbmax);
+		//println("max = ", nrmax, ngmax, nbmax);
 
-		//if possible sum_ += igame;
 		sum_ += nrmax * ngmax * nbmax;
 
 		str_ = readln(f);
