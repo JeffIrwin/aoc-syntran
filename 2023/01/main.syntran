@@ -1,0 +1,269 @@
+
+//==============================================================================
+
+let ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt",
+	"test-input2.txt"  // WARNING: this test input crashes part1
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let digit_chars = "0123456789";
+
+fn scan(str_: str, set: str): i32
+{
+	let i = 0;
+	let found = false;
+	while not found and i < len(str_)
+	{
+		let j = 0;
+		while not found and j < len(set)
+		{
+			found = str_[i] == set[j];
+			j += 1;
+		}
+		i += 1;
+	}
+
+	// return
+	let ans = -1;
+	if (found)
+		ans = i - 1;
+}
+
+//==============================================================================
+
+fn scanback(str_: str, set: str): i32
+{
+	let i = len(str_) - 1;
+	let found = false;
+	while not found and i >= 0
+	{
+		let j = 0;
+		while not found and j < len(set)
+		{
+			found = str_[i] == set[j];
+			j += 1;
+		}
+		i -= 1;
+	}
+
+	// return
+	let ans = -1;
+	if (found)
+		ans = i + 1;
+}
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let sum_ = 0;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let i = scan(str_, digit_chars);
+		//println("first = ", str_[i]);
+
+		let j = scanback(str_, digit_chars);
+		//println("last  = ", str_[j]);
+
+		let digits = str_[i] + str_[j];
+		//println("digits = ", digits);
+
+		sum_ += parse_i32(digits);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	sum_;
+}
+
+//==============================================================================
+
+fn index_(str_: str, substr: str): i32
+{
+	//println("str_   = ", str_);
+	//println("substr = ", substr);
+
+	let i = 0;
+	let all_found = false;
+	while not all_found and i < len(str_) - len(substr) + 1
+	{
+		//println("i = ", i);
+		let j = 0;
+		all_found = true;
+		while all_found and j < len(substr)
+		{
+			//println("j = ", j);
+			all_found = str_[i+j] == substr[j];
+			j += 1;
+		}
+		i += 1;
+		//i = i + 1;
+	}
+
+	// return
+	if all_found
+	{
+		i -= 1;
+		//println("str_ = ", str_);
+		//println("str_[] = ", str_[i: i + len(substr)]);
+		//println("substr = ", substr);
+		//println();
+		let ans = i;
+	}
+	else
+	{
+		//println("not found");
+		let ans = -1;
+	}
+
+}
+
+//==============================================================================
+
+fn indexback(str_: str, substr: str): i32
+{
+	//println("str_   = ", str_);
+	//println("substr = ", substr);
+
+	let i = len(str_) - len(substr);
+	let all_found = false;
+	while not all_found and i >= 0
+	{
+		//println("i = ", i);
+		let j = 0;
+		all_found = true;
+		while all_found and j < len(substr)
+		{
+			//println("j = ", j);
+			all_found = str_[i+j] == substr[j];
+			j += 1;
+		}
+		i -= 1;
+	}
+
+	// return
+	if all_found
+	{
+		i += 1;
+		//println("str_ = ", str_);
+		//println("str_[] = ", str_[i: i + len(substr)]);
+		//println("substr = ", substr);
+		//println();
+		let ans = i;
+	}
+	else
+	{
+		//println("not found");
+		let ans = -1;
+	}
+
+}
+
+//==============================================================================
+
+fn part2(): i32
+{
+	let sum_ = 0;
+
+	let nums =
+	[
+		"zero",
+		"one",
+		"two",
+		"three",
+		"four",
+		"five",
+		"six",
+		"seven",
+		"eight",
+		"nine"
+	];
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let imin = len(str_) + 1;
+		let val_first = -1;
+		for j in [0: size(nums,0)]
+		{
+			let i = index_(str_, nums[j]);
+			if i >= 0 and i < imin
+			{
+				imin = i;
+				val_first = j;
+			}
+		}
+		let i = scan(str_, digit_chars);
+		if i >= 0 and i < imin
+		{
+			imin = i;
+			val_first = parse_i32(str_[i]);
+		}
+		//println("val_first = ", val_first);
+
+		let imax = -1;
+		let val_last = -1;
+		for j in [0: size(nums,0)]
+		{
+			let i = indexback(str_, nums[j]);
+			if i >= 0 and i > imax
+			{
+				imax = i;
+				val_last = j;
+			}
+		}
+		i = scanback(str_, digit_chars);
+		if i >= 0 and i > imax
+		{
+			imax = i;
+			val_last = parse_i32(str_[i]);
+		}
+		//println("val_last = ", val_last);
+
+		let digits = str(val_first, val_last);
+		sum_ += parse_i32(digits);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	part2();
+
+	println("Ending AOC syntran main");
+	println();
+	0;
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+
