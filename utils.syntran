@@ -1,0 +1,145 @@
+
+//==============================================================================
+
+let digit_chars = "0123456789";
+
+fn scan(str_: str, set: str): i32
+{
+	let i = 0;
+	let found = false;
+	while not found and i < len(str_)
+	{
+		let j = 0;
+		while not found and j < len(set)
+		{
+			found = str_[i] == set[j];
+			j += 1;
+		}
+		i += 1;
+	}
+
+	// return
+	let ans = -1;
+	if (found)
+		ans = i - 1;
+}
+
+//==============================================================================
+
+fn scanback(str_: str, set: str): i32
+{
+	let i = len(str_) - 1;
+	let found = false;
+	while not found and i >= 0
+	{
+		let j = 0;
+		while not found and j < len(set)
+		{
+			found = str_[i] == set[j];
+			j += 1;
+		}
+		i -= 1;
+	}
+
+	// return
+	let ans = -1;
+	if (found)
+		ans = i + 1;
+}
+
+//==============================================================================
+
+fn index_(str_: str, substr: str): i32
+{
+	//println("str_   = ", str_);
+	//println("substr = ", substr);
+
+	let nsub = len(substr);
+
+	let i = 0;
+	let found = false;
+	while not found and i < len(str_) - len(substr) + 1
+	{
+
+		found = str_[i: i+nsub] == substr;
+
+		////println("i = ", i);
+		//let j = 0;
+		//found = true;
+		//while found and j < len(substr)
+		//{
+		//	//println("j = ", j);
+		//	found = str_[i+j] == substr[j];
+		//	j += 1;
+		//}
+
+		i += 1;
+		//i = i + 1;
+	}
+
+	// return
+	if found
+	{
+		i -= 1;
+		//println("str_ = ", str_);
+		//println("str_[] = ", str_[i: i + len(substr)]);
+		//println("substr = ", substr);
+		//println();
+		let ans = i;
+	}
+	else
+	{
+		//println("not found");
+		let ans = -1;
+	}
+
+}
+
+//==============================================================================
+
+fn indexback(str_: str, substr: str): i32
+{
+	//println("str_   = ", str_);
+	//println("substr = ", substr);
+
+	let nsub = len(substr);
+
+	let i = len(str_) - len(substr);
+	let found = false;
+	while not found and i >= 0
+	{
+
+		found = str_[i: i+nsub] == substr;
+
+		////println("i = ", i);
+		//let j = 0;
+		//found = true;
+		//while found and j < len(substr)
+		//{
+		//	//println("j = ", j);
+		//	found = str_[i+j] == substr[j];
+		//	j += 1;
+		//}
+		i -= 1;
+	}
+
+	// return
+	if found
+	{
+		i += 1;
+		//println("str_ = ", str_);
+		//println("str_[] = ", str_[i: i + len(substr)]);
+		//println("substr = ", substr);
+		//println();
+		let ans = i;
+	}
+	else
+	{
+		//println("not found");
+		let ans = -1;
+	}
+
+}
+
+//==============================================================================
+
