@@ -17,3 +17,5 @@ To run a solution for AOC, change to the directory for that day's solution and r
 cd 2023/01
 syntran ./main.syntran
 ```
+
+As of 2023-12-01, you will need at least syntran version 0.0.27 to run the code here 
