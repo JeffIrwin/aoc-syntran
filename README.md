@@ -21,3 +21,7 @@ syntran ./main.syntran
 ```
 
 As of 2023-12-01, you will need at least syntran version 0.0.27 to run the code here 
+
+## Development streams
+
+I'm developing these solutions live on twitch.  You can also watch them after the fact at this YouTube playlist:  https://www.youtube.com/watch?v=xrWKYiD6Xr4&list=PLkNcKcm8wEj4TYgBqtaCBqKkfJsXOv49E
