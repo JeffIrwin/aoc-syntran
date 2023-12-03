@@ -3,6 +3,94 @@
 
 let digit_chars = "0123456789";
 
+//==============================================================================
+
+fn countln_(filename: str): i32
+{
+	let nlines = 0;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		nlines += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	// return
+	let ans = nlines;
+}
+
+//==============================================================================
+
+fn verify(str_: str, set: str): i32
+{
+	//println("");
+	//println("starting verify");
+	//println("str_ = ", str_);
+	//println("set  = ", set);
+
+	let i = 0;
+	let found = true;
+	while found and i < len(str_)
+	{
+		let j = 0;
+		//found = true;
+		found = false;
+		while not found and j < len(set)
+		{
+			found = str_[i] == set[j];
+			j += 1;
+		}
+		i += 1;
+	}
+
+	// return
+	let ans = -1;
+	if not found
+	{
+		//println("ans = ", i - 1);
+		ans = i - 1;
+	}
+}
+
+//==============================================================================
+
+fn verifyback(str_: str, set: str): i32
+{
+	//println("");
+	//println("starting verifyback");
+	//println("str_ = ", str_);
+	//println("set  = ", set);
+
+	let i = len(str_) - 1;
+	let found = true;
+	while found and i >= 0
+	{
+		let j = 0;
+		found = false;
+		while not found and j < len(set)
+		{
+			found = str_[i] == set[j];
+			j += 1;
+		}
+		i -= 1;
+	}
+
+	// return
+	let ans = -1;
+	if not found
+	{
+		//println("ans = ", i + 1);
+		ans = i + 1;
+	}
+}
+
+//==============================================================================
+
 fn scan(str_: str, set: str): i32
 {
 	let i = 0;
@@ -20,8 +108,15 @@ fn scan(str_: str, set: str): i32
 
 	// return
 	let ans = -1;
-	if (found)
+	if found
 		ans = i - 1;
+}
+
+//==============================================================================
+
+fn is_digit(char_: str): bool
+{
+	let ans = scan(char_, digit_chars) >= 0;
 }
 
 //==============================================================================
@@ -43,7 +138,7 @@ fn scanback(str_: str, set: str): i32
 
 	// return
 	let ans = -1;
-	if (found)
+	if found
 		ans = i + 1;
 }
 
