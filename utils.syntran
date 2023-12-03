@@ -49,6 +49,11 @@ fn verify(str_: str, set: str): i32
 	}
 
 	// return
+	//
+	// TODO: it might make more sense to return `ans = len(str_)` instead of ans
+	// = -1 in the `not found` case.  This is not consistent with the way that
+	// Fortran's `verify()` fn works, but it could simplify the logic for many
+	// use cases.  Similarly for scanback (but not verifyback or scan)
 	let ans = -1;
 	if not found
 	{
