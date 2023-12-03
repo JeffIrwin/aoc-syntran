@@ -19,13 +19,13 @@ fn part1(): i32
 	let sum_ = 0;
 
 	let ny = countln_(filename);
-	println("ny = ", ny);
+	//println("ny = ", ny);
 
 	let f = open(filename);
 	let str_ = readln(f);
 
 	let nx = len(str_);
-	println("nx = ", nx);
+	//println("nx = ", nx);
 
 	let grid = [false; nx, ny];
 
@@ -52,7 +52,7 @@ fn part1(): i32
 	str_ = readln(f);
 	for iy in [0: nx]
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let ix = 0;
 		while ix < nx
@@ -107,13 +107,13 @@ fn part2(): i32
 	let sum_ = 0;
 
 	let ny = countln_(filename);
-	println("ny = ", ny);
+	//println("ny = ", ny);
 
 	let f = open(filename);
 	let str_ = readln(f);
 
 	let nx = len(str_);
-	println("nx = ", nx);
+	//println("nx = ", nx);
 
 	// Save strings in a vector
 	let strs = [""; ny];
@@ -136,7 +136,7 @@ fn part2(): i32
 		str_ = strs[iy];
 		if str_[ix] == "*"
 		{
-			println("asterisk ", ix, " ", iy);
+			//println("asterisk ", ix, " ", iy);
 
 			// Search for numbers adjacent to the asterisk
 
@@ -266,7 +266,7 @@ fn part2(): i32
 
 			if nnums == 2
 			{
-				println("adding ", nums[0] , " ", nums[1], " = ", nums[0] * nums[1]);
+				//println("adding ", nums[0] , " ", nums[1], " = ", nums[0] * nums[1]);
 				sum_ += nums[0] * nums[1];
 			}
 		}
