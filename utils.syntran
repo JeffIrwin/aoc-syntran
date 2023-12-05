@@ -126,6 +126,29 @@ fn is_digit(char_: str): bool
 
 //==============================================================================
 
+fn any_str_eq_set(str_: str, set: str): bool
+{
+	let ans = scan(str_, set) >= 0;
+}
+
+//==============================================================================
+
+fn any_str_eq(str_: str, v: [str; :]): bool
+{
+	//if (any_str_eq(my_num, wn_nums_str)) nwin = 1;
+
+	let found = false;
+	let i = 0;
+	while i < size(v, 0) and not found
+	{
+		found = str_ == v[i];
+		i += 1;
+	}
+	let ans = found;
+}
+
+//==============================================================================
+
 fn scanback(str_: str, set: str): i32
 {
 	let i = len(str_) - 1;
@@ -239,6 +262,73 @@ fn indexback(str_: str, substr: str): i32
 		let ans = -1;
 	}
 
+}
+
+//==============================================================================
+
+fn split_(str_: str, delims: str): [str; :]
+{
+	// Split an input str_ into a delimited vector of strs.  delims is a set of
+	// delimiters
+	//
+	// TODO: this is including the pipe `|` in some places that it shouldn't
+
+	//println("starting split_()");
+	//println("str_ = """, str_, """");
+
+	let n = len(str_);
+	//println("n = ", n);
+
+	let nout = 0;
+	if (any_str_eq_set(str_[0], delims)) nout -= 1;
+
+	// First pass: count delimited strings
+	let i = 0;
+	while i < n
+	{
+		//println("i = ", i);
+		let i0 = i;
+
+		i = scan  (str_[i:n], delims) + i0;
+		if (i < i0) i = n;
+
+		i0 = i;
+		i = verify(str_[i:n], delims) + i0;
+		if (i < i0) i = n;
+		//i += 1;
+
+		nout += 1;
+	}
+	//println("nout = ", nout);
+
+	let out = [""; nout];
+
+	nout = 0;
+	if (any_str_eq_set(str_[0], delims)) nout -= 1;
+
+	// Second pass: save split strings
+	i = 0;
+	while i < n
+	{
+		//println("i = ", i);
+		let i0 = i;
+
+		i = scan  (str_[i:n], delims) + i0;
+		if (i < i0) i = n;
+
+		if (nout >= 0) out[nout] = str_[i0-1: i];
+
+		i0 = i;
+		i = verify(str_[i:n], delims) + i0;
+		if (i < i0) i = n;
+		//i += 1;
+
+		nout += 1;
+	}
+
+	// return
+	//out;
+	let ans = out;
 }
 
 //==============================================================================
