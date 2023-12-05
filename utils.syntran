@@ -316,7 +316,7 @@ fn split_(str_: str, delims: str): [str; :]
 		i = scan  (str_[i:n], delims) + i0;
 		if (i < i0) i = n;
 
-		if (nout >= 0) out[nout] = str_[i0-1: i];
+		if (nout >= 0) out[nout] = str_[i0: i];
 
 		i0 = i;
 		i = verify(str_[i:n], delims) + i0;

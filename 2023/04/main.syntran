@@ -22,7 +22,7 @@ fn part1(): i32
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let strs = split_(str_, ":|");
 
@@ -30,22 +30,22 @@ fn part1(): i32
 		let my_nums_str = split_(strs[2], " ");
 
 		//println("wn_nums_str = ", wn_nums_str);
-		println("my_nums_str = ", my_nums_str);
+		//println("my_nums_str = ", my_nums_str);
 
 		let nwin = 0;
 		for i in [0: size(my_nums_str,0)]
 		{
 			let my_num = my_nums_str[i];
-			println("my_num = ", my_num);
+			//println("my_num = ", my_num);
 
 			if (any_str_eq(my_num, wn_nums_str))
 			{
-				println(my_num, " matches!");
+				//println(my_num, " matches!");
 				nwin += 1;
 			}
 		}
-		println("nwin = ", nwin);
-		println();
+		//println("nwin = ", nwin);
+		//println();
 
 		if (nwin >= 0) sum_ += 2 ** (nwin - 1);
 
@@ -53,7 +53,7 @@ fn part1(): i32
 	}
 	close(f);
 
-	println();
+	//println();
 
 	let strs = [""];
 
@@ -73,17 +73,17 @@ fn part1(): i32
 fn part2(): i32
 {
 	let n = countln_(filename);
-	println("n = ", n);
+	//println("n = ", n);
 
 	let ncopies = [1; n];
-	println("ncopies = ", ncopies);
+	//println("ncopies = ", ncopies);
 
 	let f = open(filename);
 	let str_ = readln(f);
 	let icard = 0;
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let strs = split_(str_, ":|");
 
@@ -91,22 +91,22 @@ fn part2(): i32
 		let my_nums_str = split_(strs[2], " ");
 
 		//println("wn_nums_str = ", wn_nums_str);
-		println("my_nums_str = ", my_nums_str);
+		//println("my_nums_str = ", my_nums_str);
 
 		let nwin = 0;
 		for i in [0: size(my_nums_str,0)]
 		{
 			let my_num = my_nums_str[i];
-			println("my_num = ", my_num);
+			//println("my_num = ", my_num);
 
 			if (any_str_eq(my_num, wn_nums_str))
 			{
-				println(my_num, " matches!");
+				//println(my_num, " matches!");
 				nwin += 1;
 			}
 		}
-		println("nwin = ", nwin);
-		println();
+		//println("nwin = ", nwin);
+		//println();
 
 		for j in [icard + 1: icard + nwin + 1]
 		{
@@ -120,8 +120,8 @@ fn part2(): i32
 	}
 	close(f);
 
-	println("ncopies = ", ncopies);
-	println();
+	//println("ncopies = ", ncopies);
+	//println();
 
 	let sum_ = 0;
 	for i in [0: n]
