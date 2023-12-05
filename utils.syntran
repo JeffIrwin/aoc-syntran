@@ -268,10 +268,7 @@ fn indexback(str_: str, substr: str): i32
 
 fn split_(str_: str, delims: str): [str; :]
 {
-	// Split an input str_ into a delimited vector of strs.  delims is a set of
-	// delimiters
-	//
-	// TODO: this is including the pipe `|` in some places that it shouldn't
+	// Split an input str_ into a vector of strs based on a set of delimiters
 
 	//println("starting split_()");
 	//println("str_ = """, str_, """");

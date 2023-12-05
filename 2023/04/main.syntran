@@ -39,10 +39,7 @@ fn part1(): i32
 			//println("my_num = ", my_num);
 
 			if (any_str_eq(my_num, wn_nums_str))
-			{
-				//println(my_num, " matches!");
 				nwin += 1;
-			}
 		}
 		//println("nwin = ", nwin);
 		//println();
@@ -53,10 +50,7 @@ fn part1(): i32
 	}
 	close(f);
 
-	//println();
-
-	let strs = [""];
-
+	//let strs = [""];
 	//strs = split_(" 1 21 53 59 44 ", " ");
 	//strs = split_("1 21 53 59 44", " ");
 	//strs = split_(" 1 21 53 59 44", " ");
@@ -79,13 +73,9 @@ fn part2(): i32
 	//println("ncopies = ", ncopies);
 
 	let f = open(filename);
-	let str_ = readln(f);
-	let icard = 0;
-	while not eof(f)
+	for icard in [0: n]
 	{
-		//println("str_ = ", str_);
-
-		let strs = split_(str_, ":|");
+		let strs = split_(readln(f), ":|");
 
 		let wn_nums_str = split_(strs[1], " ");
 		let my_nums_str = split_(strs[2], " ");
@@ -100,33 +90,23 @@ fn part2(): i32
 			//println("my_num = ", my_num);
 
 			if (any_str_eq(my_num, wn_nums_str))
-			{
-				//println(my_num, " matches!");
 				nwin += 1;
-			}
 		}
 		//println("nwin = ", nwin);
 		//println();
 
 		for j in [icard + 1: icard + nwin + 1]
-		{
 			ncopies[j] += ncopies[icard];
-		}
-
-		//if (nwin >= 0) sum_ += 2 ** (nwin - 1);
-
-		str_ = readln(f);
-		icard += 1;
 	}
 	close(f);
 
 	//println("ncopies = ", ncopies);
-	//println();
 
 	let sum_ = 0;
 	for i in [0: n]
 		sum_ += ncopies[i];
 
+	//// Test some edge cases of split_()
 	//let strs = [""];
 	//strs = split_(" 1 21 53 59 44 ", " ");
 	//strs = split_("1 21 53 59 44", " ");
