@@ -126,6 +126,7 @@ fn is_digit(char_: str): bool
 
 //==============================================================================
 
+// TODO: rename to any_char_eq_str or any_char_eq_set
 fn any_str_eq_set(str_: str, set: str): bool
 {
 	let ans = scan(str_, set) >= 0;
@@ -133,6 +134,7 @@ fn any_str_eq_set(str_: str, set: str): bool
 
 //==============================================================================
 
+// TODO: rename to any_str_eq_vec
 fn any_str_eq(str_: str, v: [str; :]): bool
 {
 	//if (any_str_eq(my_num, wn_nums_str)) nwin = 1;
@@ -326,6 +328,18 @@ fn split_(str_: str, delims: str): [str; :]
 	// return
 	//out;
 	let ans = out;
+}
+
+//==============================================================================
+
+fn parse_i64_delim(str_: str, delims: str): [i64; :]
+{
+	let str_vec = split_(str_, delims);
+	//println("str_vec = ", str_vec);
+	let vec = [i64(0); size(str_vec, 0)];
+	for i in [0: size(str_vec, 0)]
+		vec[i] = parse_i64(str_vec[i]);
+	let ans = vec;
 }
 
 //==============================================================================

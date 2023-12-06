@@ -106,15 +106,6 @@ fn part2(): i32
 	for i in [0: n]
 		sum_ += ncopies[i];
 
-	//// Test some edge cases of split_()
-	//let strs = [""];
-	//strs = split_(" 1 21 53 59 44 ", " ");
-	//strs = split_("1 21 53 59 44", " ");
-	//strs = split_(" 1 21 53 59 44", " ");
-	//strs = split_("1 21 53 59 44 ", " ");
-	//strs = split_("   1   21     53    59    44     ", " ");
-	//strs = split_(" 69 82 63 72 16 21 14  1", " ");
-
 	println("part 2 = ", sum_);
 	sum_;
 }
