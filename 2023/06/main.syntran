@@ -14,6 +14,37 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
+// TODO: move to utils
+
+fn floor_(x: f32): i32
+{
+	let i = i32(x);
+	if (i > x) i -= 1;
+}
+
+fn ceil_(x: f32): i32
+{
+	let i = i32(x);
+	if (i < x) i += 1;
+}
+
+// TODO: utils, consistent naming
+fn minf32(a: f32, b: f32): f32
+{
+	let ans = a;
+	if b < a
+		ans = b;
+}
+
+fn maxf32(a: f32, b: f32): f32
+{
+	let ans = a;
+	if b > a
+		ans = b;
+}
+
+//==============================================================================
+
 fn part1(): i32
 {
 	let prod_ = 1;
@@ -40,18 +71,32 @@ fn part1(): i32
 		println("race_time, rec_dist = ", race_time, ", ", rec_dist);
 
 		let nwin = 0;
-		for j in [1: race_time]
-		{
-			// Acceleration is 1 mm/ms/ms
-			let speed = j * 1;
 
-			let duration = race_time - j;
-			let dist = speed * duration;
-			println("dist = ", dist);
+		// dist = speed * duration;
+		//      = speed * (race_time - j);
+		//      = j * (race_time - j)
+		//      == rec_dist;
+		//
+		// j * (race_time - j) - rec_dist == 0
+		// -j**2 + race_time * j - rec_dist == 0;
+		//
+		//   a = -1;  b = race_time;  c = -rec_dist;
 
-			if (dist > rec_dist) nwin += 1;
-		}
-		println();
+		let a = -1.0;
+		let b =  1.0 * race_time;
+		let c = -1.0 * rec_dist;
+
+		let j1 = (-b + (b ** 2 - 4 * a * c) ** 0.5) / (2 * a);
+		let j2 = (-b - (b ** 2 - 4 * a * c) ** 0.5) / (2 * a);
+
+		println(" j1,  j2 = ", j1, ", ", j2);
+		println("fj1, fj2 = ", floor_(j1), ", ", floor_(j2));
+		println("fj1, fj2 = ", ceil_ (j1), ", ", ceil_ (j2));
+
+		let jmin = ceil_ (minf32(j1, j2));
+		let jmax = floor_(maxf32(j1, j2));
+
+		nwin = (jmax - jmin + 1);
 
 		prod_ *= nwin;
 
