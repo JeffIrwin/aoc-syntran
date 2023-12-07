@@ -332,6 +332,18 @@ fn split_(str_: str, delims: str): [str; :]
 
 //==============================================================================
 
+fn parse_i32_delim(str_: str, delims: str): [i32; :]
+{
+	let str_vec = split_(str_, delims);
+	//println("str_vec = ", str_vec);
+	let vec = [i32(0); size(str_vec, 0)];
+	for i in [0: size(str_vec, 0)]
+		vec[i] = parse_i32(str_vec[i]);
+	let ans = vec;
+}
+
+//==============================================================================
+
 fn parse_i64_delim(str_: str, delims: str): [i64; :]
 {
 	let str_vec = split_(str_, delims);
@@ -340,6 +352,29 @@ fn parse_i64_delim(str_: str, delims: str): [i64; :]
 	for i in [0: size(str_vec, 0)]
 		vec[i] = parse_i64(str_vec[i]);
 	let ans = vec;
+}
+
+//==============================================================================
+
+fn rm_char(str_: str, char_: str): str
+{
+	// Remove all occurences of a char from a str
+
+	// allocate to max possible length
+	let out = str_;
+
+	let j = 0;
+	for i in [0: len(str_)]
+	{
+		if not (str_[i] == char_)
+		{
+			out[j] = str_[i];
+			j += 1;
+		}
+	}
+
+	// trim and return
+	out = out[0: j];
 }
 
 //==============================================================================

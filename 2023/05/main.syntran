@@ -257,7 +257,6 @@ fn part2(): i32
 		seeds = map_fn(seeds, dst_range, src_range, len_range);
 		//println("seeds = ", seeds);
 
-
 		str_ = readln(f);
 	}
 	close(f);
