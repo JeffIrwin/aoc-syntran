@@ -52,23 +52,23 @@ fn part1(): i32
 	let f = open(filename);
 
 	let str_ = readln(f);
-	println("str_ = ", str_);
+	//println("str_ = ", str_);
 
 	let strs  = split_(str_, ":");
 	let times = parse_i32_delim(strs[1], " ");
-	println("times = ", times);
+	//println("times = ", times);
 
 	str_ = readln(f);
 	strs  = split_(str_, ":");
 	let rec_dists = parse_i32_delim(strs[1], " ");
-	println("rec_dists = ", rec_dists);
+	//println("rec_dists = ", rec_dists);
 
 	for i in [0: size(times, 0)]
 	{
 		let race_time = times[i];
 		let rec_dist = rec_dists[i];
 
-		println("race_time, rec_dist = ", race_time, ", ", rec_dist);
+		//println("race_time, rec_dist = ", race_time, ", ", rec_dist);
 
 		let nwin = 0;
 
@@ -89,9 +89,9 @@ fn part1(): i32
 		let j1 = (-b + (b ** 2 - 4 * a * c) ** 0.5) / (2 * a);
 		let j2 = (-b - (b ** 2 - 4 * a * c) ** 0.5) / (2 * a);
 
-		println(" j1,  j2 = ", j1, ", ", j2);
-		println("fj1, fj2 = ", floor_(j1), ", ", floor_(j2));
-		println("fj1, fj2 = ", ceil_ (j1), ", ", ceil_ (j2));
+		//println(" j1,  j2 = ", j1, ", ", j2);
+		//println("fj1, fj2 = ", floor_(j1), ", ", floor_(j2));
+		//println("fj1, fj2 = ", ceil_ (j1), ", ", ceil_ (j2));
 
 		let jmin = ceil_ (minf32(j1, j2));
 		let jmax = floor_(maxf32(j1, j2));
@@ -117,7 +117,7 @@ fn part2(): i32
 	let f = open(filename);
 
 	let str_ = readln(f);
-	println("str_ = ", str_);
+	//println("str_ = ", str_);
 
 	let strs  = split_(str_, ":");
 
@@ -125,7 +125,7 @@ fn part2(): i32
 	let times = parse_i32(rm_char(strs[1], " "));
 	//let times = parse_i32_delim(strs[1], " ");
 
-	println("times = ", times);
+	//println("times = ", times);
 
 	str_ = readln(f);
 	strs  = split_(str_, ":");
@@ -133,14 +133,14 @@ fn part2(): i32
 	//let rec_dists = parse_i32_delim(strs[1], " ");
 	let rec_dists = parse_i64(rm_char(strs[1], " "));
 
-	println("rec_dists = ", rec_dists);
+	//println("rec_dists = ", rec_dists);
 
 	let race_time = times;
 	let rec_dist = rec_dists;
 
-	println("race_time, rec_dist = ", race_time, ", ", rec_dist);
+	//println("race_time, rec_dist = ", race_time, ", ", rec_dist);
 
-	println("calculating distances ...");
+	//println("calculating distances ...");
 
 	let nwin = i64(0);
 	for j in [1: race_time]
@@ -154,9 +154,9 @@ fn part2(): i32
 
 		if (dist > rec_dist) nwin += i64(1);
 	}
-	println();
+	//println();
 
-	println("nwin = ", nwin);
+	//println("nwin = ", nwin);
 
 	prod_ *= nwin;
 
