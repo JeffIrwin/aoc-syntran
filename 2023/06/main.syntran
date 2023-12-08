@@ -72,13 +72,15 @@ fn part1(): i32
 
 		let nwin = 0;
 
-		// dist = speed * duration;
-		//      = speed * (race_time - j);
-		//      = j * (race_time - j)
+		// dist == speed * duration;
+		//      == speed * (race_time - j);
+		//      == j * (race_time - j)
 		//      == rec_dist;
 		//
 		// j * (race_time - j) - rec_dist == 0
 		// -j**2 + race_time * j - rec_dist == 0;
+		//
+		//  a * j**2 + b * j + c == 0;
 		//
 		//   a = -1;  b = race_time;  c = -rec_dist;
 
