@@ -181,14 +181,11 @@ fn bubble_sort_hands(hands: [str; :]): [i32; :]
 	let n = size(hands, 0);
 	let idx = [0: n];
 	//let idx = bubble_sort_hands(hands);
-	
-	//let swapped = false;
-	//// TODO: while loops are cracked in syntran.  this
-	////doesn't sort
-	//while (not swapped)
-	for j in [0: n]
+
+	let swapped = true;
+	while swapped
 	{
-		//swapped = false;
+		swapped = false;
 		for i in [1: n]
 		{
 			if is_hand_gt(hands[idx[i-1]], hands[idx[i]])
@@ -198,7 +195,7 @@ fn bubble_sort_hands(hands: [str; :]): [i32; :]
 				idx[i-1] = idx[i];
 				idx[i] = tmp;
 
-				//swapped = true;
+				swapped = true;
 				//println("swapped = ", swapped);
 			}
 		}
