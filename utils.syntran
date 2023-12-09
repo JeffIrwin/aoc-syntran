@@ -400,3 +400,24 @@ fn all_ends_with_(strs: [str; :], j: [i32; :], char_: str): bool
 
 //==============================================================================
 
+fn gcd64(a: i64, b: i64): i64
+{
+	// Euclidean algorithm for GCD
+	while b != 0
+	{
+		let t = b;
+		b = a % b;
+		a = t;
+	}
+	let ans = a;
+}
+
+fn lcm64(a: i64, b: i64): i64
+{
+	let abs_ = a * b;
+	if (abs_ < 0) abs_ = -abs_;
+	abs_ / gcd64(a, b);
+}
+
+//==============================================================================
+

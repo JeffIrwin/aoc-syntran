@@ -215,10 +215,8 @@ fn part2(): i32
 	// loop through all of the instructions, but fortunately that doesn't happen
 	// with the given input
 
-	// shell out to python bc i've had enough of day 8 :sweat:
-	let ans_str = "math.lcm(";
-
 	let prod_ = i64(1);
+	let lcm_  = i64(1);
 	for k in [0: na]
 	{
 		let i = 0;
@@ -233,14 +231,17 @@ fn part2(): i32
 		}
 		//println("cycle len [", k, "] = ", i);
 		prod_ *= i;
-		ans_str += str(i);
-		if (k < na-1) ans_str += ", ";
+		lcm_ = lcm64(lcm_, i64(i));
 	}
-	ans_str += ")";
 
-	println("ans_str = ", ans_str);
-	println("part 2 = ", prod_); // Wrong!  Product is not LCM
-	prod_;
+	//// unit tests :)
+	//println("gcd64(6,9) = ", gcd64(i64(6), i64(9)));
+	//println("lcm64(13939, 11309) = ", lcm64(i64(13939), i64(11309)));
+
+	//println("ans_str = ", ans_str);
+	println("part 2 = ", lcm_);
+	//println("part 2 = ", prod_); // Wrong!  Product is not LCM
+	lcm_;
 }
 
 //==============================================================================
