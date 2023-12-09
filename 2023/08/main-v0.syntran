@@ -248,27 +248,19 @@ fn part2(): i32
 
 	println("j = ", j);
 
-	// This version inlines every fn to avoid memory leaks
+	// This version uses fns but suffers from debilitating memory leaks
 	let i = 0;
-	let all_ends_with__ = false;
-	//while not (all_ends_with_(nodes, j, "Z"))
-	while not (all_ends_with__)
+	while not (all_ends_with_(nodes, j, "Z"))
 	{
 		let ins = instr[i % ninstr];
 		//println("ins = ", ins);
 		//println("node = ", nodes[j]);
 
-		if i % 1000000 == 0
+		if i % 100000 == 0
 		{
 			println("i = ", i);
 			println("ins = ", ins);
-			println("node[j[0]] = ", nodes[j[0]]);
-			println("node[j[1]] = ", nodes[j[1]]);
-			println("node[j[2]] = ", nodes[j[2]]);
-			println("node[j[3]] = ", nodes[j[3]]);
-			println("node[j[4]] = ", nodes[j[4]]);
-			println("node[j[5]] = ", nodes[j[5]]);
-			println();
+			//println("node = ", nodes[j]);
 		}
 
 		for k in [0: na]
@@ -280,24 +272,6 @@ fn part2(): i32
 				println("Error: bad instr");
 
 		i += 1;
-
-		//fn all_ends_with_(strs: [str; :], j: [i32; :], char_: str): bool
-		//{
-			let il = 0; // TODO: rename `i` if shadowing doesn't work
-			let all_end = true;
-			//while all_end and il < size(j, 0) // size() def has a mem leak bc this is the last line i fixed
-			while all_end and il < na
-			{
-				//all_end = ends_with_(nodes[j[il]], "Z");
-				let str_ = nodes[j[il]];
-				//all_end = str_[ len(str_) - 1 ] == "Z";  // TODO: does len() have a mem leak?
-				all_end = str_[2] == "Z";
-
-				il += 1;
-			}
-			all_ends_with__ = all_end;
-		//}
-
 	}
 	sum_ = i;
 
@@ -312,7 +286,7 @@ fn main()
 	println();
 	println("Starting AOC syntran main");
 
-	//part1(); // TODO
+	//part1();
 	part2();
 
 	println("Ending AOC syntran main");
