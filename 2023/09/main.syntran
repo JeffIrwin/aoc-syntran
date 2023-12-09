@@ -72,10 +72,10 @@ fn part1(): i32
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let v = parse_i32_delim(str_, " ");
-		println("v = ", v);
+		//println("v = ", v);
 
 		// Take derivatives dv until we get all zeroes
 		let dv = v;
@@ -86,7 +86,7 @@ fn part1(): i32
 		{
 			i += 1;
 			dv = diff_(dv, i);
-			println("dv = ", dv);
+			//println("dv = ", dv);
 		}
 		let n = i;
 
@@ -96,9 +96,9 @@ fn part1(): i32
 			v[i] = dv[i]; // copy all but last value
 
 		// Integrate to undo the derivatives and extrapolate back up
-		println();
-		println("integrating ...");
-		println();
+		//println();
+		//println("integrating ...");
+		//println();
 		for i in [0: n]
 		//for i in [i: -1: 0] // TODO
 		{
@@ -106,19 +106,19 @@ fn part1(): i32
 			//println("n - i = ", n - i);
 
 			v = integrate_(v, n - i);
-			println("v = ", v);
+			//println("v = ", v);
 			//println();
 		}
 
-		println();
-		println("adding ", v[ size(v,0) - 1 ]);
+		//println();
+		//println("adding ", v[ size(v,0) - 1 ]);
 
 		sum_ += i64(v[ size(v,0) - 1 ]);
-		println("sum_ = ", sum_);
 
-		println();
+		//println("sum_ = ", sum_);
+		//println();
+		//println();
 
-		println();
 		str_ = readln(f);
 	}
 	close(f);
@@ -131,23 +131,23 @@ fn part1(): i32
 
 fn part2(): i32
 {
-	println("starting part2()");
-	println();
+	//println("starting part2()");
+	//println();
 	let sum_ = i64(0);
 
 	let f = open(filename);
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let tmp = parse_i32_delim(str_, " ");
-		println("tmp = ", tmp);
+		//println("tmp = ", tmp);
 
 		let v = tmp;
 		for i in [0: size(tmp,0)]
 			v[i] = tmp[ size(tmp,0) - i - 1];
-		println("v = ", v);
+		//println("v = ", v);
 
 		// Take derivatives dv until we get all zeroes
 		let dv = v;
@@ -158,7 +158,7 @@ fn part2(): i32
 		{
 			i += 1;
 			dv = diff_(dv, i);
-			println("dv = ", dv);
+			//println("dv = ", dv);
 		}
 		let n = i;
 
@@ -168,9 +168,9 @@ fn part2(): i32
 			v[i] = dv[i]; // copy all but last value
 
 		// Integrate to undo the derivatives and extrapolate back up
-		println();
-		println("integrating ...");
-		println();
+		//println();
+		//println("integrating ...");
+		//println();
 		for i in [0: n]
 		//for i in [i: -1: 0] // TODO
 		{
@@ -178,19 +178,19 @@ fn part2(): i32
 			//println("n - i = ", n - i);
 
 			v = integrate_(v, n - i);
-			println("v = ", v);
+			//println("v = ", v);
 			//println();
 		}
 
-		println();
-		println("adding ", v[ size(v,0) - 1 ]);
+		//println();
+		//println("adding ", v[ size(v,0) - 1 ]);
 
 		sum_ += i64(v[ size(v,0) - 1 ]);
-		println("sum_ = ", sum_);
+		//println("sum_ = ", sum_);
 
-		println();
+		//println();
 
-		println();
+		//println();
 		str_ = readln(f);
 	}
 	close(f);
