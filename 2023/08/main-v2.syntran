@@ -144,7 +144,7 @@ fn part1(): i32
 fn part2(): i32
 {
 	println("starting part2()");
-	//let sum_ = 0;
+	let sum_ = 0;
 
 	let n = countln_(filename) - 2;
 	println("n = ", n);
@@ -253,101 +253,74 @@ fn part2(): i32
 	for i in [0: n]
 		end_z[i] = ends_with_(nodes[i], "Z");
 
-	// Find cycle len for each thread.  Then multiply them all together to find
-	// the part2 answer.  Might need LCM instead of actual product.  I think
-	// this actually won't work if you get to "Z" on any thread before the first
-	// loop through all of the instructions, but fortunately that doesn't happen
-	// with the given input
+	// TODO: find cycle len for each thread.  Then multiple them all together to
+	// find the part2 answer.  Might need LCM instead of actual product
 
-	// shell out to python bc i've had enough of day 8 :sweat:
-	let ans_str = "math.lcm(";
-
-	let prod_ = i64(1);
-	for k in [0: na]
+	// This version inlines every fn to avoid memory leaks
+	let i  = 0;
+	let ii = i64(0);
+	let all_ends_with__ = false;
+	//while not (all_ends_with_(nodes, j, "Z"))
+	//while not (all_ends_with__)
+	while not (all_ends_with__) and ii < 10000000
 	{
-		let i = 0;
-		while not end_z[j[k]]
+		let ins = instr[i];
+		//println("ins = ", ins);
+		//println("node = ", nodes[j]);
+
+		if ii % 1000000 == 0
 		{
-			let ins = instr[i % ninstr];
-			if (ins == "L")
-				j[k] =  lefts_idx[j[k]];
-			else //if (ins == "R")
-				j[k] = rights_idx[j[k]];
-			i += 1;
+			println("i = ", i, ", ", ii);
+			println("ins = ", ins);
+			println("node[j[0]] = ", nodes[j[0]]);
+			println("node[j[1]] = ", nodes[j[1]]);
+			//println("node[j[2]] = ", nodes[j[2]]);
+			//println("node[j[3]] = ", nodes[j[3]]);
+			//println("node[j[4]] = ", nodes[j[4]]);
+			//println("node[j[5]] = ", nodes[j[5]]);
+			println();
 		}
-		println("cycle len [", k, "] = ", i);
-		prod_ *= i;
-		ans_str += str(i);
-		if (k < na-1) ans_str += ", ";
+
+		let idebug = 1;
+		if (end_z[j[idebug]])
+		{
+			println("j[", idebug, "] ends with Z");
+			println("ii = ", ii);
+			println();
+		}
+
+		if (ins == "L")
+			for k in [0: na]
+				j[k] =  lefts_idx[j[k]];
+		else if (ins == "R")
+			for k in [0: na]
+				j[k] = rights_idx[j[k]];
+		else
+				println("Error: bad instr");
+
+		ii += 1;
+		i = i32(ii % i64(ninstr));
+
+		let il = 0;
+		all_ends_with__ = true;
+		//while all_ends_with__ and il < size(j, 0) // size() def has a mem leak bc this is the last line ii fixed
+		while all_ends_with__ and il < na
+		{
+			//let str_ = nodes[j[il]];
+			////all_end = str_[ len(str_) - 1 ] == "Z";  // TODO: does len() have a mem leak?
+
+			//all_ends_with__ = str_[2] == "Z"; // optimize by finding which nodes end in "Z" before big loop
+			all_ends_with__ = end_z[j[il]];
+
+			il += 1;
+		}
+		//all_ends_with__ = all_end;
+
 	}
-	ans_str += ")";
-	println("ans_str = ", ans_str);
+	sum_ = ii;
 
-	//// This version inlines every fn to avoid memory leaks
-	//let i  = 0;
-	//let ii = i64(0);
-	//let all_ends_with__ = false;
-	////while not (all_ends_with_(nodes, j, "Z"))
-	////while not (all_ends_with__)
-	//while not (all_ends_with__) and ii < 10000000
-	//{
-	//	let ins = instr[i];
-	//	//println("ins = ", ins);
-	//	//println("node = ", nodes[j]);
-
-	//	if ii % 1000000 == 0
-	//	{
-	//		println("i = ", i, ", ", ii);
-	//		println("ins = ", ins);
-	//		println("node[j[0]] = ", nodes[j[0]]);
-	//		println("node[j[1]] = ", nodes[j[1]]);
-	//		//println("node[j[2]] = ", nodes[j[2]]);
-	//		//println("node[j[3]] = ", nodes[j[3]]);
-	//		//println("node[j[4]] = ", nodes[j[4]]);
-	//		//println("node[j[5]] = ", nodes[j[5]]);
-	//		println();
-	//	}
-
-	//	let idebug = 1;
-	//	if (end_z[j[idebug]])
-	//	{
-	//		println("j[", idebug, "] ends with Z");
-	//		println("ii = ", ii);
-	//		println();
-	//	}
-
-	//	if (ins == "L")
-	//		for k in [0: na]
-	//			j[k] =  lefts_idx[j[k]];
-	//	else if (ins == "R")
-	//		for k in [0: na]
-	//			j[k] = rights_idx[j[k]];
-	//	else
-	//			println("Error: bad instr");
-
-	//	ii += 1;
-	//	i = i32(ii % i64(ninstr));
-
-	//	let il = 0;
-	//	all_ends_with__ = true;
-	//	//while all_ends_with__ and il < size(j, 0) // size() def has a mem leak bc this is the last line ii fixed
-	//	while all_ends_with__ and il < na
-	//	{
-	//		//let str_ = nodes[j[il]];
-	//		////all_end = str_[ len(str_) - 1 ] == "Z";  // TODO: does len() have a mem leak?
-
-	//		//all_ends_with__ = str_[2] == "Z"; // optimize by finding which nodes end in "Z" before big loop
-	//		all_ends_with__ = end_z[j[il]];
-
-	//		il += 1;
-	//	}
-	//	//all_ends_with__ = all_end;
-
-	//}
-	//sum_ = ii;
-
-	println("part 2 = ", prod_);
-	prod_;
+	println("part 2 = ", sum_);
+	sum_;
 }
 
 //==============================================================================
