@@ -29,22 +29,21 @@ fn part1(): i32
 	//println("nx, ny = ", nx, ny);
 
 	let grid  = [""; nx, ny];
-	let dists = [ 0; nx, ny];
 
 	// Load the grid and find position of start S
-	let ixs = -1;
-	let iys = -1;
-	for iy in [0: ny]
+	let xs = -1;
+	let ys = -1;
+	for y in [0: ny]
 	{
 		//println("str_ = ", str_);
 
-		for ix in [0: nx]
+		for x in [0: nx]
 		{
-			grid[ix,iy] = str_[ix];
-			if (grid[ix,iy] == "S")
+			grid[x,y] = str_[x];
+			if (grid[x,y] == "S")
 			{
-				ixs = ix;
-				iys = iy;
+				xs = x;
+				ys = y;
 			}
 		}
 		str_ = readln(f);
@@ -53,15 +52,15 @@ fn part1(): i32
 
 	//println("grid =");
 	//println(grid);
-	//println("ixs, iys = ", ixs, ", ", iys);
+	//println("xs, ys = ", xs, ", ", ys);
 
 	// Start the search at S
-	let ix0 = ixs;
-	let iy0 = iys;
-	let ix = -1;
-	let iy = -1;
-	let ix00 = -1;
-	let iy00 = -1;
+	let x0 = xs;
+	let y0 = ys;
+	let x = -1;
+	let y = -1;
+	let x00 = -1;
+	let y00 = -1;
 
 	// Cardinal directions
 	let dirs =
@@ -82,25 +81,25 @@ fn part1(): i32
 	let NORTH = 3;
 
 	let k = 0;
-	//while ix != ixs or iy != iys
-	while not (ix == ixs and iy == iys)
-	//while not (ix == ixs and iy == iys) and k < 4
+	//while x != xs or y != ys
+	while not (x == xs and y == ys)
+	//while not (x == xs and y == ys) and k < 4
 	{
-		//println("ix0, iy0 = ", ix0, ", ", iy0);
+		//println("x0, y0 = ", x0, ", ", y0);
 		let connects = false;
 		let idir = 0;
 		while not connects
 		{
-			ix = ix0 + dirs[0, idir];
-			iy = iy0 + dirs[1, idir];
+			x = x0 + dirs[0, idir];
+			y = y0 + dirs[1, idir];
 
-			//println("ix, iy = ", ix, ", ", iy);
+			//println("x, y = ", x, ", ", y);
 
 			if (idir == EAST or idir == WEST)
 			{
 				// east-west pair
-				let ce = grid[ix0, iy0];
-				let cw = grid[ix , iy ];
+				let ce = grid[x0, y0];
+				let cw = grid[x , y ];
 				if (idir == EAST)
 				{
 					let tmp = ce;
@@ -143,8 +142,8 @@ fn part1(): i32
 			else
 			{
 				// north-south pair
-				let cn = grid[ix0, iy0];
-				let cs = grid[ix , iy ];
+				let cn = grid[x0, y0];
+				let cs = grid[x , y ];
 				if (idir == NORTH)
 				{
 					let tmp = cn;
@@ -178,25 +177,20 @@ fn part1(): i32
 				connects = connects or cns == "SJ";
 				connects = connects or cns == "SS";
 			}
-			if (ix == ix00 and iy == iy00) connects = false;
+			if (x == x00 and y == y00) connects = false;
 
 			idir += 1;
 		}
 
-		dists[ix0,iy0] = k;
+		x00 = x0;
+		y00 = y0;
 
-		ix00 = ix0;
-		iy00 = iy0;
-
-		ix0 = ix;
-		iy0 = iy;
+		x0 = x;
+		y0 = y;
 
 		k += 1;
 		//println();
 	}
-	//println("dists = ");
-	//println(dists);
-
 	//println("max dist = ", k);
 	sum_ = k / 2;
 
@@ -221,22 +215,21 @@ fn part2(): i32
 	//println("nx, ny = ", nx, ny);
 
 	let grid  = [""; nx, ny];
-	let dists = [ 0; nx, ny];
 
 	// Load the grid and find position of start S
-	let ixs = -1;
-	let iys = -1;
-	for iy in [0: ny]
+	let xs = -1;
+	let ys = -1;
+	for y in [0: ny]
 	{
 		//println("str_ = ", str_);
 
-		for ix in [0: nx]
+		for x in [0: nx]
 		{
-			grid[ix,iy] = str_[ix];
-			if (grid[ix,iy] == "S")
+			grid[x,y] = str_[x];
+			if (grid[x,y] == "S")
 			{
-				ixs = ix;
-				iys = iy;
+				xs = x;
+				ys = y;
 			}
 		}
 		str_ = readln(f);
@@ -245,15 +238,15 @@ fn part2(): i32
 
 	//println("grid =");
 	//println(grid);
-	//println("ixs, iys = ", ixs, ", ", iys);
+	//println("xs, ys = ", xs, ", ", ys);
 
 	// Start the search at S
-	let ix0 = ixs;
-	let iy0 = iys;
-	let ix = -1;
-	let iy = -1;
-	let ix00 = -1;
-	let iy00 = -1;
+	let x0 = xs;
+	let y0 = ys;
+	let x = -1;
+	let y = -1;
+	let x00 = -1;
+	let y00 = -1;
 
 	// Cardinal directions
 	let dirs =
@@ -278,32 +271,33 @@ fn part2(): i32
 	let first = true;
 	let defer = false;
 	let wind_inc0 = 0;
-	let ixd = -1;
-	let iyd = -1;
+	let xd = -1;
+	let yd = -1;
 	let wind_incd = 0;
 
-	// bool arrays for points that are on/in contour
+	// bool arrays for points that are on/in contour.  shouldn't be necessary if
+	// i can count edges correctly
 	let on       = [false; nx, ny];
 	let on_or_in = [false; nx, ny];
 
 	let k = 0;
-	while not (ix == ixs and iy == iys)
+	while not (x == xs and y == ys)
 	{
-		//println("ix0, iy0 = ", ix0, ", ", iy0);
+		//println("x0, y0 = ", x0, ", ", y0);
 		let connects = false;
 		let idir = 0;
 		while not connects
 		{
-			ix = ix0 + dirs[0, idir];
-			iy = iy0 + dirs[1, idir];
+			x = x0 + dirs[0, idir];
+			y = y0 + dirs[1, idir];
 
-			//println("ix, iy = ", ix, ", ", iy);
+			//println("x, y = ", x, ", ", y);
 
 			if (idir == EAST or idir == WEST)
 			{
 				// east-west pair
-				let ce = grid[ix0, iy0];
-				let cw = grid[ix , iy ];
+				let ce = grid[x0, y0];
+				let cw = grid[x , y ];
 				if (idir == EAST)
 				{
 					let tmp = ce;
@@ -338,8 +332,8 @@ fn part2(): i32
 			else
 			{
 				// north-south pair
-				let cn = grid[ix0, iy0];
-				let cs = grid[ix , iy ];
+				let cn = grid[x0, y0];
+				let cs = grid[x , y ];
 				if (idir == NORTH)
 				{
 					let tmp = cn;
@@ -373,60 +367,50 @@ fn part2(): i32
 				connects = connects or cns == "SJ";
 				connects = connects or cns == "SS";
 			}
-			if (ix == ix00 and iy == iy00) connects = false;
+			if (x == x00 and y == y00) connects = false;
 
 			idir += 1;
 		}
-
-		dists[ix0,iy0] = k;
 
 		// Set winding values for filling.  Reference:
 		//
 		//     https://github.com/JeffIrwin/cali/blob/e7971fa48a79be46e1475f6c5e6f60757faf7b08/src/cali.f90#L1179-L1199
 		//
-		let wind_inc = sign_(iy - iy0);
+		let wind_inc = sign_(y - y0);
 		if (not first and wind_inc != 0)
 		{
 			if (wind_inc0 == 0 and not defer)
 			{
 				defer = true;
-				ixd = ix0;
-				iyd = iy0;
+				xd = x0;
+				yd = y0;
 				wind_incd = wind_inc;
 			}
 
 			if (wind_inc0 + wind_inc == 0)
-			{
-				wind[ix0, iy0] += wind_inc;
-			}
+				wind[x0, y0] += wind_inc;
 
-			wind[ix, iy] += wind_inc;
-			wind_inc0 = wind_inc;
-
+			wind[x, y] += wind_inc;
+			wind_inc0   = wind_inc;
 		}
 		first = false;
 
-		on_or_in[ix, iy] = on_or_in[ix, iy] or true;
-		on      [ix, iy] = on      [ix, iy] or true;
+		on_or_in[x, y] = on_or_in[x, y] or true;
+		on      [x, y] = on      [x, y] or true;
 
-		ix00 = ix0;
-		iy00 = iy0;
+		x00 = x0;
+		y00 = y0;
 
-		ix0 = ix;
-		iy0 = iy;
+		x0 = x;
+		y0 = y;
 
 		k += 1;
 		//println();
 	}
-	//println("dists = ");
-	//println(dists);
 
 	// Mark the deferred point after wrapping around the entire contour
 	if (defer and wind_incd != wind_inc0)
-		wind[ixd, iyd] += wind_incd;
-
-	//println("max dist = ", k);
-	//sum_ = k / 2;
+		wind[xd, yd] += wind_incd;
 
 	//println("wind = ");
 	//println(wind);
@@ -440,31 +424,31 @@ fn part2(): i32
 
 	// Count all points/pixels that are in *or on* the pipe contour
 	let n = 0;
-	for iy in [0: ny]
+	for y in [0: ny]
 	{
 		let wind_num = 0;
-		for ix in [0: nx]
+		for x in [0: nx]
 		{
-			wind_num += wind[ix, iy];
-			//if (wind_num != 0 or wind[ix, iy] != 0) n += 1;
+			wind_num += wind[x, y];
+			//if (wind_num != 0 or wind[x, y] != 0) n += 1;
 
 			if (wind_num != 0)
 			{
-				n += 1;
-				on_or_in[ix, iy] = on_or_in[ix, iy] or true;
+				n += 1; // count of `n` isn't right bc it doesn't count east edges
+				on_or_in[x, y] = on_or_in[x, y] or true;
 			}
-
-			//on_or_in[ix, iy] = on_or_in[ix, iy] or true;
 		}
 	}
 	//println("num on or in = ", n);
 	//println("num on       = ", k);
+
+	//// This should be right if i count east edges
 	//sum_ = n - k;
 
 	sum_ = 0;
-	for iy in [0: ny]
-	for ix in [0: nx]
-		if (on_or_in[ix,iy] and not on[ix,iy]) sum_ += 1;
+	for y in [0: ny]
+	for x in [0: nx]
+		if (on_or_in[x,y] and not on[x,y]) sum_ += 1;
 
 	println("part 2 = ", sum_);
 	sum_;
