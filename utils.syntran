@@ -377,6 +377,16 @@ fn rm_char(str_: str, char_: str): str
 	out = out[0: j];
 }
 
+fn reverse_str(str_: str): str
+{
+	// Reverse a str
+	let rev = str_;
+	let n = len(str_);
+	for i in [0: n]
+		rev[i] = str_[n-i-1];
+	let ans = rev;
+}
+
 //==============================================================================
 
 fn ends_with_(str_: str, char_: str): bool

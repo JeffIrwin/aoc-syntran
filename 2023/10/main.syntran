@@ -280,6 +280,8 @@ fn part2(): i32
 	let on       = [false; nx, ny];
 	let on_or_in = [false; nx, ny];
 
+	//println("reverse_str(aoeu) = ", reverse_str("aoeu"));
+
 	let k = 0;
 	while not (x == xs and y == ys)
 	{
@@ -296,15 +298,9 @@ fn part2(): i32
 			if (idir == EAST or idir == WEST)
 			{
 				// east-west pair
-				let ce = grid[x0, y0];
-				let cw = grid[x , y ];
-				if (idir == EAST)
-				{
-					let tmp = ce;
-					ce = cw;
-					cw = tmp;
-				}
-				let cwe = cw + ce;
+				let cwe = grid[x0, y0] + grid[x, y];
+				if (idir == WEST)
+					cwe = reverse_str(cwe);
 				//println("cw ce = ", cwe);
 
 				// | - L J 7 F . S
@@ -332,19 +328,9 @@ fn part2(): i32
 			else
 			{
 				// north-south pair
-				let cn = grid[x0, y0];
-				let cs = grid[x , y ];
+				let cns = grid[x0, y0] + grid[x , y ];
 				if (idir == NORTH)
-				{
-					let tmp = cn;
-					cn = cs;
-					cs = tmp;
-				}
-				//println("cn, cs = ");
-				//println(cn);
-				//println(cs);
-
-				let cns = cn + cs;
+					cns = reverse_str(cns);
 
 				// | - L J 7 F . S
 				connects = connects or cns == "||";
