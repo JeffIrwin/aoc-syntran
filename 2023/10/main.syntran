@@ -1,0 +1,494 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let sum_ = 0;
+
+	// Get grid size
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let nx = len(str_);
+
+	println("nx, ny = ", nx, ny);
+
+	let grid  = [""; nx, ny];
+	let dists = [ 0; nx, ny];
+
+	// Load the grid and find position of start S
+	let ixs = -1;
+	let iys = -1;
+	for iy in [0: ny]
+	{
+		//println("str_ = ", str_);
+
+		for ix in [0: nx]
+		{
+			grid[ix,iy] = str_[ix];
+			if (grid[ix,iy] == "S")
+			{
+				ixs = ix;
+				iys = iy;
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("grid =");
+	println(grid);
+	println("ixs, iys = ", ixs, ", ", iys);
+
+	// Start the search at S
+	let ix0 = ixs;
+	let iy0 = iys;
+	let ix = -1;
+	let iy = -1;
+	let ix00 = -1;
+	let iy00 = -1;
+
+	// Cardinal directions
+	let dirs =
+		[
+			 1,  0, // east
+			-1,  0, // west
+			 0,  1, // south
+			 0, -1  // north
+			 ;
+			 2,  4
+		];
+	//println("dirs = ", dirs);
+
+	// Note consistent ordering with dirs array
+	let EAST  = 0;
+	let WEST  = 1;
+	let SOUTH = 2;
+	let NORTH = 3;
+
+	let k = 0;
+	//while ix != ixs or iy != iys
+	while not (ix == ixs and iy == iys)
+	//while not (ix == ixs and iy == iys) and k < 4
+	{
+		//println("ix0, iy0 = ", ix0, ", ", iy0);
+		let connects = false;
+		let idir = 0;
+		while not connects
+		{
+			ix = ix0 + dirs[0, idir];
+			iy = iy0 + dirs[1, idir];
+
+			//println("ix, iy = ", ix, ", ", iy);
+
+			if (idir == EAST or idir == WEST)
+			{
+				// east-west pair
+				let ce = grid[ix0, iy0];
+				let cw = grid[ix , iy ];
+				if (idir == EAST)
+				{
+					let tmp = ce;
+					ce = cw;
+					cw = tmp;
+				}
+				let cwe = cw + ce;
+				//println("cw ce = ", cwe);
+
+				//if (cw == "." or ce == ".")
+				//{
+				//	connects = false;
+				//}
+
+				//if (cw + ce == "--")
+				//	connects = true;
+
+				// | - L J 7 F . S
+				connects = connects or cwe == "-7";
+				connects = connects or cwe == "--";
+				connects = connects or cwe == "-J";
+				connects = connects or cwe == "-S";
+
+				connects = connects or cwe == "L7";
+				connects = connects or cwe == "L-";
+				connects = connects or cwe == "LJ";
+				connects = connects or cwe == "LS";
+
+				connects = connects or cwe == "F7";
+				connects = connects or cwe == "F-";
+				connects = connects or cwe == "FJ";
+				connects = connects or cwe == "FS";
+
+				connects = connects or cwe == "S7";
+				connects = connects or cwe == "S-";
+				connects = connects or cwe == "SJ";
+				connects = connects or cwe == "SS";
+
+			}
+			else
+			{
+				// north-south pair
+				let cn = grid[ix0, iy0];
+				let cs = grid[ix , iy ];
+				if (idir == NORTH)
+				{
+					let tmp = cn;
+					cn = cs;
+					cs = tmp;
+				}
+				//println("cn, cs = ");
+				//println(cn);
+				//println(cs);
+
+				let cns = cn + cs;
+
+				// | - L J 7 F . S
+				connects = connects or cns == "||";
+				connects = connects or cns == "|L";
+				connects = connects or cns == "|J";
+				connects = connects or cns == "|S";
+
+				connects = connects or cns == "7|";
+				connects = connects or cns == "7L";
+				connects = connects or cns == "7J";
+				connects = connects or cns == "7S";
+
+				connects = connects or cns == "F|";
+				connects = connects or cns == "FL";
+				connects = connects or cns == "FJ";
+				connects = connects or cns == "FS";
+
+				connects = connects or cns == "S|";
+				connects = connects or cns == "SL";
+				connects = connects or cns == "SJ";
+				connects = connects or cns == "SS";
+			}
+			if (ix == ix00 and iy == iy00) connects = false;
+
+			idir += 1;
+		}
+
+		dists[ix0,iy0] = k;
+
+		ix00 = ix0;
+		iy00 = iy0;
+
+		ix0 = ix;
+		iy0 = iy;
+
+		k += 1;
+		//println();
+	}
+	println("dists = ");
+	println(dists);
+
+	println("max dist = ", k);
+	sum_ = k / 2;
+
+	println("part 1 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn part2(): i32
+{
+	let sum_ = 0;
+
+	// Get grid size
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let nx = len(str_);
+
+	println("nx, ny = ", nx, ny);
+
+	let grid  = [""; nx, ny];
+	let dists = [ 0; nx, ny];
+
+	// Load the grid and find position of start S
+	let ixs = -1;
+	let iys = -1;
+	for iy in [0: ny]
+	{
+		//println("str_ = ", str_);
+
+		for ix in [0: nx]
+		{
+			grid[ix,iy] = str_[ix];
+			if (grid[ix,iy] == "S")
+			{
+				ixs = ix;
+				iys = iy;
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("grid =");
+	println(grid);
+	println("ixs, iys = ", ixs, ", ", iys);
+
+	// Start the search at S
+	let ix0 = ixs;
+	let iy0 = iys;
+	let ix = -1;
+	let iy = -1;
+	let ix00 = -1;
+	let iy00 = -1;
+
+	// Cardinal directions
+	let dirs =
+		[
+			 1,  0, // east
+			-1,  0, // west
+			 0,  1, // south
+			 0, -1  // north
+			 ;
+			 2,  4
+		];
+	//println("dirs = ", dirs);
+
+	// Note consistent ordering with dirs array
+	let EAST  = 0;
+	let WEST  = 1;
+	let SOUTH = 2;
+	let NORTH = 3;
+
+	// c.f. cali.f90
+	let wind  = [ 0; nx, ny];
+	let first = true;
+	let defer = false;
+	let wind_inc0 = 0;
+	let ixd = -1;
+	let iyd = -1;
+	let wind_incd = 0;
+
+	// bool arrays for points that are on/in contour
+	let on       = [false; nx, ny];
+	let on_or_in = [false; nx, ny];
+
+	let k = 0;
+	while not (ix == ixs and iy == iys)
+	{
+		//println("ix0, iy0 = ", ix0, ", ", iy0);
+		let connects = false;
+		let idir = 0;
+		while not connects
+		{
+			ix = ix0 + dirs[0, idir];
+			iy = iy0 + dirs[1, idir];
+
+			//println("ix, iy = ", ix, ", ", iy);
+
+			if (idir == EAST or idir == WEST)
+			{
+				// east-west pair
+				let ce = grid[ix0, iy0];
+				let cw = grid[ix , iy ];
+				if (idir == EAST)
+				{
+					let tmp = ce;
+					ce = cw;
+					cw = tmp;
+				}
+				let cwe = cw + ce;
+				//println("cw ce = ", cwe);
+
+				// | - L J 7 F . S
+				connects = connects or cwe == "-7";
+				connects = connects or cwe == "--";
+				connects = connects or cwe == "-J";
+				connects = connects or cwe == "-S";
+
+				connects = connects or cwe == "L7";
+				connects = connects or cwe == "L-";
+				connects = connects or cwe == "LJ";
+				connects = connects or cwe == "LS";
+
+				connects = connects or cwe == "F7";
+				connects = connects or cwe == "F-";
+				connects = connects or cwe == "FJ";
+				connects = connects or cwe == "FS";
+
+				connects = connects or cwe == "S7";
+				connects = connects or cwe == "S-";
+				connects = connects or cwe == "SJ";
+				connects = connects or cwe == "SS";
+
+			}
+			else
+			{
+				// north-south pair
+				let cn = grid[ix0, iy0];
+				let cs = grid[ix , iy ];
+				if (idir == NORTH)
+				{
+					let tmp = cn;
+					cn = cs;
+					cs = tmp;
+				}
+				//println("cn, cs = ");
+				//println(cn);
+				//println(cs);
+
+				let cns = cn + cs;
+
+				// | - L J 7 F . S
+				connects = connects or cns == "||";
+				connects = connects or cns == "|L";
+				connects = connects or cns == "|J";
+				connects = connects or cns == "|S";
+
+				connects = connects or cns == "7|";
+				connects = connects or cns == "7L";
+				connects = connects or cns == "7J";
+				connects = connects or cns == "7S";
+
+				connects = connects or cns == "F|";
+				connects = connects or cns == "FL";
+				connects = connects or cns == "FJ";
+				connects = connects or cns == "FS";
+
+				connects = connects or cns == "S|";
+				connects = connects or cns == "SL";
+				connects = connects or cns == "SJ";
+				connects = connects or cns == "SS";
+			}
+			if (ix == ix00 and iy == iy00) connects = false;
+
+			idir += 1;
+		}
+
+		dists[ix0,iy0] = k;
+
+		// Set winding values for filling.  Reference:
+		//
+		//     https://github.com/JeffIrwin/cali/blob/e7971fa48a79be46e1475f6c5e6f60757faf7b08/src/cali.f90#L1179-L1199
+		//
+		let wind_inc = sign_(iy - iy0);
+		if (not first and wind_inc != 0)
+		{
+			if (wind_inc0 == 0 and not defer)
+			{
+				defer = true;
+				ixd = ix0;
+				iyd = iy0;
+				wind_incd = wind_inc;
+			}
+
+			if (wind_inc0 + wind_inc == 0)
+			{
+				wind[ix0, iy0] += wind_inc;
+			}
+
+			wind[ix, iy] += wind_inc;
+			wind_inc0 = wind_inc;
+
+		}
+		first = false;
+
+		on_or_in[ix, iy] = on_or_in[ix, iy] or true;
+		on      [ix, iy] = on      [ix, iy] or true;
+
+		ix00 = ix0;
+		iy00 = iy0;
+
+		ix0 = ix;
+		iy0 = iy;
+
+		k += 1;
+		//println();
+	}
+	println("dists = ");
+	println(dists);
+
+	// Mark the deferred point after wrapping around the entire contour
+	if (defer and wind_incd != wind_inc0)
+		wind[ixd, iyd] += wind_incd;
+
+	println("max dist = ", k);
+	//sum_ = k / 2;
+
+	println("wind = ");
+	println(wind);
+
+	//// Unit tests
+	//println("sign_(0) = ", sign_(0));
+	//println("sign_( 1) = ", sign_( 1));
+	//println("sign_(-1) = ", sign_(-1));
+	//println("sign_( 2) = ", sign_( 2));
+	//println("sign_(-2) = ", sign_(-2));
+
+	// Count all points/pixels that are in *or on* the pipe contour
+	let n = 0;
+	for iy in [0: ny]
+	{
+		let wind_num = 0;
+		for ix in [0: nx]
+		{
+			wind_num += wind[ix, iy];
+			//if (wind_num != 0 or wind[ix, iy] != 0) n += 1;
+
+			if (wind_num != 0)
+			{
+				n += 1;
+				on_or_in[ix, iy] = on_or_in[ix, iy] or true;
+			}
+
+			//on_or_in[ix, iy] = on_or_in[ix, iy] or true;
+		}
+	}
+	println("num on or in = ", n);
+	println("num on       = ", k);
+	//sum_ = n - k;
+
+	sum_ = 0;
+	for iy in [0: ny]
+	for ix in [0: nx]
+	{
+		if (on_or_in[ix,iy] and not on[ix,iy]) sum_ += 1;
+	}
+
+	println("part 2 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+
