@@ -55,12 +55,9 @@ fn part1(): i32
 	//println("xs[0], xs[1] = ", xs[0], ", ", xs[1]);
 
 	// Start the search at S
-	let x0 = xs[0];
-	let y0 = xs[1];
-	let x = -1;
-	let y = -1;
-	let x00 = -1;
-	let y00 = -1;
+	let x0  = xs;
+	let x   = [-1, -1];
+	let x00 = [-1, -1];
 
 	// Cardinal directions
 	let dirs =
@@ -74,32 +71,32 @@ fn part1(): i32
 		];
 	//println("dirs = ", dirs);
 
-	// Note consistent ordering with dirs array
+	// Note consistent ordering with dirs arrax[1]
 	let EAST  = 0;
 	let WEST  = 1;
 	let SOUTH = 2;
 	let NORTH = 3;
 
 	let k = 0;
-	//while x != xs[0] or y != xs[1]
-	while not (x == xs[0] and y == xs[1])
-	//while not (x == xs[0] and y == xs[1]) and k < 4
+	//while x[0] != xs[0] or x[1] != xs[1]
+	while not (x[0] == xs[0] and x[1] == xs[1])
+	//while not (x[0] == xs[0] and x[1] == xs[1]) and k < 4
 	{
-		//println("x0, y0 = ", x0, ", ", y0);
+		//println("x0[0], x0[1] = ", x0[0], ", ", x0[1]);
 		let connects = false;
 		let idir = 0;
 		while not connects
 		{
-			x = x0 + dirs[0, idir];
-			y = y0 + dirs[1, idir];
+			x[0] = x0[0] + dirs[0, idir];
+			x[1] = x0[1] + dirs[1, idir];
 
-			//println("x, y = ", x, ", ", y);
+			//println("x[0], x[1] = ", x[0], ", ", x[1]);
 
 			if (idir == EAST or idir == WEST)
 			{
 				// east-west pair
-				let ce = grid[x0, y0];
-				let cw = grid[x , y ];
+				let ce = grid[x0[0], x0[1]];
+				let cw = grid[x[0] , x[1] ];
 				if (idir == EAST)
 				{
 					let tmp = ce;
@@ -108,14 +105,6 @@ fn part1(): i32
 				}
 				let cwe = cw + ce;
 				//println("cw ce = ", cwe);
-
-				//if (cw == "." or ce == ".")
-				//{
-				//	connects = false;
-				//}
-
-				//if (cw + ce == "--")
-				//	connects = true;
 
 				// | - L J 7 F . S
 				connects = connects or cwe == "-7";
@@ -142,8 +131,8 @@ fn part1(): i32
 			else
 			{
 				// north-south pair
-				let cn = grid[x0, y0];
-				let cs = grid[x , y ];
+				let cn = grid[x0[0], x0[1]];
+				let cs = grid[x[0] , x[1] ];
 				if (idir == NORTH)
 				{
 					let tmp = cn;
@@ -177,21 +166,20 @@ fn part1(): i32
 				connects = connects or cns == "SJ";
 				connects = connects or cns == "SS";
 			}
-			if (x == x00 and y == y00) connects = false;
+
+			// Don't get stuck in a two point loop
+			if (x[0] == x00[0] and x[1] == x00[1]) connects = false;
 
 			idir += 1;
 		}
 
 		x00 = x0;
-		y00 = y0;
-
-		x0 = x;
-		y0 = y;
+		x0  = x ;
 
 		k += 1;
 		//println();
 	}
-	//println("max dist = ", k);
+	//println("max[0] dist = ", k);
 	sum_ = k / 2;
 
 	println("part 1 = ", sum_);
@@ -227,10 +215,7 @@ fn part2(): i32
 		{
 			grid[x,y] = str_[x];
 			if (grid[x,y] == "S")
-			{
-				xs[0] = x;
-				xs[1] = y;
-			}
+				xs = [x, y];
 		}
 		str_ = readln(f);
 	}
@@ -241,12 +226,9 @@ fn part2(): i32
 	//println("xs[0], xs[1] = ", xs[0], ", ", xs[1]);
 
 	// Start the search at S
-	let x0 = xs[0];
-	let y0 = xs[1];
-	let x = -1;
-	let y = -1;
-	let x00 = -1;
-	let y00 = -1;
+	let x0  = xs;
+	let x   = [-1, -1];
+	let x00 = [-1, -1];
 
 	// Cardinal directions
 	let dirs =
@@ -260,45 +242,44 @@ fn part2(): i32
 		];
 	//println("dirs = ", dirs);
 
-	// Note consistent ordering with dirs array
+	// Note consistent ordering with dirs arrax[1]
 	let EAST  = 0;
 	let WEST  = 1;
 	let SOUTH = 2;
 	let NORTH = 3;
 
 	// c.f. cali.f90
-	let wind  = [ 0; n[0], n[1]];
+	let wind  = [0; n[0], n[1]];
 	let first = true;
 	let defer = false;
 	let wind_inc0 = 0;
-	let xd = -1;
-	let yd = -1;
+	let xd = [-1, -1];
 	let wind_incd = 0;
 
-	// bool arraxs[1] for points that are on/in contour.  shouldn't be necessary if
-	// i can count edges correctly
+	// bool arraxs[1] for points that are on/in contour.  shouldn't be necessarx[1] if
+	// i can count edges correctlx[1]
 	let on       = [false; n[0], n[1]];
 	let on_or_in = [false; n[0], n[1]];
 
 	//println("reverse_str(aoeu) = ", reverse_str("aoeu"));
 
 	let k = 0;
-	while not (x == xs[0] and y == xs[1])
+	while not (x[0] == xs[0] and x[1] == xs[1]) // TODO: all() intrinsic
 	{
-		//println("x0, y0 = ", x0, ", ", y0);
+		//println("x0[0], x0[1] = ", x0[0], ", ", x0[1]);
 		let connects = false;
 		let idir = 0;
 		while not connects
 		{
-			x = x0 + dirs[0, idir];
-			y = y0 + dirs[1, idir];
+			x[0] = x0[0] + dirs[0, idir]; // TODO: vec addition `+` operator
+			x[1] = x0[1] + dirs[1, idir];
 
-			//println("x, y = ", x, ", ", y);
+			//println("x[0], x[1] = ", x[0], ", ", x[1]);
 
 			if (idir == EAST or idir == WEST)
 			{
 				// east-west pair
-				let cwe = grid[x0, y0] + grid[x, y];
+				let cwe = grid[x0[0], x0[1]] + grid[x[0], x[1]];
 				if (idir == WEST)
 					cwe = reverse_str(cwe);
 				//println("cw ce = ", cwe);
@@ -328,7 +309,7 @@ fn part2(): i32
 			else
 			{
 				// north-south pair
-				let cns = grid[x0, y0] + grid[x , y ];
+				let cns = grid[x0[0], x0[1]] + grid[x[0] , x[1]];
 				if (idir == NORTH)
 					cns = reverse_str(cns);
 
@@ -353,7 +334,9 @@ fn part2(): i32
 				connects = connects or cns == "SJ";
 				connects = connects or cns == "SS";
 			}
-			if (x == x00 and y == y00) connects = false;
+
+			// Don't get stuck in a two point loop
+			if (x[0] == x00[0] and x[1] == x00[1]) connects = false;
 
 			idir += 1;
 		}
@@ -362,33 +345,29 @@ fn part2(): i32
 		//
 		//     https://github.com/JeffIrwin/cali/blob/e7971fa48a79be46e1475f6c5e6f60757faf7b08/src/cali.f90#L1179-L1199
 		//
-		let wind_inc = sign_(y - y0);
+		let wind_inc = sign_(x[1] - x0[1]);
 		if (not first and wind_inc != 0)
 		{
 			if (wind_inc0 == 0 and not defer)
 			{
 				defer = true;
 				xd = x0;
-				yd = y0;
 				wind_incd = wind_inc;
 			}
 
 			if (wind_inc0 + wind_inc == 0)
-				wind[x0, y0] += wind_inc;
+				wind[x0[0], x0[1]] += wind_inc;
 
-			wind[x, y] += wind_inc;
+			wind[x[0], x[1]] += wind_inc;
 			wind_inc0   = wind_inc;
 		}
 		first = false;
 
-		on_or_in[x, y] = on_or_in[x, y] or true;
-		on      [x, y] = on      [x, y] or true;
+		on_or_in[x[0], x[1]] = on_or_in[x[0], x[1]] or true;
+		on      [x[0], x[1]] = on      [x[0], x[1]] or true;
 
 		x00 = x0;
-		y00 = y0;
-
-		x0 = x;
-		y0 = y;
+		x0  = x ;
 
 		k += 1;
 		//println();
@@ -396,7 +375,7 @@ fn part2(): i32
 
 	// Mark the deferred point after wrapping around the entire contour
 	if (defer and wind_incd != wind_inc0)
-		wind[xd, yd] += wind_incd;
+		wind[xd[0], xd[1]] += wind_incd;
 
 	//println("wind = ");
 	//println(wind);
