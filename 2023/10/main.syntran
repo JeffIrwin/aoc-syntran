@@ -19,31 +19,31 @@ fn part1(): i32
 	let sum_ = 0;
 
 	// Get grid size
-	let ny = countln_(filename);
+	let n = [0, 0];
+	n[1] = countln_(filename);
 
 	let f = open(filename);
 	let str_ = readln(f);
 
-	let nx = len(str_);
+	n[0] = len(str_);
 
-	//println("nx, ny = ", nx, ny);
+	//println("n[0], n[1] = ", n[0], n[1]);
 
-	let grid  = [""; nx, ny];
+	let grid  = [""; n[0], n[1]];
 
 	// Load the grid and find position of start S
-	let xs = -1;
-	let ys = -1;
-	for y in [0: ny]
+	let xs = [-1, -1];
+	for y in [0: n[1]]
 	{
 		//println("str_ = ", str_);
 
-		for x in [0: nx]
+		for x in [0: n[0]]
 		{
 			grid[x,y] = str_[x];
 			if (grid[x,y] == "S")
 			{
-				xs = x;
-				ys = y;
+				xs[0] = x;
+				xs[1] = y;
 			}
 		}
 		str_ = readln(f);
@@ -52,11 +52,11 @@ fn part1(): i32
 
 	//println("grid =");
 	//println(grid);
-	//println("xs, ys = ", xs, ", ", ys);
+	//println("xs[0], xs[1] = ", xs[0], ", ", xs[1]);
 
 	// Start the search at S
-	let x0 = xs;
-	let y0 = ys;
+	let x0 = xs[0];
+	let y0 = xs[1];
 	let x = -1;
 	let y = -1;
 	let x00 = -1;
@@ -81,9 +81,9 @@ fn part1(): i32
 	let NORTH = 3;
 
 	let k = 0;
-	//while x != xs or y != ys
-	while not (x == xs and y == ys)
-	//while not (x == xs and y == ys) and k < 4
+	//while x != xs[0] or y != xs[1]
+	while not (x == xs[0] and y == xs[1])
+	//while not (x == xs[0] and y == xs[1]) and k < 4
 	{
 		//println("x0, y0 = ", x0, ", ", y0);
 		let connects = false;
@@ -205,31 +205,31 @@ fn part2(): i32
 	let sum_ = 0;
 
 	// Get grid size
-	let ny = countln_(filename);
+	let n = [0, 0];
+	n[1] = countln_(filename);
 
 	let f = open(filename);
 	let str_ = readln(f);
 
-	let nx = len(str_);
+	n[0] = len(str_);
 
-	//println("nx, ny = ", nx, ny);
+	//println("n[0], n[1] = ", n[0], n[1]);
 
-	let grid  = [""; nx, ny];
+	let grid  = [""; n[0], n[1]];
 
 	// Load the grid and find position of start S
-	let xs = -1;
-	let ys = -1;
-	for y in [0: ny]
+	let xs = [-1, -1];
+	for y in [0: n[1]]
 	{
 		//println("str_ = ", str_);
 
-		for x in [0: nx]
+		for x in [0: n[0]]
 		{
 			grid[x,y] = str_[x];
 			if (grid[x,y] == "S")
 			{
-				xs = x;
-				ys = y;
+				xs[0] = x;
+				xs[1] = y;
 			}
 		}
 		str_ = readln(f);
@@ -238,11 +238,11 @@ fn part2(): i32
 
 	//println("grid =");
 	//println(grid);
-	//println("xs, ys = ", xs, ", ", ys);
+	//println("xs[0], xs[1] = ", xs[0], ", ", xs[1]);
 
 	// Start the search at S
-	let x0 = xs;
-	let y0 = ys;
+	let x0 = xs[0];
+	let y0 = xs[1];
 	let x = -1;
 	let y = -1;
 	let x00 = -1;
@@ -267,7 +267,7 @@ fn part2(): i32
 	let NORTH = 3;
 
 	// c.f. cali.f90
-	let wind  = [ 0; nx, ny];
+	let wind  = [ 0; n[0], n[1]];
 	let first = true;
 	let defer = false;
 	let wind_inc0 = 0;
@@ -275,15 +275,15 @@ fn part2(): i32
 	let yd = -1;
 	let wind_incd = 0;
 
-	// bool arrays for points that are on/in contour.  shouldn't be necessary if
+	// bool arraxs[1] for points that are on/in contour.  shouldn't be necessary if
 	// i can count edges correctly
-	let on       = [false; nx, ny];
-	let on_or_in = [false; nx, ny];
+	let on       = [false; n[0], n[1]];
+	let on_or_in = [false; n[0], n[1]];
 
 	//println("reverse_str(aoeu) = ", reverse_str("aoeu"));
 
 	let k = 0;
-	while not (x == xs and y == ys)
+	while not (x == xs[0] and y == xs[1])
 	{
 		//println("x0, y0 = ", x0, ", ", y0);
 		let connects = false;
@@ -409,31 +409,31 @@ fn part2(): i32
 	//println("sign_(-2) = ", sign_(-2));
 
 	// Count all points/pixels that are in *or on* the pipe contour
-	let n = 0;
-	for y in [0: ny]
+	let np = 0;
+	for y in [0: n[1]]
 	{
 		let wind_num = 0;
-		for x in [0: nx]
+		for x in [0: n[0]]
 		{
 			wind_num += wind[x, y];
-			//if (wind_num != 0 or wind[x, y] != 0) n += 1;
+			//if (wind_num != 0 or wind[x, y] != 0) np += 1;
 
 			if (wind_num != 0)
 			{
-				n += 1; // count of `n` isn't right bc it doesn't count east edges
+				np += 1; // count of `np` isn't right bc it doesn't count east edges
 				on_or_in[x, y] = on_or_in[x, y] or true;
 			}
 		}
 	}
-	//println("num on or in = ", n);
+	//println("num on or in = ", np);
 	//println("num on       = ", k);
 
 	//// This should be right if i count east edges
-	//sum_ = n - k;
+	//sum_ = np - k;
 
 	sum_ = 0;
-	for y in [0: ny]
-	for x in [0: nx]
+	for y in [0: n[1]]
+	for x in [0: n[0]]
 		if (on_or_in[x,y] and not on[x,y]) sum_ += 1;
 
 	println("part 2 = ", sum_);
