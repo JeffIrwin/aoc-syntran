@@ -26,7 +26,7 @@ fn part1(): i32
 
 	let nx = len(str_);
 
-	println("nx, ny = ", nx, ny);
+	//println("nx, ny = ", nx, ny);
 
 	let grid  = [""; nx, ny];
 	let dists = [ 0; nx, ny];
@@ -51,9 +51,9 @@ fn part1(): i32
 	}
 	close(f);
 
-	println("grid =");
-	println(grid);
-	println("ixs, iys = ", ixs, ", ", iys);
+	//println("grid =");
+	//println(grid);
+	//println("ixs, iys = ", ixs, ", ", iys);
 
 	// Start the search at S
 	let ix0 = ixs;
@@ -194,10 +194,10 @@ fn part1(): i32
 		k += 1;
 		//println();
 	}
-	println("dists = ");
-	println(dists);
+	//println("dists = ");
+	//println(dists);
 
-	println("max dist = ", k);
+	//println("max dist = ", k);
 	sum_ = k / 2;
 
 	println("part 1 = ", sum_);
@@ -218,7 +218,7 @@ fn part2(): i32
 
 	let nx = len(str_);
 
-	println("nx, ny = ", nx, ny);
+	//println("nx, ny = ", nx, ny);
 
 	let grid  = [""; nx, ny];
 	let dists = [ 0; nx, ny];
@@ -243,9 +243,9 @@ fn part2(): i32
 	}
 	close(f);
 
-	println("grid =");
-	println(grid);
-	println("ixs, iys = ", ixs, ", ", iys);
+	//println("grid =");
+	//println(grid);
+	//println("ixs, iys = ", ixs, ", ", iys);
 
 	// Start the search at S
 	let ix0 = ixs;
@@ -418,18 +418,18 @@ fn part2(): i32
 		k += 1;
 		//println();
 	}
-	println("dists = ");
-	println(dists);
+	//println("dists = ");
+	//println(dists);
 
 	// Mark the deferred point after wrapping around the entire contour
 	if (defer and wind_incd != wind_inc0)
 		wind[ixd, iyd] += wind_incd;
 
-	println("max dist = ", k);
+	//println("max dist = ", k);
 	//sum_ = k / 2;
 
-	println("wind = ");
-	println(wind);
+	//println("wind = ");
+	//println(wind);
 
 	//// Unit tests
 	//println("sign_(0) = ", sign_(0));
@@ -457,16 +457,14 @@ fn part2(): i32
 			//on_or_in[ix, iy] = on_or_in[ix, iy] or true;
 		}
 	}
-	println("num on or in = ", n);
-	println("num on       = ", k);
+	//println("num on or in = ", n);
+	//println("num on       = ", k);
 	//sum_ = n - k;
 
 	sum_ = 0;
 	for iy in [0: ny]
 	for ix in [0: nx]
-	{
 		if (on_or_in[ix,iy] and not on[ix,iy]) sum_ += 1;
-	}
 
 	println("part 2 = ", sum_);
 	sum_;
