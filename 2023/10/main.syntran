@@ -14,6 +14,26 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
+// Cardinal directions
+let DIRS =
+	[
+		 1,  0, // east
+		-1,  0, // west
+		 0,  1, // south
+		 0, -1  // north
+		 ;
+		 2,  4
+	];
+//println("DIRS = ", DIRS);
+
+// Note consistent ordering with DIRS array
+let EAST  = 0;
+let WEST  = 1;
+let SOUTH = 2;
+let NORTH = 3;
+
+//==============================================================================
+
 fn part1(): i32
 {
 	let sum_ = 0;
@@ -37,14 +57,11 @@ fn part1(): i32
 	{
 		//println("str_ = ", str_);
 
-		for x in [0: n[0]]
+		for x in [0: n[0]]  // `x` is scalar iterator not to be confused with later vector
 		{
 			grid[x,y] = str_[x];
 			if (grid[x,y] == "S")
-			{
-				xs[0] = x;
-				xs[1] = y;
-			}
+				xs = [x, y];
 		}
 		str_ = readln(f);
 	}
@@ -56,26 +73,8 @@ fn part1(): i32
 
 	// Start the search at S
 	let x0  = xs;
-	let x   = [-1, -1];
+	let x   = [-1, -1]; // vector
 	let x00 = [-1, -1];
-
-	// Cardinal directions
-	let dirs =
-		[
-			 1,  0, // east
-			-1,  0, // west
-			 0,  1, // south
-			 0, -1  // north
-			 ;
-			 2,  4
-		];
-	//println("dirs = ", dirs);
-
-	// Note consistent ordering with dirs array
-	let EAST  = 0;
-	let WEST  = 1;
-	let SOUTH = 2;
-	let NORTH = 3;
 
 	let k = 0;
 	while not (x[0] == xs[0] and x[1] == xs[1])
@@ -85,14 +84,14 @@ fn part1(): i32
 		let idir = 0;
 		while not connects
 		{
-			x[0] = x0[0] + dirs[0, idir];
-			x[1] = x0[1] + dirs[1, idir];
+			x[0] = x0[0] + DIRS[0, idir];
+			x[1] = x0[1] + DIRS[1, idir];
 
 			//println("x[0], x[1] = ", x[0], ", ", x[1]);
 
 			if (idir == EAST or idir == WEST)
 			{
-				// east-west pair
+				// east-west pair.  see refactoring in part 2
 				let ce = grid[x0[0], x0[1]];
 				let cw = grid[x[0] , x[1] ];
 				if (idir == EAST)
@@ -105,6 +104,8 @@ fn part1(): i32
 				//println("cw ce = ", cwe);
 
 				// | - L J 7 F . S
+
+				// could use any_str_eq()
 				connects = connects or cwe == "-7";
 				connects = connects or cwe == "--";
 				connects = connects or cwe == "-J";
@@ -228,24 +229,6 @@ fn part2(): i32
 	let x   = [-1, -1];
 	let x00 = [-1, -1];
 
-	// Cardinal directions
-	let dirs =
-		[
-			 1,  0, // east
-			-1,  0, // west
-			 0,  1, // south
-			 0, -1  // north
-			 ;
-			 2,  4
-		];
-	//println("dirs = ", dirs);
-
-	// Note consistent ordering with dirs array
-	let EAST  = 0;
-	let WEST  = 1;
-	let SOUTH = 2;
-	let NORTH = 3;
-
 	// c.f. cali.f90
 	let wind  = [0; n[0], n[1]];
 	let first = true;
@@ -269,8 +252,8 @@ fn part2(): i32
 		let idir = 0;
 		while not connects
 		{
-			x[0] = x0[0] + dirs[0, idir]; // TODO: vec addition `+` operator
-			x[1] = x0[1] + dirs[1, idir];
+			x[0] = x0[0] + DIRS[0, idir]; // TODO: vec addition `+` operator
+			x[1] = x0[1] + DIRS[1, idir];
 
 			//println("x[0], x[1] = ", x[0], ", ", x[1]);
 
