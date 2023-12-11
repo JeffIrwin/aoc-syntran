@@ -104,28 +104,13 @@ fn part1(): i32
 				//println("cw ce = ", cwe);
 
 				// | - L J 7 F . S
-
-				// could use any_str_eq()
-				connects = connects or cwe == "-7";
-				connects = connects or cwe == "--";
-				connects = connects or cwe == "-J";
-				connects = connects or cwe == "-S";
-
-				connects = connects or cwe == "L7";
-				connects = connects or cwe == "L-";
-				connects = connects or cwe == "LJ";
-				connects = connects or cwe == "LS";
-
-				connects = connects or cwe == "F7";
-				connects = connects or cwe == "F-";
-				connects = connects or cwe == "FJ";
-				connects = connects or cwe == "FS";
-
-				connects = connects or cwe == "S7";
-				connects = connects or cwe == "S-";
-				connects = connects or cwe == "SJ";
-				connects = connects or cwe == "SS";
-
+				connects = any_str_eq(cwe,
+					[
+						"-7", "--", "-J", "-S",
+						"L7", "L-", "LJ", "LS",
+						"F7", "F-", "FJ", "FS",
+						"S7", "S-", "SJ", "SS"
+					]);
 			}
 			else
 			{
@@ -145,25 +130,13 @@ fn part1(): i32
 				let cns = cn + cs;
 
 				// | - L J 7 F . S
-				connects = connects or cns == "||";
-				connects = connects or cns == "|L";
-				connects = connects or cns == "|J";
-				connects = connects or cns == "|S";
-
-				connects = connects or cns == "7|";
-				connects = connects or cns == "7L";
-				connects = connects or cns == "7J";
-				connects = connects or cns == "7S";
-
-				connects = connects or cns == "F|";
-				connects = connects or cns == "FL";
-				connects = connects or cns == "FJ";
-				connects = connects or cns == "FS";
-
-				connects = connects or cns == "S|";
-				connects = connects or cns == "SL";
-				connects = connects or cns == "SJ";
-				connects = connects or cns == "SS";
+				connects = any_str_eq(cns,
+					[
+						"||", "|L", "|J", "|S",
+						"7|", "7L", "7J", "7S",
+						"F|", "FL", "FJ", "FS",
+						"S|", "SL", "SJ", "SS"
+					]);
 			}
 
 			// Don't get stuck in a two point loop
@@ -266,26 +239,13 @@ fn part2(): i32
 				//println("cw ce = ", cwe);
 
 				// | - L J 7 F . S
-				connects = connects or cwe == "-7";
-				connects = connects or cwe == "--";
-				connects = connects or cwe == "-J";
-				connects = connects or cwe == "-S";
-
-				connects = connects or cwe == "L7";
-				connects = connects or cwe == "L-";
-				connects = connects or cwe == "LJ";
-				connects = connects or cwe == "LS";
-
-				connects = connects or cwe == "F7";
-				connects = connects or cwe == "F-";
-				connects = connects or cwe == "FJ";
-				connects = connects or cwe == "FS";
-
-				connects = connects or cwe == "S7";
-				connects = connects or cwe == "S-";
-				connects = connects or cwe == "SJ";
-				connects = connects or cwe == "SS";
-
+				connects = any_str_eq(cwe,
+					[
+						"-7", "--", "-J", "-S",
+						"L7", "L-", "LJ", "LS",
+						"F7", "F-", "FJ", "FS",
+						"S7", "S-", "SJ", "SS"
+					]);
 			}
 			else
 			{
@@ -295,25 +255,13 @@ fn part2(): i32
 					cns = reverse_str(cns);
 
 				// | - L J 7 F . S
-				connects = connects or cns == "||";
-				connects = connects or cns == "|L";
-				connects = connects or cns == "|J";
-				connects = connects or cns == "|S";
-
-				connects = connects or cns == "7|";
-				connects = connects or cns == "7L";
-				connects = connects or cns == "7J";
-				connects = connects or cns == "7S";
-
-				connects = connects or cns == "F|";
-				connects = connects or cns == "FL";
-				connects = connects or cns == "FJ";
-				connects = connects or cns == "FS";
-
-				connects = connects or cns == "S|";
-				connects = connects or cns == "SL";
-				connects = connects or cns == "SJ";
-				connects = connects or cns == "SS";
+				connects = any_str_eq(cns,
+					[
+						"||", "|L", "|J", "|S",
+						"7|", "7L", "7J", "7S",
+						"F|", "FL", "FJ", "FS",
+						"S|", "SL", "SJ", "SS"
+					]);
 			}
 
 			// Don't get stuck in a two point loop
@@ -369,20 +317,22 @@ fn part2(): i32
 	//println("sign_(-2) = ", sign_(-2));
 
 	// Count all points/pixels that are in *or on* the pipe contour
-	let np = 0;
+	//let np = 0;
 	for y in [0: n[1]]
 	{
-		let wind_num = 0;
+		let wind_num  = 0;
+		//let wind_num0 = 0;
 		for x in [0: n[0]]
 		{
 			wind_num += wind[x, y];
 			//if (wind_num != 0 or wind[x, y] != 0) np += 1;
 
-			if (wind_num != 0)
+			if (wind_num != 0)// or wind_num0 != 0)
 			{
-				np += 1; // count of `np` isn't right bc it doesn't count east edges
+				//np += 1; // count of `np` isn't right bc it doesn't count east edges
 				on_or_in[x, y] = on_or_in[x, y] or true;
 			}
+			//wind_num0 = wind_num;
 		}
 	}
 	//println("num on or in = ", np);
@@ -390,11 +340,22 @@ fn part2(): i32
 
 	//// This should be right if i count east edges
 	//sum_ = np - k;
+	//println("sum_   = ", sum_);
 
+	//let non_or_in = 0;
+	//let non       = 0;
 	sum_ = 0;
 	for y in [0: n[1]]
 	for x in [0: n[0]]
+	{
+		//if (on_or_in[x,y]) non_or_in += 1;
+		//if (on      [x,y]) non       += 1;
+
 		if (on_or_in[x,y] and not on[x,y]) sum_ += 1;
+	}
+
+	//println("non_or_in = ", non_or_in);
+	//println("non       = ", non      );
 
 	println("part 2 = ", sum_);
 	sum_;
