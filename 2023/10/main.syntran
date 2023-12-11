@@ -71,16 +71,14 @@ fn part1(): i32
 		];
 	//println("dirs = ", dirs);
 
-	// Note consistent ordering with dirs arrax[1]
+	// Note consistent ordering with dirs array
 	let EAST  = 0;
 	let WEST  = 1;
 	let SOUTH = 2;
 	let NORTH = 3;
 
 	let k = 0;
-	//while x[0] != xs[0] or x[1] != xs[1]
 	while not (x[0] == xs[0] and x[1] == xs[1])
-	//while not (x[0] == xs[0] and x[1] == xs[1]) and k < 4
 	{
 		//println("x0[0], x0[1] = ", x0[0], ", ", x0[1]);
 		let connects = false;
@@ -179,7 +177,7 @@ fn part1(): i32
 		k += 1;
 		//println();
 	}
-	//println("max[0] dist = ", k);
+	//println("max dist = ", k);
 	sum_ = k / 2;
 
 	println("part 1 = ", sum_);
@@ -242,7 +240,7 @@ fn part2(): i32
 		];
 	//println("dirs = ", dirs);
 
-	// Note consistent ordering with dirs arrax[1]
+	// Note consistent ordering with dirs array
 	let EAST  = 0;
 	let WEST  = 1;
 	let SOUTH = 2;
@@ -256,8 +254,8 @@ fn part2(): i32
 	let xd = [-1, -1];
 	let wind_incd = 0;
 
-	// bool arraxs[1] for points that are on/in contour.  shouldn't be necessarx[1] if
-	// i can count edges correctlx[1]
+	// bool array for points that are on/in contour.  shouldn't be necessary if
+	// i can count edges correctly
 	let on       = [false; n[0], n[1]];
 	let on_or_in = [false; n[0], n[1]];
 
@@ -363,8 +361,8 @@ fn part2(): i32
 		}
 		first = false;
 
-		on_or_in[x[0], x[1]] = on_or_in[x[0], x[1]] or true;
-		on      [x[0], x[1]] = on      [x[0], x[1]] or true;
+		on_or_in[x[0], x[1]] = true;
+		on      [x[0], x[1]] = true;
 
 		x00 = x0;
 		x0  = x ;
