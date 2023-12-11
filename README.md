@@ -7,6 +7,8 @@
 
 Syntran is my interpretted, array-oriented language.  The interpreter is written in this repo:  https://github.com/JeffIrwin/syntran
 
+Syntran is pre-alpha and I don't recommend using it for anything serious.  You will discover bugs, missing features, many pain points in general; and later updates will be incompatible.
+
 See the [README](https://github.com/JeffIrwin/syntran) in the syntran repo for instructions on how to build the interpretter.  You will need a Fortran compiler 
 
 After building, copy the `syntran` interpreter to a directory in your `$PATH` environment variable for convenience 
