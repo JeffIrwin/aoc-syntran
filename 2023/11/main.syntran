@@ -24,7 +24,7 @@ fn part1(): i32
 	let str_ = readln(f);
 
 	let nx0 = len(str_);
-	println("nx0, ny0 = ", nx0, ", ", ny0);
+	//println("nx0, ny0 = ", nx0, ", ", ny0);
 
 	let grid0 = [""; nx0, ny0];
 
@@ -49,20 +49,7 @@ fn part1(): i32
 		for ix in [0: nx0]
 			if (grid0[ix, iy] == "#") ngalaxies += 1;
 
-	println("ngalaxies = ", ngalaxies);
-
-	//// Save list of galaxy coordinates in canonical (un-expanded) universe
-	//let galaxies = [0; 2, ngalaxies];
-	//let ig = 0;
-	//for iy in [0: ny0]
-	//	for ix in [0: nx0]
-	//		if (grid0[ix, iy] == "#")
-	//		{
-	//			galaxies[0,ig] = ix;
-	//			galaxies[1,ig] = iy;
-	//			ig += 1;
-	//		}
-	//println("galaxies = ", galaxies);
+	//println("ngalaxies = ", ngalaxies);
 
 	// Find empty rows
 	let is_row_empty = [false; ny0];
@@ -145,7 +132,7 @@ fn part2(): i32
 	let str_ = readln(f);
 
 	let nx0 = len(str_);
-	println("nx0, ny0 = ", nx0, ", ", ny0);
+	//println("nx0, ny0 = ", nx0, ", ", ny0);
 
 	let grid0 = [""; nx0, ny0];
 
@@ -170,20 +157,7 @@ fn part2(): i32
 		for ix in [0: nx0]
 			if (grid0[ix, iy] == "#") ngalaxies += 1;
 
-	println("ngalaxies = ", ngalaxies);
-
-	//// Save list of galaxy coordinates in canonical (un-expanded) universe
-	//let galaxies = [0; 2, ngalaxies];
-	//let ig = 0;
-	//for iy in [0: ny0]
-	//	for ix in [0: nx0]
-	//		if (grid0[ix, iy] == "#")
-	//		{
-	//			galaxies[0,ig] = ix;
-	//			galaxies[1,ig] = iy;
-	//			ig += 1;
-	//		}
-	//println("galaxies = ", galaxies);
+	//println("ngalaxies = ", ngalaxies);
 
 	// Find empty rows
 	let is_row_empty = [false; ny0];
