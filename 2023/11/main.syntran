@@ -18,6 +18,7 @@ fn part1(): i32
 {
 	let sum_ = 0;
 
+	// The size [nx0, ny0] is the size of the canonical (un-expanded) universe
 	let ny0 = countln_(filename);
 
 	let f = open(filename);
@@ -43,7 +44,8 @@ fn part1(): i32
 	//println("grid0 = ");
 	//println(grid0);
 
-	// Count number of galaxies `#`
+	// Count number of galaxies `#`.  This could be done in the same loop as
+	// loading
 	let ngalaxies = 0;
 	for iy in [0: ny0]
 		for ix in [0: nx0]
@@ -55,6 +57,10 @@ fn part1(): i32
 	let is_row_empty = [false; ny0];
 	for iy in [0: ny0]
 	{
+		// In Fortran this would just be `is_row_empty(iy) = all(grid0(:,iy) == ".")`
+		//
+		// Alas, I do not have such nice array expressions in syntran yet :(
+
 		let empty = true;
 		let ix = 0;
 		while empty and ix < nx0
@@ -81,7 +87,8 @@ fn part1(): i32
 	}
 	//println("is_col_empty = ", is_col_empty);
 
-	// Expand coordinates
+	// Save and expand coordinates.  Iterators ix0 and iy0 only iterate through
+	// the size of the canonical universe
 	let galaxies = [0; 2, ngalaxies];
 	let ig = 0;
 	let iy = 0; // expanded y coordinate
@@ -107,16 +114,15 @@ fn part1(): i32
 
 	// Iterate through pairs of galaxies (order is not important)
 	for i in [0: ngalaxies]
-	{
 		for j in [0: i]
 		{
-			// Get 1-norm distance (taxicab/manhatten norm)
+			// Get 1-norm distance (taxicab/manhattan norm) between galaxy i and
+			// galaxy j
 			let dist = abs_i32(galaxies[0,i] - galaxies[0,j])
 			         + abs_i32(galaxies[1,i] - galaxies[1,j]);
 			//println("dist = ", dist);
 			sum_ += dist;
 		}
-	}
 
 	println("part 1 = ", sum_);
 	sum_;
@@ -216,16 +222,15 @@ fn part2(): i32
 	// Iterate through pairs of galaxies (order is not important)
 	let sum_ = i64(0);
 	for i in [0: ngalaxies]
-	{
 		for j in [0: i]
 		{
-			// Get 1-norm distance (taxicab/manhatten norm)
+			// Get 1-norm distance (taxicab/manhattan norm) between galaxy i and
+			// galaxy j
 			let dist = abs_i32(galaxies[0,i] - galaxies[0,j])
 			         + abs_i32(galaxies[1,i] - galaxies[1,j]);
 			//println("dist = ", dist);
 			sum_ += dist;
 		}
-	}
 
 	println("part 2 = ", sum_);
 	sum_;
