@@ -399,7 +399,7 @@ fn part2(): i32
 
 			if (wind_num != 0)
 			{
-				np += 1; // count of `np` isn't right bc it doesn't count east edges
+				np += 1; // TODO: count of `np` isn't right bc it doesn't count east edges
 				on_or_in[x, y] = on_or_in[x, y] or true;
 			}
 		}
