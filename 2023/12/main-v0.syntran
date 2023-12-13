@@ -1,0 +1,218 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let sum_ = 0;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let ns = len(str_);
+
+		// Count question marks `?`.  Could split str_ before counting
+		let nq = 0;
+		for i in [0: ns]
+			if (str_[i] == "?") nq += 1;
+
+		println("nq = ", nq);
+
+		// Count known hashes (question marks don't count here)
+		let nknown_hash = 0;
+		for i in [0: ns]
+			if (str_[i] == "#") nknown_hash += 1;
+
+		// Save indices of every question mark
+		let iqs = [-1; nq];
+		nq = 0;
+		for i in [0: ns]
+			if (str_[i] == "?")
+			{
+				iqs[nq] = i;
+				nq += 1;
+			}
+
+		println("iqs = ", iqs);
+
+		let groups = parse_i32_delim(str_, ".#? ,");
+		let ng = size(groups,0);
+		println("groups = ", groups);
+
+		// Sum total number of hashes
+		let nhash = 0;
+		for i in [0: ng]
+			nhash = nhash + groups[i];
+		println("nhash = ", nhash);
+
+		let nunknown_hash = nhash - nknown_hash;
+
+		// Total number of combinations of unknowns is `nq choose nunknown_hash` (n
+		// choose k)
+		//
+		// Only check combinations that have the correct number of hashes.
+		// Then, filter them down to just the combos that meet the grouping
+		// criteria too
+
+		// First combination is all hashes as far left as possible at the
+		// unknown locations
+
+		//let combo = str_[0: nq];  // TODO: syntran needs a str allocation fn
+		//						  //
+		////let combo = "";
+		////for i in [0: nq]
+		////	combo += ".";
+		//for i in [0: nhash]
+		//	combo[i] = "#";
+		//for i in [nhash: nq]
+		//	combo[i] = ".";
+
+		let combo = str_;
+		for i in [0: nunknown_hash]
+			combo[iqs[i]] = "#";
+		for i in [nunknown_hash: nq]
+			combo[iqs[i]] = ".";
+
+		println("first combo = ", combo);
+
+		// index array of first combo for next combo algorithm
+		let a = [0: nunknown_hash];
+
+		// Iterate through combinations
+		let last = false;
+		while not last
+		{
+			// Reset combo str then fill in hashes from index array `a`
+			combo = str_;
+			for i in [0: nunknown_hash]
+				combo[a[iqs[i]]] = "#";
+
+			println("combo = ", combo);
+			println("a = ", a);
+
+			//for i in [0: nq]
+			//	combo[i] = ".";
+			//for i in [0: nunknown_hash]
+			//	combo[a[i]] = "#";
+
+			// Check if the combo str meets the grouping criteria
+			let g = split_(combo, ".?, " + digit_chars);
+			println("combo = ", combo);
+			println("g = ", g);
+			if (size(g,0) == ng)
+			{
+				println("size match");
+
+				// Size matches
+				let all_eq_ = true;
+				let i = 0;
+				while i < ng and all_eq_
+				{
+					all_eq_ = len(g[i]) == groups[i];
+					i += 1;
+				}
+				if (all_eq_)
+				{
+					println("valid combo");
+					sum_ += 1;
+				}
+			}
+
+			// Get next combination
+			// initial k -> nunknown_hash
+			// n -> nq
+			// a -> a.  a.size() -> nunknown_hash
+
+			let k = nunknown_hash;
+			let ii = 0;
+			let found = false;
+			while ii < k and not found
+			//for ii in [0: k]
+			{
+				//      k - (k-1) - 1 == 0;
+				let i = k - ii - 1;
+				//println("i = ", i);
+
+				if (a[i] < nq - k + i)
+				//if (a[i] < nq - k + i + 1)
+				//if (a[i] <= nq - k + i + 1)
+				{
+					found = true;
+					a[i] += 1;
+					for j in [i + 1: k]
+					{
+						a[j] = a[j - 1] + 1;
+					}
+				}
+				//else
+				//	last = true;
+
+				ii += 1;
+			}
+			if (not found) last = true;
+
+//bool next_combination(vector<int>& a, int n) {
+//    int k = (int)a.size();
+//    for (int i = k - 1; i >= 0; i--) {
+//        if (a[i] < n - k + i + 1) {
+//            a[i]++;
+//            for (int j = i + 1; j < k; j++)
+//                a[j] = a[j - 1] + 1;
+//            return true;
+//        }
+//    }
+//    return false;
+//}
+
+			println();
+			//last = true;
+		}
+
+		println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	str_ = "##?.###";
+	let g = split_(str_, ".?");
+	println("split_(" + str_ + ") = ", g);
+
+	println("part 1 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	//part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+
