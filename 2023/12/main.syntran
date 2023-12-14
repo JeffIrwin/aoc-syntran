@@ -16,6 +16,14 @@ let filename = filenames[ifile];
 
 fn part1(): i32
 {
+	// This takes 15 minutes to run!
+	//
+	// I'm thinking it might be better to take the inverse approach:  generate
+	// every combination with the correct length and groupings but ignoring
+	// known `.` and `#` locations, and then filter if the known chars match.
+	// I'm not sure if this would generate any fewer combinations to filter or
+	// if a yet more clever approach is needed
+
 	let sum_ = 0;
 
 	let f = open(filename);
@@ -56,7 +64,7 @@ fn part1(): i32
 		let ng = size(groups,0);
 		//println("groups = ", groups);
 
-		// Sum total number of hashes
+		// Sum total number of hashes, including known and unknown locations
 		let nhash = 0;
 		for i in [0: ng]
 			nhash = nhash + groups[i];
@@ -74,15 +82,8 @@ fn part1(): i32
 
 		// First combination is all hashes as far left as possible at the
 		// unknown locations
-
-		//let combo = str_;
-		//for i in [0: nunknown_hash]
-		//	combo[iqs[i]] = "#";
-		//for i in [nunknown_hash: nq]
-		//	combo[iqs[i]] = ".";
-		//println("first combo = ", combo);
-
-		// index array of first combo for next combo algorithm
+		//
+		// Index array of first combo for next combo algorithm
 		let a = [0: nunknown_hash];
 		//println("a = ", a);
 
@@ -122,16 +123,15 @@ fn part1(): i32
 				}
 			}
 
-			// Get next combination
-			// initial k -> nunknown_hash
-			// n -> nq
-			// a -> a.  a.size() -> nunknown_hash
+			// Get next combination.  Ref:  https://cp-algorithms.com/combinatorics/generating_combinations.html
+			//
+			// This should be a next_combo() fn but I'm working around mem leaks
 
 			//println("getting next combo");
 			let k = nunknown_hash;
 			let ii = 0;
 			let found = false;
-			while ii < k and not found
+			while ii < k and not found // ii is unnecessary since i could be decremented directly
 			{
 				let i = k - ii - 1;
 				//println("i = ", i);
