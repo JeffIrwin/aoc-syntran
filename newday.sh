@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -xe
+
 # Provide year and date as single arg, e.g. "2023/13"
 #
 # TODO: arg count checking
