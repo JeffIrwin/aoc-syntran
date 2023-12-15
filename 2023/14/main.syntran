@@ -180,15 +180,29 @@ fn part2(): i32
 		str_ = readln(f);
 	}
 	close(f);
-	println("initial grid = ", grid);
+	//println("initial grid = ", grid);
 
-	//let ncycle = 1;
-	let ncycle = 1000;
+	// nstep_min is the number of steps to simulate before starting check for
+	// periodic steady state.  There are 4 steps per cycle
+	//
+	// There is some guess work here.  I can't guarantee that this will work for
+	// all inputs.  If not, you'll just have to watch the logs and look for
+	// cycles manually, or try increasing nstep_min and buffer
+	//
+	// nstep_min = 500 worked for me, but I've increased it just in case other
+	// inputs take longer to get to a steady state
 
-	for ii in [0: 4 * ncycle]
+	let nstep_min = 600;
+	let buffer    = 300;
+
+	let period_steps = -1;
+
+	let done_cycling = false;
+	let step = 0;
+	while step < nstep_min + buffer and not done_cycling
 	{
 		//let idir = NORTH;
-		let idir = ii % 4;
+		let idir = step % 4;
 
 		let xbeg = 0;
 		let xend = nx;
@@ -256,26 +270,68 @@ fn part2(): i32
 			y += dy;
 		}
 		//println("grid = ", grid);
-		//if ii % 4 == 0
-		//{
 
-			// Add up the score
-			let sum_ = 0;
-			for y in [0: ny]
-				for x in [0: nx]
-					if grid[x, y] == "O"
-						sum_ += ny - y;
+		//// Add up the score
+		//let sum_ = 0;
+		//for y in [0: ny]
+		//	for x in [0: nx]
+		//		if grid[x, y] == "O"
+		//			sum_ += ny - y;
+		//println("step, sum = ", step, ", ", sum_);
+		//println("step = ", step);
 
-			println("ii, sum = ", ii, ", ", sum_);
-		//}
+		if step == nstep_min
+			let grid_cache = grid;
+		else if step > nstep_min and period_steps < 0
+		{
+			// Check if a period has been reached (i.e. if the grid is exactly
+			// the same as the cached grid)
+			let all_eq_ = true;
+			let y = 0;
+			while all_eq_ and y < ny
+			{
+				let x = 0;
+				while all_eq_ and x < nx
+				{
+					all_eq_ = grid[x, y] == grid_cache[x, y];
+					x += 1;
+				}
+				y += 1;
+			}
+			if all_eq_
+			{
+				period_steps = step - nstep_min;
+				//println("period_steps = ", period_steps);
+			}
+		}
+
+		// If we've found the period, stop cycling as soon as we get to the next
+		// cycle that will have the same state as 1 billion cycles
+		if period_steps > 0 and (3999999999 - step) % period_steps == 0
+		{
+			done_cycling = true;
+		}
+
+		step += 1;
 	}
 
-	// Add up the score
 	let sum_ = 0;
-	for y in [0: ny]
-		for x in [0: nx]
-			if grid[x, y] == "O"
-				sum_ += ny - y;
+	//println("period_steps = ", period_steps);
+	if period_steps < 0
+	{
+		println();
+		println("Error: cyclic period not found");
+		println();
+		sum_ = -1;
+	}
+	else
+	{
+		// Add up the score
+		for y in [0: ny]
+			for x in [0: nx]
+				if grid[x, y] == "O"
+					sum_ += ny - y;
+	}
 
 	println("part 2 = ", sum_);
 	sum_;
