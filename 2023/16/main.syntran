@@ -36,15 +36,16 @@ let EAST  = 3;
 
 //****************
 
-// Stack of unprocessed beams
+// Stack of unprocessed beams.  Contains direction and location
 let STACK_CAP  = 1024;
 let stack_ = [-1; 3, STACK_CAP];
-let sptr   = 0;
+let sptr   = 0; // stack pointer
 
 // grid_beams[d, x, y] is true if there is a beam in direction d at location
 // [x, y]
 let grid_beams = [false; 0, 0, 0];
 
+// Character grid
 let grid = [""; 0, 0];
 
 //==============================================================================
@@ -57,7 +58,6 @@ fn push_(dir: i32, x: i32, y: i32)
 		println("Error: STACK_CAP overflow!");
 		println();
 	}
-
 	stack_[0, sptr] = dir;
 	stack_[1, sptr] = x;
 	stack_[2, sptr] = y;
@@ -67,6 +67,12 @@ fn push_(dir: i32, x: i32, y: i32)
 fn pop_(): [i32; :]
 {
 	sptr -= 1;
+	if sptr < 0
+	{
+		println();
+		println("Error: STACK_CAP underflow!");
+		println();
+	}
 	let vec =
 		[
 			stack_[0, sptr],
@@ -109,17 +115,25 @@ fn part1(): i32
 
 	//println("grid = ", grid);
 
+	// Start at northwest corner going east
 	let x = 0;
 	let y = 0;
 	let dir = EAST;
 	push_(dir, x, y);
+
+	// Follow the beams with an iterative depth-first search, using a stack to
+	// keep track of beams.  Each time the beam is split, an extra beam is
+	// pushed onto the stack
+	//
+	// Syntran does not have recursion (yet), so I have to do this iteratively,
+	// i.e. using a loop instead of using recursive fn calls
 
 	//println("sptr = ", sptr);
 	//let k = 0;
 	while not beams_empty() //and k < 16
 	{
 		let beam = pop_();
-		dir = beam[0];  // unpack from array
+		dir = beam[0];  // unpack popped beam from array
 		x   = beam[1];
 		y   = beam[2];
 
@@ -210,6 +224,8 @@ fn part1(): i32
 
 fn count_energized_tiles(dir: i32, x: i32, y: i32, nx: i32, ny: i32): i32
 {
+	// Part 1 could be refactored to use this fn instead of copy/pasta
+
 	grid_beams = [false; NDIRS, nx, ny];
 	push_(dir, x, y);
 
