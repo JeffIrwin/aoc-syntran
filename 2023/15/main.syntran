@@ -14,6 +14,10 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
+let HASH_MAX = 256;
+
+//==============================================================================
+
 fn part1(): i32
 {
 	let sum_ = 0;
@@ -39,7 +43,7 @@ fn part1(): i32
 
 			hash_ += i32(c);
 			hash_ *= 17;
-			hash_ %= 256;
+			hash_ %= HASH_MAX;
 		}
 		//println("hash_ = ", hash_);
 		//println();
@@ -67,7 +71,7 @@ fn part2(): i32
 	let BOX_CAP = 256;
 
 	// Dimension `2` is there because we store the label and the value
-	let boxes = [""; 2, BOX_CAP, 256];
+	let boxes = [""; 2, BOX_CAP, HASH_MAX];
 
 	for i in [0: size(strs, 0)]
 	{
@@ -87,7 +91,7 @@ fn part2(): i32
 
 			hash_ += i32(c);
 			hash_ *= 17;
-			hash_ %= 256;
+			hash_ %= HASH_MAX;
 		}
 		//println("hash_ = ", hash_);
 
@@ -100,7 +104,7 @@ fn part2(): i32
 			let val_str = str_[ len(label) + 1: len(str_)];
 			//println("val_str = ", val_str);
 
-			// Find the box with the given label (if any)
+			// Find the slot with the given label (if any)
 			let islot = 0;
 			while not (boxes[0, islot, hash_] == label) and
 			      not (boxes[0, islot, hash_] == "")
@@ -116,7 +120,7 @@ fn part2(): i32
 		{
 			// Removal operation
 
-			// Find the box with the given label (if any)
+			// Find the slot with the given label (if any)
 			let islot = 0;
 			while not (boxes[0, islot, hash_] == label) and
 			      not (boxes[0, islot, hash_] == "")
@@ -125,7 +129,7 @@ fn part2(): i32
 				islot += 1;
 			}
 
-			// Remove the current label and shift everything afterwards in the
+			// Remove the current label and shift all slots afterwards in the
 			// same box
 			while not (boxes[0, islot, hash_] == "")
 			{
@@ -141,7 +145,7 @@ fn part2(): i32
 
 	// Add up the focusing power
 	let sum_ = 0;
-	for ibox in [0: 256]
+	for ibox in [0: HASH_MAX]
 	{
 		let islot = 0;
 		while not (boxes[0, islot, ibox] == "")

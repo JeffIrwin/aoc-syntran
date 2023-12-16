@@ -7,7 +7,7 @@
 
 Syntran is my interpretted, array-oriented language.  The interpreter is written in this repo:  https://github.com/JeffIrwin/syntran
 
-Syntran is pre-alpha and I don't recommend using it for anything serious.  You will discover bugs, missing features, many pain points in general; and later updates will be incompatible.
+⚠️ Syntran is pre-alpha and I don't recommend using it for anything serious.  You will discover bugs, missing features, many pain points in general; and later updates will be incompatible.
 
 See the [README](https://github.com/JeffIrwin/syntran) in the syntran repo for instructions on how to build the interpretter.  You will need a Fortran compiler 
 
@@ -22,7 +22,9 @@ cd 2023/01
 syntran ./main.syntran
 ```
 
-As of 2023-12-05, you will need at least syntran version 0.0.29 to run the code here 
+As of 2023-12-15, you will need at least syntran version 0.0.30 to run the code here 
+
+Until 2023 day 15, 0.0.29 was sufficient.  Day 15 requires `i32()` casting characters to ASCII codes, which were added in 0.0.30.
 
 Until 2023 day 5, 0.0.27 was sufficient.  Day 5 requires `i32()` casting and `parse_i64()`, which were added by 0.0.29
 
