@@ -67,10 +67,13 @@ fn part2(): i32
 	let strs = split_(str_, ",");
 	//println("strs = ", strs);
 	
-	// Capacity for hash clashes within a single box
-	let BOX_CAP = 256;
+	// Capacity for hash clashes within a single box.  Cap 6 worked for me.
+	// Anyway, this is a terrible way to implement hash maps.  Every box should
+	// be a growable array because (1) it would save memory when hash clashes
+	// are rare and (2) overflow would be impossible
+	let BOX_CAP = 16;
 
-	// Dimension `2` is there because we store the label and the value
+	// Size `2` is there because we store the label and the value
 	let boxes = [""; 2, BOX_CAP, HASH_MAX];
 
 	for i in [0: size(strs, 0)]
@@ -79,11 +82,10 @@ fn part2(): i32
 		//println("str_ """, str_, """");
 
 		let labels = split_(str_, "-=" + digit_chars);
-		let label = labels[0];
+		let label  = labels[0];
 		//println("label = ", label);
 
 		let hash_ = 0;
-		//for j in [0: 2]
 		for j in [0: len(label)]
 		{
 			let c = str_[j];
@@ -100,7 +102,7 @@ fn part2(): i32
 
 		if op == "="
 		{
-			// Insert operation
+			// Insertion operation
 			let val_str = str_[ len(label) + 1: len(str_)];
 			//println("val_str = ", val_str);
 
@@ -109,8 +111,15 @@ fn part2(): i32
 			while not (boxes[0, islot, hash_] == label) and
 			      not (boxes[0, islot, hash_] == "")
 			{
-				// TODO: there is no check for BOX_CAP overflow here!
 				islot += 1;
+				if islot >= BOX_CAP - 1
+				{
+					// minus 1 bc removal operation could oveflow if all slots
+					// are filled but the label doesn't exist
+					println();
+					println("Error: BOX_CAP oveflow!");
+					println();
+				}
 			}
 
 			boxes[0, islot, hash_] = label;
@@ -138,7 +147,6 @@ fn part2(): i32
 				islot += 1;
 			}
 		}
-
 		//println();
 	}
 	//println("boxes = ", boxes);
