@@ -1,0 +1,177 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let sum_ = 0;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let strs = split_(str_, ",");
+	//println("strs = ", strs);
+
+	for i in [0: size(strs, 0)]
+	{
+		str_ = strs[i];
+		//println("str_ """, str_, """");
+
+		let hash_ = 0;
+		for j in [0: len(str_)]
+		{
+			let c = str_[j];
+			//println("c = ", c);
+
+			hash_ += i32(c);
+			hash_ *= 17;
+			hash_ %= 256;
+		}
+		//println("hash_ = ", hash_);
+		//println();
+
+		sum_ += hash_;
+	}
+
+	println("part 1 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn part2(): i32
+{
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let strs = split_(str_, ",");
+	//println("strs = ", strs);
+	
+	// Capacity for hash clashes within a single box
+	let BOX_CAP = 256;
+
+	// Dimension `2` is there because we store the label and the value
+	let boxes = [""; 2, BOX_CAP, 256];
+
+	for i in [0: size(strs, 0)]
+	{
+		str_ = strs[i];
+		//println("str_ """, str_, """");
+
+		let labels = split_(str_, "-=" + digit_chars);
+		let label = labels[0];
+		//println("label = ", label);
+
+		let hash_ = 0;
+		//for j in [0: 2]
+		for j in [0: len(label)]
+		{
+			let c = str_[j];
+			//println("c = ", c);
+
+			hash_ += i32(c);
+			hash_ *= 17;
+			hash_ %= 256;
+		}
+		//println("hash_ = ", hash_);
+
+		let op = str_[ len(label) ];
+		//println("op = ", op);
+
+		if op == "="
+		{
+			// Insert operation
+			let val_str = str_[ len(label) + 1: len(str_)];
+			//println("val_str = ", val_str);
+
+			// Find the box with the given label (if any)
+			let islot = 0;
+			while not (boxes[0, islot, hash_] == label) and
+			      not (boxes[0, islot, hash_] == "")
+			{
+				// TODO: there is no check for BOX_CAP overflow here!
+				islot += 1;
+			}
+
+			boxes[0, islot, hash_] = label;
+			boxes[1, islot, hash_] = val_str;
+		}
+		else // if op == "-"
+		{
+			// Removal operation
+
+			// Find the box with the given label (if any)
+			let islot = 0;
+			while not (boxes[0, islot, hash_] == label) and
+			      not (boxes[0, islot, hash_] == "")
+			{
+				//println("islot = ", islot);
+				islot += 1;
+			}
+
+			// Remove the current label and shift everything afterwards in the
+			// same box
+			while not (boxes[0, islot, hash_] == "")
+			{
+				boxes[0, islot, hash_] = boxes[0, islot + 1, hash_];
+				boxes[1, islot, hash_] = boxes[1, islot + 1, hash_];
+				islot += 1;
+			}
+		}
+
+		//println();
+	}
+	//println("boxes = ", boxes);
+
+	// Add up the focusing power
+	let sum_ = 0;
+	for ibox in [0: 256]
+	{
+		let islot = 0;
+		while not (boxes[0, islot, ibox] == "")
+		{
+			sum_ += (ibox + 1) * (islot + 1) * parse_i32(boxes[1, islot, ibox]);
+			islot += 1;
+		}
+	}
+
+	println("part 2 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+

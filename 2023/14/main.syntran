@@ -271,7 +271,9 @@ fn part2(): i32
 		}
 		//println("grid = ", grid);
 
-		//// Add up the score
+		//// Add up the score.  Uncomment this block if you need to debug and
+		//// look for periodic cycles manually
+		//{
 		//let sum_ = 0;
 		//for y in [0: ny]
 		//	for x in [0: nx]
@@ -279,6 +281,7 @@ fn part2(): i32
 		//			sum_ += ny - y;
 		//println("step, sum = ", step, ", ", sum_);
 		//println("step = ", step);
+		//}
 
 		if step == nstep_min
 			let grid_cache = grid;
