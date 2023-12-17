@@ -1,0 +1,212 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIM = 2;
+
+let NDIRS = 4;
+
+// Cardinal directions
+let DIRS =
+	[
+		 0, -1, // north
+		-1,  0, // west
+		 0,  1, // south
+		 1,  0  // east
+		 ;
+		 2,  NDIRS
+	];
+//println("DIRS = ", DIRS);
+
+// Note consistent ordering with DIRS array
+let NORTH = 0;
+let WEST  = 1;
+let SOUTH = 2;
+let EAST  = 3;
+
+//==============================================================================
+
+fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
+{
+	println("starting dijkstra()");
+	println("xbeg = ", xbeg);
+	println("xend = ", xend);
+
+	let nx = size(map, 0);
+	let ny = size(map, 1);
+
+	println("nx, ny = ", [nx, ny]);
+
+	let dist = [2000000000; nx, ny]; // initialize distance to practical infinity
+	let prev = [ 0; NDIM, nx, ny];
+	let q    = [true; nx, ny];
+
+	// Direction travelled to get to each point
+	let dirs = [-1; nx, ny];
+
+	// Straight line path lengths
+	let lens = [1; nx, ny];
+	//let lens = [0; nx, ny];
+	//let lens = [-1; nx, ny];
+
+	// Initialize source vertex to 0 distance
+	dist[xbeg[0], xbeg[1]] = 0;
+
+	println("dist = ", dist);
+
+	let k = 0;
+	while any_mat(q) //and k < 10
+	{
+		// u is vertex in q with min dist
+		let u = minloc_mat(dist, q);
+		println("u = ", u);
+
+		//// TODO: early return
+		//if (u[0] == xend[0] and u[1] == xend[1]) return
+
+		// Remove u from q
+		q[u[0], u[1]] = false;
+
+		// For each neighbor v of u still in q
+		for dir in [0: NDIRS]
+		{
+			let v =
+				[
+					u[0] + DIRS[0, dir],
+					u[1] + DIRS[1, dir]
+				];
+
+			let continue_ = false;
+
+			// Check bounds
+			if v[0] < 0 or v[0] >= nx or v[1] < 0 or v[1] >= ny
+				continue_ = true;
+
+			// v still in q
+			if not continue_
+				if not q[v[0], v[1]]
+					continue_ = true;
+
+			// Straight line path length must be less than ~3 or 4 (depending on
+			// how lens is initialized)
+			if not continue_
+			{
+				//if lens[v[0], v[1]] > 3
+				//	continue_ = true;
+
+				//if lens[u[0], u[1]] > 6
+				//	continue_ = true;
+
+				let len_ = 0;
+				if dir == dirs[u[0], u[1]]
+					len_ = lens[u[0], u[1]] + 1;
+				//else
+				//	len_ = 0;
+
+				if len_ > 4
+					continue_ = true;
+			}
+
+			//// Graph distances are stored in map array
+			//let alt = 0;
+			if not continue_
+			{
+				let alt = dist[u[0], u[1]] + map[v[0], v[1]];
+				if alt < dist[v[0], v[1]]
+				{
+					dist[v[0], v[1]] = alt;
+
+					dirs[v[0], v[1]] = dir;
+					if dir == dirs[u[0], u[1]]
+						lens[v[0], v[1]] = lens[u[0], u[1]] + 1;
+					else
+						lens[v[0], v[1]] = 1;
+
+					// Maybe not necessary for this AOC problem?
+					prev[0, v[0], v[1]] = u[0];
+					prev[1, v[0], v[1]] = u[1];
+					//let prev = [ 0; NDIM, nx, ny];
+				}
+			}
+		}
+
+		k += 1; // debug only
+	}
+
+	println("dirs = ", dirs);
+	println("lens = ", lens);
+
+	//let ans = dist[xend[0], xend[1]];
+	let ans = dist[xend[0], xend[1]] + map[xend[0], xend[1]];
+}
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let nx = len(str_);
+
+	println("nx, ny = ", [nx, ny]);
+
+	let grid = [-1; nx, ny];
+
+	for y in [0: ny]
+	{
+		println("str_ = ", str_);
+
+		for x in [0: nx]
+			grid[x, y] = parse_i32(str_[x]);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("grid = ", grid);
+
+	// Start at northwest corner, end at southeast
+	let xbeg = [0, 0];
+	let xend = [nx - 1, ny - 1];
+
+	let sum_ = dijkstra(grid, xbeg, xend);
+
+	println("part 1 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	//part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+
