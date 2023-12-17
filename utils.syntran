@@ -153,6 +153,30 @@ fn any_mat(v: [bool; :, :]): bool
 
 //==============================================================================
 
+fn any_r3(v: [bool; :, :, :]): bool
+{
+	let found = false;
+	let i = 0;
+	while i < size(v, 1) and not found
+	{
+		let j = 0;
+		while j < size(v, 0) and not found
+		{
+			let k = 0;
+			while k < size(v, 0) and not found
+			{
+				found = v[k,j,i];
+				k += 1;
+			}
+			j += 1;
+		}
+		i += 1;
+	}
+	let ans = found;
+}
+
+//==============================================================================
+
 fn minloc_mat(dist: [i32; :, :], q: [bool; :, :]): [i32; :]
 {
 	let found = false;
@@ -177,6 +201,39 @@ fn minloc_mat(dist: [i32; :, :], q: [bool; :, :]): [i32; :]
 				found = true;
 				min_ = dist[x,y];
 				minloc_ = [x, y];
+			}
+		}
+	}
+	//let ans = min_;
+	let ans = minloc_;
+}
+
+//==============================================================================
+
+fn minloc_r3(dist: [i32; :, :, :], q: [bool; :, :, :]): [i32; :]
+{
+	let found = false;
+	let min_ = -1;
+	let minloc_ = [-1, -1];
+	for z in [0: size(dist,2)]
+	for y in [0: size(dist,1)]
+	for x in [0: size(dist,0)]
+	{
+		if q[x,y,z]
+		{
+			if found
+			{
+				if (dist[x,y,z] < min_)
+				{
+					min_ = dist[x,y,z];
+					minloc_ = [x, y, z];
+				}
+			}
+			else
+			{
+				found = true;
+				min_ = dist[x,y,z];
+				minloc_ = [x, y, z];
 			}
 		}
 	}
@@ -498,6 +555,16 @@ fn sign_(x: i32): i32
 	else if x < 0
 		s = -1;
 	let ans = s;
+}
+
+//==============================================================================
+
+fn sum_i32(v: [i32; :]): i32
+{
+	let sum_ = 0;
+	for i in [0: size(v,0)]
+		sum_ += v[i];
+	let ans = sum_;
 }
 
 //==============================================================================
