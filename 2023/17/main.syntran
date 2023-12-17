@@ -36,6 +36,8 @@ let WEST  = 1;
 let SOUTH = 2;
 let EAST  = 3;
 
+let DIRS_STR = "^<v>";
+
 //==============================================================================
 
 fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
@@ -57,17 +59,14 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	let dirs = [-1; nx, ny];
 
 	// Straight line path lengths
-	let lens = [1; nx, ny];
-	//let lens = [0; nx, ny];
-	//let lens = [-1; nx, ny];
+	let lens = [0; nx, ny];
 
 	// Initialize source vertex to 0 distance
 	dist[xbeg[0], xbeg[1]] = 0;
 
-	println("dist = ", dist);
+	//println("dist = ", dist);
 
-	let k = 0;
-	while any_mat(q) //and k < 10
+	while any_mat(q)
 	{
 		// u is vertex in q with min dist
 		let u = minloc_mat(dist, q);
@@ -101,26 +100,33 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 			// Straight line path length must be less than ~3 or 4 (depending on
 			// how lens is initialized)
+			let len_ = 1;
 			if not continue_
 			{
 				//if lens[v[0], v[1]] > 3
 				//	continue_ = true;
 
-				//if lens[u[0], u[1]] > 6
+				//if lens[u[0], u[1]] > 2
 				//	continue_ = true;
 
-				let len_ = 0;
-				if dir == dirs[u[0], u[1]]
+				//len_ = 1;
+				if dir  == dirs[u[0], u[1]]
+				{
 					len_ = lens[u[0], u[1]] + 1;
+				}
 				//else
 				//	len_ = 0;
 
-				if len_ > 4
+				if len_ > 3
+				//if lens[u[0], u[1]] > 3
+				{
 					continue_ = true;
+				}
 			}
 
+			// TODO: add logic to stop backtracking or allow looping?
+
 			//// Graph distances are stored in map array
-			//let alt = 0;
 			if not continue_
 			{
 				let alt = dist[u[0], u[1]] + map[v[0], v[1]];
@@ -129,27 +135,52 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 					dist[v[0], v[1]] = alt;
 
 					dirs[v[0], v[1]] = dir;
-					if dir == dirs[u[0], u[1]]
-						lens[v[0], v[1]] = lens[u[0], u[1]] + 1;
-					else
-						lens[v[0], v[1]] = 1;
+					lens[v[0], v[1]] = len_;
+
+					//if dir == dirs[u[0], u[1]]
+					//	lens[v[0], v[1]] = lens[u[0], u[1]] + 1;
+					//else
+					//	lens[v[0], v[1]] = 0;
 
 					// Maybe not necessary for this AOC problem?
 					prev[0, v[0], v[1]] = u[0];
 					prev[1, v[0], v[1]] = u[1];
-					//let prev = [ 0; NDIM, nx, ny];
 				}
 			}
 		}
-
-		k += 1; // debug only
 	}
 
 	println("dirs = ", dirs);
 	println("lens = ", lens);
 
+	// Construct the path by backtracking from the end (debug only)
+
+	// Initialize to the number at each point
+	let path_map = ["."; nx, ny];
+	for y in [0: ny]
+		for x in [0: nx]
+			path_map[x, y] = str(map[x, y]);
+
+	// Backtrack
+	let u = xend;
+	while not (u[0] == xbeg[0] and u[1] == xbeg[1])
+	{
+		//path_map[u[0], u[1]] = str(dirs[u[0], u[1]]);
+		path_map[u[0], u[1]] = DIRS_STR[dirs[u[0], u[1]]];
+
+		let tmp = u;
+		u[0] = prev[0, tmp[0], tmp[1]];
+		u[1] = prev[1, tmp[0], tmp[1]];
+	}
+	println("path_map = ", path_map);
+
 	//let ans = dist[xend[0], xend[1]];
-	let ans = dist[xend[0], xend[1]] + map[xend[0], xend[1]];
+	//let ans = dist[xend[0], xend[1]] + map[xend[0], xend[1]];
+	//let ans = dist[xend[0], xend[1]] + map[xbeg[0], xbeg[1]];
+
+	// "Because you already start in the top-left block, you don't incur that
+	// block's heat loss unless you leave that block and then return to it"
+	let ans = dist[xend[0], xend[1]];
 }
 
 //==============================================================================
