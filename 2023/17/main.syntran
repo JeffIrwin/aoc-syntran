@@ -70,6 +70,9 @@ let DIRS_STR = "^<v>";
 
 fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 {
+	// TODO: try solving one of 2022's dijksta problems in syntran just to
+	// see if I have this close to correct
+
 	// I don't think Dijkstra's algorithm can work for this problem.  When there
 	// are multiple routes between two points with the same distance, Dijkstra
 	// will just pick one.  However, it can't foresee if that will get stuck in
