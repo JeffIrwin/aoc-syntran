@@ -17,9 +17,9 @@ let filename = filenames[ifile];
 let NDIM = 2;        // spatial dimensions
 let NST  = NDIM + 1; // space-time dimensions
 
-//let TMAX = 1024;     // max "time" steps
-//let TMAX = 256;     // max "time" steps
-let TMAX = 128;     // max "time" steps
+////let TMAX = 1024;     // max "time" steps
+////let TMAX = 256;     // max "time" steps
+//let TMAX = 128;     // max "time" steps
 
 let NDIRS = 4;
 
@@ -91,77 +91,62 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 	println("nx, ny = ", [nx, ny]);
 
-	let dist = [2000000000; nx, ny, TMAX]; // initialize distance to practical infinity
-	let prev = [ 0;   NDIM, nx, ny, TMAX];
-	let q    = [true;       nx, ny, TMAX];
+	// initialize distance to practical infinity
+	let DIST_INFTY = 2000000000;
 
-	//for t in [0: TMAX]
-	//for y in [0: ny]
-	//for x in [0: nx]
-	//	push_(x, y, t);
+	let dist = [DIST_INFTY; nx, ny, NDIRS];
+	let prev = [ 0; NDIM+1, nx, ny, NDIRS];
+	let q    = [true;       nx, ny, NDIRS];
 
 	// Direction travelled to get to each point
-	let dirs = [-1; nx, ny, TMAX];
+	let dirs = [-1; nx, ny, NDIRS];
 
 	// Straight line path lengths
-	let lens = [ 0; nx, ny, TMAX];
+	let lens = [ 0; nx, ny, NDIRS];
 
 	// Initialize source vertex to 0 distance
-	dist[xbeg[0], xbeg[1], 0] = 0;
+
+	dist[xbeg[0], xbeg[1], EAST ] = 0;
+	//dist[xbeg[0], xbeg[1], SOUTH] = 0;
+	//dist[xbeg[0], xbeg[1], WEST ] = 0;
+	//dist[xbeg[0], xbeg[1], NORTH] = 0;
+
+	//dist[xbeg[0], xbeg[1], 0] = NORTH;
+	//dist[xbeg[0], xbeg[1], 0] = WEST;
+	//dist[xbeg[0], xbeg[1], 0] = SOUTH;
+	//dist[xbeg[0], xbeg[1], 0] = EAST;
 
 	//println("dist = ", dist);
 
 	let found = false;
-	let dist_end = -1;
-	let t_end = -1;
+	let dist_end = DIST_INFTY;
+	let t_end = -1; // really dir end?
 	//while any_r3(q) and not found
-	while not found
+	while any_r3(q)
+	//while not found
 	{
-		//// u is vertex in q with min dist
-		////
-		//// inlined for time perf.  mem leaks are fixed but copy args by val
-		//// is still slow
+		// u is vertex in q with min dist
+		//println("getting minloc_r3");
 		let u = minloc_r3(dist, q);
-		//let u = [-1; NST];
-		//{
-		//	// minloc_r3() inlined
-		//	let found = false;
-		//	let min_ = -1;
-		//	let minloc_ = [-1, -1];
-		//	for z in [0: size(dist,2)]
-		//	for y in [0: size(dist,1)]
-		//	for x in [0: size(dist,0)]
-		//	{
-		//		if q[x,y,z]
-		//		{
-		//			if found
-		//			{
-		//				if (dist[x,y,z] < min_)
-		//				{
-		//					min_ = dist[x,y,z];
-		//					minloc_ = [x, y, z];
-		//				}
-		//			}
-		//			else
-		//			{
-		//				found = true;
-		//				min_ = dist[x,y,z];
-		//				minloc_ = [x, y, z];
-		//			}
-		//		}
-		//	}
-		//	//let ans = min_;
-		//	//let ans = minloc_;
-		//	u = minloc_;
-		//}
 
 		println("u = ", u);
+		//println("dist = ", dist[u[0], u[1], u[2]]);
 
 		if u[0] == xend[0] and u[1] == xend[1]
 		{
 			found = true;
-			dist_end = dist[u[0], u[1], u[2]];
-			t_end = u[2];
+
+			////dist_end = dist[u[0], u[1], u[2]];
+			//dist_end = min(dist_end, dist[u[0], u[1], u[2]]);
+			//println("dist_end = ", dist_end);
+			//t_end = u[2];
+
+			if dist[u[0], u[1], u[2]] < dist_end
+			{
+				dist_end = dist[u[0], u[1], u[2]];
+				t_end = u[2];
+			}
+
 		}
 
 		// Remove u from q
@@ -174,28 +159,29 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 				[
 					u[0] + DIRS[0, dir],
 					u[1] + DIRS[1, dir],
-					u[2] + 1  // "time" always increases by 1
+					dir
+					//u[2] + 1  // "time" always increases by 1
 				];
 
 			let continue_ = false;
 
 			// Check bounds
+			//println("check bounds");
 			if v[0] < 0 or v[0] >= nx or v[1] < 0 or v[1] >= ny
 				continue_ = true;
 
-			if v[2] >= TMAX
-			{
-				println();
-				println("Error: TMAX overflow!");
-				println();
-			}
-
 			// v still in q
+			//println("check v in q");
 			if not continue_
 				if not q[v[0], v[1], v[2]]
 					continue_ = true;
 
+			if not continue_
+				if dist[u[0], u[1], u[2]] >= DIST_INFTY
+					continue_ = true;
+
 			// ban immediate 2 cycle backtracking but allow looping of 3+ cycle
+			//println("check cycle");
 			let dir_u = dirs[u[0], u[1], u[2]];
 			if not continue_
 			{
@@ -205,17 +191,11 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 						prev[1, u[0], u[1], u[2]]
 					];
 				continue_ = v[0] == u0[0] and v[1] == u0[1];
-
-				//// should be possible to do this with a single `+ 2 % 4` expression
-				//continue_ =
-				//	(dir == EAST  and dir_u == WEST ) or
-				//	(dir == WEST  and dir_u == EAST ) or
-				//	(dir == NORTH and dir_u == SOUTH) or
-				//	(dir == SOUTH and dir_u == NORTH);
 			}
 
 			// Straight line path length must be less than ~3 or 4 (depending on
 			// how lens is initialized)
+			//println("check line length");
 			let len_ = 1;
 			if not continue_
 			{
@@ -226,14 +206,16 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 			}
 
 			// Graph distances are stored in map array
+			//println("continue_ = ", continue_);
 			if not continue_
 			{
 				let alt =  dist[u[0], u[1], u[2]] + map[v[0], v[1]];
+				//println("alt = ", alt);
 				if  alt <  dist[v[0], v[1], v[2]]
 				{
 					dist[v[0], v[1], v[2]] = alt;
 
-					dirs[v[0], v[1], v[2]] = dir;
+					dirs[v[0], v[1], v[2]] = dir; // maybe redundant if v[2] is also dir
 					lens[v[0], v[1], v[2]] = len_;
 
 					// Maybe not necessary for this AOC problem?
@@ -261,8 +243,11 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	u[0] = xend[0];
 	u[1] = xend[1];
 	u[2] = t_end;
+	println("backtracking ...");
 	while not (u[0] == xbeg[0] and u[1] == xbeg[1])
 	{
+		println("u = ", u);
+
 		//path_map[u[0], u[1]] = str(dirs[u[0], u[1]]);
 		path_map[u[0], u[1]] = DIRS_STR[dirs[u[0], u[1], u[2]]];
 

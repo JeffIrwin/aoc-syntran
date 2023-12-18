@@ -157,10 +157,10 @@ fn any_r3(v: [bool; :, :, :]): bool
 {
 	let found = false;
 	let i = 0;
-	while i < size(v, 1) and not found
+	while i < size(v, 2) and not found
 	{
 		let j = 0;
-		while j < size(v, 0) and not found
+		while j < size(v, 1) and not found
 		{
 			let k = 0;
 			while k < size(v, 0) and not found
