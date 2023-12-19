@@ -1,0 +1,339 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIM = 2;        // spatial dimensions
+let NST  = NDIM + 1; // space-time dimensions
+
+////let TMAX = 1024;     // max "time" steps
+////let TMAX = 256;     // max "time" steps
+//let TMAX = 128;     // max "time" steps
+
+let NDIRS = 4;
+
+// Cardinal directions
+let DIRS =
+	[
+		 0, -1, // north
+		-1,  0, // west
+		 0,  1, // south
+		 1,  0  // east
+		 ;
+		 2,  NDIRS
+	];
+//println("DIRS = ", DIRS);
+
+// Note consistent ordering with DIRS array
+let NORTH = 0;
+let WEST  = 1;
+let SOUTH = 2;
+let EAST  = 3;
+
+let DIRS_STR = "^<v>";
+
+//// Queue data structure
+//let QUEUE_CAP = 20 * 1024;
+//let queue = [-1; NST, QUEUE_CAP];
+//let queue_beg = 0;
+//let queue_end = 0;
+
+//****************
+
+//fn push_(x: i32, y: i32, t: i32)
+//{
+//	// Unused
+//	if queue_end >= QUEUE_CAP
+//	{
+//		println();
+//		println("Error: QUEUE_CAP overflow!");
+//		println();
+//	}
+//	queue[ 0, queue_end ] = x;
+//	queue[ 1, queue_end ] = y;
+//	queue[ 2, queue_end ] = t;
+//	queue_end += 1;
+//}
+
+//==============================================================================
+
+fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
+{
+	// TODO: try solving one of 2022's dijksta problems in syntran just to
+	// see if I have this close to correct
+
+	// I don't think Dijkstra's algorithm can work for this problem.  When there
+	// are multiple routes between two points with the same distance, Dijkstra
+	// will just pick one.  However, it can't foresee if that will get stuck in
+	// a straight line for too long and end up suboptimal in the long run
+	//
+	// The solutions are not necessarily unique.  For example, in the test
+	// input, row 2 col 10 (1-based index) is 5, and row 3 col 9 is also 5.  The
+	// solution can take either one of these paths and it doesn't matter.
+	// However, there are similar path bifurcations later where it *does* matter
+	// because you will need to turn sooner or later.  I don't know how to
+	// modify Dijkstra to explore both of those bifurcations
+
+	println("starting dijkstra()");
+	println("xbeg = ", xbeg);
+	println("xend = ", xend);
+
+	let nx = size(map, 0);
+	let ny = size(map, 1);
+
+	println("nx, ny = ", [nx, ny]);
+
+	// initialize distance to practical infinity
+	let DIST_INFTY = 2000000000;
+
+	let dist = [DIST_INFTY; nx, ny, NDIRS];
+	let prev = [ 0; NDIM+1, nx, ny, NDIRS];
+	let q    = [true;       nx, ny, NDIRS];
+
+	// Direction travelled to get to each point
+	let dirs = [-1; nx, ny, NDIRS];
+
+	// Straight line path lengths
+	let lens = [ 0; nx, ny, NDIRS];
+
+	// Initialize source vertex to 0 distance
+
+	dist[xbeg[0], xbeg[1], EAST ] = 0;
+	//dist[xbeg[0], xbeg[1], SOUTH] = 0;
+	//dist[xbeg[0], xbeg[1], WEST ] = 0;
+	//dist[xbeg[0], xbeg[1], NORTH] = 0;
+
+	//dist[xbeg[0], xbeg[1], 0] = NORTH;
+	//dist[xbeg[0], xbeg[1], 0] = WEST;
+	//dist[xbeg[0], xbeg[1], 0] = SOUTH;
+	//dist[xbeg[0], xbeg[1], 0] = EAST;
+
+	//println("dist = ", dist);
+
+	let found = false;
+	let dist_end = DIST_INFTY;
+	let t_end = -1; // really dir end?
+	//while any_r3(q) and not found
+	while any_r3(q)
+	//while not found
+	{
+		// u is vertex in q with min dist
+		//println("getting minloc_r3");
+		let u = minloc_r3(dist, q);
+
+		println("u = ", u);
+		//println("dist = ", dist[u[0], u[1], u[2]]);
+
+		if u[0] == xend[0] and u[1] == xend[1]
+		{
+			found = true;
+
+			////dist_end = dist[u[0], u[1], u[2]];
+			//dist_end = min(dist_end, dist[u[0], u[1], u[2]]);
+			//println("dist_end = ", dist_end);
+			//t_end = u[2];
+
+			if dist[u[0], u[1], u[2]] < dist_end
+			{
+				dist_end = dist[u[0], u[1], u[2]];
+				t_end = u[2];
+			}
+
+		}
+
+		// Remove u from q
+		q[u[0], u[1], u[2]] = false;
+
+		// For each neighbor v of u still in q
+		for dir in [0: NDIRS]
+		{
+			let v =
+				[
+					u[0] + DIRS[0, dir],
+					u[1] + DIRS[1, dir],
+					dir
+					//u[2] + 1  // "time" always increases by 1
+				];
+
+			let continue_ = false;
+
+			// Check bounds
+			//println("check bounds");
+			if v[0] < 0 or v[0] >= nx or v[1] < 0 or v[1] >= ny
+				continue_ = true;
+
+			// v still in q
+			//println("check v in q");
+			if not continue_
+				if not q[v[0], v[1], v[2]]
+					continue_ = true;
+
+			if not continue_
+				if dist[u[0], u[1], u[2]] >= DIST_INFTY
+					continue_ = true;
+
+			// ban immediate 2 cycle backtracking but allow looping of 3+ cycle
+			//println("check cycle");
+			let dir_u = dirs[u[0], u[1], u[2]];
+			if not continue_
+			{
+				let u0 =
+					[
+						prev[0, u[0], u[1], u[2]],
+						prev[1, u[0], u[1], u[2]]
+					];
+				continue_ = v[0] == u0[0] and v[1] == u0[1];
+			}
+
+			// Straight line path length must be less than ~3 or 4 (depending on
+			// how lens is initialized)
+			//println("check line length");
+			let len_ = 1;
+			if not continue_
+			{
+				if dir  == dir_u
+					len_ = lens[u[0], u[1], u[2]] + 1;
+				if len_ > 3
+					continue_ = true;
+			}
+
+			// Graph distances are stored in map array
+			//println("continue_ = ", continue_);
+			if not continue_
+			{
+				let alt =  dist[u[0], u[1], u[2]] + map[v[0], v[1]];
+				//println("alt = ", alt);
+				if  alt <  dist[v[0], v[1], v[2]]
+				{
+					dist[v[0], v[1], v[2]] = alt;
+
+					dirs[v[0], v[1], v[2]] = dir; // maybe redundant if v[2] is also dir
+					lens[v[0], v[1], v[2]] = len_;
+
+					// Maybe not necessary for this AOC problem?
+					prev[0, v[0], v[1], v[2]] = u[0];
+					prev[1, v[0], v[1], v[2]] = u[1];
+					prev[2, v[0], v[1], v[2]] = u[2];
+				}
+			}
+		}
+	}
+
+	//println("dirs = ", dirs);
+	//println("lens = ", lens);
+
+	// Construct the path by backtracking from the end (debug only)
+
+	// Initialize to the number at each point
+	let path_map = ["."; nx, ny];
+	for y in [0: ny]
+		for x in [0: nx]
+			path_map[x, y] = str(map[x, y]);
+
+	// Backtrack
+	let u = [-1; NST];
+	u[0] = xend[0];
+	u[1] = xend[1];
+	u[2] = t_end;
+	println("backtracking ...");
+	while not (u[0] == xbeg[0] and u[1] == xbeg[1])
+	{
+		println("u = ", u);
+
+		//path_map[u[0], u[1]] = str(dirs[u[0], u[1]]);
+		path_map[u[0], u[1]] = DIRS_STR[dirs[u[0], u[1], u[2]]];
+
+		let tmp = u;
+		u[0] = prev[0, tmp[0], tmp[1], tmp[2]];
+		u[1] = prev[1, tmp[0], tmp[1], tmp[2]];
+		u[2] = prev[2, tmp[0], tmp[1], tmp[2]];
+	}
+	println("path_map = ", path_map);
+
+	//let ans = dist[xend[0], xend[1]];
+	//let ans = dist[xend[0], xend[1]] + map[xend[0], xend[1]];
+	//let ans = dist[xend[0], xend[1]] + map[xbeg[0], xbeg[1]];
+
+	// "Because you already start in the top-left block, you don't incur that
+	// block's heat loss unless you leave that block and then return to it"
+
+	//let ans = dist[xend[0], xend[1]];
+	//let ans = 0;
+
+	let ans = dist_end;
+}
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let nx = len(str_);
+
+	println("nx, ny = ", [nx, ny]);
+
+	let grid = [-1; nx, ny];
+
+	for y in [0: ny]
+	{
+		println("str_ = ", str_);
+
+		for x in [0: nx]
+			grid[x, y] = parse_i32(str_[x]);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("grid = ", grid);
+
+	// Start at northwest corner, end at southeast
+	let xbeg = [0, 0];
+	let xend = [nx - 1, ny - 1];
+
+	let sum_ = dijkstra(grid, xbeg, xend);
+
+	println("part 1 = ", sum_);
+	println();
+	println("hint: 1255 was too low");
+
+	println("grid = ", grid);
+
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	//part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+

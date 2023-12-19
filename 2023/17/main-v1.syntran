@@ -1,0 +1,347 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIM = 2;        // spatial dimensions
+//let NST  = NDIM + 1; // space-time dimensions
+
+let NDIRS = 4;
+
+// Cardinal directions
+let DIRS =
+	[
+		 0, -1, // north
+		-1,  0, // west
+		 0,  1, // south
+		 1,  0  // east
+		 ;
+		 2,  NDIRS
+	];
+//println("DIRS = ", DIRS);
+
+// Note consistent ordering with DIRS array
+let NORTH = 0;
+let WEST  = 1;
+let SOUTH = 2;
+let EAST  = 3;
+
+let DIRS_STR = "^<v>";
+
+// Number of state variables.  State contains:
+//
+//     0. dist ("heat loss")
+//     1. x pos
+//     2. y pos
+//     3. direction (encoded as a single i32 from enum above)
+//     4. length of straight line
+//
+let NSTATE = 5;
+
+// Queue data structure
+let QUEUE_CAP = 128 * 1024;
+let queue = [-1; NSTATE, QUEUE_CAP];
+let queue_beg = 0;
+let queue_end = 0;
+
+let unvisited = [true; 0, 0, 0, 0];
+
+//****************
+
+//fn push_(dist: i32, x: i32, y: i32, dir: i32, len_: i32)
+fn push_(v: [i32; :])
+{
+	if queue_end >= QUEUE_CAP
+	{
+		println();
+		println("Error: QUEUE_CAP overflow!");
+		println();
+	}
+
+	queue[0, queue_end ] = v[0]; //dist;
+	queue[1, queue_end ] = v[1]; //x;
+	queue[2, queue_end ] = v[2]; //y;
+	queue[3, queue_end ] = v[3]; //dir;
+	queue[4, queue_end ] = v[4]; //len_;
+
+	queue_end += 1;
+}
+
+fn pop_(): [i32; :]
+{
+	// Linear scan because I'm not implementing a min-heap queue :(
+
+	// TODO: mark popped element as "out of queue" somehow.  Can we use
+	// unvisited or do something like set dist < 0 maybe
+	let i = 0;
+	let imin = 0;
+	let x = [-1; NSTATE];
+	let min_ = 0;
+	let found = false;
+	while i < queue_end
+	{
+		if queue[0,i] >= 0
+		{
+			if not found or queue[0,i] < min_
+			{
+				found = true;
+				min_ = queue[0,i];
+				imin = i;
+
+				x[0] = queue[0,i];
+				x[1] = queue[1,i];
+				x[2] = queue[2,i];
+				x[3] = queue[3,i];
+				x[4] = queue[4,i];
+			}
+		}
+		i += 1;
+	}
+	queue[0, imin] = -1;  // mark popped element as out of queue
+	let ans = x;
+}
+
+//==============================================================================
+
+fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :]): i32
+{
+	println("starting dijkstra()");
+	println("xbeg = ", xbeg);
+	println("xend = ", xend);
+
+	let nx = size(map, 0);
+	let ny = size(map, 1);
+
+	println("nx, ny = ", [nx, ny]);
+
+	// initialize distance to practical infinity
+	let DIST_INFTY = 2000000000;
+
+	let LEN_MAX = 4;
+
+	//let dist = [DIST_INFTY; nx, ny, NDIRS];
+	let dist = [DIST_INFTY; nx, ny, NDIRS, LEN_MAX];
+	let prev = [ 0; NDIM+1, nx, ny, NDIRS];
+	//let q    = [true;       nx, ny, NDIRS];
+	unvisited = [true; nx, ny, NDIRS, LEN_MAX];
+
+	//// Direction travelled to get to each point
+	//let dirs = [-1; nx, ny, NDIRS];
+
+	// Straight line path lengths
+	let lens = [ 0; nx, ny, NDIRS];
+
+	// Initialize source vertex to 0 distance
+
+	//dist[xbeg[0], xbeg[1], EAST ] = 0;
+	dist[xbeg[0], xbeg[1], EAST, 0] = 0;
+	push_([0, xbeg[0], xbeg[1], EAST, 0]);
+
+	//println("dist = ", dist);
+
+	let found = false;
+	let dist_end = DIST_INFTY;
+	//let t_end = -1; // really dir end
+	while not found
+	{
+		// u is vertex in unvisited with min dist
+		//println("getting minloc_r3");
+		//let u = minloc_r3(dist, q);
+		let u = pop_();
+
+		println("u = ", u);
+
+		if u[1] == xend[0] and u[2] == xend[1]
+		{
+			found = true;
+			dist_end = u[0];
+			println("dist end = ", dist_end);
+		}
+
+		// Remove u from unvisited
+		unvisited[u[1], u[2], u[3], u[4]] = false;
+
+		// For each neighbor v of u still in unvisited
+		for dir in [0: NDIRS]
+		{
+			let v =
+				[
+					0,
+					u[1] + DIRS[0, dir],
+					u[2] + DIRS[1, dir],
+					dir,
+					0
+				];
+
+			let continue_ = false;
+
+			// Check bounds
+			if v[1] < 0 or v[1] >= nx or v[2] < 0 or v[2] >= ny
+				continue_ = true;
+
+			// v still in unvisited
+			if not continue_
+				if not unvisited[v[1], v[2], v[3], v[4]]
+					continue_ = true;
+
+			//if not continue_
+			//	if u[0] >= DIST_INFTY
+			//		continue_ = true;
+
+			// ban immediate 2 cycle backtracking but allow looping of 3+ cycle
+			//let dir0 = dirs[u[0], u[1], u[2]];
+			let dir0 = u[3];
+			if not continue_
+			{
+				// should be possible to do this with a single `+ 2 % 4` expression
+				continue_ =
+					(dir == EAST  and dir0 == WEST ) or
+					(dir == WEST  and dir0 == EAST ) or
+					(dir == NORTH and dir0 == SOUTH) or
+					(dir == SOUTH and dir0 == NORTH);
+			}
+
+			// Straight line path length must be less than ~3 or 4 (depending on
+			// how lens is initialized)
+			let len_ = 1;
+			if not continue_
+			{
+				if dir  == dir0
+					len_ = u[4] + 1;
+				if len_ >= LEN_MAX
+					continue_ = true;
+				v[4] = len_;
+			}
+
+			// Graph distances are stored in map array
+			if not continue_
+			{
+				let alt = u[0] + map[v[1], v[2]];
+				//if  alt < v[0]
+				if  alt < dist[v[1], v[2], v[3], v[4]]
+				{
+					v[0] = alt;
+					push_(v);
+					dist[v[1], v[2], v[3], v[4]] = alt;
+
+					//dist[v[0], v[1], v[2]] = alt;
+
+					//dirs[v[0], v[1], v[2]] = dir; // maybe redundant if v[2] is also dir
+					//lens[v[0], v[1], v[2]] = len_;
+
+					//// Maybe not necessary for this AOC problem?
+					//prev[0, v[0], v[1], v[2]] = u[0];
+					//prev[1, v[0], v[1], v[2]] = u[1];
+					//prev[2, v[0], v[1], v[2]] = u[2];
+				}
+			}
+		}
+	}
+	//println("dirs = ", dirs);
+	//println("lens = ", lens);
+
+	// Construct the path by backtracking from the end (debug only)
+
+	//// Initialize to the number at each point
+	//let path_map = ["."; nx, ny];
+	//for y in [0: ny]
+	//	for x in [0: nx]
+	//		path_map[x, y] = str(map[x, y]);
+
+	//// Backtrack
+	//let u = [-1; NST];
+	//u[0] = xend[0];
+	//u[1] = xend[1];
+	//u[2] = t_end;
+	//println("backtracking ...");
+	//while not (u[0] == xbeg[0] and u[1] == xbeg[1])
+	//{
+	//	println("u = ", u);
+
+	//	//path_map[u[0], u[1]] = str(dirs[u[0], u[1]]);
+	//	path_map[u[0], u[1]] = DIRS_STR[dirs[u[0], u[1], u[2]]];
+
+	//	let tmp = u;
+	//	u[0] = prev[0, tmp[0], tmp[1], tmp[2]];
+	//	u[1] = prev[1, tmp[0], tmp[1], tmp[2]];
+	//	u[2] = prev[2, tmp[0], tmp[1], tmp[2]];
+	//}
+	//println("path_map = ", path_map);
+
+	let ans = dist_end;
+}
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let nx = len(str_);
+
+	println("nx, ny = ", [nx, ny]);
+
+	let grid = [-1; nx, ny];
+
+	for y in [0: ny]
+	{
+		println("str_ = ", str_);
+
+		for x in [0: nx]
+			grid[x, y] = parse_i32(str_[x]);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("grid = ", grid);
+
+	// Start at northwest corner, end at southeast
+	let xbeg = [0, 0];
+	let xend = [nx - 1, ny - 1];
+
+	let sum_ = dijkstra(grid, xbeg, xend);
+
+	println("part 1 = ", sum_);
+	println();
+	println("hint: 1255 was too low");
+
+	println("grid = ", grid);
+
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	//part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+
