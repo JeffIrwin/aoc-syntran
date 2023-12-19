@@ -1,0 +1,156 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let x = 0;
+	let y = 0;
+
+	let area      = i64(0);
+	let perimeter = i64(0);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let x0 = x;
+		let y0 = y;
+
+		let strs = split_(str_, " ");
+		let dir_char = strs[0];
+		let dist = parse_i32(strs[1]);
+
+		println("dir_char = ", dir_char);
+		println("dist     = ", dist);
+
+		if      dir_char == "R"
+			x += dist;
+		else if dir_char == "L"
+			x -= dist;
+		else if dir_char == "D"
+			y += dist;
+		else if dir_char == "U"
+			y -= dist;
+
+		println("x, y = ", [x, y]);
+
+		// Trapezoid area:  https://en.wikipedia.org/wiki/Shoelace_formula
+		let trap_area = (i64(y0) + y) * (x0 - x) / 2;
+
+		area += trap_area;
+		perimeter += dist;
+
+		println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("area = ", area);
+	println("peri = ", perimeter);
+
+	let sum_ = 1 + area + perimeter / 2;
+
+	println("part 1 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn part2(): i64
+{
+	let x = 0;
+	let y = 0;
+
+	let area      = i64(0);
+	let perimeter = i64(0);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let x0 = x;
+		let y0 = y;
+
+		let strs = split_(str_, " ");
+
+		let hexes = split_(strs[2], "()#");
+		let hex = hexes[0];
+		println("hex = ", hex);
+
+		//let dir_char = strs[0];
+		let dir_char = hex[5];
+
+		//let dist = parse_i32(strs[1]);
+		let dist = parse_i32_hex(hex[0:5]);
+
+		println("dir_char = ", dir_char);
+		println("dist     = ", dist);
+
+		if      dir_char == "0"
+			x += dist;
+		else if dir_char == "2"
+			x -= dist;
+		else if dir_char == "1"
+			y += dist;
+		else if dir_char == "3"
+			y -= dist;
+
+		println("x, y = ", [x, y]);
+
+		// Trapezoid area:  https://en.wikipedia.org/wiki/Shoelace_formula
+		let trap_area = (i64(y0) + y) * (x0 - x) / 2;
+
+		area += trap_area;
+		perimeter += dist;
+
+		println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("area = ", area);
+	println("peri = ", perimeter);
+
+	let sum_ = 1 + area + perimeter / 2;
+
+	println("part 2 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+

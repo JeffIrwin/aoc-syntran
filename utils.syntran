@@ -2,6 +2,7 @@
 //==============================================================================
 
 let digit_chars = "0123456789";
+let hex_chars = digit_chars + "abcdef";
 
 //==============================================================================
 
@@ -437,6 +438,24 @@ fn split_(str_: str, delims: str): [str; :]
 	// return
 	//out;
 	let ans = out;
+}
+
+//==============================================================================
+
+fn parse_i32_hex(str_: str): i32
+{
+	// Read a hexadecimal number *without* any leading `0x` or `#` or anything
+	// besides literal hex characters
+
+	let num = 0;
+	for ii in [0: len(str_)]
+	{
+		let i = len(str_) - ii - 1;
+		let c = str_[i];
+		let val = scan(hex_chars, c);
+		num += val * 16 ** ii;
+	}
+	let ans = num;
 }
 
 //==============================================================================
