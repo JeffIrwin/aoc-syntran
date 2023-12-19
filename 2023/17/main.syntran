@@ -15,7 +15,6 @@ let filename = filenames[ifile];
 //==============================================================================
 
 let NDIM = 2;        // spatial dimensions
-//let NST  = NDIM + 1; // space-time dimensions
 
 let NDIRS = 4;
 
@@ -67,46 +66,12 @@ let queue_end0 = 0;
 
 //****************
 
-//fn bubble_sort_queue()
-//{
-//	println("starting sort_queue()");
-//
-//	let swapped = true;
-//	while swapped
-//	{
-//		swapped = false;
-//		for i in [queue_beg + 1: queue_end]
-//		{
-//			if queue[0, i-1] > queue[0, i]
-//			{
-//				for j in [0: NSTATE]
-//				{
-//					let tmp       = queue[j, i-1];
-//					queue[j, i-1] = queue[j, i];
-//					queue[j, i  ] = tmp;
-//				}
-//				swapped = true;
-//			}
-//		}
-//	}
-//
-//	// This could also prune popped elements entirely to avoid QUEUE_CAP issues
-//	while queue[0, queue_beg] < 0 and queue_beg < queue_end
-//		queue_beg += 1;
-//
-//	// After sorting, new unsorted elements will be pushed onto the queue after
-//	// this position
-//	queue_end0 = queue_end;
-//}
-
 fn sort_queue()
 {
 	// Quick sort
 	println("starting qsort()");
 	////println("queue = ", queue);
 
-	//let l = 0;
-	//let h = size(queue,0) - 1;
 	let l = queue_beg;
 	let h = queue_end - 1;
 
@@ -138,9 +103,6 @@ fn sort_queue()
 				if queue[0,j] <= x
 				{
 					i += 1;
-					//let tmp = queue[i];
-					//queue[i]  = queue[j];
-					//queue[j]  = tmp;
 					for k in [0: NSTATE]
 					{
 						let tmp     = queue[k, i];
@@ -148,9 +110,6 @@ fn sort_queue()
 						queue[k, j] = tmp;
 					}
 				}
-			//let tmp = queue[i+1];
-			//queue[i+1] = queue[h];
-			//queue[h] = tmp;
 			for k in [0: NSTATE]
 			{
 				let tmp       = queue[k, i+1];
@@ -203,27 +162,24 @@ fn push_(v: [i32; :])
 		println();
 	}
 
-	queue[0, queue_end ] = v[0]; //dist;
-	queue[1, queue_end ] = v[1]; //x;
-	queue[2, queue_end ] = v[2]; //y;
-	queue[3, queue_end ] = v[3]; //dir;
-	queue[4, queue_end ] = v[4]; //len_;
+	queue[0, queue_end ] = v[0]; // dist;
+	queue[1, queue_end ] = v[1]; // x;
+	queue[2, queue_end ] = v[2]; // y;
+	queue[3, queue_end ] = v[3]; // dir;
+	queue[4, queue_end ] = v[4]; // len_;
 
 	queue_end += 1;
 
+	// I don't actually know if sorting the queue provides any perf benefit.
+	// Even if it does, the sort period should be tuned to the specific
+	// problem based on vibes
 	if push_count % 3000 == 0
-	//if push_count % 1000 == 0
-	//if push_count % 100 == 0
-	//if push_count % 1 == 0
-	{
 		sort_queue();
-	}
 	push_count += 1;
 }
 
 //****************
 
-//let pop_count = 0;
 fn pop_(): [i32; :]
 {
 	// Linear scan because I'm not implementing a min-heap queue :(
@@ -236,12 +192,11 @@ fn pop_(): [i32; :]
 	// Scan only the unsorted part of the queue
 	let x = [-1; NSTATE];
 	i = queue_end0;
-	//i = queue_beg;
 	while i < queue_end
 	{
 		if queue[0,i] >= 0
 		{
-			if queue[0,i] < min_ //or min_ < 0
+			if queue[0,i] < min_
 			{
 				min_ = queue[0,i];
 				imin = i;
@@ -259,26 +214,8 @@ fn pop_(): [i32; :]
 
 	// When queue[0,:] happens to get popped, increment it to the next element
 	// still in queue
-	//if imin == queue_beg
-		while queue[0, queue_beg] < 0 and queue_beg < queue_end
-			queue_beg += 1;
-
-	//// I don't actually know if sorting the queue provides any perf benefit.
-	//// Even if it does, the sort period should be tuned to the specific
-	//// problem based on vibes
-
-	////if pop_count % 10000 == 0
-	////if pop_count % 5000 == 0
-	//if pop_count % 3000 == 0
-	////if pop_count % 1000 == 0
-	////if pop_count % 100 == 0
-	////if pop_count % 1 == 0
-	//{
-	//	// It might make more sense to amortize this based on a push count
-	//	// instead of the pop count
-	//	sort_queue();
-	//}
-	//pop_count += 1;
+	while queue[0, queue_beg] < 0 and queue_beg < queue_end
+		queue_beg += 1;
 
 	let ans = x;
 }
@@ -287,7 +224,7 @@ fn pop_(): [i32; :]
 
 fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len_max: i32): i32
 {
-	// Obsolete.  I couldn't get this working for part 2
+	// Directly adapted from:  https://github.com/hyper-neutrino/advent-of-code/blob/main/2023/day17p2.py
 
 	println();
 	println("starting dijkstra()");
@@ -309,156 +246,6 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len_
 	// initialize distance to practical infinity.  using a negative with extra
 	// logic might be more robust
 	let DIST_INFTY = 2000000000;
-	//let DIST_INFTY = -1;
-
-	let dist = [DIST_INFTY; nx, ny, NDIRS+1, len_max];
-	let unvisited = [true ; nx, ny, NDIRS+1, len_max];
-
-	// Initialize source vertex to 0 distance
-
-	//dist[xbeg[0], xbeg[1], EAST, 0] = 0;
-	//push_([0, xbeg[0], xbeg[1], EAST, 0]);
-	dist  [   xbeg[0], xbeg[1], NDIRS, 0] = 0;
-	push_([0, xbeg[0], xbeg[1], NDIRS, 0]);
-
-	let dist0 = -1;
-
-	let found = false;
-	let dist_end = DIST_INFTY;
-	while not found
-	{
-		// u is vertex in unvisited with min dist
-		let u = pop_();
-
-		println("u = ", u);
-		//if u[0] > dist0
-		//{
-		//	println("u = ", u);
-		//	dist0 = u[0];
-		//}
-
-		//if u[1] == xend[0] and u[2] == xend[1]
-		if u[1] == xend[0] and u[2] == xend[1] and u[4] >= len_min
-		{
-			found = true;
-			dist_end = u[0];
-			println("dist end = ", dist_end);
-		}
-
-		// Remove u from unvisited
-		//println("removing");
-		unvisited[u[1], u[2], u[3], u[4]] = false;
-		//println("done");
-
-		// For each neighbor v of u still in unvisited
-		for dir in [0: NDIRS]
-		{
-			let v =
-				[
-					0, // dist and len will be set later
-					u[1] + DIRS[0, dir],
-					u[2] + DIRS[1, dir],
-					dir,
-					0
-				];
-
-			let continue_ = false;
-
-			// Check bounds
-			if v[1] < 0 or v[1] >= nx or v[2] < 0 or v[2] >= ny
-				continue_ = true;
-
-			// Straight line path length must be less than ~3 or 4 (depending on
-			// how len_ is initialized)
-			let len_ = 1;
-			let dir0 = u[3];
-			//println("continue_ = ", continue_);
-			if not continue_
-			{
-				if dir  == dir0
-				{
-					len_ = u[4] + 1;
-				}
-				//if (len_ < len_min) and (dir != dir0) and (dir0 != NDIRS)
-				//if (len_ < len_min) and (dir == dir0) and (dir0 != NDIRS)
-				if (len_ < len_min) and (dir == dir0) and (dir0 != NDIRS)
-				{
-					//println("len_ < len_min = ", len_, " < ", len_min);
-					//println("dir, dir0 = ", [dir, dir0]);
-					continue_ = true;
-				}
-				if (len_ >= len_max) and (dir0 != NDIRS)
-				{
-					continue_ = true;
-				}
-				v[4] = len_;
-			}
-			//println("continue_ = ", continue_);
-
-			// v still in unvisited
-			//println("checking");
-			if not continue_
-				if not unvisited[v[1], v[2], v[3], v[4]]
-					continue_ = true;
-			//println("done");
-
-			// ban immediate 2 cycle backtracking but allow looping of 3+ cycle
-			if not continue_
-			{
-				// should be possible to do this with a single `+ 2 % 4` expression
-				continue_ =
-					(dir == EAST  and dir0 == WEST ) or
-					(dir == WEST  and dir0 == EAST ) or
-					(dir == NORTH and dir0 == SOUTH) or
-					(dir == SOUTH and dir0 == NORTH);
-			}
-
-			// Graph distances are stored in map array
-			if not continue_
-			{
-				let alt = u[0] + map[v[1], v[2]];
-				//if  alt < dist[v[1], v[2], v[3], v[4]] or dist[v[1], v[2], v[3], v[4]] < 0
-				if  alt < dist[v[1], v[2], v[3], v[4]]
-				{
-					v[0] = alt;
-					push_(v);
-					dist[v[1], v[2], v[3], v[4]] = alt;
-				}
-			}
-		}
-	}
-	//println("dirs = ", dirs);
-
-	let ans = dist_end;
-}
-
-//==============================================================================
-
-fn dijkstra2(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len_max: i32): i32
-{
-	// Directly adapted from:  https://github.com/hyper-neutrino/advent-of-code/blob/main/2023/day17p2.py
-
-	println();
-	println("starting dijkstra2()");
-	println("xbeg = ", xbeg);
-	println("xend = ", xend);
-	println("len_min = ", len_min);
-	println("len_max = ", len_max);
-
-	queue_beg  = 0;
-	queue_end  = 0;
-	queue_end0 = 0;
-	queue = [-1; NSTATE, QUEUE_CAP];
-
-	let nx = size(map, 0);
-	let ny = size(map, 1);
-
-	println("nx, ny = ", [nx, ny]);
-
-	// initialize distance to practical infinity.  using a negative with extra
-	// logic might be more robust
-	let DIST_INFTY = 2000000000;
-	//let DIST_INFTY = -1;
 
 	let dist = [DIST_INFTY; nx, ny, NDIRS+1, len_max];
 	let unvisited = [true ; nx, ny, NDIRS+1, len_max];
@@ -466,9 +253,6 @@ fn dijkstra2(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len
 	// Initialize source vertex to 0 distance.  We do not enter the start point
 	// in any particulal direction, so encode that as dir == NDIRS (one-past
 	// usual end of DIRS array)
-
-	//dist[xbeg[0], xbeg[1], EAST, 0] = 0;
-	//push_([0, xbeg[0], xbeg[1], EAST, 0]);
 	dist  [   xbeg[0], xbeg[1], NDIRS, 0] = 0;
 	push_([0, xbeg[0], xbeg[1], NDIRS, 0]);
 
@@ -584,17 +368,11 @@ fn part1(): i32
 	let xbeg = [0, 0];
 	let xend = [nx - 1, ny - 1];
 
-	//let sum_ = dijkstra(grid, xbeg, xend, 0, 4);
-	let sum_ = dijkstra2(grid, xbeg, xend, 0, 4);
+	let sum_ = dijkstra(grid, xbeg, xend, 0, 4);
 
 	println("part 1 = ", sum_);
-	//println("hint: 1255 was too low");
-
-	//println("grid = ", grid);
-
 	sum_;
 }
-
 
 //==============================================================================
 
@@ -628,11 +406,9 @@ fn part2(): i32
 	let xbeg = [0, 0];
 	let xend = [nx - 1, ny - 1];
 
-	let sum_ = dijkstra2(grid, xbeg, xend, 4, 11);
+	let sum_ = dijkstra(grid, xbeg, xend, 4, 11);
 
 	println("part 2 = ", sum_);
-	//println("grid = ", grid);
-
 	sum_;
 }
 
