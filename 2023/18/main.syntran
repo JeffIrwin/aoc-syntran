@@ -63,6 +63,16 @@ fn part1(): i64
 	println("area = ", area);
 	println("peri = ", perimeter);
 
+	// The perimeter is not zero-width, so it also covers a finite area.  `area`
+	// actually covers half of the perimeter's area -- the inside half of the
+	// perimeter is accounted for by `area`, and the other half is out, so we
+	// add `perimeter / 2` here
+	//
+	// This still leaves out 4 literal corner cases from completing 1 full
+	// circle.  Each of the 4 real outer corners has a quarter unit area not yet
+	// accounted for.  There is negative area for inside corners too, but they
+	// cancel out with other (unreal) outer corners.  Because of 4 uncancelled
+	// quarter unit corner areas, we add another `1` here
 	let sum_ = 1 + area + perimeter / 2;
 
 	println("part 1 = ", sum_);
