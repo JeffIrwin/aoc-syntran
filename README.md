@@ -22,7 +22,9 @@ cd 2023/01
 syntran ./main.syntran
 ```
 
-As of 2023-12-15, you will need at least syntran version 0.0.30 to run the code here 
+As of 2023-12-19, you will need at least syntran version 0.0.33 to run the code here
+
+<!-- As of 2023-12-15, you will need at least syntran version 0.0.30 to run the code here -->
 
 Until 2023 day 15, 0.0.29 was sufficient.  Day 15 requires `i32()` casting characters to ASCII codes, which were added in 0.0.30.
 
