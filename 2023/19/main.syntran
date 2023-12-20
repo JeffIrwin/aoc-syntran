@@ -29,7 +29,7 @@ fn part1(): i32
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		if not (str_ == "")
 		{
@@ -43,8 +43,8 @@ fn part1(): i32
 	}
 	close(f);
 
-	println("nfn = ", nfn);
-	println("nda = ", nda);
+	//println("nfn = ", nfn);
+	//println("nda = ", nda);
 
 	let fns       = [""; nfn];
 	let fn_labels = [""; nfn];
@@ -95,7 +95,7 @@ fn part1(): i32
 	//println("fns  = ", fns);
 	//println("fn_labels = ", fn_labels);
 	//println("bodies = ", bodies);
-	println();
+	//println();
 
 	//let nclauses_max = 0;
 
@@ -112,12 +112,12 @@ fn part1(): i32
 		let fn_label = fn_labels[i];
 		let body = bodies[i];
 
-		println("fn_label = ", fn_label);
-		println("body = ", body);
+		//println("fn_label = ", fn_label);
+		//println("body = ", body);
 
 		// If / else-if / else clauses
 		let clauses = split_(body, ",");
-		println("clauses = ", clauses);
+		//println("clauses = ", clauses);
 
 		nclauses[i] = size(clauses, 0);
 		//nclauses_max = max(nclauses_max, size(clauses, 0));
@@ -133,11 +133,11 @@ fn part1(): i32
 			let comp_str = strs[1];
 			let call     = strs[2];
 
-			println("xmas_str = ", xmas_str);
-			println("op       = ", op      );
-			println("comp_str = ", comp_str);
-			println("call     = ", call    );
-			println();
+			//println("xmas_str = ", xmas_str);
+			//println("op       = ", op      );
+			//println("comp_str = ", comp_str);
+			//println("call     = ", call    );
+			//println();
 
 			xmas_idx[j, i] = scan("xmas", xmas_str);
 			ops     [j, i] = op;
@@ -183,23 +183,23 @@ fn part1(): i32
 			}
 		}
 
-		println();
+		//println();
 	}
 	//println("nclauses_max = ", nclauses_max);
-	println("nclauses = ", nclauses);
+	//println("nclauses = ", nclauses);
 
-	println("fn_call = ", fn_call);
+	//println("fn_call = ", fn_call);
 
-	println("xmas_idx = ", xmas_idx);
-	println("ops      = ", ops     );
-	println("comp_num = ", comp_num);
+	//println("xmas_idx = ", xmas_idx);
+	//println("ops      = ", ops     );
+	//println("comp_num = ", comp_num);
 
 	let in_call = 0;
 	while not (fn_labels[ in_call ] == "in")
 	{
 		in_call += 1;
 	}
-	println("in_call = ", in_call);
+	//println("in_call = ", in_call);
 
 	// Evaluate the fn calls on each line of data
 	let sum_ = 0;
@@ -213,7 +213,7 @@ fn part1(): i32
 				data[2, id],
 				data[3, id]
 			];
-		println("d = ", d);
+		//println("d = ", d);
 
 		let i = in_call;
 		let returned = false;
@@ -272,7 +272,7 @@ fn part2(): i32
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		if not (str_ == "")
 		{
@@ -284,7 +284,7 @@ fn part2(): i32
 	}
 	close(f);
 
-	println("nfn = ", nfn);
+	//println("nfn = ", nfn);
 
 	let fns       = [""; nfn];
 	let fn_labels = [""; nfn];
@@ -326,12 +326,12 @@ fn part2(): i32
 		let fn_label = fn_labels[i];
 		let body = bodies[i];
 
-		println("fn_label = ", fn_label);
-		println("body = ", body);
+		//println("fn_label = ", fn_label);
+		//println("body = ", body);
 
 		// If / else-if / else clauses
 		let clauses = split_(body, ",");
-		println("clauses = ", clauses);
+		//println("clauses = ", clauses);
 
 		nclauses[i] = size(clauses, 0);
 
@@ -346,11 +346,11 @@ fn part2(): i32
 			let comp_str = strs[1];
 			let call     = strs[2];
 
-			println("xmas_str = ", xmas_str);
-			println("op       = ", op      );
-			println("comp_str = ", comp_str);
-			println("call     = ", call    );
-			println();
+			//println("xmas_str = ", xmas_str);
+			//println("op       = ", op      );
+			//println("comp_str = ", comp_str);
+			//println("call     = ", call    );
+			//println();
 
 			xmas_idx[j, i] = scan("xmas", xmas_str);
 			ops     [j, i] = op;
@@ -383,20 +383,20 @@ fn part2(): i32
 			while not (fn_labels[ fn_call[j, i] ] == call)
 				fn_call[j, i] += 1;
 		}
-		println();
+		//println();
 	}
 	//println("nclauses_max = ", nclauses_max);
-	println("nclauses = ", nclauses);
+	//println("nclauses = ", nclauses);
 
-	println("fn_call = ", fn_call);
-	println("xmas_idx = ", xmas_idx);
-	println("ops      = ", ops     );
-	println("comp_num = ", comp_num);
+	//println("fn_call = ", fn_call);
+	//println("xmas_idx = ", xmas_idx);
+	//println("ops      = ", ops     );
+	//println("comp_num = ", comp_num);
 
 	let in_call = 0;
 	while not (fn_labels[ in_call ] == "in")
 		in_call += 1;
-	println("in_call = ", in_call);
+	//println("in_call = ", in_call);
 
 	// Invert the fn call table: find the line where each fn is called
 	//
@@ -413,7 +413,7 @@ fn part2(): i32
 				fn_inv[1, call] = j;
 			}
 		}
-	println("fn_inv = ", fn_inv);
+	//println("fn_inv = ", fn_inv);
 
 	let sum_ = i64(0);
 
@@ -435,18 +435,18 @@ fn part2(): i32
 	for ii in [0: nfn]
 	//for ii in [0: 1] // TODO
 	{
-		println("fn index = ", ii);
+		//println("fn index = ", ii);
 
 		// Iterate through clauses
 		for jj in [0: nclauses[ii]]
 		{
 			let i = ii;
-			println("clause index = ", jj);
+			//println("clause index = ", jj);
 
 			// We only care about acceptance "A" endpoints
 			if fn_call[jj, i] == ACCEPT
 			{
-				println("ACCEPT");
+				//println("ACCEPT");
 				let min_ = [min0; NXMAS];
 				let max_ = [max0; NXMAS];
 
@@ -455,7 +455,7 @@ fn part2(): i32
 				//while i != in_call
 				while i >= 0
 				{
-					println("fn index = ", i);
+					//println("fn index = ", i);
 
 					// Work backwards to from endpoint.  Condition jj must be true,
 					// unless jj is the else clause, which is unconditional
@@ -472,8 +472,8 @@ fn part2(): i32
 						{
 							max_[xmas] = min(max_[xmas], num);
 						}
-						println("min_ = ", min_);
-						println("max_ = ", max_);
+						//println("min_ = ", min_);
+						//println("max_ = ", max_);
 					}
 					// All conditions left of jj must be false
 					while j > 0
@@ -490,8 +490,8 @@ fn part2(): i32
 						{
 							min_[xmas] = max(min_[xmas], num);
 						}
-						println("min_ = ", min_);
-						println("max_ = ", max_);
+						//println("min_ = ", min_);
+						//println("max_ = ", max_);
 					}
 
 					// TODO: find the fn that calls the current fn and keep working
@@ -499,7 +499,7 @@ fn part2(): i32
 					// ahead of time.  Shouldn't matter for perf, but I might be
 					// able to avoid some deep nesting
 					let caller = fn_inv[0, i];
-					println("caller = ", caller);
+					//println("caller = ", caller);
 					//if (caller >= 0) j = fn_inv[1, i];
 					j = fn_inv[1, i];
 					i = caller;
@@ -517,7 +517,7 @@ fn part2(): i32
 
 				sum_ += prod_;
 			}
-			println();
+			//println();
 		}
 	}
 
