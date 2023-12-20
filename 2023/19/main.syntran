@@ -31,7 +31,7 @@ fn part1(): i32
 	{
 		//println("str_ = ", str_);
 
-		if not (str_ == "")
+		if str_ != ""
 		{
 			if is_alpha(str_[0])
 				nfn += 1;
@@ -45,7 +45,7 @@ fn part1(): i32
 	//println("nfn = ", nfn);
 	//println("nda = ", nda);
 
-	let fns       = [""; nfn];
+	//let fns       = [""; nfn];
 	let fn_labels = [""; nfn];
 	let bodies    = [""; nfn];
 
@@ -60,11 +60,11 @@ fn part1(): i32
 	{
 		//println("str_ = ", str_);
 
-		if not (str_ == "")
+		if str_ != ""
 		{
 			if is_alpha(str_[0])
 			{
-				fns[nfn] = str_;
+				//fns[nfn] = str_;
 
 				let strs = split_(str_, "{}");
 				fn_labels[nfn] = strs[0];
@@ -148,7 +148,7 @@ fn part1(): i32
 			{
 				// Scan for fn call label
 				fn_call [j, i] = 0;
-				while not (fn_labels[ fn_call[j, i] ] == call)
+				while fn_labels[ fn_call[j, i] ] != call
 					fn_call[j, i] += 1;
 			}
 		}
@@ -164,7 +164,7 @@ fn part1(): i32
 		{
 			// Scan for fn call label
 			fn_call [j, i] = 0;
-			while not (fn_labels[ fn_call[j, i] ] == call)
+			while fn_labels[ fn_call[j, i] ] != call
 				fn_call[j, i] += 1;
 		}
 		//println();
@@ -177,7 +177,7 @@ fn part1(): i32
 	//println("comp_num = ", comp_num);
 
 	let in_call = 0;
-	while not (fn_labels[ in_call ] == "in")
+	while fn_labels[ in_call ] != "in"
 		in_call += 1;
 	//println("in_call = ", in_call);
 
@@ -255,7 +255,7 @@ fn part2(): i32
 	{
 		//println("str_ = ", str_);
 
-		if not (str_ == "")
+		if str_ != ""
 			if is_alpha(str_[0])
 				nfn += 1;
 
@@ -265,7 +265,7 @@ fn part2(): i32
 
 	//println("nfn = ", nfn);
 
-	let fns       = [""; nfn];
+	//let fns       = [""; nfn];
 	let fn_labels = [""; nfn];
 	let bodies    = [""; nfn];
 
@@ -275,10 +275,10 @@ fn part2(): i32
 	str_ = readln(f);
 	while not eof(f)
 	{
-		if not (str_ == "")
+		if str_ != ""
 			if is_alpha(str_[0])
 			{
-				fns[nfn] = str_;
+				//fns[nfn] = str_;
 
 				let strs = split_(str_, "{}");
 				fn_labels[nfn] = strs[0];
@@ -330,7 +330,7 @@ fn part2(): i32
 			{
 				// Scan for fn call label
 				fn_call [j, i] = 0;
-				while not (fn_labels[ fn_call[j, i] ] == call)
+				while fn_labels[ fn_call[j, i] ] != call
 					fn_call[j, i] += 1;
 			}
 		}
@@ -346,7 +346,7 @@ fn part2(): i32
 		{
 			// Scan for fn call label
 			fn_call [j, i] = 0;
-			while not (fn_labels[ fn_call[j, i] ] == call)
+			while fn_labels[ fn_call[j, i] ] != call
 				fn_call[j, i] += 1;
 		}
 		//println();
@@ -355,7 +355,7 @@ fn part2(): i32
 	//println("nclauses = ", nclauses);
 
 	let in_call = 0;
-	while not (fn_labels[ in_call ] == "in")
+	while fn_labels[ in_call ] != "in"
 		in_call += 1;
 
 	// Invert the fn call table: find the line where each fn is called
