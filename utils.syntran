@@ -122,7 +122,7 @@ fn scan(str_: str, set: str): i32
 
 fn is_digit(char_: str): bool
 {
-	// TODO: optimize with i32() char casting
+	// TODO: optimize with i32() char casting, like is_alpha()
 	let ans = scan(char_, digit_chars) >= 0;
 }
 
