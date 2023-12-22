@@ -3,7 +3,7 @@
 
 //==============================================================================
 
-let ifile = 1;
+let ifile = 0;
 
 let filenames =
 [
@@ -15,7 +15,7 @@ let filename = filenames[ifile];
 // Number of time steps
 let nts =
 [
-	6,
+	10, //6,
 	64
 ];
 let nt = nts[ifile];
@@ -227,8 +227,7 @@ fn part1(): i32
 
 	push_(xs, ys);
 
-	for it in [0: nt] // TODO
-	//for it in [0: 2]
+	for it in [0: nt]
 	{
 		println("step ", it);
 
@@ -285,13 +284,121 @@ fn part1(): i32
 
 //==============================================================================
 
+fn part2(): i32
+{
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let nx = len(str_);
+
+	println("nx, ny = ", [nx, ny]);
+
+	let grid = [""; nx, ny];
+	let xs = -1;
+	let ys = -1;
+
+	for y in [0: ny]
+	{
+		//println("str_ = ", str_);
+
+		for x in [0: nx]
+		{
+			grid[x, y] = str_[x];
+			if grid[x, y] == "S"
+			{
+				xs = x;
+				ys = y;
+			}
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("grid = ", grid);
+	println("xs, ys = ", [xs, ys]);
+
+	push_(xs, ys);
+
+	for it in [0: nt]
+	{
+		println("step ", it);
+
+		// Could be optimized by only copying 0: np
+		let p0 = p;
+		let np0 = np;
+
+		np = 0;
+		for ip0 in [0: np0]
+		{
+			for dir in [0: NDIRS]
+			{
+				let x = p0[0, ip0] + DIRS[0, dir];
+				let y = p0[1, ip0] + DIRS[1, dir];
+				if grid[pmod(x, nx), pmod(y, ny)] != "#"
+					push_(x, y);
+			}
+		}
+
+		//println("p dup = ");
+		//for i in [0: np]
+		//	println([p[0,i], p[1,i]]);
+
+		// Convert 2D indices p to 1D indices p1
+		//
+		// TODO: this doesn't work for infinitely tiled grids.  Instead of
+		// making p1, sort p directly, lexicographically
+		let p1 = [-1; np];
+		for ip in [0: np]
+			p1[ip] = p[0,ip] + nx * p[1,ip];
+		//println("p1 = ", p1);
+
+		println("sorting points ...");
+		let pu = uniq(p1);
+		println("done");
+		//println("pu = ", pu);
+
+		// Convert unique 1D indices back to 2D
+		np = 0;
+		for i in [0: size(pu, 0)]
+		{
+			let x = pu[i] % nx;
+			let y = pu[i] / nx;
+			push_(x, y);
+		}
+		println("np = ", np);
+		//println("p unq = ");
+		//for i in [0: np]
+		//	println([p[0,i], p[1,i]]);
+		println();
+	}
+
+	let sum_ = np;
+	println("part 2 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
 fn main()
 {
 	println();
 	println("Starting AOC syntran main");
 
-	part1();
-	//part2();
+	//part1(); // TODO
+	part2();
+
+	//println("pmod(0, 3) = ", pmod(0, 3));
+	//println("pmod(1, 3) = ", pmod(1, 3));
+	//println("pmod(2, 3) = ", pmod(2, 3));
+	//println("pmod(3, 3) = ", pmod(3, 3));
+	//println("pmod(4, 3) = ", pmod(4, 3));
+	//println("pmod(-0, 3) = ", pmod(-0, 3));
+	//println("pmod(-1, 3) = ", pmod(-1, 3));
+	//println("pmod(-2, 3) = ", pmod(-2, 3));
+	//println("pmod(-3, 3) = ", pmod(-3, 3));
+	//println("pmod(-4, 3) = ", pmod(-4, 3));
 
 	println("Ending AOC syntran main");
 	println();
