@@ -13,7 +13,7 @@ let filenames =
 let filename = filenames[ifile];
 
 // Number of time steps
-let nts = 
+let nts =
 [
 	6,
 	64
@@ -68,15 +68,15 @@ fn push_(x: i32, y: i32)
 
 //==============================================================================
 
-fn qsort(arr: [i32; :]): [i32; :]
+fn qsort(v: [i32; :]): [i32; :]
 {
 	// Quick sort algorithm
 
 	//println("starting qsort()");
-	//println("arr = ", arr);
+	//println("v = ", v);
 
 	let l = 0;
-	let h = size(arr,0) - 1;
+	let h = size(v,0) - 1;
 
 	if l < h
 	{
@@ -92,6 +92,7 @@ fn qsort(arr: [i32; :]): [i32; :]
 
 		while top >= 0
 		{
+			//println("h = ", h);
 			h = stack[top];
 			top -= 1;
 
@@ -99,27 +100,51 @@ fn qsort(arr: [i32; :]): [i32; :]
 			top -= 1;
 
 			//// inlined
-			//let p = partition(arr, l, h);
-			let x = arr[h];
+			//let p = partition(v, l, h);
+
+			//let x = v[h];
+
+			// Median-of-three pivot.  40x faster for AOC!
+			let m = (l + h) / 2;
+			if v[m] < v[l]
+			{
+				let tmp = v[m];
+				v[m]    = v[l];
+				v[l]    = tmp;
+			}
+			if v[h] < v[l]
+			{
+				let tmp = v[h];
+				v[h]    = v[l];
+				v[l]    = tmp;
+			}
+			if v[m] < v[h]
+			{
+				let tmp = v[m];
+				v[m]    = v[h];
+				v[h]    = tmp;
+			}
+			let x = v[h];
+
 			let i = (l - 1);
 			for j in [l: h]
-				if arr[j] <= x
+				if v[j] <= x
 				{
 					i += 1;
-					let tmp = arr[i];
-					arr[i]  = arr[j];
-					arr[j]  = tmp;
+					let tmp = v[i];
+					v[i]  = v[j];
+					v[j]  = tmp;
 				}
-			let tmp = arr[i+1];
-			arr[i+1] = arr[h];
-			arr[h] = tmp;
+			let tmp = v[i+1];
+			v[i+1] = v[h];
+			v[h] = tmp;
 			let p = i + 1;
 
 			if p - 1 > l
 			{
 				top += 1;
 				stack[top] = l;
-			
+
 				top += 1;
 				stack[top] = p - 1;
 			}
@@ -128,14 +153,14 @@ fn qsort(arr: [i32; :]): [i32; :]
 			{
 				top += 1;
 				stack[top] = p + 1;
-			
+
 				top += 1;
 				stack[top] = h;
 			}
 		}
 	}
-	//println("arr = ", arr);
-	let ans = arr;
+	//println("v = ", v);
+	let ans = v;
 }
 
 fn uniq(v_in: [i32; :]): [i32; :]
@@ -182,7 +207,7 @@ fn part1(): i32
 
 	for y in [0: ny]
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		for x in [0: nx]
 		{
@@ -197,7 +222,7 @@ fn part1(): i32
 		str_ = readln(f);
 	}
 	close(f);
-	println("grid = ", grid);
+	//println("grid = ", grid);
 	println("xs, ys = ", [xs, ys]);
 
 	push_(xs, ys);
@@ -205,6 +230,8 @@ fn part1(): i32
 	for it in [0: nt] // TODO
 	//for it in [0: 2]
 	{
+		println("step ", it);
+
 		// Could be optimized by only copying 0: np
 		let p0 = p;
 		let np0 = np;
@@ -221,18 +248,20 @@ fn part1(): i32
 			}
 		}
 
-		println("p dup = ");
-		for i in [0: np]
-			println([p[0,i], p[1,i]]);
+		//println("p dup = ");
+		//for i in [0: np]
+		//	println([p[0,i], p[1,i]]);
 
 		// Convert 2D indices p to 1D indices p1
 		let p1 = [-1; np];
 		for ip in [0: np]
 			p1[ip] = p[0,ip] + nx * p[1,ip];
-		println("p1 = ", p1);
+		//println("p1 = ", p1);
 
+		println("sorting points ...");
 		let pu = uniq(p1);
-		println("pu = ", pu);
+		println("done");
+		//println("pu = ", pu);
 
 		// Convert unique 1D indices back to 2D
 		np = 0;
@@ -242,9 +271,11 @@ fn part1(): i32
 			let y = pu[i] / nx;
 			push_(x, y);
 		}
-		println("p unq = ");
-		for i in [0: np]
-			println([p[0,i], p[1,i]]);
+		println("np = ", np);
+		//println("p unq = ");
+		//for i in [0: np]
+		//	println([p[0,i], p[1,i]]);
+		println();
 	}
 
 	let sum_ = np;
