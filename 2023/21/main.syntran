@@ -329,6 +329,22 @@ fn part2(): i32
 		let p0 = p;
 		let np0 = np;
 
+		// TODO: the points expand outward ~~in a ring~~.  Points in the interior of
+		// the ring just flip-flop between white and black squares like a
+		// checkerboard pattern.  Even steps have all points on white squares,
+		// and and odd steps have all points on black squares
+		//
+		// Nothing new happens on the interior, only points on the frontier of
+		// expansion do anything interesting.  Compare set of points with all
+		// points from two steps ago (e.g. compare black to black and white to
+		// white), maybe using a bisection search on lexicographical ordering.
+		// Only points that expand "outwards" need to be processed in the next
+		// step
+		//
+		// Actually it's not necessarily a ring.  Because of rocks, the
+		// expansion could happen around obstacles but back towards the starting
+		// point
+
 		np = 0;
 		for ip0 in [0: np0]
 		{
