@@ -1,0 +1,274 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+// Number of time steps
+let nts = 
+[
+	6,
+	64
+];
+let nt = nts[ifile];
+
+//==============================================================================
+
+let NDIM = 2;        // spatial dimensions
+
+let NDIRS = 4;
+
+// Cardinal directions
+let DIRS =
+	[
+		 0, -1, // north
+		-1,  0, // west
+		 0,  1, // south
+		 1,  0  // east
+		 ;
+		 2,  NDIRS
+	];
+//println("DIRS = ", DIRS);
+
+// Note consistent ordering with DIRS array
+let NORTH = 0;
+let WEST  = 1;
+let SOUTH = 2;
+let EAST  = 3;
+
+//****************
+
+// List of reachable positions
+let NPCAP = 1024 * 1024;
+let p = [-1; NDIM, NPCAP];
+let np = 0;
+
+fn push_(x: i32, y: i32)
+{
+	if np >= NPCAP
+	{
+		println();
+		println("Error: NPCAP overflow!");
+		println();
+		exit(-1);
+	}
+
+	p[0, np] = x;
+	p[1, np] = y;
+	np += 1;
+}
+
+//==============================================================================
+
+fn qsort(arr: [i32; :]): [i32; :]
+{
+	// Quick sort algorithm
+
+	//println("starting qsort()");
+	//println("arr = ", arr);
+
+	let l = 0;
+	let h = size(arr,0) - 1;
+
+	if l < h
+	{
+		let stack = [0; h - l + 1];
+
+		let top = -1;
+
+		top += 1;
+		stack[top] = l;
+
+		top += 1;
+		stack[top] = h;
+
+		while top >= 0
+		{
+			h = stack[top];
+			top -= 1;
+
+			l = stack[top];
+			top -= 1;
+
+			//// inlined
+			//let p = partition(arr, l, h);
+			let x = arr[h];
+			let i = (l - 1);
+			for j in [l: h]
+				if arr[j] <= x
+				{
+					i += 1;
+					let tmp = arr[i];
+					arr[i]  = arr[j];
+					arr[j]  = tmp;
+				}
+			let tmp = arr[i+1];
+			arr[i+1] = arr[h];
+			arr[h] = tmp;
+			let p = i + 1;
+
+			if p - 1 > l
+			{
+				top += 1;
+				stack[top] = l;
+			
+				top += 1;
+				stack[top] = p - 1;
+			}
+
+			if p + 1 < h
+			{
+				top += 1;
+				stack[top] = p + 1;
+			
+				top += 1;
+				stack[top] = h;
+			}
+		}
+	}
+	//println("arr = ", arr);
+	let ans = arr;
+}
+
+fn uniq(v_in: [i32; :]): [i32; :]
+{
+	let v = qsort(v_in);
+	let u = v;
+
+	u[0] = v[0];
+	let nu = 1;
+	for i in [1: size(v, 0)]
+	{
+		if v[i] != v[i - 1]
+		{
+			u[nu] = v[i];
+			nu += 1;
+		}
+	}
+	//println("u = ", u);
+
+	// Trim
+	let ut = [-1; nu];
+	for i in [0: nu]
+		ut[i] = u[i];
+
+	let ans = ut;
+}
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let nx = len(str_);
+
+	println("nx, ny = ", [nx, ny]);
+
+	let grid = [""; nx, ny];
+	let xs = -1;
+	let ys = -1;
+
+	for y in [0: ny]
+	{
+		println("str_ = ", str_);
+
+		for x in [0: nx]
+		{
+			grid[x, y] = str_[x];
+			if grid[x, y] == "S"
+			{
+				xs = x;
+				ys = y;
+			}
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+	println("grid = ", grid);
+	println("xs, ys = ", [xs, ys]);
+
+	push_(xs, ys);
+
+	for it in [0: nt] // TODO
+	//for it in [0: 2]
+	{
+		// Could be optimized by only copying 0: np
+		let p0 = p;
+		let np0 = np;
+
+		np = 0;
+		for ip0 in [0: np0]
+		{
+			for dir in [0: NDIRS]
+			{
+				let x = p0[0, ip0] + DIRS[0, dir];
+				let y = p0[1, ip0] + DIRS[1, dir];
+				if grid[x, y] != "#"
+					push_(x, y);
+			}
+		}
+
+		println("p dup = ");
+		for i in [0: np]
+			println([p[0,i], p[1,i]]);
+
+		// Convert 2D indices p to 1D indices p1
+		let p1 = [-1; np];
+		for ip in [0: np]
+			p1[ip] = p[0,ip] + nx * p[1,ip];
+		println("p1 = ", p1);
+
+		let pu = uniq(p1);
+		println("pu = ", pu);
+
+		// Convert unique 1D indices back to 2D
+		np = 0;
+		for i in [0: size(pu, 0)]
+		{
+			let x = pu[i] % nx;
+			let y = pu[i] / nx;
+			push_(x, y);
+		}
+		println("p unq = ");
+		for i in [0: np]
+			println([p[0,i], p[1,i]]);
+	}
+
+	let sum_ = np;
+	println("part 1 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	//part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+
