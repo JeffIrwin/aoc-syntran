@@ -97,7 +97,10 @@ fn sort_queue()
 
 			//// inlined
 			//let p = partition(queue, l, h);
+
+			// TODO: use median-of-3 pivot like later day(s)
 			let x = queue[0,h];
+
 			let i = l - 1;
 			for j in [l: h]
 				if queue[0,j] <= x
@@ -132,7 +135,7 @@ fn sort_queue()
 			{
 				top += 1;
 				stack[top] = p + 1;
-			
+
 				top += 1;
 				stack[top] = h;
 			}
