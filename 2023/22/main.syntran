@@ -123,6 +123,7 @@ fn part1(): i32
 	let ymax = [-1; nb];
 	let zmax = [-1; nb];
 
+	// TODO: intrinsic HUGE in syntran or max int fn
 	let HUGE = 2000000000;
 	let xminmin =  HUGE;
 	let yminmin =  HUGE;
