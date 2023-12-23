@@ -209,12 +209,15 @@ fn part1(): i32
 
 						if nsupported_by[i] < NSUP_BY_CAP
 						{
-							// TODO: this should really use a loop to check if
-							// it's already in the list
-							let supporter0 = supported_by[0, i];
-							let supporter1 = supported_by[1, i];
+							let listed = false;
+							let j = 0;
+							while not listed and j < nsupported_by[i]
+							{
+								listed = vox[x, y, z] == supported_by[j, i];
+								j += 1;
+							}
 
-							if vox[x, y, z] != supporter0 and vox[x, y, z] != supporter1
+							if not listed
 							{
 								supported_by[ nsupported_by[i], i ] = vox[x, y, z];
 								nsupported_by[i] += 1;
@@ -328,7 +331,7 @@ fn part2(): i32
 
 	// Other inputs might need a smaller cap?  This is surprisingly small so I
 	// feel like it's intentional
-	let NSUP_BY_CAP = 3;
+	let NSUP_BY_CAP = 8;
 
 	// supported_by[:,i] == j means that brick i is supported by brick j
 	let supported_by  = [-1; NSUP_BY_CAP, nb];
@@ -355,25 +358,23 @@ fn part2(): i32
 					{
 						resting = true;
 
-						// TODO: this should really use a loop to check if
-						let supporter0 = supported_by[0, i];
-						let supporter1 = supported_by[1, i];
-						let supporter2 = supported_by[2, i];
-
-						if vox[x, y, z] != supporter0 and
-						   vox[x, y, z] != supporter1 and
-						   vox[x, y, z] != supporter2
+						let listed = false;
+						let j = 0;
+						while not listed and j < nsupported_by[i]
 						{
-							if nsupported_by[i] < NSUP_BY_CAP
-							{
-								supported_by[ nsupported_by[i], i ] = vox[x, y, z];
-								nsupported_by[i] += 1;
-							}
-							else
+							listed = vox[x, y, z] == supported_by[j, i];
+							j += 1;
+						}
+
+						if not listed
+						{
+							if nsupported_by[i] >= NSUP_BY_CAP
 							{
 								println("Error: NSUP_BY_CAP overflow!");
 								exit(-1);
 							}
+							supported_by[ nsupported_by[i], i ] = vox[x, y, z];
+							nsupported_by[i] += 1;
 						}
 					}
 			}
@@ -406,17 +407,13 @@ fn part2(): i32
 		{
 			let supporter = supported_by[j, supportee];
 
-			if nsupports[supporter] < NSUPS_CAP
-			{
-				supports[ nsupports[supporter], supporter ] = supportee;
-				nsupports[supporter] += 1;
-			}
-			else
+			if nsupports[supporter] >= NSUPS_CAP
 			{
 				println("Error: NSUPS_CAP overflow!");
 				exit(-1);
 			}
-
+			supports[ nsupports[supporter], supporter ] = supportee;
+			nsupports[supporter] += 1;
 		}
 	}
 
