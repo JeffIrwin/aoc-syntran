@@ -1,0 +1,462 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn qsort(v: [i32; :]): [i32; :]
+{
+	// Quick sort algorithm.  Return index array instead of modifying the input
+	// array in-place
+
+	//println("starting qsort()");
+	//println("v = ", v);
+
+	let l = 0;
+	let h = size(v,0) - 1;
+
+	let ix = [l: h + 1];
+
+	if l < h
+	{
+		let stack = [0; h - l + 1];
+
+		let top = -1;
+
+		top += 1;
+		stack[top] = l;
+
+		top += 1;
+		stack[top] = h;
+
+		while top >= 0
+		{
+			//println("h = ", h);
+			h = stack[top];
+			top -= 1;
+
+			l = stack[top];
+			top -= 1;
+
+			// Median-of-three pivot.  40x faster for AOC day 21!
+			let m = (l + h) / 2;
+			if v[ix[m]] < v[ix[l]]
+			{
+				let tmp = ix[m];
+				ix[m]   = ix[l];
+				ix[l]   = tmp;
+			}
+			if v[ix[h]] < v[ix[l]]
+			{
+				let tmp = ix[h];
+				ix[h]   = ix[l];
+				ix[l]   = tmp;
+			}
+			if v[ix[m]] < v[ix[h]]
+			{
+				let tmp = ix[m];
+				ix[m]   = ix[h];
+				ix[h]   = tmp;
+			}
+			let x = v[ix[h]];
+
+			let i = (l - 1);
+			for j in [l: h]
+				if v[ix[j]] <= x
+				{
+					i += 1;
+					let tmp = ix[i];
+					ix[i]   = ix[j];
+					ix[j]   = tmp;
+				}
+			let tmp = ix[i+1];
+			ix[i+1] = ix[h];
+			ix[h]   = tmp;
+			let p = i + 1;
+
+			if p - 1 > l
+			{
+				top += 1;
+				stack[top] = l;
+
+				top += 1;
+				stack[top] = p - 1;
+			}
+
+			if p + 1 < h
+			{
+				top += 1;
+				stack[top] = p + 1;
+
+				top += 1;
+				stack[top] = h;
+			}
+		}
+	}
+	//println("v = ", v);
+	//let ans = v;
+	let ans = ix;
+}
+
+//==============================================================================
+
+fn part1(): i32
+{
+	let nb = countln_(filename);
+	println("nb = ", nb);
+
+	let xmin = [-1; nb];
+	let ymin = [-1; nb];
+	let zmin = [-1; nb];
+
+	let xmax = [-1; nb];
+	let ymax = [-1; nb];
+	let zmax = [-1; nb];
+
+	let HUGE = 2000000000;
+	let xminmin =  HUGE;
+	let yminmin =  HUGE;
+	let zminmin =  HUGE;
+	let xmaxmax = -HUGE;
+	let ymaxmax = -HUGE;
+	let zmaxmax = -HUGE;
+
+	let f = open(filename);
+	for i in [0: nb]
+	{
+		let str_ = readln(f);
+		//println("str_ = ", str_);
+
+		let coords = parse_i32_delim(str_, ",~");
+
+		xmin[i] = coords[0];
+		ymin[i] = coords[1];
+		zmin[i] = coords[2];
+
+		xmax[i] = coords[3];
+		ymax[i] = coords[4];
+		zmax[i] = coords[5];
+
+		xminmin = min(xminmin, xmin[i]);
+		yminmin = min(yminmin, ymin[i]);
+		zminmin = min(zminmin, zmin[i]);
+
+		xmaxmax = max(xmaxmax, xmax[i]);
+		ymaxmax = max(ymaxmax, ymax[i]);
+		zmaxmax = max(zmaxmax, zmax[i]);
+	}
+	close(f);
+
+	//println("min = ", xmin, ymin, zmin);
+	//println("max = ", xmax, ymax, zmax);
+
+	//println();
+	println("min = ", [xminmin, yminmin, zminmin]);
+	println("max = ", [xmaxmax, ymaxmax, zmaxmax]);
+
+	// Get an index array to sort by min z coord
+	let ix = qsort(zmin);
+	//println("ix = ", ix);
+
+	//println("zmin sorted = ");
+	//for i in [0: nb]
+	//	println(zmin[ix[i]]);
+
+	// Voxel data.  Negative numbers are empty space, positive numbers are the
+	// index of the grid it that position
+	let EMPTY = -1;
+	let vox = [EMPTY; xmaxmax + 1, ymaxmax + 1, zmaxmax + 1];
+
+	//println("empty vox = ", vox);
+
+	// supported_by[:,i] == j means that brick i is supported by brick j
+	let NSUP_CAP = 2;
+	let supported_by  = [-1; NSUP_CAP, nb];
+	let nsupported_by = [ 0; nb]; // nsupported_by[i] is the number of bricks that brick i is supported by
+
+	// Let all the bricks fall, starting with the lowest brick
+	//println("zmin = ", zmin);
+	for ii in [0: nb]
+	{
+		let i = ix[ii];
+		//println("xyz min = ", [xmin[i], ymin[i], zmin[i]]);
+
+		let resting = false;
+		while not resting
+		{
+			// Check collision with ground
+			resting = zmin[i] <= 1;
+
+			if not resting
+			{
+				// Check collision with other bricks
+				let z = zmin[i] - 1;
+				for y in [ymin[i]: ymax[i] + 1]
+				for x in [xmin[i]: xmax[i] + 1]
+					if vox[x, y, z] != EMPTY
+					{
+						resting = true;
+
+						if nsupported_by[i] < NSUP_CAP
+						{
+							let supporter0 = supported_by[0, i];
+							let supporter1 = supported_by[0, i];
+
+							if vox[x, y, z] != supporter0 and vox[x, y, z] != supporter1
+							{
+								supported_by[ nsupported_by[i], i ] = vox[x, y, z];
+								nsupported_by[i] += 1;
+							}
+						}
+					}
+			}
+
+			if not resting
+			{
+				zmin[i] -= 1;
+				zmax[i] -= 1;
+			}
+		}
+
+		//println("brick = ",
+		//		xmin[i], ",", ymin[i], ",", zmin[i], "~",
+		//		xmax[i], ",", ymax[i], ",", zmax[i]);
+
+		// Set the resting brick's position in the vox array
+		for z in [zmin[i]: zmax[i] + 1]
+		for y in [ymin[i]: ymax[i] + 1]
+		for x in [xmin[i]: xmax[i] + 1]
+		{
+			vox[x, y, z] = i;
+		}
+
+		//println("vox = ", vox);
+	}
+	//println("zmin = ", zmin);
+	//println("zmax = ", zmax);
+
+	// If a brick is the only brick that is supporting another brick, it cannot
+	// be disintegrated
+	//println("supported_by = ", supported_by);
+	let can_disintegrate = [true; nb];
+	for i in [0: nb]
+	{
+		let supporter = supported_by[0,i];
+		//if supported_by[1,i] < 0 and supporter >= 0
+		if nsupported_by[i] == 1
+		{
+			can_disintegrate[supporter] = false;
+		}
+	}
+	//println("can_disintegrate = ", can_disintegrate);
+
+	let sum_ = 0;
+	for i in [0: nb]
+		if can_disintegrate[i]
+			sum_ += 1;
+
+	println("part 1 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn part2(): i32
+{
+	let nb = countln_(filename);
+	println("nb = ", nb);
+
+	let xmin = [-1; nb];
+	let ymin = [-1; nb];
+	let zmin = [-1; nb];
+
+	let xmax = [-1; nb];
+	let ymax = [-1; nb];
+	let zmax = [-1; nb];
+
+	let HUGE = 2000000000;
+	let xminmin =  HUGE;
+	let yminmin =  HUGE;
+	let zminmin =  HUGE;
+	let xmaxmax = -HUGE;
+	let ymaxmax = -HUGE;
+	let zmaxmax = -HUGE;
+
+	let f = open(filename);
+	for i in [0: nb]
+	{
+		let str_ = readln(f);
+		//println("str_ = ", str_);
+
+		let coords = parse_i32_delim(str_, ",~");
+
+		xmin[i] = coords[0];
+		ymin[i] = coords[1];
+		zmin[i] = coords[2];
+
+		xmax[i] = coords[3];
+		ymax[i] = coords[4];
+		zmax[i] = coords[5];
+
+		xminmin = min(xminmin, xmin[i]);
+		yminmin = min(yminmin, ymin[i]);
+		zminmin = min(zminmin, zmin[i]);
+
+		xmaxmax = max(xmaxmax, xmax[i]);
+		ymaxmax = max(ymaxmax, ymax[i]);
+		zmaxmax = max(zmaxmax, zmax[i]);
+	}
+	close(f);
+
+	//println("min = ", xmin, ymin, zmin);
+	//println("max = ", xmax, ymax, zmax);
+
+	//println();
+	println("min = ", [xminmin, yminmin, zminmin]);
+	println("max = ", [xmaxmax, ymaxmax, zmaxmax]);
+
+	// Get an index array to sort by min z coord
+	let ix = qsort(zmin);
+	//println("ix = ", ix);
+
+	//println("zmin sorted = ");
+	//for i in [0: nb]
+	//	println(zmin[ix[i]]);
+
+	// Voxel data.  Negative numbers are empty space, positive numbers are the
+	// index of the grid it that position
+	let EMPTY = -1;
+	let vox = [EMPTY; xmaxmax + 1, ymaxmax + 1, zmaxmax + 1];
+
+	//println("empty vox = ", vox);
+
+	// supported_by[:,i] == j means that brick i is supported by brick j
+
+	// TODO: set higher cap for part 2 because we need to know the whole tree.
+	// Check for cap overflow
+	let NSUP_CAP = 32;
+	let supported_by  = [-1; NSUP_CAP, nb];
+	let nsupported_by = [ 0; nb]; // nsupported_by[i] is the number of bricks that brick i is supported by
+
+	// Let all the bricks fall, starting with the lowest brick
+	//println("zmin = ", zmin);
+	for ii in [0: nb]
+	{
+		let i = ix[ii];
+		//println("xyz min = ", [xmin[i], ymin[i], zmin[i]]);
+
+		let resting = false;
+		while not resting
+		{
+			// Check collision with ground
+			resting = zmin[i] <= 1;
+
+			if not resting
+			{
+				// Check collision with other bricks
+				let z = zmin[i] - 1;
+				for y in [ymin[i]: ymax[i] + 1]
+				for x in [xmin[i]: xmax[i] + 1]
+					if vox[x, y, z] != EMPTY
+					{
+						resting = true;
+
+						if nsupported_by[i] < NSUP_CAP
+						{
+							let supporter0 = supported_by[0, i];
+							let supporter1 = supported_by[0, i];
+
+							// TODO: modify this condition for NSUP_CAP > 2
+							if vox[x, y, z] != supporter0 and vox[x, y, z] != supporter1
+							{
+								supported_by[ nsupported_by[i], i ] = vox[x, y, z];
+								nsupported_by[i] += 1;
+							}
+						}
+						else
+						{
+							println("Error: NSUP_CAP overflow!");
+							exit(-1);
+						}
+					}
+			}
+
+			if not resting
+			{
+				zmin[i] -= 1;
+				zmax[i] -= 1;
+			}
+		}
+
+		//println("brick = ",
+		//		xmin[i], ",", ymin[i], ",", zmin[i], "~",
+		//		xmax[i], ",", ymax[i], ",", zmax[i]);
+
+		// Set the resting brick's position in the vox array
+		for z in [zmin[i]: zmax[i] + 1]
+		for y in [ymin[i]: ymax[i] + 1]
+		for x in [xmin[i]: xmax[i] + 1]
+		{
+			vox[x, y, z] = i;
+		}
+
+		//println("vox = ", vox);
+	}
+	//println("zmin = ", zmin);
+	//println("zmax = ", zmax);
+
+	//// TODO: this is not right.  nfall only accounts for bricks that are
+	//// *directly* supported by a disintegrating brick and does not count chain
+	//// reactions of other higher bricks that are indirectly supported
+
+	//println("supported_by = ", supported_by);
+	let nfall = [0; nb];
+	for i in [0: nb]
+	{
+		let supporter = supported_by[0,i];
+		//if supported_by[1,i] < 0 and supporter >= 0
+		if nsupported_by[i] == 1
+		{
+			nfall[supporter] += 1;
+		}
+	}
+	//println("nfall = ", nfall);
+
+	let sum_ = 0;
+	for i in [0: nb]
+		sum_ += nfall[i];
+
+	println("part 2 = ", sum_);
+	sum_;
+}
+
+//==============================================================================
+
+fn main()
+{
+	println();
+	println("Starting AOC syntran main");
+
+	part1();
+	part2();
+
+	println("Ending AOC syntran main");
+	println();
+}
+
+//==============================================================================
+
+main();
+
+//==============================================================================
+

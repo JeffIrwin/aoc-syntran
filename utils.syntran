@@ -389,8 +389,8 @@ fn split_(str_: str, delims: str): [str; :]
 {
 	// Split an input str_ into a vector of strs based on a set of delimiters
 
-	println("starting split_()");
-	println("str_ = """, str_, """");
+	//println("starting split_()");
+	//println("str_ = """, str_, """");
 
 	let n = len(str_);
 	//println("n = ", n);
@@ -415,7 +415,7 @@ fn split_(str_: str, delims: str): [str; :]
 
 		nout += 1;
 	}
-	println("nout = ", nout);
+	//println("nout = ", nout);
 
 	let out = [""; nout];
 
