@@ -113,7 +113,7 @@ fn qsort(v: [i32; :]): [i32; :]
 fn part1(): i32
 {
 	let nb = countln_(filename);
-	println("nb = ", nb);
+	//println("nb = ", nb);
 
 	let xmin = [-1; nb];
 	let ymin = [-1; nb];
@@ -161,8 +161,8 @@ fn part1(): i32
 	//println("max = ", xmax, ymax, zmax);
 
 	//println();
-	println("min = ", [xminmin, yminmin, zminmin]);
-	println("max = ", [xmaxmax, ymaxmax, zmaxmax]);
+	//println("min = ", [xminmin, yminmin, zminmin]);
+	//println("max = ", [xmaxmax, ymaxmax, zmaxmax]);
 
 	// Get an index array to sort by min z coord
 	let ix = qsort(zmin);
@@ -276,7 +276,6 @@ fn part1(): i32
 fn part2(): i32
 {
 	let nb = countln_(filename);
-	println("nb = ", nb);
 
 	let xmin = [-1; nb];
 	let ymin = [-1; nb];
@@ -298,7 +297,6 @@ fn part2(): i32
 	for i in [0: nb]
 	{
 		let str_ = readln(f);
-		//println("str_ = ", str_);
 
 		let coords = parse_i32_delim(str_, ",~");
 
@@ -320,27 +318,13 @@ fn part2(): i32
 	}
 	close(f);
 
-	//println("min = ", xmin, ymin, zmin);
-	//println("max = ", xmax, ymax, zmax);
-
-	//println();
-	println("min = ", [xminmin, yminmin, zminmin]);
-	println("max = ", [xmaxmax, ymaxmax, zmaxmax]);
-
 	// Get an index array to sort by min z coord
 	let ix = qsort(zmin);
-	//println("ix = ", ix);
-
-	//println("zmin sorted = ");
-	//for i in [0: nb]
-	//	println(zmin[ix[i]]);
 
 	// Voxel data.  Negative numbers are empty space, positive numbers are the
 	// index of the grid it that position
 	let EMPTY = -1;
 	let vox = [EMPTY; xmaxmax + 1, ymaxmax + 1, zmaxmax + 1];
-
-	//println("empty vox = ", vox);
 
 	// Other inputs might need a smaller cap?  This is surprisingly small so I
 	// feel like it's intentional
@@ -351,11 +335,9 @@ fn part2(): i32
 	let nsupported_by = [ 0; nb]; // nsupported_by[i] is the number of bricks that brick i is supported by
 
 	// Let all the bricks fall, starting with the lowest brick
-	//println("zmin = ", zmin);
 	for ii in [0: nb]
 	{
 		let i = ix[ii];
-		//println("xyz min = ", [xmin[i], ymin[i], zmin[i]]);
 
 		let resting = false;
 		while not resting
@@ -373,6 +355,7 @@ fn part2(): i32
 					{
 						resting = true;
 
+						// TODO: this should really use a loop to check if
 						let supporter0 = supported_by[0, i];
 						let supporter1 = supported_by[1, i];
 						let supporter2 = supported_by[2, i];
@@ -402,10 +385,6 @@ fn part2(): i32
 			}
 		}
 
-		//println("brick = ",
-		//		xmin[i], ",", ymin[i], ",", zmin[i], "~",
-		//		xmax[i], ",", ymax[i], ",", zmax[i]);
-
 		// Set the resting brick's position in the vox array
 		for z in [zmin[i]: zmax[i] + 1]
 		for y in [ymin[i]: ymax[i] + 1]
@@ -413,13 +392,8 @@ fn part2(): i32
 		{
 			vox[x, y, z] = i;
 		}
-
-		//println("vox = ", vox);
 	}
-	//println("zmin = ", zmin);
-	//println("zmax = ", zmax);
-
-	println("supported_by = ", supported_by);
+	//println("supported_by = ", supported_by);
 
 	let NSUPS_CAP = 8;  // 4 worked for my input but this is easier to change
 
@@ -445,11 +419,9 @@ fn part2(): i32
 
 		}
 	}
-	println("supports = ", supports);
 
 	// Backup original at-rest state
 	let vox0 = vox;
-	println("vox0 = ", vox0);
 
 	let nfall = [0; nb];
 	for i in [0: nb]
@@ -459,11 +431,11 @@ fn part2(): i32
 
 		// Disintegration queue
 		let q = [0; nb];
-		let qs = 0;
-		let qe = 0; // queue start/end
+		let qs = -1;
+		let qe = -1; // queue start/end
 
 		// Push brick i for disintegration
-		q[(qe += 1) - 1] = i;  // poor man's qe++
+		q[(qe += 1)] = i;  // poor man's ++qe
 
 		//println("q = ", q);
 
@@ -471,7 +443,7 @@ fn part2(): i32
 		while qs < qe
 		{
 			// pop
-			let j = q[(qs += 1) - 1];
+			let j = q[(qs += 1)];
 
 			// Disintegrate
 			for z in [zmin[j]: zmax[j] + 1]
@@ -494,13 +466,13 @@ fn part2(): i32
 
 				if not resting
 				{
-					q[(qe += 1) - 1] = l;  // push
+					q[(qe += 1)] = l;  // push
 					nfall[i] += 1;
 				}
 			}
 		}
 	}
-	println("nfall = ", nfall);
+	//println("nfall = ", nfall);
 
 	let sum_ = 0;
 	for i in [0: nb]
@@ -517,7 +489,7 @@ fn main()
 	println();
 	println("Starting AOC syntran main");
 
-	//part1(); // TODO
+	part1();
 	part2();
 
 	println("Ending AOC syntran main");
