@@ -180,8 +180,8 @@ fn part1(): i32
 	//println("empty vox = ", vox);
 
 	// supported_by[:,i] == j means that brick i is supported by brick j
-	let NSUP_CAP = 2;
-	let supported_by  = [-1; NSUP_CAP, nb];
+	let NSUP_BY_CAP = 2;
+	let supported_by  = [-1; NSUP_BY_CAP, nb];
 	let nsupported_by = [ 0; nb]; // nsupported_by[i] is the number of bricks that brick i is supported by
 
 	// Let all the bricks fall, starting with the lowest brick
@@ -207,10 +207,12 @@ fn part1(): i32
 					{
 						resting = true;
 
-						if nsupported_by[i] < NSUP_CAP
+						if nsupported_by[i] < NSUP_BY_CAP
 						{
+							// TODO: this should really use a loop to check if
+							// it's already in the list
 							let supporter0 = supported_by[0, i];
-							let supporter1 = supported_by[0, i];
+							let supporter1 = supported_by[1, i];
 
 							if vox[x, y, z] != supporter0 and vox[x, y, z] != supporter1
 							{
@@ -340,12 +342,12 @@ fn part2(): i32
 
 	//println("empty vox = ", vox);
 
-	// supported_by[:,i] == j means that brick i is supported by brick j
+	// Other inputs might need a smaller cap?  This is surprisingly small so I
+	// feel like it's intentional
+	let NSUP_BY_CAP = 3;
 
-	// TODO: set higher cap for part 2 because we need to know the whole tree.
-	// Check for cap overflow
-	let NSUP_CAP = 32;
-	let supported_by  = [-1; NSUP_CAP, nb];
+	// supported_by[:,i] == j means that brick i is supported by brick j
+	let supported_by  = [-1; NSUP_BY_CAP, nb];
 	let nsupported_by = [ 0; nb]; // nsupported_by[i] is the number of bricks that brick i is supported by
 
 	// Let all the bricks fall, starting with the lowest brick
@@ -371,22 +373,24 @@ fn part2(): i32
 					{
 						resting = true;
 
-						if nsupported_by[i] < NSUP_CAP
-						{
-							let supporter0 = supported_by[0, i];
-							let supporter1 = supported_by[0, i];
+						let supporter0 = supported_by[0, i];
+						let supporter1 = supported_by[1, i];
+						let supporter2 = supported_by[2, i];
 
-							// TODO: modify this condition for NSUP_CAP > 2
-							if vox[x, y, z] != supporter0 and vox[x, y, z] != supporter1
+						if vox[x, y, z] != supporter0 and
+						   vox[x, y, z] != supporter1 and
+						   vox[x, y, z] != supporter2
+						{
+							if nsupported_by[i] < NSUP_BY_CAP
 							{
 								supported_by[ nsupported_by[i], i ] = vox[x, y, z];
 								nsupported_by[i] += 1;
 							}
-						}
-						else
-						{
-							println("Error: NSUP_CAP overflow!");
-							exit(-1);
+							else
+							{
+								println("Error: NSUP_BY_CAP overflow!");
+								exit(-1);
+							}
 						}
 					}
 			}
@@ -415,22 +419,88 @@ fn part2(): i32
 	//println("zmin = ", zmin);
 	//println("zmax = ", zmax);
 
-	//// TODO: this is not right.  nfall only accounts for bricks that are
-	//// *directly* supported by a disintegrating brick and does not count chain
-	//// reactions of other higher bricks that are indirectly supported
+	println("supported_by = ", supported_by);
 
-	//println("supported_by = ", supported_by);
+	let NSUPS_CAP = 8;  // 4 worked for my input but this is easier to change
+
+	// Invert the `supported_by` table to get `supports`
+	let supports  = [-1; NSUPS_CAP, nb];
+	let nsupports = [ 0; nb];
+	for supportee in [0: nb]
+	{
+		for j in [0: nsupported_by[supportee]]
+		{
+			let supporter = supported_by[j, supportee];
+
+			if nsupports[supporter] < NSUPS_CAP
+			{
+				supports[ nsupports[supporter], supporter ] = supportee;
+				nsupports[supporter] += 1;
+			}
+			else
+			{
+				println("Error: NSUPS_CAP overflow!");
+				exit(-1);
+			}
+
+		}
+	}
+	println("supports = ", supports);
+
+	// Backup original at-rest state
+	let vox0 = vox;
+	println("vox0 = ", vox0);
+
 	let nfall = [0; nb];
 	for i in [0: nb]
 	{
-		let supporter = supported_by[0,i];
-		//if supported_by[1,i] < 0 and supporter >= 0
-		if nsupported_by[i] == 1
+		// Restore
+		vox = vox0;
+
+		// Disintegration queue
+		let q = [0; nb];
+		let qs = 0;
+		let qe = 0; // queue start/end
+
+		// Push brick i for disintegration
+		q[(qe += 1) - 1] = i;  // poor man's qe++
+
+		//println("q = ", q);
+
+		// The Disintegration Loops
+		while qs < qe
 		{
-			nfall[supporter] += 1;
+			// pop
+			let j = q[(qs += 1) - 1];
+
+			// Disintegrate
+			for z in [zmin[j]: zmax[j] + 1]
+			for y in [ymin[j]: ymax[j] + 1]
+			for x in [xmin[j]: xmax[j] + 1]
+				vox[x, y, z] = EMPTY;
+
+			// For each brick that brick j supports, check if it is now
+			// unsupported
+			for k in [0: nsupports[j]]
+			{
+				let l = supports[k, j];
+
+				let resting = false;
+				let z = zmin[l] - 1;
+				for y in [ymin[l]: ymax[l] + 1]
+				for x in [xmin[l]: xmax[l] + 1]
+					if vox[x, y, z] != EMPTY
+						resting = true;
+
+				if not resting
+				{
+					q[(qe += 1) - 1] = l;  // push
+					nfall[i] += 1;
+				}
+			}
 		}
 	}
-	//println("nfall = ", nfall);
+	println("nfall = ", nfall);
 
 	let sum_ = 0;
 	for i in [0: nb]
@@ -447,7 +517,7 @@ fn main()
 	println();
 	println("Starting AOC syntran main");
 
-	part1();
+	//part1(); // TODO
 	part2();
 
 	println("Ending AOC syntran main");
