@@ -3,7 +3,7 @@
 
 //==============================================================================
 
-let ifile = 1;
+let ifile = 0;
 
 let filenames =
 [
@@ -43,7 +43,6 @@ let NSTATE = 3;
 // Queue data structure.  I don't have pass-by-reference but I do have
 // pass-by-global-variable :)
 let QUEUE_CAP = 2 * 1024 * 1024;
-let STACK_CAP = 2 * 1024 * 1024;
 let queue = [-1; NSTATE, QUEUE_CAP];
 let queue_beg  = 0;
 let queue_end  = 0;
@@ -215,82 +214,73 @@ fn pop_(): [i32; :]
 
 //==============================================================================
 
-//fn dijkstra(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
-fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
+fn dijkstra(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 {
-	// Use depth-first search to find the *longest* path from xbeg to xend
-	//
-	// This could be optimized for this AOC problem by precomputing where the
-	// *junctions* are and then only traversing a graph from
-	// junction-to-junction (rather than one tile at a time)
+	// This is Dijkstra's algorithm with negative weights to find the logest
+	// path.  It only works for directed acyclic graphs (DAGs)
 
 	println();
-	println("starting dfs_longest()");
+	println("starting dijkstra()");
 	println("xbeg = ", xbeg);
 	println("xend = ", xend);
 
-	let stack_end  = 0;
-	let stack = [0; NSTATE, STACK_CAP];
+	queue_beg  = 0;
+	queue_end  = 0;
+	queue_end0 = 0;
+	queue = [2000000000; NSTATE, QUEUE_CAP];
 
 	let nx = size(map, 0);
 	let ny = size(map, 1);
 
 	println("nx, ny = ", [nx, ny]);
 
-	//let DIST_INFTY = 2000000000;
+	// initialize distance to practical infinity.  using a negative with extra
+	// logic might be more robust
+	let DIST_INFTY = 2000000000;
 
-	let dist = [0; nx, ny];
-	let discovered = [false ; nx, ny];
+	let dist = [DIST_INFTY; nx, ny];
+	let unvisited = [true ; nx, ny];
 
-	// push
-	stack[0, stack_end] = 0; // dist
-	stack[1, stack_end] = xbeg[0];
-	stack[2, stack_end] = xbeg[1];
-	stack_end += 1;
-
-	let dist_max = 0;
+	// Initialize source vertex to 0 distance.  We do not enter the start point
+	// in any particulal direction, so encode that as dir == NDIRS (one-past
+	// usual end of DIRS array)
+	dist  [   xbeg[0], xbeg[1]] = 0;
+	push_([0, xbeg[0], xbeg[1]]);
 
 	let dist_progress = -1;
 
 	let found = false;
-	//let dist_end = DIST_INFTY;
-	//while not found
+	let dist_end = DIST_INFTY;
+	while not found
 	//while queue_beg < queue_end
-	while stack_end > 0
 	{
-		// pop
-		let v = [-1; NSTATE];  // temp var, not really necessary
-		stack_end -= 1;
-		v[0] = stack[0, stack_end];
-		v[1] = stack[1, stack_end];
-		v[2] = stack[2, stack_end];
-		//println("v = ", v);
+		let u = pop_();
+		println();
+		println("u = ", u);
 
 		// unpack from array
-		let dist0 = v[0];
-		let x0    = v[1];
-		let y0    = v[2];
+		let dist0 = u[0];
+		let x0    = u[1];
+		let y0    = u[2];
+		//let dir0  = u[3];
 
-		// reset discovery for everything past v.  this is the track that makes
-		// DFS backtrack and follow *all* paths to the end instead of just one.
-		// it's also a bit slow and there's probably a better solution
-		for y in [0: ny]
-		for x in [0: nx]
-			if dist[x,y] > dist0
-				discovered[x,y] = false;
+		//if dist0 < dist_progress
+		//{
+		//	dist_progress = dist0;
+		//	println("u = ", u);
+		//}
 
 		if x0 == xend[0] and y0 == xend[1]
 		{
 			found = true;
 			//dist_end = dist0;
-			//dist_end = min(dist_end, dist0);
-			dist_max = max(dist_max, dist0);
-			println("dist_max = ", dist_max);
+			dist_end = min(dist_end, dist0);
+			println("dist_end = ", dist_end);
 		}
 
 		let continue_ = false;
 
-		if discovered[x0, y0]
+		if not unvisited[x0, y0]
 			continue_ = true;
 
 		//// Don't go into the forest.  Should this be checked inside the NDIRS
@@ -300,10 +290,7 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 		//		continue_ = true;
 
 		if not continue_
-		{
-			discovered[x0, y0] = true;
-			dist      [x0, y0] = dist0;
-		}
+			unvisited[x0, y0] = false;
 
 		if not continue_
 			for dir in [0: NDIRS]
@@ -328,136 +315,17 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 					if map[x, y] != "#"
 					{
-						// push
-						stack[0, stack_end] = dist0 + 1;
-						stack[1, stack_end] = x;
-						stack[2, stack_end] = y;
-						stack_end += 1;
-
-						//let alt = dist0 - 1;
-						//if alt < dist[x, y]
-						//{
-						//	push_([alt, x, y]);
-						//	dist[x, y] = alt;
-						//}
+						let alt = dist0 - 1;
+						if alt < dist[x, y]
+						{
+							push_([alt, x, y]);
+							dist[x, y] = alt;
+						}
 					}
 				}
 			}
 	}
-	let ans = dist_max;
-}
-
-//==============================================================================
-
-fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
-{
-	// Use depth-first search to find the *longest* path from xbeg to xend
-	//
-	// This could be optimized for this AOC problem by precomputing where the
-	// *junctions* are and then only traversing a graph from
-	// junction-to-junction (rather than one tile at a time)
-
-	println();
-	println("starting dfs_longest2()");
-	println("xbeg = ", xbeg);
-	println("xend = ", xend);
-
-	let stack_end  = 0;
-	let stack = [0; NSTATE, STACK_CAP];
-
-	let nx = size(map, 0);
-	let ny = size(map, 1);
-
-	println("nx, ny = ", [nx, ny]);
-
-	//let DIST_INFTY = 2000000000;
-
-	let dist = [0; nx, ny];
-	let discovered = [false ; nx, ny];
-
-	// push
-	stack[0, stack_end] = 0; // dist
-	stack[1, stack_end] = xbeg[0];
-	stack[2, stack_end] = xbeg[1];
-	stack_end += 1;
-
-	let dist_max = 0;
-
-	let dist_progress = -1;
-
-	let found = false;
-	//let dist_end = DIST_INFTY;
-	//while not found
-	//while queue_beg < queue_end
-	while stack_end > 0
-	{
-		// pop
-		let v = [-1; NSTATE];  // temp var, not really necessary
-		stack_end -= 1;
-		v[0] = stack[0, stack_end];
-		v[1] = stack[1, stack_end];
-		v[2] = stack[2, stack_end];
-		//println("v = ", v);
-
-		// unpack from array
-		let dist0 = v[0];
-		let x0    = v[1];
-		let y0    = v[2];
-
-		// reset discovery for everything past v.  this is the track that makes
-		// DFS backtrack and follow *all* paths to the end instead of just one.
-		// it's also a bit slow and there's probably a better solution
-		for y in [0: ny]
-		for x in [0: nx]
-			if dist[x,y] > dist0
-				discovered[x,y] = false;
-
-		if x0 == xend[0] and y0 == xend[1]
-		{
-			found = true;
-			//dist_end = dist0;
-			//dist_end = min(dist_end, dist0);
-			dist_max = max(dist_max, dist0);
-			println("dist_max = ", dist_max);
-		}
-
-		let continue_ = false;
-
-		if discovered[x0, y0]
-			continue_ = true;
-
-		if not continue_
-		{
-			discovered[x0, y0] = true;
-			dist      [x0, y0] = dist0;
-		}
-
-		if not continue_
-			for dir in [0: NDIRS]
-			{
-				let x = x0 + DIRS[0, dir];
-				let y = y0 + DIRS[1, dir];
-				if 0 <= x and x < nx and 0 <= y and y < ny
-				{
-					if map[x, y] != "#"
-					{
-						// push
-						stack[0, stack_end] = dist0 + 1;
-						stack[1, stack_end] = x;
-						stack[2, stack_end] = y;
-						stack_end += 1;
-
-						//let alt = dist0 - 1;
-						//if alt < dist[x, y]
-						//{
-						//	push_([alt, x, y]);
-						//	dist[x, y] = alt;
-						//}
-					}
-				}
-			}
-	}
-	let ans = dist_max;
+	let ans = dist_end;
 }
 
 //==============================================================================
@@ -501,58 +369,8 @@ fn part1(): i32
 	println("grid = ", grid);
 	println("xbeg, xend = ", [xbeg, xend]);
 
-	//let sum_ = -dijkstra(grid, [xbeg, ybeg], [xend, yend]);
-	let sum_ = dfs_longest(grid, [xbeg, ybeg], [xend, yend]);
-
+	let sum_ = -dijkstra(grid, [xbeg, ybeg], [xend, yend]);
 	println("part 1 = ", sum_);
-	sum_;
-}
-
-//==============================================================================
-
-fn part2(): i32
-{
-	let ny = countln_(filename);
-
-	let f = open(filename);
-	let str_ = readln(f);
-
-	let nx = len(str_);
-
-	println("nx, ny = ", [nx, ny]);
-
-	let grid = [""; nx, ny];
-
-	let ybeg = 0;
-	let yend = ny - 1;
-
-	// Scan for these later
-	let xbeg = -1;
-	let xend = -1;
-
-	for y in [0: ny]
-	{
-		println("str_ = ", str_);
-
-		for x in [0: nx]
-			grid[x, y] = str_[x];
-
-		if y == ybeg
-			xbeg = scan(str_, ".");
-		else if y == yend
-			xend = scan(str_, ".");
-
-		str_ = readln(f);
-	}
-	close(f);
-
-	println("grid = ", grid);
-	println("xbeg, xend = ", [xbeg, xend]);
-
-	//let sum_ = -dijkstra(grid, [xbeg, ybeg], [xend, yend]);
-	let sum_ = dfs_longest2(grid, [xbeg, ybeg], [xend, yend]);
-
-	println("part 2 = ", sum_);
 	sum_;
 }
 
@@ -563,8 +381,8 @@ fn main()
 	println();
 	println("Starting AOC syntran main");
 
-	//part1();  // TODO
-	part2();
+	part1();
+	//part2();
 
 	println("Ending AOC syntran main");
 	println();
