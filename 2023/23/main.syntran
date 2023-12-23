@@ -21,10 +21,10 @@ let NDIRS = 4;
 // Cardinal directions
 let DIRS =
 	[
-		 0, -1, // north
-		-1,  0, // west
+		 1,  0, // east
 		 0,  1, // south
-		 1,  0  // east
+		-1,  0, // west
+		 0, -1  // north
 		 ;
 		 2,  NDIRS
 	];
@@ -54,7 +54,7 @@ let queue_end0 = 0;
 fn sort_queue()
 {
 	// Quick sort
-	println("starting qsort()");
+	//println("starting qsort()");
 	////println("queue = ", queue);
 
 	let l = queue_beg;
@@ -143,7 +143,7 @@ fn sort_queue()
 let push_count = 0;
 fn push_(v: [i32; :])
 {
-	println("pushing ", v);
+	//println("pushing ", v);
 	if queue_end >= QUEUE_CAP
 	{
 		println();
@@ -224,10 +224,10 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	// *junctions* are and then only traversing a graph from
 	// junction-to-junction (rather than one tile at a time)
 
-	println();
-	println("starting dfs_longest()");
-	println("xbeg = ", xbeg);
-	println("xend = ", xend);
+	//println();
+	//println("starting dfs_longest()");
+	//println("xbeg = ", xbeg);
+	//println("xend = ", xend);
 
 	let stack_end  = 0;
 	let stack = [0; NSTATE, STACK_CAP];
@@ -235,7 +235,7 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	let nx = size(map, 0);
 	let ny = size(map, 1);
 
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	//let DIST_INFTY = 2000000000;
 
@@ -271,7 +271,7 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 		let x0    = v[1];
 		let y0    = v[2];
 
-		// reset discovery for everything past v.  this is the track that makes
+		// reset discovery for everything past v.  this is the trick that makes
 		// DFS backtrack and follow *all* paths to the end instead of just one.
 		// it's also a bit slow and there's probably a better solution
 		for y in [0: ny]
@@ -357,10 +357,10 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	// *junctions* are and then only traversing a graph from
 	// junction-to-junction (rather than one tile at a time)
 
-	println();
-	println("starting dfs_longest2()");
-	println("xbeg = ", xbeg);
-	println("xend = ", xend);
+	//println();
+	//println("starting dfs_longest2()");
+	//println("xbeg = ", xbeg);
+	//println("xend = ", xend);
 
 	let stack_end  = 0;
 	let stack = [0; NSTATE, STACK_CAP];
@@ -368,7 +368,7 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	let nx = size(map, 0);
 	let ny = size(map, 1);
 
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	//let DIST_INFTY = 2000000000;
 
@@ -471,7 +471,7 @@ fn part1(): i32
 
 	let nx = len(str_);
 
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	let grid = [""; nx, ny];
 
@@ -484,7 +484,7 @@ fn part1(): i32
 
 	for y in [0: ny]
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		for x in [0: nx]
 			grid[x, y] = str_[x];
@@ -498,8 +498,8 @@ fn part1(): i32
 	}
 	close(f);
 
-	println("grid = ", grid);
-	println("xbeg, xend = ", [xbeg, xend]);
+	//println("grid = ", grid);
+	//println("xbeg, xend = ", [xbeg, xend]);
 
 	//let sum_ = -dijkstra(grid, [xbeg, ybeg], [xend, yend]);
 	let sum_ = dfs_longest(grid, [xbeg, ybeg], [xend, yend]);
@@ -519,7 +519,7 @@ fn part2(): i32
 
 	let nx = len(str_);
 
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	let grid = [""; nx, ny];
 
@@ -532,7 +532,7 @@ fn part2(): i32
 
 	for y in [0: ny]
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		for x in [0: nx]
 			grid[x, y] = str_[x];
@@ -546,8 +546,8 @@ fn part2(): i32
 	}
 	close(f);
 
-	println("grid = ", grid);
-	println("xbeg, xend = ", [xbeg, xend]);
+	//println("grid = ", grid);
+	//println("xbeg, xend = ", [xbeg, xend]);
 
 	//let sum_ = -dijkstra(grid, [xbeg, ybeg], [xend, yend]);
 	let sum_ = dfs_longest2(grid, [xbeg, ybeg], [xend, yend]);
