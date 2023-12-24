@@ -3,7 +3,7 @@
 
 //==============================================================================
 
-let ifile = 1;
+let ifile = 0;
 
 let filenames =
 [
@@ -36,12 +36,186 @@ let WEST  = 1;
 let SOUTH = 2;
 let EAST  = 3;
 
+//let DIRS_STR = "^<v>";
+//let NSTATE = 5;
 let NSTATE = 3;
 
+// Queue data structure.  I don't have pass-by-reference but I do have
+// pass-by-global-variable :)
+let QUEUE_CAP = 2 * 1024 * 1024;
 let STACK_CAP = 2 * 1024 * 1024;
+let queue = [-1; NSTATE, QUEUE_CAP];
+let queue_beg  = 0;
+let queue_end  = 0;
+let queue_end0 = 0;
+
+//****************
+
+fn sort_queue()
+{
+	// Quick sort
+	//println("starting qsort()");
+	////println("queue = ", queue);
+
+	let l = queue_beg;
+	let h = queue_end - 1;
+
+	if (l < h)
+	{
+		let stack = [0; h - l + 1];
+
+		let top = -1;
+
+		top += 1;
+		stack[top] = l;
+
+		top += 1;
+		stack[top] = h;
+
+		while top >= 0
+		{
+			h = stack[top];
+			top -= 1;
+
+			l = stack[top];
+			top -= 1;
+
+			//// inlined
+			//let p = partition(queue, l, h);
+
+			// TODO: use median-of-3 pivot like other day(s)
+			let x = queue[0,h];
+
+			let i = l - 1;
+			for j in [l: h]
+				if queue[0,j] <= x
+				{
+					i += 1;
+					for k in [0: NSTATE]
+					{
+						let tmp     = queue[k, i];
+						queue[k, i] = queue[k, j];
+						queue[k, j] = tmp;
+					}
+				}
+			for k in [0: NSTATE]
+			{
+				let tmp       = queue[k, i+1];
+				queue[k, i+1] = queue[k, h];
+				queue[k, h] = tmp;
+			}
+
+			let p = i + 1;
+
+			if p - 1 > l
+			{
+				top += 1;
+				stack[top] = l;
+			
+				top += 1;
+				stack[top] = p - 1;
+			}
+
+			if p + 1 < h
+			{
+				top += 1;
+				stack[top] = p + 1;
+
+				top += 1;
+				stack[top] = h;
+			}
+		}
+	}
+	//println("queue = ", queue);
+
+	// This could also prune popped elements entirely to avoid QUEUE_CAP issues
+	//while queue[0, queue_beg] < 0 and queue_beg < queue_end
+	while queue[0, queue_beg] > 0 and queue_beg < queue_end
+		queue_beg += 1;
+
+	// After sorting, new unsorted elements will be pushed onto the queue after
+	// this position
+	queue_end0 = queue_end;
+}
 
 //==============================================================================
 
+let push_count = 0;
+fn push_(v: [i32; :])
+{
+	//println("pushing ", v);
+	if queue_end >= QUEUE_CAP
+	{
+		println();
+		println("Error: QUEUE_CAP overflow!");
+		println();
+		exit(-1);
+	}
+
+	queue[0, queue_end ] = v[0]; // dist;
+	queue[1, queue_end ] = v[1]; // x;
+	queue[2, queue_end ] = v[2]; // y;
+	//queue[3, queue_end ] = v[3]; // dir;
+	//queue[4, queue_end ] = v[4]; // len_;
+
+	queue_end += 1;
+
+	//// I don't actually know if sorting the queue provides any perf benefit.
+	//// Even if it does, the sort period should be tuned to the specific
+	//// problem based on vibes
+	//if push_count % 3000 == 0
+		sort_queue();
+
+	push_count += 1;
+}
+
+//****************
+
+fn pop_(): [i32; :]
+{
+	// Linear scan because I'm not implementing a min-heap queue :(
+
+	// queue_beg is guaranteed to be in the queue (i think)
+	let i = queue_beg;
+	let imin = i;
+	let min_ = queue[0,i];
+
+	// Scan only the unsorted part of the queue
+	let x = [-1; NSTATE];
+	i = queue_end0;
+	while i < queue_end
+	{
+		//if queue[0,i] >= 0
+		if queue[0,i] <= 0
+		{
+			if queue[0,i] < min_
+			{
+				min_ = queue[0,i];
+				imin = i;
+			}
+		}
+		i += 1;
+	}
+	x[0] = queue[0,imin];
+	x[1] = queue[1,imin];
+	x[2] = queue[2,imin];
+	//x[3] = queue[3,imin];
+	//x[4] = queue[4,imin];
+
+	queue[0, imin] = +1;  // mark popped element as out of queue
+
+	// When queue[0,:] happens to get popped, increment it to the next element
+	// still in queue
+	//while queue[0, queue_beg] < 0 and queue_beg < queue_end
+	while queue[0, queue_beg] > 0 and queue_beg < queue_end
+		queue_beg += 1;
+
+	let ans = x;
+}
+
+//==============================================================================
+
+//fn dijkstra(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 {
 	// Use depth-first search to find the *longest* path from xbeg to xend
@@ -63,6 +237,8 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 	//println("nx, ny = ", [nx, ny]);
 
+	//let DIST_INFTY = 2000000000;
+
 	let dist = [0; nx, ny];
 	let discovered = [false ; nx, ny];
 
@@ -77,6 +253,9 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	let dist_progress = -1;
 
 	let found = false;
+	//let dist_end = DIST_INFTY;
+	//while not found
+	//while queue_beg < queue_end
 	while stack_end > 0
 	{
 		// pop
@@ -191,158 +370,15 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 	//println("nx, ny = ", [nx, ny]);
 
-	// Count the number of junction nodes.  A junction is a point with at least
-	// three open (non-hash) neighbors and will form a node on the compressed
-	// graph.  Begin and end points are also junctions
-	//
-	// Save an array of their coordinates `xn`
-	let nn = 0;
-	let NN_CAP = 64;  // 34 for my input
-	let xn = [0; NDIM, NN_CAP];
+	//let DIST_INFTY = 2000000000;
 
-	// Number of adjacent nodes per node
-	let nadj = [0; NN_CAP];
+	let dist = [0; nx, ny];
+	let discovered = [false ; nx, ny];
 
-	xn[0, nn] = xbeg[0];
-	xn[1, nn] = xbeg[1];
-	nadj[ nn] = 1; // assume
-	nn += 1;
-
-	for y0 in [0: ny]
-	for x0 in [0: nx]
-	{
-		nadj[nn] = 0;
-		if map[x0, y0] != "#"
-		for dir in [0: NDIRS]
-		{
-			let x = x0 + DIRS[0, dir];
-			let y = y0 + DIRS[1, dir];
-			if 0 <= x and x < nx and 0 <= y and y < ny
-				if map[x, y] != "#"
-					nadj[nn] += 1;
-		}
-		if nadj[nn] >= 3
-		{
-			xn[0, nn] = x0;
-			xn[1, nn] = y0;
-
-			nn += 1;
-		}
-	}
-
-	xn[0, nn] = xend[0];
-	xn[1, nn] = xend[1];
-	nadj[ nn] = 1; // assume
-	nn += 1;
-
-	println("number of junctions = ", nn);
-	println("xn = ");
-	for i in [0: nn]
-		println([xn[0, i], xn[1, i]]);
-	println("nadj = ");
-	for i in [0: nn]
-		println(nadj[i]);
-
-	// Reset
-	nadj = [0; NN_CAP];
-
-	// Find which nodes neighbor each other to form the compressed graph `g`
-	let nadj_max = 4;
-	let g = [-1; nadj_max, nn];
-	let w = [-1; nadj_max, nn]; // weights (distances)
-	for i in [0: nn]
-	{
-		let x00 = xn[0, i];
-		let y00 = xn[1, i];
-
-		// Start DFS from node [x00, y00]
-
-		let discovered = [false ; nx, ny];
-
-		// push
-		stack[0, stack_end] = x00;
-		stack[1, stack_end] = y00;
-		stack[2, stack_end] = 0;
-		stack_end += 1;
-
-		while stack_end > 0
-		{
-			// pop
-			let v = [-1; NSTATE];  // temp var, not really necessary
-			stack_end -= 1;
-			v[0] = stack[0, stack_end];
-			v[1] = stack[1, stack_end];
-			v[2] = stack[2, stack_end];
-			//println("v = ", v);
-
-			// unpack from array
-			let x0 = v[0];
-			let y0 = v[1];
-			let d0 = v[2];
-
-			let continue_ = false;
-
-			if discovered[x0, y0]
-				continue_ = true;
-
-			if not continue_
-			{
-				discovered[x0, y0] = true;
-				if not (x0 == x00 and y0 == y00)
-				{
-					let is_node = false;
-					let j = 0;
-					while not is_node and j < nn
-					{
-						is_node = x0 == xn[0,j] and y0 == xn[1,j];
-						j += 1;
-					}
-					if is_node
-					{
-						j -= 1;
-						println("nadj[i] = ", nadj[i]);
-						g[nadj[i], i] = j;
-						w[nadj[i], i] = d0;
-						nadj[i] += 1;
-
-						// stop search after finding a node on this path
-						continue_ = true;
-					}
-				}
-			}
-
-			if not continue_
-				for dir in [0: NDIRS]
-				{
-					let x = x0 + DIRS[0, dir];
-					let y = y0 + DIRS[1, dir];
-					if 0 <= x and x < nx and 0 <= y and y < ny
-					{
-						if map[x, y] != "#"
-						{
-							// push
-							stack[0, stack_end] = x;
-							stack[1, stack_end] = y;
-							stack[2, stack_end] = d0 + 1;
-							stack_end += 1;
-						}
-					}
-				}
-		}
-	}
-	println("g = ", g);
-	println("w = ", w);
-	//exit(0);
-
-	// Now perform a full DFS from xbeg to xend on the compressed graph g.
-	// Traverse *all* paths
-
-	let dist = [0; nn];
-	let discovered = [false; nn];
-
-	// push begin node
+	// push
 	stack[0, stack_end] = 0; // dist
-	stack[1, stack_end] = 0; // node index
+	stack[1, stack_end] = xbeg[0];
+	stack[2, stack_end] = xbeg[1];
 	stack_end += 1;
 
 	let dist_max = 0;
@@ -350,6 +386,9 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	let dist_progress = -1;
 
 	let found = false;
+	//let dist_end = DIST_INFTY;
+	//while not found
+	//while queue_beg < queue_end
 	while stack_end > 0
 	{
 		// pop
@@ -357,70 +396,67 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 		stack_end -= 1;
 		v[0] = stack[0, stack_end];
 		v[1] = stack[1, stack_end];
+		v[2] = stack[2, stack_end];
 		//println("v = ", v);
 
 		// unpack from array
 		let dist0 = v[0];
 		let x0    = v[1];
-		//println("x0 = ", x0);
+		let y0    = v[2];
 
 		// reset discovery for everything past v.  this is the track that makes
 		// DFS backtrack and follow *all* paths to the end instead of just one.
 		// it's also a bit slow and there's probably a better solution
-		for x in [0: nn]
-			if dist[x] > dist0
-				discovered[x] = false;
+		for y in [0: ny]
+		for x in [0: nx]
+			if dist[x,y] > dist0
+				discovered[x,y] = false;
 
-		//println("checking end");
-		if x0 == nn - 1
+		if x0 == xend[0] and y0 == xend[1]
 		{
 			found = true;
 			//dist_end = dist0;
 			//dist_end = min(dist_end, dist0);
 			dist_max = max(dist_max, dist0);
-			//println("dist_max = ", dist_max);
-			if dist_max > dist_progress
-			{
-				println("dist_max = ", dist_max);
-				dist_progress = dist_max;
-			}
+			println("dist_max = ", dist_max);
 		}
 
 		let continue_ = false;
 
-		//println("checking discovered");
-		//println("x0 = ", x0);
-		if discovered[x0]
+		if discovered[x0, y0]
 			continue_ = true;
 
-		//println("setting discovered");
 		if not continue_
 		{
-			discovered[x0] = true;
-			dist      [x0] = dist0;
+			discovered[x0, y0] = true;
+			dist      [x0, y0] = dist0;
 		}
 
-		//println("pushing neighbors");
 		if not continue_
-			//for dir in [0: NDIRS]
-			for adj in [0: nadj[x0]]
+			for dir in [0: NDIRS]
 			{
-				let x = g[adj, x0];
-				//let y = y0 + DIRS[1, dir];
-				//if 0 <= x and x < nx and 0 <= y and y < ny
-				//{
-					//if map[x, y] != "#"
-					//{
+				let x = x0 + DIRS[0, dir];
+				let y = y0 + DIRS[1, dir];
+				if 0 <= x and x < nx and 0 <= y and y < ny
+				{
+					if map[x, y] != "#"
+					{
 						// push
-						stack[0, stack_end] = dist0 + w[adj, x0];
+						stack[0, stack_end] = dist0 + 1;
 						stack[1, stack_end] = x;
-						//stack[2, stack_end] = y;
+						stack[2, stack_end] = y;
 						stack_end += 1;
-					//}
-				//}
+
+						//let alt = dist0 - 1;
+						//if alt < dist[x, y]
+						//{
+						//	push_([alt, x, y]);
+						//	dist[x, y] = alt;
+						//}
+					}
+				}
 			}
 	}
-	println("dist_max = ", dist_max);
 	let ans = dist_max;
 }
 
@@ -465,6 +501,7 @@ fn part1(): i32
 	//println("grid = ", grid);
 	//println("xbeg, xend = ", [xbeg, xend]);
 
+	//let sum_ = -dijkstra(grid, [xbeg, ybeg], [xend, yend]);
 	let sum_ = dfs_longest(grid, [xbeg, ybeg], [xend, yend]);
 
 	println("part 1 = ", sum_);
@@ -512,6 +549,7 @@ fn part2(): i32
 	//println("grid = ", grid);
 	//println("xbeg, xend = ", [xbeg, xend]);
 
+	//let sum_ = -dijkstra(grid, [xbeg, ybeg], [xend, yend]);
 	let sum_ = dfs_longest2(grid, [xbeg, ybeg], [xend, yend]);
 
 	println("part 2 = ", sum_);
