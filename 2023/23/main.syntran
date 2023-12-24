@@ -21,10 +21,20 @@ let NDIRS = 4;
 // Cardinal directions
 let DIRS =
 	[
-		 0, -1, // north
+		 0, -1, // north // toggling order gives diff answers for test input TODO
 		-1,  0, // west
 		 0,  1, // south
 		 1,  0  // east
+
+		// 0,  1, // south
+		// 1,  0, // east
+		// 0, -1, // north
+		//-1,  0  // west
+
+		//-1,  0, // west
+		// 0, -1, // north // toggling order gives diff answers for test input TODO
+		// 0,  1, // south
+		// 1,  0  // east
 		 ;
 		 NDIM,  NDIRS
 	];
@@ -173,10 +183,6 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 {
 	// Use depth-first search to find the *longest* path from xbeg to xend
-	//
-	// This could be optimized for this AOC problem by precomputing where the
-	// *junctions* are and then only traversing a graph from
-	// junction-to-junction (rather than one tile at a time)
 
 	//println();
 	//println("starting dfs_longest2()");
@@ -260,6 +266,7 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 		let discovered = [false ; nx, ny];
 
 		// push
+		stack_end  = 0;
 		stack[0, stack_end] = x00;
 		stack[1, stack_end] = y00;
 		stack[2, stack_end] = 0;
@@ -302,7 +309,12 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 						j -= 1;
 						println("nadj[i] = ", nadj[i]);
 						g[nadj[i], i] = j;
+
+						// TODO: weight isn't right?  There could be more than 1
+						// path from node i to node j, so we should take the max
+						// of all of them
 						w[nadj[i], i] = d0;
+
 						nadj[i] += 1;
 
 						// stop search after finding a node on this path
@@ -330,6 +342,7 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 				}
 		}
 	}
+	println("nadj = ", nadj);
 	println("g = ", g);
 	println("w = ", w);
 	//exit(0);
@@ -341,6 +354,7 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	let discovered = [false; nn];
 
 	// push begin node
+	stack_end  = 0;
 	stack[0, stack_end] = 0; // dist
 	stack[1, stack_end] = 0; // node index
 	stack_end += 1;
@@ -349,7 +363,6 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 	let dist_progress = -1;
 
-	let found = false;
 	while stack_end > 0
 	{
 		// pop
@@ -364,17 +377,21 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 		let x0    = v[1];
 		//println("x0 = ", x0);
 
-		// reset discovery for everything past v.  this is the track that makes
+		// reset discovery for everything past v.  this is the trick that makes
 		// DFS backtrack and follow *all* paths to the end instead of just one.
 		// it's also a bit slow and there's probably a better solution
+		//
+		// TODO: i think this is wrong
 		for x in [0: nn]
-			if dist[x] > dist0
+			if dist[x] >= dist0 and x != x0
+			{
 				discovered[x] = false;
+				dist[x] = 0; // idk?
+			}
 
 		//println("checking end");
 		if x0 == nn - 1
 		{
-			found = true;
 			//dist_end = dist0;
 			//dist_end = min(dist_end, dist0);
 			dist_max = max(dist_max, dist0);
