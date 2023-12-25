@@ -150,6 +150,9 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 
 		//	// Still avoiding floats :( thanks tsoding for the olivecs training :)
 
+		//// This works for the test input but not the real input.  Overflow
+		//// probably occurs somewhere
+		//
 		//	let pxdet = p0[0] * det + v0[0] * t0det;
 		//	let pydet = p0[1] * det + v0[1] * t0det;
 
@@ -201,6 +204,13 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 }
 
 //==============================================================================
+
+// Brief outline for part 2 (still very open):
+//
+// Find 3 rays such that no pair of rays are parallel.  Such a triplet should be
+// common unless the input is carefully crafted to be difficult
+//
+// Then construct a 4th ray which intersects with all of the other 3.
 
 fn part1(): i32
 {
