@@ -46,10 +46,10 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 	//      2: intersection exists but is outside test area
 	//
 
-	println("p0 = ", p0);
-	println("v0 = ", v0);
-	println("p1 = ", p1);
-	println("v1 = ", v1);
+	//println("p0 = ", p0);
+	//println("v0 = ", v0);
+	//println("p1 = ", p1);
+	//println("v1 = ", v1);
 
 	// p == p0 + v0 * t0
 	// p == p1 + v1 * t1
@@ -73,7 +73,7 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 			p1[0] - p0[0],
 			p1[1] - p0[1]
 		];
-	println("p01 = ", p01);
+	//println("p01 = ", p01);
 
 	// Matrix A elements
 	let a =  v0[0];
@@ -92,10 +92,10 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 
 	let ans = 0;
 
-	println("det = ", det);
+	//println("det = ", det);
 	if det == 0
 	{
-		println("Parallel!");
+		//println("Parallel!");
 		ans = 0;
 	}
 	else
@@ -198,8 +198,7 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 	//	];
 	//println("v10 = ", v10);
 
-	println();
-	//exit(0);
+	//println();
 	let return_val = ans;
 }
 
@@ -223,7 +222,7 @@ fn part1(): i32
 	for i in [0: n]
 	{
 		let str_ = readln(f);
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let vec = parse_i64_delim(str_, ",@ ");
 
@@ -239,15 +238,15 @@ fn part1(): i32
 	}
 	close(f);
 
-	println("p = ", p);
-	println("v = ", v);
+	//println("p = ", p);
+	//println("v = ", v);
 
 	// Iterate through pairs of hailstones
 	let sum_ = 0;
 	for i in [0: n]
 	for j in [0: i]
 	{
-		println("i, j = ", [i, j]);
+		//println("i, j = ", [i, j]);
 
 		// Repack
 
