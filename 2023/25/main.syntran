@@ -417,7 +417,10 @@ fn part1_tarjan(): i32
 
 fn part1(): i32
 {
-	// Use a randomized statistical method
+	// Use a randomized statistical method.  The gist of it is, if you travel
+	// from one random node to another, you are almost guaranteed to cross a
+	// bridge at some point.  Do this enough times and you can identify all
+	// bridges
 
 	// First pass: save list of unique names
 	println("Loading names ...");
@@ -498,7 +501,8 @@ fn part1(): i32
 	// Queue for iterative (non-recursive) breadth-first search
 	//
 	// Graph is unweighted, so BFS is sufficient instead of Dijkstra's algorithm
-	let q = [0; 16 * nn];
+	let QUEUE_CAP = 16 * nn;
+	let q = [0; QUEUE_CAP];
 
 	// Use a statistical method.  BFS from a "few" source nodes and find the
 	// shortest paths to a few destination nodes.  Trace out those shortest
@@ -577,6 +581,13 @@ fn part1(): i32
 				{
 					visited[w] = true;
 					prev[w] = v;
+					if qe >= QUEUE_CAP - 1
+					{
+						println();
+						println("Error: QUEUE_CAP overflow!");
+						println();
+						exit(-1);
+					}
 					q[(qe += 1)] = w; // push
 				}
 			}
@@ -740,6 +751,7 @@ fn main()
 	println();
 	println("Starting AOC syntran main");
 
+	//part1_tarjan();
 	part1();
 
 	println("Ending AOC syntran main");
