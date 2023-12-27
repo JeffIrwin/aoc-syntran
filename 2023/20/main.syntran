@@ -477,6 +477,10 @@ fn part2(): i32
 	// flip-flop input will mask a binary operation.  The flip state alone (not
 	// even consering the conjunction state) is a ~48 bit number, so the answer
 	// must be a huge number
+	//
+	// The hard part is figuring out what the input number being added is and/or
+	// what order the bits are listed in.  The first flip-flop isn't necessarily
+	// the first one to change state on a button press
 
 	//for iouter in [0: 1000]
 	while not found_rx
