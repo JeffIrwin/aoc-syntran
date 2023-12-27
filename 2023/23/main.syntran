@@ -21,7 +21,7 @@ let NDIRS = 4;
 // Cardinal directions
 let DIRS =
 	[
-		// 0, -1, // north // toggling order gives diff answers for test input for dfs_longest2()
+		// 0, -1, // north // toggling order converges at different speeds but still gives correct answer
 		//-1,  0, // west
 		// 0,  1, // south
 		// 1,  0  // east
@@ -36,10 +36,10 @@ let DIRS =
 //println("DIRS = ", DIRS);
 
 // Note consistent ordering with DIRS array
-let NORTH = 0;
-let WEST  = 1;
-let SOUTH = 2;
-let EAST  = 3;
+let SOUTH = 0;
+let EAST  = 1;
+let NORTH = 2;
+let WEST  = 3;
 
 let NSTATE = 3;
 
@@ -444,6 +444,9 @@ fn dfs_longest2(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 {
+	// Get max distance by walking *all* paths from xbeg to xend.  This is a bit
+	// slow, but it converges to the right answer in about 10 minutes for me
+
 	println();
 	println("starting get_max_dist()");
 	println("xbeg = ", xbeg);
@@ -569,10 +572,6 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 						j -= 1;
 						println("nadj[i] = ", nadj[i]);
 						g[nadj[i], i] = j;
-
-						// TODO: weight isn't right?  There could be more than 1
-						// path from node i to node j, so we should take the max
-						// of all of them
 						w[nadj[i], i] = d0;
 
 						nadj[i] += 1;
@@ -631,7 +630,6 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 		let v = 0;
 		let break_ = false;
 		let i = 0;
-		//let i0 = 0;
 		while not break_
 		{
 			if visited[v]
@@ -671,32 +669,12 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 					break_ = true;
 				}
 			}
-
 			i += 1;
 		}
 
 		// Get the next path.  This is basically a bignum += 1 algorithm
-
-		//i = i0;
-
-		//// One endianness.  Should actually stop at nadj_max-1, not nadj_max
-		//i = 0;
-		//while path[i] == nadj_max and i < nn - 1
-		//	i += 1;
-		//if path[i] == nadj_max
-		//	i += 1;
-
-		//if i == nn
-		//	last_path = true;
-		//else
-		//{
-		//	path[i] += 1;
-		//	for i in [0: i]
-		//		path[i] = 0;
-		//}
-
-
-		// Opposite endianness.  This way is easier to optimize for early breaks
+		//
+		// With this endianness, it is easier to optimize for early breaks
 		// because we can prune an entire tree after the current vertex when we
 		// hit a dead end
 		i = nn - 1;
@@ -810,7 +788,6 @@ fn part2(): i32
 	//println("grid = ", grid);
 	//println("xbeg, xend = ", [xbeg, xend]);
 
-	//let sum_ = dfs_longest2(grid, [xbeg, ybeg], [xend, yend]);
 	let sum_ = get_max_dist(grid, [xbeg, ybeg], [xend, yend]);
 
 	println("part 2 = ", sum_);
@@ -824,7 +801,11 @@ fn main()
 	println();
 	println("Starting AOC syntran main");
 
-	//part1();  // TODO
+	//// TODO: this is probably broken now after my changes for part2.  The
+	//// easiest thing to do is probably copy part2() to part1() and modify for
+	//// direction constraints
+	//part1();  
+
 	part2();
 
 	println("Ending AOC syntran main");
