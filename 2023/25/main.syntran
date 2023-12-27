@@ -189,10 +189,10 @@ fn part1_tarjan(): i32
 		str_ = readln(f);
 	}
 
-	println("names = ");
+	//println("names = ");
 	for i in [0: nn]
 		println(names[i]);
-	println("nn = ", nn);
+	println("Number of nodes = ", nn);
 
 	// Second pass: save one-way directed connections as graph gdir
 	let NADJ_CAP = 16;
@@ -246,8 +246,8 @@ fn part1_tarjan(): i32
 		g[ nadj[to], to ] = from;
 		nadj[to] += 1;
 	}
-	println("g = ", g);
-	println("nadj = ", nadj);
+	//println("g = ", g);
+	//println("nadj = ", nadj);
 
 	// Stack for iterative (non-recursive) depth-first search
 	let stack = [0; 16 * nn];
@@ -318,9 +318,9 @@ fn part1_tarjan(): i32
 	}
 	nadj[back] -= 1;
 
-	// TODO: if I can get this working, maybe publish it as a blog post.  I
-	// didn't see any google search results for iterative versions of Tarjan's
-	// bridge algorithm, only recursive versions :(
+	// TODO: maybe publish this as a blog post.  I didn't see any google search
+	// results for iterative versions of Tarjan's bridge algorithm, only
+	// recursive versions :(
 	let sp = -1; // stack pointer
 
 	// Push root
@@ -434,10 +434,10 @@ fn part1(): i32
 		str_ = readln(f);
 	}
 
-	println("names = ");
-	for i in [0: nn]
-		println(names[i]);
-	println("nn = ", nn);
+	//println("names = ");
+	//for i in [0: nn]
+	//	println(names[i]);
+	println("Number of nodes = ", nn);
 
 	// Second pass: save one-way directed connections as graph gdir
 	let NADJ_CAP = 16;
@@ -446,6 +446,7 @@ fn part1(): i32
 	close(f);
 	f = open(filename);
 	str_ = readln(f);
+	println("Looking up names ...");
 	while not eof(f)
 	{
 		//println("str_ = ", str_);
@@ -491,8 +492,8 @@ fn part1(): i32
 		g[ nadj[to], to ] = from;
 		nadj[to] += 1;
 	}
-	println("g = ", g);
-	println("nadj = ", nadj);
+	//println("g = ", g);
+	//println("nadj = ", nadj);
 
 	// Queue for iterative (non-recursive) breadth-first search
 	//
@@ -547,10 +548,11 @@ fn part1(): i32
 		srcs = [0: nn];
 		dsts = [0: nn];
 	}
-	println("srcs = ", srcs);
-	println("dsts = ", dsts);
+	//println("srcs = ", srcs);
+	//println("dsts = ", dsts);
 
 	// Iterate through all srcs
+	println("Searching for bridges ...");
 	for isrc in [0: size(srcs, 0)]
 	{
 		let src = srcs[isrc];
@@ -587,10 +589,10 @@ fn part1(): i32
 
 			// Trace back path from dst to src
 			let v = dst;
-			println("reverse path from ", src, " to ", dst, " = ");
+			//println("reverse path from ", src, " to ", dst, " = ");
 			while v != src
 			{
-				println("v = ", v);
+				//println("v = ", v);
 				if v != dst
 					hist[v] += 1;
 
@@ -608,6 +610,7 @@ fn part1(): i32
 	//println("histe = ", histe);
 
 	// Don't sort the edge histogram!  Just select the top 3 in 3 passes
+	println("Sorting histogram ...");
 	let neb = 3; // # edge bridges
 	let eb = [-1; 2, neb];
 
@@ -649,14 +652,17 @@ fn part1(): i32
 			eb[1, 2] = i;
 		}
 	}
-	println("eb = ", eb);
+	//println("eb = ", eb);
+	println();
 
 	println("Bridge edges = ");
 	for i in [0: neb]
 		println("between ", names[eb[0,i]], " and ", names[eb[1,i]]);
+	println();
 
 	// Remove bridge edges
-	println("g = ", g);
+
+	//println("g = ", g);
 	for i in [0: neb]
 	{
 		let i0 = eb[0, i];
@@ -682,7 +688,7 @@ fn part1(): i32
 		}
 		nadj[i1] -= 1;
 	}
-	println("g = ", g);
+	//println("g = ", g);
 
 	// Count size of each connected component
 	let ncomp = 2;
@@ -699,7 +705,6 @@ fn part1(): i32
 			let qe = -1;  // queue end
 
 			// BFS
-			//let prev = [-1; nn];
 			q[(qe += 1)] = i; // push
 			visited[i] = true;
 			while qe > qb
@@ -714,7 +719,6 @@ fn part1(): i32
 					if not visited[w]
 					{
 						visited[w] = true;
-						//prev[w] = v;
 						q[(qe += 1)] = w; // push
 					}
 				}
@@ -724,37 +728,7 @@ fn part1(): i32
 	}
 	println("sizes_ = ", sizes_);
 
-	////println("hist = ", hist);
-	//println("hist = ");
-	//for i in [0: nn]
-	//	println(names[i], " hist = ", hist[i]);
-
-	//let sort = qsort(hist);
-	//println("sorted hist = ");
-	////for i in [0: nn]
-	//for i in [0: min(12, nn)]
-	//{
-	//	println(names[sort[nn - i - 1]], " hist = ", hist[sort[nn - i - 1]]);
-	//	if i == 5
-	//		println("--------");
-	//}
-
-	//// Save a list of the top 6 bridge nodes
-	////
-	//// Actually this doesn't work because we can't uniquely identify the bridge
-	//// edges just from the bridge nodes -- there are more than just 3 edges that
-	//// connect the top 6 nodes
-	//let nnb = 2 * neb; // # node bridges
-	//let bn = [-1; nnb];
-	//for i in [0: nnb]
-	//	bn[i] = sort[nn - i - 1];
-	//println("bridge nodes = ", bn);
-	//println("bridge node names = ");
-	//for i in [0: nnb]
-	//	println(names[bn[i]]);
-
 	let sum_ = sizes_[0] * sizes_[1];
-
 	println("part 1 = ", sum_);
 	sum_;
 }
