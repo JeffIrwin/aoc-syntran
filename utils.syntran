@@ -608,6 +608,8 @@ fn sum_i32(v: [i32; :]): i32
 fn pmod(i: i32, n: i32): i32
 {
 	// Modulo/remainder but always positive
+	//
+	// TODO: shouldn't it be abs(n)?
 	(i % n + n) % n;
 }
 
