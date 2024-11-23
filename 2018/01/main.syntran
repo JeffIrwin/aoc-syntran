@@ -1801,9 +1801,9 @@ fn part2(): i32
         // Shift pigeonhole index by NMAX because the cumsum could be negative
         let idx = cumsum + NMAX;
 
-        if (idx >= NMAX2)
+        if (idx >= NMAX2 or idx < 0)
         {
-            println("Error: histogram overflow.  Increase NMAX and re-run");
+            println("Error: histogram overflow/underflow.  Increase NMAX and re-run");
             exit(-1);
         }
 
