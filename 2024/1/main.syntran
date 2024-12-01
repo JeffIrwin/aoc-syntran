@@ -15,102 +15,6 @@ let filename = filenames[ifile];
 
 let NEWLINE_ = char(10);
 
-// from aoc 2023/25
-// TODO: add to utils.  look for an in-place sort implementation too
-fn qsort(v: [i32; :]): [i32; :]
-{
-	// Quick sort algorithm.  Return index array instead of modifying the input
-	// array in-place
-
-	//println("starting qsort()");
-	//println("v = ", v);
-
-	let l = 0;
-	let h = i32(size(v,0)) - 1;
-
-	let ix = [l: h + 1];
-
-	if l < h
-	{
-		let stack = [0; h - l + 1];
-
-		let top = -1;
-
-		top += 1;
-		stack[top] = l;
-
-		top += 1;
-		stack[top] = h;
-
-		while top >= 0
-		{
-			//println("h = ", h);
-			h = stack[top];
-			top -= 1;
-
-			l = stack[top];
-			top -= 1;
-
-			// Median-of-three pivot.  40x faster for AOC day 21!
-			let m = (l + h) / 2;
-			if v[ix[m]] < v[ix[l]]
-			{
-				let tmp = ix[m];
-				ix[m]   = ix[l];
-				ix[l]   = tmp;
-			}
-			if v[ix[h]] < v[ix[l]]
-			{
-				let tmp = ix[h];
-				ix[h]   = ix[l];
-				ix[l]   = tmp;
-			}
-			if v[ix[m]] < v[ix[h]]
-			{
-				let tmp = ix[m];
-				ix[m]   = ix[h];
-				ix[h]   = tmp;
-			}
-			let x = v[ix[h]];
-
-			let i = (l - 1);
-			for j in [l: h]
-				if v[ix[j]] <= x
-				{
-					i += 1;
-					let tmp = ix[i];
-					ix[i]   = ix[j];
-					ix[j]   = tmp;
-				}
-			let tmp = ix[i+1];
-			ix[i+1] = ix[h];
-			ix[h]   = tmp;
-			let p = i + 1;
-
-			if p - 1 > l
-			{
-				top += 1;
-				stack[top] = l;
-
-				top += 1;
-				stack[top] = p - 1;
-			}
-
-			if p + 1 < h
-			{
-				top += 1;
-				stack[top] = p + 1;
-
-				top += 1;
-				stack[top] = h;
-			}
-		}
-	}
-	//println("v = ", v);
-	//let ans = v;
-	return ix;
-}
-
 //==============================================================================
 
 fn part1(): i64
@@ -153,8 +57,8 @@ fn part1(): i64
 	// println("v1 = ", v1);
 	// println("v2 = ", v2);
 
-	let i1 = qsort(v1);
-	let i2 = qsort(v2);
+	let i1 = sort_index(v1);
+	let i2 = sort_index(v2);
 	// println("i1 = ", i1);
 	// println("i2 = ", i2);
 
@@ -230,8 +134,8 @@ fn part2(): i64
 	//// the number of appearances.  Better yet, traverse both lists at the same
 	//// time, in sorted order and in sync to skip the need for bisection
 
-	// let i1 = qsort(v1);
-	// let i2 = qsort(v2);
+	// let i1 = sort_index(v1);
+	// let i2 = sort_index(v2);
 
 	println("part 2 = ", sum_);
 	return sum_;
