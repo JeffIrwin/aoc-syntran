@@ -1921,7 +1921,11 @@ fn part2(): i32
         sum_ += v1[j1] * appearances;
     }
 
-    //// If you wanted to optimize this implementation, you could sort again like in part 1, and then do a bisection search on the 2nd list to count the number of appearances
+    //// If you wanted to optimize this implementation, you could sort again
+    //// like in part 1, and then do a bisection search on the 2nd list to count
+    //// the number of appearances.  Better yet, traverse both lists at the same
+    //// time, in sorted order and in sync to skip the need for bisection
+
     // let i1 = qsort(v1);
     // let i2 = qsort(v2);
 
@@ -1933,6 +1937,7 @@ fn main(): i32
 {
     println("starting aoc main");
 
+    // Expect part 1 = 3246517 and part 2 = 29379307
     let p1 = part1();
     let p2 = part2();
     
