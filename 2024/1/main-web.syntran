@@ -1,4 +1,9 @@
 
+// This is the version that I wrote live on twitch, using the syntran explorer
+// web editor.  The web editor does not have access to filesystem, so it cannot
+// load input from file (hence INPUT_STR pasted here) or use #include (hence
+// utils fns pasted here)
+
 // Test input
 let INPUT_STR = "3   4
 4   3
