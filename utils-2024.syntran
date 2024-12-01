@@ -826,3 +826,102 @@ fn sort_index(v: [i32; :]): [i32; :]
 
 //==============================================================================
 
+fn sort_inplace(v: [i32; :]): [i32; :]
+{
+	// Quick sort algorithm.  Return the input array but sorted (no index
+	// array).  This could be DRY'd up with the index version above at the cost
+	// of some time and space overhead
+
+	//println("starting sort_inplace()");
+	//println("v = ", v);
+
+	let l = 0;
+	let h = size(v,0) - 1;
+
+	if l < h
+	{
+		let stack = [0; h - l + 1];
+
+		let top = -1;
+
+		top += 1;
+		stack[top] = l;
+
+		top += 1;
+		stack[top] = h;
+
+		while top >= 0
+		{
+			//println("h = ", h);
+			h = stack[top];
+			top -= 1;
+
+			l = stack[top];
+			top -= 1;
+
+			//// inlined
+			//let p = partition(v, l, h);
+
+			//let x = v[h];
+
+			// Median-of-three pivot.  40x faster for AOC!
+			let m = (l + h) / 2;
+			if v[m] < v[l]
+			{
+				let tmp = v[m];
+				v[m]    = v[l];
+				v[l]    = tmp;
+			}
+			if v[h] < v[l]
+			{
+				let tmp = v[h];
+				v[h]    = v[l];
+				v[l]    = tmp;
+			}
+			if v[m] < v[h]
+			{
+				let tmp = v[m];
+				v[m]    = v[h];
+				v[h]    = tmp;
+			}
+			let x = v[h];
+
+			let i = (l - 1);
+			for j in [l: h]
+				if v[j] <= x
+				{
+					i += 1;
+					let tmp = v[i];
+					v[i]  = v[j];
+					v[j]  = tmp;
+				}
+			let tmp = v[i+1];
+			v[i+1] = v[h];
+			v[h] = tmp;
+			let p = i + 1;
+
+			if p - 1 > l
+			{
+				top += 1;
+				stack[top] = l;
+
+				top += 1;
+				stack[top] = p - 1;
+			}
+
+			if p + 1 < h
+			{
+				top += 1;
+				stack[top] = p + 1;
+
+				top += 1;
+				stack[top] = h;
+			}
+		}
+	}
+	//println("v = ", v);
+	return v;
+}
+
+//==============================================================================
+

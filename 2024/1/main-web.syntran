@@ -1877,7 +1877,7 @@ fn part1(): i32
     // println("i2 = ", i2);
 
     //// You could just get ans in one-line in fortran:
-    // sum_ = abs(v1[i1] - v2[i2]);
+    // sum_ = sum(abs(v1[i1] - v2[i2]));
 
     for i in [0: nlines]
     {
