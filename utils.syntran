@@ -1,4 +1,14 @@
 
+// These utils fns were implemented in 2023.  Notably, this was before fns had
+// `return` statements.  For compatibility, I leave the unported legacy version
+// here.  A more modern port exists in this repo as utils-2024.syntran, and in
+// the syntran repo as part of unit tests here:
+//
+//     https://github.com/JeffIrwin/syntran/blob/main/src/tests/long/aoc/utils.syntran
+//
+// For 2024, I have also started to move other fns like sorting fns into
+// utils-2024.syntran, so you should probably use that version for any new code
+
 //==============================================================================
 
 let digit_chars = "0123456789";
