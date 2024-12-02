@@ -15,7 +15,7 @@ reset="\e[0m"
 # For days 1 through 9, make sure to use a single digit.  If you try "01" you
 # will get a 404 error
 #
-# TODO: arg count checking
+# TODO: add -h / --help arg.  First err msg below effectively functions as help
 
 if [[ "$#" -ne "1" ]]; then
 	echo -e "${red}Error${reset}: missing year/day cmd arg"
