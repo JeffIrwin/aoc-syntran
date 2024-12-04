@@ -35,34 +35,26 @@ fn part1(): i64
 			//println("i = ", i);
 			//println(str_[i]);
 
-			let valid = true;
-			if (str_[i: i+len_start_str] == start_str)
-			{
-				//println("found " + start_str);
-				let j = i + len_start_str;
-				let j0 = j;
-				while is_digit(str_[j]) j += 1;
-				if (str_[j] != ",") valid = false;
-				j += 1;
+			if (str_[i: i+len_start_str] != start_str) continue;
 
-				if valid
-				{
-					let a = parse_i32(str_[j0: j]);
-					//println("a = ", a);
+			//println("found " + start_str);
+			let j = i + len_start_str;
+			let j0 = j;
+			while is_digit(str_[j]) j += 1;
+			if (str_[j] != ",") continue;
+			j += 1;
 
-					j0 = j;
-					while is_digit(str_[j]) j += 1;
-					if (str_[j] != ")") valid = false;
+			let a = parse_i32(str_[j0: j]);
+			//println("a = ", a);
 
-					if valid
-					{
-						let b = parse_i32(str_[j0: j]);
-						//println("b = ", b);
+			j0 = j;
+			while is_digit(str_[j]) j += 1;
+			if (str_[j] != ")") continue;
 
-						sum_ += a * b;
-					}
-				}
-			}
+			let b = parse_i32(str_[j0: j]);
+			//println("b = ", b);
+
+			sum_ += a * b;
 			//println();
 		}
 		str_ = readln(f);
@@ -83,7 +75,7 @@ fn part2(): i64
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let start_str = "mul(";
 		let do_str = "do()";
@@ -97,41 +89,34 @@ fn part2(): i64
 		// copying here
 		for i in [0: len(str_)]
 		{
-			println("i = ", i);
-			println(str_[i]);
+			//println("i = ", i);
+			//println(str_[i]);
 
 			if (str_[i: i+len_do_str  ] == do_str  ) enabled = true;
 			if (str_[i: i+len_dont_str] == dont_str) enabled = false;
 
-			let valid = true;
-			if (enabled and str_[i: i+len_start_str] == start_str)
-			{
-				println("found " + start_str);
-				let j = i + len_start_str;
-				let j0 = j;
-				while is_digit(str_[j]) j += 1;
-				if (str_[j] != ",") valid = false;
-				j += 1;
+			if (not enabled) continue;
+			if (str_[i: i+len_start_str] != start_str) continue;
 
-				if valid
-				{
-					let a = parse_i32(str_[j0: j]);
-					println("a = ", a);
+			//println("found " + start_str);
+			let j = i + len_start_str;
+			let j0 = j;
+			while is_digit(str_[j]) j += 1;
+			if (str_[j] != ",") continue;
+			j += 1;
 
-					j0 = j;
-					while is_digit(str_[j]) j += 1;
-					if (str_[j] != ")") valid = false;
+			let a = parse_i32(str_[j0: j]);
+			//println("a = ", a);
 
-					if valid
-					{
-						let b = parse_i32(str_[j0: j]);
-						println("b = ", b);
+			j0 = j;
+			while is_digit(str_[j]) j += 1;
+			if (str_[j] != ")") continue;
 
-						sum_ += a * b;
-					}
-				}
-			}
-			println();
+			let b = parse_i32(str_[j0: j]);
+			//println("b = ", b);
+
+			sum_ += a * b;
+			//println();
 		}
 		str_ = readln(f);
 	}
@@ -152,6 +137,7 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
+	// Expect 178886550 + 87163705
 	sum_ += part1();
 	sum_ += part2();
 
