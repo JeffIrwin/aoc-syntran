@@ -25,12 +25,12 @@ fn part1(): i64
 	let str_ = readln(f);
 	while not eof(f) and str_ != ""
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 		nrules += 1;
 		str_ = readln(f);
 	}
 	close(f);
-	println("nrules = ", nrules);
+	//println("nrules = ", nrules);
 
 	let rules = [0; 2, nrules];
 	f = open(filename);
@@ -39,17 +39,17 @@ fn part1(): i64
 		str_ = readln(f);
 		rules[:, i] = parse_i32_delim(str_, "|");
 	}
-	println("rules = ", rules);
+	//println("rules = ", rules);
 
 	let nums = [0; 2 * nrules];
 	nums[0: nrules] = rules[0, :];
 	nums[nrules: 2*nrules] = rules[1, :];
-	println("nums = ", nums);
+	//println("nums = ", nums);
 
-	//let sorted = sort_inplace(nums);
-	//println("sorted = ", sorted);
-	let unums = uniq(nums);
-	println("unums = ", unums);
+	////let sorted = sort_inplace(nums);
+	////println("sorted = ", sorted);
+	//let unums = uniq(nums);
+	//println("unums = ", unums);
 
 	// Skip blank line
 	str_ = readln(f);
@@ -61,7 +61,7 @@ fn part1(): i64
 
 		let v = parse_i32_delim(str_, ",");
 		let nv = size(v, 0);
-		println("v = ", v);
+		//println("v = ", v);
 
 		// Check if each pair of adjacent numbers in "update" vector v is in the
 		// correct order
@@ -72,6 +72,9 @@ fn part1(): i64
 			ordered = true;
 			let va = v[i];
 			let vb = v[i+1];
+
+			// Check all the rules by brute force.  This could just use
+			// is_le_rule() which I used for part 2
 			for ir in [0: nrules]
 			{
 				if (va == rules[0, ir] and vb == rules[1, ir])
@@ -96,6 +99,217 @@ fn part1(): i64
 	return sum_;
 }
 
+fn is_le_rule(va: i32, vb: i32, rules: [i32; :, :]): bool
+{
+	// In the case that va == vb, this returns true which is correct.  Be
+	// careful about this if you need to implement is_lt_rule()
+
+	let nrules = size(rules, 1);
+
+	// Check all the rules by brute force
+	let ordered = true;
+	for ir in [0: nrules]
+	{
+		if (va == rules[0, ir] and vb == rules[1, ir])
+		{
+			break;
+		}
+		else if (vb == rules[0, ir] and va == rules[1, ir])
+		{
+			ordered = false;
+			break;
+		}
+	}
+	return ordered;
+}
+
+fn sort_rule(v: [i32; :], rules: [i32; :, :]): [i32; :]
+{
+	// Quick sort algorithm with a given set of ordering rules.  Copied from
+	// 2023 natural order sort
+
+	//println("starting sort_rule()");
+	//println("v = ", v);
+
+	let l = 0;
+	let h = size(v,0) - 1;
+
+	if l < h
+	{
+		let stack = [0; h - l + 1];
+
+		let top = -1;
+
+		top += 1;
+		stack[top] = l;
+
+		top += 1;
+		stack[top] = h;
+
+		while top >= 0
+		{
+			//println("h = ", h);
+			h = stack[top];
+			top -= 1;
+
+			l = stack[top];
+			top -= 1;
+
+			//// inlined
+			//let p = partition(v, l, h);
+			//let x = v[h];
+
+			//// Median-of-three pivot.  Would need is_lt_rule()
+			//let m = (l + h) / 2;
+			//if v[m] < v[l]
+			//{
+			//	let tmp = v[m];
+			//	v[m]    = v[l];
+			//	v[l]    = tmp;
+			//}
+			//if v[h] < v[l]
+			//{
+			//	let tmp = v[h];
+			//	v[h]    = v[l];
+			//	v[l]    = tmp;
+			//}
+			//if v[m] < v[h]
+			//{
+			//	let tmp = v[m];
+			//	v[m]    = v[h];
+			//	v[h]    = tmp;
+			//}
+			let x = v[h];
+
+			let i = (l - 1);
+			for j in [l: h]
+				//if v[j] <= x
+				if is_le_rule(v[j], x, rules)
+				{
+					i += 1;
+					let tmp = v[i];
+					v[i]  = v[j];
+					v[j]  = tmp;
+				}
+			let tmp = v[i+1];
+			v[i+1] = v[h];
+			v[h] = tmp;
+			let p = i + 1;
+
+			if p - 1 > l
+			{
+				top += 1;
+				stack[top] = l;
+
+				top += 1;
+				stack[top] = p - 1;
+			}
+
+			if p + 1 < h
+			{
+				top += 1;
+				stack[top] = p + 1;
+
+				top += 1;
+				stack[top] = h;
+			}
+		}
+	}
+	//println("v = ", v);
+	return v;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	// Count the number of ordering rules
+	let nrules = 0;
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f) and str_ != ""
+	{
+		//println("str_ = ", str_);
+		nrules += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("nrules = ", nrules);
+
+	let rules = [0; 2, nrules];
+	f = open(filename);
+	for i in [0: nrules]
+	{
+		str_ = readln(f);
+		rules[:, i] = parse_i32_delim(str_, "|");
+	}
+	//println("rules = ", rules);
+
+	let nums = [0; 2 * nrules];
+	nums[0: nrules] = rules[0, :];
+	nums[nrules: 2*nrules] = rules[1, :];
+	//println("nums = ", nums);
+
+	////let sorted = sort_inplace(nums);
+	////println("sorted = ", sorted);
+	//let unums = uniq(nums);
+	//println("unums = ", unums);
+
+	// Skip blank line
+	str_ = readln(f);
+
+	str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let v = parse_i32_delim(str_, ",");
+		let nv = size(v, 0);
+		//println("v = ", v);
+
+		// Check if each pair of adjacent numbers in "update" vector v is in the
+		// correct order
+		let ordered = true;
+		for i in [0: nv - 1]
+		{
+			// Is v[i] < v[i+1] ? according to given ordering rules, not the usual `<`
+			ordered = true;
+			let va = v[i];
+			let vb = v[i+1];
+
+			// Check all the rules by brute force
+			for ir in [0: nrules]
+			{
+				if (va == rules[0, ir] and vb == rules[1, ir])
+				{
+					break;
+				}
+				else if (vb == rules[0, ir] and va == rules[1, ir])
+				{
+					ordered = false;
+					break;
+				}
+			}
+			if (not ordered) break;
+		}
+		//if (ordered)
+		//	sum_ += v[nv / 2];
+		if (not ordered)
+		{
+			//println("v = ", v);
+			let s = sort_rule(v, rules);
+			//println("s = ", s);
+			//println();
+			sum_ += s[nv / 2];
+		}
+
+		str_ = readln(f);
+	}
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
 //==============================================================================
 
 fn main(): i64
@@ -107,8 +321,9 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
+	// Expect 5452 + 4598
 	sum_ += part1();
-	//sum_ += part2();
+	sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
