@@ -1,0 +1,123 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	// Count the number of ordering rules
+	let nrules = 0;
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f) and str_ != ""
+	{
+		println("str_ = ", str_);
+		nrules += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	println("nrules = ", nrules);
+
+	let rules = [0; 2, nrules];
+	f = open(filename);
+	for i in [0: nrules]
+	{
+		str_ = readln(f);
+		rules[:, i] = parse_i32_delim(str_, "|");
+	}
+	println("rules = ", rules);
+
+	let nums = [0; 2 * nrules];
+	nums[0: nrules] = rules[0, :];
+	nums[nrules: 2*nrules] = rules[1, :];
+	println("nums = ", nums);
+
+	//let sorted = sort_inplace(nums);
+	//println("sorted = ", sorted);
+	let unums = uniq(nums);
+	println("unums = ", unums);
+
+	// Skip blank line
+	str_ = readln(f);
+
+	str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let v = parse_i32_delim(str_, ",");
+		let nv = size(v, 0);
+		println("v = ", v);
+
+		// Check if each pair of adjacent numbers in "update" vector v is in the
+		// correct order
+		let ordered = true;
+		for i in [0: nv - 1]
+		{
+			// Is v[i] < v[i+1] ? according to given ordering rules, not the usual `<`
+			ordered = true;
+			let va = v[i];
+			let vb = v[i+1];
+			for ir in [0: nrules]
+			{
+				if (va == rules[0, ir] and vb == rules[1, ir])
+				{
+					break;
+				}
+				else if (vb == rules[0, ir] and va == rules[1, ir])
+				{
+					ordered = false;
+					break;
+				}
+			}
+			if (not ordered) break;
+		}
+		if (ordered)
+			sum_ += v[nv / 2];
+
+		str_ = readln(f);
+	}
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	//sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -13,6 +13,7 @@ let filenames =
 ];
 let filename = filenames[ifile];
 
+// Cardinal directions and diagonals
 let NDIRS = 8;
 let DIRS = 
 [
@@ -42,7 +43,6 @@ fn part1(): i64
 
 	//println("nx, ny = ", [nx, ny]);
 	let chars = [" "; nx, ny];
-	//let vec = [0; nx];
 
 	f = open(filename);
 	for iy in [0: ny]
@@ -124,7 +124,6 @@ fn part2(): i64
 
 	//println("nx, ny = ", [nx, ny]);
 	let chars = [" "; nx, ny];
-	//let vec = [0; nx];
 
 	f = open(filename);
 	for iy in [0: ny]
@@ -167,13 +166,11 @@ fn part2(): i64
 				let ck = ks[ikx, iky, ik];
 				if (chars[ixl, iyl] != ck and ck != ".") {match_ = false; break;}
 
-				//if (i == nxmas - 1) sum_ += 1;
 				//if (ikx == nkx-1 and iky == nky-1) sum_ += 1;
 			}
 			if (match_) sum_ += 1;
 		}
 	}
-
 	println("part 2 = ", sum_);
 	return sum_;
 }
