@@ -39,10 +39,8 @@ fn part1(): i64
 			for j in [1: nv]
 			{
 				//println("j = ", j);
-				//let va = v[j-1];
 				let vb = v[j];
 				let op_bit = 1'i64 & (i >> (j-1));
-				//let op_bit = 1'i64 & (j >> i);
 				if (op_bit == 0)
 					res += vb;
 				else
@@ -56,7 +54,6 @@ fn part1(): i64
 				break;
 			}
 		}
-		//return 0'i64; // TODO
 		//println();
 		str_ = readln(f);
 	}
@@ -66,20 +63,22 @@ fn part1(): i64
 	return sum_;
 }
 
-fn base3(a: i64): [i64; :]
+fn base3(a: i32): [i32; :]
 {
-	// Convert `a` to base 3
-	let res = [0'i64; 20];
-	if a == 0
-	{
-		//println("base3 = ", res);
-		return res;
-	}
-	for i in [0: 20]
+	// Convert `a` to base 3.  Max 12 (base 3) digits allowed.  This is ok for
+	// the value of nvmax
+	let res = [0'i32; 12];
+	//if a == 0
+	//{
+	//	//println("base3 = ", res);
+	//	return res;
+	//}
+	for i in [0: 12]
 	{
 		let r = a % 3;
 		a /= 3;
-		res[i] = r;
+		if (a == 0) break;
+		res[i] = r;  // endianness is not important for aoc problem
 	}
 	//println("base3 = ", res);
 	return res;
@@ -89,12 +88,13 @@ fn part2(): i64
 {
 	let sum_ = 0'i64;
 
+	let nvmax = 0'i32;
 	let k = 0; // debug progress only
 	let f = open(filename);
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("k = ", k);
+		//println("k = ", k);
 		k += 1;
 		//println("str_ = ", str_);
 
@@ -105,7 +105,9 @@ fn part2(): i64
 		//println("ans = ", ans);
 		//println("v = ", v);
 
-		let nv = size(v, 0);
+		let nv = i32(size(v, 0));
+		nvmax = max(nvmax, nv);
+
 		for i in [0: 3 ** (nv - 1)] // permutations
 		{
 			let i3 = base3(i);
@@ -113,13 +115,8 @@ fn part2(): i64
 			for j in [1: nv]
 			{
 				//println("j = ", j);
-				//let va = v[j-1];
 				let vb = v[j];
-
-				//let op_bit = 1'i64 & (i >> (j-1));
-				let op_bit = i3[j-1];
-
-				//let op_bit = 1'i64 & (j >> i);
+				let op_bit = i3[j-1]; // not a bit but yolo
 				if (op_bit == 0)
 					res += vb;
 				else if (op_bit == 1)
@@ -142,6 +139,7 @@ fn part2(): i64
 		str_ = readln(f);
 	}
 	close(f);
+	//println("nvmax = ", nvmax);
 
 	println("part 2 = ", sum_);
 	return sum_;
@@ -158,7 +156,7 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
-	// Expect 4364915411363 + ?
+	// Expect 4364915411363 + 38322057216320
 	sum_ += part1();
 	sum_ += part2();
 
