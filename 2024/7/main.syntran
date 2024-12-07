@@ -1,0 +1,175 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let strs = split_(str_, ":");
+
+		let ans = parse_i64(strs[0]);
+		let v = parse_i64_delim(strs[1], " ");
+		//println("ans = ", ans);
+		//println("v = ", v);
+
+		let nv = size(v, 0);
+		for i in [0: 2 ** (nv - 1)] // permutations
+		{
+			let res = v[0];
+			for j in [1: nv]
+			{
+				//println("j = ", j);
+				//let va = v[j-1];
+				let vb = v[j];
+				let op_bit = 1'i64 & (i >> (j-1));
+				//let op_bit = 1'i64 & (j >> i);
+				if (op_bit == 0)
+					res += vb;
+				else
+					res *= vb;
+				//println("res = ", res);
+			}
+			if res == ans
+			{
+				//println("expected ans = ", ans);
+				sum_ += ans;
+				break;
+			}
+		}
+		//return 0'i64; // TODO
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn base3(a: i64): [i64; :]
+{
+	// Convert `a` to base 3
+	let res = [0'i64; 20];
+	if a == 0
+	{
+		//println("base3 = ", res);
+		return res;
+	}
+	for i in [0: 20]
+	{
+		let r = a % 3;
+		a /= 3;
+		res[i] = r;
+	}
+	//println("base3 = ", res);
+	return res;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let k = 0; // debug progress only
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("k = ", k);
+		k += 1;
+		//println("str_ = ", str_);
+
+		let strs = split_(str_, ":");
+
+		let ans = parse_i64(strs[0]);
+		let v = parse_i64_delim(strs[1], " ");
+		//println("ans = ", ans);
+		//println("v = ", v);
+
+		let nv = size(v, 0);
+		for i in [0: 3 ** (nv - 1)] // permutations
+		{
+			let i3 = base3(i);
+			let res = v[0];
+			for j in [1: nv]
+			{
+				//println("j = ", j);
+				//let va = v[j-1];
+				let vb = v[j];
+
+				//let op_bit = 1'i64 & (i >> (j-1));
+				let op_bit = i3[j-1];
+
+				//let op_bit = 1'i64 & (j >> i);
+				if (op_bit == 0)
+					res += vb;
+				else if (op_bit == 1)
+					res *= vb;
+				else
+				{
+					// concat
+					res = parse_i64(str(res) + str(vb));
+				}
+				//println("res = ", res);
+			}
+			if res == ans
+			{
+				//println("expected ans = ", ans);
+				sum_ += ans;
+				break;
+			}
+		}
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/7");
+
+	let sum_ = 0'i64;
+
+	// Expect 4364915411363 + ?
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

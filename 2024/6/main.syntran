@@ -133,6 +133,13 @@ fn part2(): i64
 	//println("guard = ", [guardx, guardy]);
 
 	// Iterate over all possible obstruction locations
+	//
+	// From part 1, i know that only about 1/3 of all locations are visited in
+	// the original path.  We could optimize 3x faster by not placing
+	// obstructions off the og path, because they will never be hit!  You could
+	// also place obstructions on the path in order, and then remember the state
+	// just before hitting it to save some work
+	//
 	for ox in [0: nx] {
 	//println("ox = ", ox);
 	for oy in [0: ny]
@@ -170,7 +177,6 @@ fn part2(): i64
 		}
 		if (looping) sum_ += 1;
 	}}
-	//sum_ = count(visited);
 
 	println("part 2 = ", sum_);
 	return sum_;
