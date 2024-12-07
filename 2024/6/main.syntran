@@ -1,0 +1,204 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let NDIRS = 4;
+let DIRS =
+[
+	 0, -1,
+	 1,  0,
+	 0,  1,
+	-1,  0
+	;
+	2, NDIRS
+];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	let nx = i32(len(str_));
+	//println("nx, ny = ", [nx, ny]);
+
+	let g = [" "; nx, ny];
+
+	let guardx = -1;
+	let guardy = -1;
+
+	let y = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		for x in [0: nx]
+		{
+			g[x, y] = str_[x];
+			if g[x, y] == "^"
+			{
+				guardx = x;
+				guardy = y;
+			}
+		}
+		y += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("g = ", g);
+	//println("guard = ", [guardx, guardy]);
+
+	let x = guardx;
+	y = guardy;
+
+	let visited = [false; nx, ny];
+	let inside = true;
+	let id = 0;
+	while true
+	{
+		visited[x, y] = true;
+		let x0 = x;
+		let y0 = y;
+
+		x += DIRS[0, id];
+		y += DIRS[1, id];
+
+		inside = (x >= 0 and x < nx and y >= 0 and y < ny);
+		if (not inside) break;
+		if g[x, y] == "#"
+		{
+			x = x0;
+			y = y0;
+			//id += 1;
+			//id %= 4;
+			id = (id + 1) % 4;
+		}
+	}
+	sum_ = count(visited);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	let nx = i32(len(str_));
+	//println("nx, ny = ", [nx, ny]);
+
+	let g = [" "; nx, ny];
+
+	let guardx = -1;
+	let guardy = -1;
+
+	let y = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		for x in [0: nx]
+		{
+			g[x, y] = str_[x];
+			if g[x, y] == "^"
+			{
+				guardx = x;
+				guardy = y;
+			}
+		}
+		y += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("g = ", g);
+	//println("guard = ", [guardx, guardy]);
+
+	// Iterate over all possible obstruction locations
+	for ox in [0: nx] {
+	//println("ox = ", ox);
+	for oy in [0: ny]
+	{
+		//println("oy = ", oy);
+
+		let x = guardx;
+		y = guardy;
+
+		//let visited = [-1; nx, ny];
+		let visited = [false; nx, ny, NDIRS];
+
+		let inside = true;
+		let looping = false;
+		let id = 0;
+		while inside and not looping
+		{
+			looping = visited[x, y, id];
+			visited[x, y, id] = true;
+			//println("x, y, id = ", [x, y, id]);
+
+			let x0 = x;
+			let y0 = y;
+
+			x += DIRS[0, id];
+			y += DIRS[1, id];
+			inside = (x >= 0 and x < nx and y >= 0 and y < ny);
+			if (not inside) break;
+			if g[x, y] == "#" or (x == ox and y == oy)
+			{
+				x = x0;
+				y = y0;
+				id = (id + 1) % 4;
+			}
+		}
+		if (looping) sum_ += 1;
+	}}
+	//sum_ = count(visited);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/6");
+
+	let sum_ = 0'i64;
+
+	// Expect 5208 + 1972
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
