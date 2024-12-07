@@ -15,6 +15,25 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
+fn base3(a: i32): [i32; :]
+{
+	// Convert `a` to base 3.  Max 12 (base 3) digits allowed.  This is ok for
+	// the value of nvmax
+	//
+	// TODO: is this worth generalizing and/or moving to utils?  Does this work
+	// for negatives?
+	let res = [0'i32; 12];
+	for i in [0: 12]
+	{
+		let r = a % 3;
+		a /= 3;
+		res[i] = r;  // endianness is not important for aoc problem
+		if (a == 0) break;
+	}
+	//println("base3 = ", res);
+	return res;
+}
+
 fn part1(): i64
 {
 	let sum_ = 0'i64;
@@ -63,27 +82,6 @@ fn part1(): i64
 	return sum_;
 }
 
-fn base3(a: i32): [i32; :]
-{
-	// Convert `a` to base 3.  Max 12 (base 3) digits allowed.  This is ok for
-	// the value of nvmax
-	let res = [0'i32; 12];
-	//if a == 0
-	//{
-	//	//println("base3 = ", res);
-	//	return res;
-	//}
-	for i in [0: 12]
-	{
-		let r = a % 3;
-		a /= 3;
-		if (a == 0) break;
-		res[i] = r;  // endianness is not important for aoc problem
-	}
-	//println("base3 = ", res);
-	return res;
-}
-
 fn part2(): i64
 {
 	let sum_ = 0'i64;
@@ -116,16 +114,22 @@ fn part2(): i64
 			{
 				//println("j = ", j);
 				let vb = v[j];
-				let op_bit = i3[j-1]; // not a bit but yolo
+				let op_bit = i3[j-1]; // actually a trit, not a bit, but yolo
 				if (op_bit == 0)
 					res += vb;
 				else if (op_bit == 1)
 					res *= vb;
 				else
 				{
-					// concat
+					// concat (in base ten)
 					res = parse_i64(str(res) + str(vb));
 				}
+
+				//// Don't continue if we've already overshot.  No significant
+				//// perf boost
+				//if res > ans
+				//	break;
+
 				//println("res = ", res);
 			}
 			if res == ans
