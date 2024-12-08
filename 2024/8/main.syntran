@@ -46,17 +46,12 @@ fn part1(): i64
 		alnums += char(i);
 	//println("alnums = ", alnums);
 
-	//println("count = ", count(grid == "a")); // doesn't work for strings i guess :(
-
-	let NMAX = 8; // max occurences of 1 antenna type
 	let is_antinode = [false; nx, ny];
-
-	let g2 = grid;
 	for iant in [0: len(alnums)]
 	{
 		let ant = alnums[iant];
 
-		let locs = [0; 2, NMAX];
+		let locs = [0; 2, count(grid == ant)];
 		let nant = 0;
 		for y in [0: ny]
 		for x in [0: nx]
@@ -83,7 +78,6 @@ fn part1(): i64
 			    anti[1] >= 0 and anti[1] < ny)
 			{
 				is_antinode[anti[0], anti[1]] = true;
-				g2[anti[0], anti[1]] = "#";
 			}
 			//println("anti = ", anti);
 
@@ -92,12 +86,10 @@ fn part1(): i64
 			    anti[1] >= 0 and anti[1] < ny)
 			{
 				is_antinode[anti[0], anti[1]] = true;
-				g2[anti[0], anti[1]] = "#";
 			}
 			//println("anti = ", anti);
 		}
 	}
-	//println("g2 = ", g2);
 	sum_ = count(is_antinode);
 
 	println("part 1 = ", sum_);
@@ -134,15 +126,12 @@ fn part2(): i64
 	for i in [i32("A"): i32("Z") + 1]
 		alnums += char(i);
 
-	let NMAX = 8; // max occurences of 1 antenna type
 	let is_antinode = [false; nx, ny];
-
-	let g2 = grid;
 	for iant in [0: len(alnums)]
 	{
 		let ant = alnums[iant];
 
-		let locs = [0; 2, NMAX];
+		let locs = [0; 2, count(grid == ant)];
 		let nant = 0;
 		for y in [0: ny]
 		for x in [0: nx]
@@ -201,7 +190,6 @@ fn part2(): i64
 			}
 		}
 	}
-	//println("g2 = ", g2);
 	sum_ = count(is_antinode);
 
 	println("part 2 = ", sum_);
