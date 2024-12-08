@@ -658,6 +658,18 @@ fn all_ends_with_(strs: [str; :], j: [i32; :], char_: str): bool
 
 //==============================================================================
 
+fn gcd32(a: i32, b: i32): i32
+{
+	// Euclidean algorithm for GCD
+	while b != 0
+	{
+		let t = b;
+		b = a % b;
+		a = t;
+	}
+	return a;
+}
+
 fn gcd64(a: i64, b: i64): i64
 {
 	// Euclidean algorithm for GCD
