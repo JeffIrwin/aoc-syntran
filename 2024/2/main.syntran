@@ -57,9 +57,15 @@ fn part2(): i64
 
 		let vlong = parse_i32_delim(str_, " ");
 
-		// TODO: there is some cursed syntran bug where this only works if i
-		// cast down from i64 to i32
+		// There was a cursed syntran bug where this only worked if i
+		// cast down from i64 to i32.  The issue was that the slice later
+		// assumed that the left bound of the slice range was always i32
+		//
+		// This now works without casting in syntran 4213ec80 on main, which is
+		// not yet released as of 2024-12-08
 		let nvlong = i32(size(vlong, 0));
+		//let nvlong = size(vlong, 0);  // TODO: enable after next release
+
 		let nv = nvlong - 1;
 		//println("nvlong = ", nvlong);
 		//println("nv = ", nv);
