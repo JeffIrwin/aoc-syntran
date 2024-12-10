@@ -134,10 +134,20 @@ fn part2(): i64
 	}
 	//println("blocks = ", blocks);
 
-	let il = 0;          // leftmost free block index
+	// TODO: main-v0.syntran had an infinite loop.  I think it was the i32/i64
+	// slice index bug which I already fixed in syntran main but haven't
+	// installed.  So I changed this to use break_outer (and break_inner) bools
+	// instead of actual break statements
+	//
+	// Anyway, I think I had actualy logical bugs in here too, so it should be
+	// possible to use regular break statements with latest syntran
+	//
+	// This could is a hacked together mess which should be significantly
+	// cleanable
+
+	let il = 0;          // leftmost free block index (part 1 but not really in part 2)
 	let ir = nblock - 1; // rightmost non-free block
 	let break_outer = false;
-	let k = 0;
 	while (not break_outer)
 	{
 		while blocks[il] >= 0
@@ -156,6 +166,9 @@ fn part2(): i64
 		//println("len_file = ", len_file);
 
 		// Look for a free space that can accomodate the file
+		//
+		// `ill` is a local copy of `il`. `ilr` is the right-end of the free
+		// space that has its left end at `ill`
 		let ill = il;
 		let break_inner = false;
 		while (not break_inner)
@@ -167,9 +180,12 @@ fn part2(): i64
 			}
 			let len_free = ilr - ill;
 			//println("len_free = ", len_free);
+
+			// Free space must be big enough. Also, never move a file to the
+			// right
 			if (len_free >= len_file and ill + len_free < ir)
 			{
-				// Move the whole file to the left
+				// Move the whole file to the left and free its previous space
 				blocks[ill: ill + len_file] = blocks[ir];
 				//println("blocks = ", blocks);
 				//println("irl, ir = ", [irl, ir]);
@@ -188,7 +204,9 @@ fn part2(): i64
 				// We couldn't move the file
 				break_inner = true;
 
-				// Decrement `ir` to try the next file (to the left?)
+				// Decrement `ir` to try the next file.  Don't try files that we
+				// haven't tried moving before (not sure if this condition is
+				// important)
 				let ir0 = ir;
 				while blocks[ir] >= blocks[ir0] and ir > 0
 				{
@@ -199,15 +217,6 @@ fn part2(): i64
 			}
 		}
 
-		//if il >= ir
-		//	break_outer = true;
-
-		k += 1;
-
-		//println("k = ", k);
-
-		// TODO
-		//if (k >= 11)
 		if blocks[ir] == 0
 			break_outer = true;
 
@@ -233,11 +242,11 @@ fn main(): i64
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2024/xx");
+	println("Starting AOC syntran main 2024/9");
 
 	let sum_ = 0'i64;
 
-	// 6366665108136 + 6398065450842
+	// Expect 6366665108136 + 6398065450842
 	sum_ += part1();
 	sum_ += part2();
 
