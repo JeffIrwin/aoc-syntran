@@ -1,0 +1,218 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+//ifile = 2; // smallest example
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt",
+	"test-input2.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	close(f);
+
+	//println("str_ = ", str_);
+
+	let nmap = len(str_);
+	//println("nmap = ", nmap);
+
+	let nblock = 0'i64;
+	let len_files = 0'i64;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		nblock += len_;
+		if i % 2 == 0
+			len_files += len_;
+	}
+	//println("nblock    = ", nblock);
+	//println("len_files = ", len_files);
+
+	let FREE = -1;
+	let blocks = [FREE; nblock];
+	let id = 0;
+	let iblock = 0;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		if i % 2 == 0
+		{
+			blocks[iblock: iblock + len_] = id;
+			id += 1;
+		}
+		iblock += len_;
+	}
+	//println("blocks = ", blocks);
+
+	let il = 0;          // leftmost free block index
+	let ir = nblock - 1; // rightmost non-free block
+	while true
+	{
+		while blocks[il] >= 0
+			il += 1;
+		while blocks[ir] == FREE
+			ir -= 1;
+		//println("il = ", il);
+		//println("ir = ", ir);
+
+		if il >= ir
+			break;
+
+		blocks[il] = blocks[ir];
+		blocks[ir] = FREE;
+		//println("blocks = ", blocks);
+		//println();
+	}
+	//println("blocks = ", blocks);
+
+	//sum_ = product(blocks[0: len_files]);
+
+	sum_ = sum([0: len_files] * blocks[0: len_files]);
+	//for i in [0: len_files]
+	//	sum_ += i * blocks[i];
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	println();
+	println("starting part2()");
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	close(f);
+
+	println("str_ = ", str_);
+
+	let nmap = len(str_);
+	//println("nmap = ", nmap);
+
+	let nblock = 0'i64;
+	let len_files = 0'i64;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		nblock += len_;
+		if i % 2 == 0
+			len_files += len_;
+	}
+	println("nblock    = ", nblock);
+	println("len_files = ", len_files);
+
+	let FREE = -1;
+	let blocks = [FREE; nblock];
+	let id = 0;
+	let iblock = 0;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		if i % 2 == 0
+		{
+			blocks[iblock: iblock + len_] = id;
+			id += 1;
+		}
+		iblock += len_;
+	}
+	println("blocks = ", blocks);
+
+	let il = 0;          // leftmost free block index
+	let ir = nblock - 1; // rightmost non-free block
+	while true
+	{
+		while blocks[il] >= 0
+			il += 1;
+		while blocks[ir] == FREE
+			ir -= 1;
+		println("il = ", il);
+		println("ir = ", ir);
+
+		// Get len of file at ir
+		let irl = ir;
+		while blocks[irl] == blocks[ir]
+			irl -= 1;
+		let len_file = ir - irl;
+		println("len_file = ", len_file);
+
+		// Look for a free space that can accomodate the file
+		let ill = il;
+		while true
+		{
+			let ilr = ill;
+			while blocks[ilr] == FREE
+			{
+				ilr += 1;
+			}
+			let len_free = ilr - ill;
+			println("len_free = ", len_free);
+			if (len_free >= len_file)
+			{
+				// Move the whole file to the left
+				blocks[ill: ill + len_file] = blocks[ir];
+				println("blocks = ", blocks);
+				blocks[irl + 1: ir + 1] = FREE;
+				break;
+			}
+			// Increment ill and try again
+			ill = ilr;
+			while blocks[ill] >= 0
+			{
+				ill += 1;
+			}
+		}
+
+		if il >= ir
+			break;
+
+		//println("blocks = ", blocks);
+		//println();
+	}
+	println("blocks = ", blocks);
+
+	sum_ = sum([0: len_files] * blocks[0: len_files]);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

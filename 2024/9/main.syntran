@@ -1,0 +1,254 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+//ifile = 2; // smallest example
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt",
+	"test-input2.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	close(f);
+
+	//println("str_ = ", str_);
+
+	let nmap = len(str_);
+	//println("nmap = ", nmap);
+
+	let nblock = 0'i64;
+	let len_files = 0'i64;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		nblock += len_;
+		if i % 2 == 0
+			len_files += len_;
+	}
+	//println("nblock    = ", nblock);
+	//println("len_files = ", len_files);
+
+	let FREE = -1;
+	let blocks = [FREE; nblock];
+	let id = 0;
+	let iblock = 0;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		if i % 2 == 0
+		{
+			blocks[iblock: iblock + len_] = id;
+			id += 1;
+		}
+		iblock += len_;
+	}
+	//println("blocks = ", blocks);
+
+	let il = 0;          // leftmost free block index
+	let ir = nblock - 1; // rightmost non-free block
+	while true
+	{
+		while blocks[il] >= 0
+			il += 1;
+		while blocks[ir] == FREE
+			ir -= 1;
+		//println("il = ", il);
+		//println("ir = ", ir);
+
+		if il >= ir
+			break;
+
+		blocks[il] = blocks[ir];
+		blocks[ir] = FREE;
+		//println("blocks = ", blocks);
+		//println();
+	}
+	//println("blocks = ", blocks);
+
+	//sum_ = product(blocks[0: len_files]);
+
+	sum_ = sum([0: len_files] * blocks[0: len_files]);
+	//for i in [0: len_files]
+	//	sum_ += i * blocks[i];
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	//println();
+	//println("starting part2()");
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	close(f);
+
+	//println("str_ = ", str_);
+
+	let nmap = len(str_);
+	//println("nmap = ", nmap);
+
+	//let nblock = 0'i64;
+	let nblock = 0;
+
+	let len_files = 0'i64;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		nblock += len_;
+		if i % 2 == 0
+			len_files += len_;
+	}
+	//println("nblock    = ", nblock);
+	//println("len_files = ", len_files);
+
+	let FREE = -1;
+	let blocks = [FREE; nblock];
+	let id = 0;
+	let iblock = 0;
+	for i in [0: nmap]
+	{
+		let len_ = parse_i32(str_[i]);
+		if i % 2 == 0
+		{
+			blocks[iblock: iblock + len_] = id;
+			id += 1;
+		}
+		iblock += len_;
+	}
+	//println("blocks = ", blocks);
+
+	let il = 0;          // leftmost free block index
+	let ir = nblock - 1; // rightmost non-free block
+	let break_outer = false;
+	let k = 0;
+	while (not break_outer)
+	{
+		while blocks[il] >= 0
+			il += 1;
+		while blocks[ir] == FREE and ir > 0
+			ir -= 1;
+		//println("il = ", il);
+		//println("ir = ", ir);
+		//println("id = ", blocks[ir], " ********************");
+
+		// Get len of file at ir
+		let irl = ir;
+		while blocks[irl] == blocks[ir]
+			irl -= 1;
+		let len_file = ir - irl;
+		//println("len_file = ", len_file);
+
+		// Look for a free space that can accomodate the file
+		let ill = il;
+		let break_inner = false;
+		while (not break_inner)
+		{
+			let ilr = ill;
+			while blocks[ilr] == FREE
+			{
+				ilr += 1;
+			}
+			let len_free = ilr - ill;
+			//println("len_free = ", len_free);
+			if (len_free >= len_file and ill + len_free < ir)
+			{
+				// Move the whole file to the left
+				blocks[ill: ill + len_file] = blocks[ir];
+				//println("blocks = ", blocks);
+				//println("irl, ir = ", [irl, ir]);
+				blocks[irl + 1: ir + 1] = FREE;
+				//println("blocks = ", blocks);
+				break_inner = true;
+			}
+			// Increment ill and try again
+			ill = ilr;
+			while blocks[ill] >= 0 and ill < ir
+			{
+				ill += 1;
+			}
+			if ill >= ir
+			{
+				// We couldn't move the file
+				break_inner = true;
+
+				// Decrement `ir` to try the next file (to the left?)
+				let ir0 = ir;
+				while blocks[ir] >= blocks[ir0] and ir > 0
+				{
+					ir -= 1;
+					while blocks[ir] == FREE and ir > 0
+						ir -= 1;
+				}
+			}
+		}
+
+		//if il >= ir
+		//	break_outer = true;
+
+		k += 1;
+
+		//println("k = ", k);
+
+		// TODO
+		//if (k >= 11)
+		if blocks[ir] == 0
+			break_outer = true;
+
+		//println("blocks = ", blocks);
+		//println();
+	}
+	//println("blocks = ", blocks);
+
+	//sum_ = sum([0: len_files] * blocks[0: len_files]);
+	//sum_ = sum([0: nblock] * blocks[0: len_files]);
+	for i in [0: nblock]
+		if blocks[i] != FREE
+			sum_ += i * blocks[i];
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	// 6366665108136 + 6398065450842
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

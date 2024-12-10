@@ -170,6 +170,8 @@ fn part2(): i64
 			{
 				is_antinode[anti[0], anti[1]] = true;
 				anti += d;
+
+				// TODO: make an in_bound(s)() util fn for this condition. Scalar or vector?
 				if (not (anti[0] >= 0 and anti[0] < nx and
 				         anti[1] >= 0 and anti[1] < ny))
 				{
