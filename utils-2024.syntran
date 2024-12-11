@@ -946,3 +946,16 @@ fn uniq(v_in: [i32; :]): [i32; :]
 
 //==============================================================================
 
+fn in_bounds(lo: [i32; :], x: [i32; :], hi: [i32; :]): bool
+{
+	// Vector bounds check.  Inclusive of lo, exclusive of hi
+	for i in [0: size(x, 0)]
+	{
+		if (x[i] <  lo[i]) return false;
+		if (x[i] >= hi[i]) return false;
+	}
+	return true;
+}
+
+//==============================================================================
+
