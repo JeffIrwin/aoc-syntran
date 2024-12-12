@@ -1,0 +1,104 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let v = parse_i64_delim(str_, " ");
+	println("v init = ", v);
+
+	let nblinks = 25;
+	//nblinks = 6;
+
+	let vmax = 0'i64;
+
+	for ib in [0: nblinks]
+	{
+		let v0 = v; // previous iteration
+		let nv0 = size(v0, 0);
+
+		for j in [0: nv0]
+			vmax = max(vmax, v0[j]);
+
+		v = [-1'i64; 2 * nv0]; // 2x as big in worst case scenario
+		let i = 0;
+		for i0 in [0: nv0]
+		{
+			let v0str = str(v0[i0]);
+			let len_ = len(v0str);
+			if v0[i0] == 0
+			{
+				v[i] = 1;
+				i += 1;
+			}
+			else if len_ % 2 == 0
+			{
+				// split digits in half
+				v[i] = parse_i64(v0str[0: len_ / 2]);
+				i += 1;
+				v[i] = parse_i64(v0str[len_ / 2: len_]);
+				i += 1;
+			}
+			else
+			{
+				v[i] = v0[i0] * 2024;
+				i += 1;
+			}
+		}
+		// trim
+		v = v[0: i];
+
+		//println("v = ", v);
+	}
+	sum_ = size(v, 0);
+	println("vmax = ", vmax);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	//sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
