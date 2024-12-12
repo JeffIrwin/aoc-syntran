@@ -21,11 +21,11 @@ fn part1(): i64
 
 	let f = open(filename);
 	let str_ = readln(f);
-	println("str_ = ", str_);
+	//println("str_ = ", str_);
 	close(f);
 
 	let v = parse_i64_delim(str_, " ");
-	println("v init = ", v);
+	//println("v init = ", v);
 
 	let nblinks = 25;
 	//nblinks = 6;
@@ -71,9 +71,112 @@ fn part1(): i64
 		//println("v = ", v);
 	}
 	sum_ = size(v, 0);
-	println("vmax = ", vmax);
+
+	//// This is too big to just have an array for counts in part 2.  You need
+	//// some kind of dict with keys
+	//println("vmax = ", vmax);
 
 	println("part 1 = ", sum_);
+	return sum_;
+}
+
+// Poor man's collection counter with O(nkeys) count addition
+//
+// You could probably optimize this by sorting the keys (and counts) by key id
+// after each blink.  Then looking up could be done with bisection in
+// O(log(nkeys))
+//
+// Part 2 runs for me in 80 seconds and I already had to cheat by looking at
+// other peoples code, so I'm not going to bother
+//
+let NKEYS_MAX = 1_000_000;
+let nkeys = 0;
+let keys = [0'i64; NKEYS_MAX];
+let cnts = [0'i64; NKEYS_MAX];
+
+fn add_cnt(key: i64, cnt: i64)
+{
+	//println("adding ", [key, cnt]);
+	for i in [0: nkeys]
+	{
+		if keys[i] == key
+		{
+			cnts[i] += cnt;
+			return;
+		}
+	}
+	keys[nkeys] = key;
+	cnts[nkeys] = cnt;
+	nkeys += 1;
+	return;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let v = parse_i64_delim(str_, " ");
+	//println("v init = ", v);
+
+	let nblinks = 75;
+	//nblinks = 25;
+
+	for i in [0: size(v, 0)]
+	{
+		add_cnt(v[i], 1'i64);
+	}
+
+	//for i in [0: nkeys]
+	//	if cnts[i] != 0
+	//		println("key, cnt = ", [keys[i], cnts[i]]);
+	//println();
+
+	for ib in [0: nblinks]
+	{
+		//println("after ", ib + 1, " blinks:");
+		let nkeys0 = nkeys;
+		let cnts0 = cnts; // buffer previous counts to not corrupt next in progress counts
+		cnts[0: nkeys] = 0;
+		for i in [0: nkeys0]
+		{
+			let cnt = cnts0[i];
+			if cnt == 0
+				continue;
+
+			//println("* key, cnt = ", [keys[i], cnt]);
+
+			let v0str = str(keys[i]);
+			let len_ = len(v0str);
+			if keys[i] == 0
+			{
+				add_cnt(1'i64, cnt);
+			}
+			else if len_ % 2 == 0
+			{
+				// split digits in half
+				add_cnt(parse_i64(v0str[0: len_ / 2   ]), cnt);
+				add_cnt(parse_i64(v0str[len_ / 2: len_]), cnt);
+			}
+			else
+			{
+				add_cnt(keys[i] * 2024, cnt);
+			}
+		}
+
+		//for i in [0: nkeys]
+		//	if cnts[i] != 0
+		//		println("key, cnt = ", [keys[i], cnts[i]]);
+		//println("sum = ", sum(cnts[0: nkeys]));
+		//println();
+	}
+	sum_ = sum(cnts[0: nkeys]);
+
+	println("part 2 = ", sum_);
 	return sum_;
 }
 
@@ -84,12 +187,13 @@ fn main(): i64
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2024/xx");
+	println("Starting AOC syntran main 2024/11");
 
 	let sum_ = 0'i64;
 
+	// Expect 183435 + 218279375708592
 	sum_ += part1();
-	//sum_ += part2();
+	sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
