@@ -226,23 +226,19 @@ fn part2(): i64
 			//// that I have here
 			//if (not any([c0, c1, c2, c3])) continue;
 
+			let count_ = count([c0, c1, c2, c3]);
+
 			// These four cases have 1 cell in and 3 cells out
-			if (c0 and not any([c1, c2, c3])) nang += 1;
-			if (c1 and not any([c2, c3, c0])) nang += 1;
-			if (c2 and not any([c3, c0, c1])) nang += 1;
-			if (c3 and not any([c0, c1, c2])) nang += 1;
+			if (count_ == 1) nang += 1;
 
 			// These four cases have 3 cells in and 1 cell out
-			if (not c0 and all([c1, c2, c3])) nang += 1;
-			if (not c1 and all([c2, c3, c0])) nang += 1;
-			if (not c2 and all([c3, c0, c1])) nang += 1;
-			if (not c3 and all([c0, c1, c2])) nang += 1;
+			if (count_ == 3) nang += 1;
 
 			// Diagonal cases with 2 in and 2 out
 			if (c0 and c3 and not c1 and not c2) nang += 2;
 			if (c1 and c2 and not c0 and not c3) nang += 2;
 
-			// The other 4 cases have 0 angles (4 straight edge cases and 2 cases
+			// The other 6 cases have 0 angles (4 straight edge cases and 2 cases
 			// with everything outside or everything inside)
 		}
 		sum_ += area * nang;
