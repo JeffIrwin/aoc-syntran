@@ -1,0 +1,24 @@
+
+ax, ay
+bx, by
+px, py
+
+na * ax + nb * bx == px
+na * ay + nb * by == py
+minimize (3 * na + nb)
+
+
+[ax, bx] * [na] == [px]
+[ay, by] * [nb] == [py]
+minimize (3 * na + nb)
+
+
+[ax, bx] * [na] == [px]
+[ay, by] * [nb] == [py]
+
+det = ax * by - ay * bx
+
+inv = 
+[ by, -bx]
+[-ay,  ax] / det
+
