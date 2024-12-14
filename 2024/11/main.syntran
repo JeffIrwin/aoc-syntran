@@ -1,5 +1,6 @@
 
 #include("../../utils-2024.syntran");
+#include("../../dict.syntran");
 
 //==============================================================================
 
@@ -80,34 +81,47 @@ fn part1(): i64
 	return sum_;
 }
 
-// Poor man's collection counter with O(nkeys) count addition
-//
-// You could probably optimize this by sorting the keys (and counts) by key id
-// after each blink.  Then looking up could be done with bisection in
-// O(log(nkeys))
-//
-// Part 2 runs for me in 80 seconds and I already had to cheat by looking at
-// other peoples code, so I'm not going to bother
-//
-let NKEYS_MAX = 1_000_000;
-let nkeys = 0;
-let keys = [0'i64; NKEYS_MAX];
-let cnts = [0'i64; NKEYS_MAX];
-
 fn add_cnt(key: i64, cnt: i64)
+//fn add_cnt(key: i64, cnt: i32)
 {
-	//println("adding ", [key, cnt]);
-	for i in [0: nkeys]
-	{
-		if keys[i] == key
-		{
-			cnts[i] += cnt;
-			return;
-		}
-	}
-	keys[nkeys] = key;
-	cnts[nkeys] = cnt;
-	nkeys += 1;
+	// If key is in (global) keys, increment its count.  If not, append a new
+	// key and set its count
+
+	let str_key = str(key);
+	//let cnt32 = i32(cnt);
+	let cnt64 = cnt;
+	//println("cnt = ", cnt);
+
+	let cnt0 = get_dict_i64(str_key);
+	//println("cnt0 = ", cnt0);
+
+	//let set_cnt = cnt0 + cnt64;
+	let set_cnt = cnt64;
+	if (cnt0 > 0)
+		set_cnt += cnt0;
+
+	//println("set_cnt = ", set_cnt);
+
+	set_dict_i64(str_key, set_cnt);
+	//set_dict_i64(str_key, cnt0 + cnt64);
+
+	////println("adding ", [key, cnt]);
+	//for i in [0: nkeys]
+	//{
+	//	if keys[i] == key
+	//	{
+	//		cnts[i] += cnt;
+	//		return;
+	//	}
+	//}
+	//if (nkeys >= NKEYS_MAX)
+	//{
+	//	println("Error: NKEYS_MAX overflow!");
+	//	exit(-1);
+	//}
+	//keys[nkeys] = key;
+	//cnts[nkeys] = cnt;
+	//nkeys += 1;
 	return;
 }
 
@@ -125,6 +139,7 @@ fn part2(): i64
 
 	let nblinks = 75;
 	//nblinks = 25;
+	//nblinks = 6;
 
 	for i in [0: size(v, 0)]
 	{
@@ -139,10 +154,20 @@ fn part2(): i64
 	for ib in [0: nblinks]
 	{
 		//println("after ", ib + 1, " blinks:");
-		let nkeys0 = nkeys;
-		let cnts0 = cnts; // buffer previous counts to not corrupt next in progress counts
-		cnts[0: nkeys] = 0;
-		for i in [0: nkeys0]
+
+		//let cnts0 = cnts; // buffer previous counts to not corrupt next in progress counts
+		//cnts[0: nkeys] = 0;
+
+		// buffer previous counts to not corrupt next in progress counts
+		let cnts0 = vals_dict_i64();
+		let keys  = keys_dict_i64();
+		let nkeys = size(keys, 0);
+		for i in [0: nkeys]
+			set_dict_i64(keys[i], 0'i64);
+
+		//println("cnts0 = ", cnts0);
+
+		for i in [0: nkeys]
 		{
 			let cnt = cnts0[i];
 			if cnt == 0
@@ -152,7 +177,7 @@ fn part2(): i64
 
 			let v0str = str(keys[i]);
 			let len_ = len(v0str);
-			if keys[i] == 0
+			if keys[i] == "0"
 			{
 				add_cnt(1'i64, cnt);
 			}
@@ -164,7 +189,7 @@ fn part2(): i64
 			}
 			else
 			{
-				add_cnt(keys[i] * 2024, cnt);
+				add_cnt(parse_i64(keys[i]) * 2024, cnt);
 			}
 		}
 
@@ -174,7 +199,15 @@ fn part2(): i64
 		//println("sum = ", sum(cnts[0: nkeys]));
 		//println();
 	}
-	sum_ = sum(cnts[0: nkeys]);
+	//sum_ = sum(cnts[0: nkeys]);
+
+	//sum_ = sum(vals_dict_i64());
+	let vals = vals_dict_i64();
+	//println("vals = ", vals);
+	sum_ = sum(vals);
+
+	//// 3880 unique keys.  This is manageable for brute-force add_cnt()
+	//println("nkeys = ", nkeys);
 
 	println("part 2 = ", sum_);
 	return sum_;

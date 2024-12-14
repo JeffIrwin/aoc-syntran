@@ -194,6 +194,10 @@ fn read_i32(str_: str): i32
 
 fn read_i32s(str_: str): [i32; :]
 {
+	// TODO: this should be read_u32s() because it treats `-` as delimiter.  In
+	// 2024 it's time for a clean break (I think 2023 relies on this behavior).
+	// Rename this and make a read_i32s() which returns negatives
+	//
 	// Parse a vector of i32 integers from a string.  Any non-int characters are
 	// treated as delimiters
 
@@ -718,7 +722,9 @@ fn pmod(i: i32, n: i32): i32
 {
 	// Modulo/remainder but always positive
 	//
-	// TODO: this is actually wrong
+	// TODO: this is actually wrong (when n is negative?).  But it works for 2024
+	// day 14, so it works for enough cases to be helpful for aoc
+	//
 	return (i % n + n) % n;
 }
 
