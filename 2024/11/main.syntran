@@ -209,6 +209,8 @@ fn part2(): i64
 	//// 3880 unique keys.  This is manageable for brute-force add_cnt()
 	//println("nkeys = ", nkeys);
 
+	//print_lens_dict_i64();
+
 	println("part 2 = ", sum_);
 	return sum_;
 }

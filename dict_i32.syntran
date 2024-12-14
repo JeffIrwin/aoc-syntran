@@ -1,6 +1,26 @@
 
+// This file includes a single hash map dictionary that maps str keys to i32
+// values.  The primary functions for setting and getting key/value pairs are:
+//
+//     set_dict_i32(key: str, val: i32)
+//     get_dict_i32(key: str): i32
+//
+// There are several related functions:
+//
+//     keys_dict_i32(): [str; :]  // return a flat array of all keys
+//     vals_dict_i32(): [i32; :]  // return a flat array of all values
+//     print_lens_dict_i32()      // print the length of each bucket in the dict
+
+//********
+
+// The choice of the max hash fn return value offers a time/space tradeoff for
+// hash clash resolutions.  Smaller max hashes yield a smaller array of buckets
+// in the dict but increase the frequency of hash clashes and lookup times.
+// Larger max hashes take more memory but lead to faster lookups due to fewer
+// clashes
+
 let HASH_MAX_DICT = 256;
-HASH_MAX_DICT = 1024 * 8;
+//HASH_MAX_DICT = 1024 * 8;
 
 //==============================================================================
 
@@ -47,6 +67,8 @@ struct dict_i32
 
 	//return dict;
 //}
+
+// TODO: copy refactored hash fn(s) from dict_i64
 
 fn hash_str_dict(s: str): i32
 {

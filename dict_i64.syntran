@@ -1,26 +1,41 @@
 
+// This file includes a single hash map dictionary that maps str keys to i64
+// values.  The primary functions for setting and getting key/value pairs are:
+//
+//     set_dict_i64(key: str, val: i64)
+//     get_dict_i64(key: str): i64
+//
+// There are several related functions:
+//
+//     keys_dict_i64(): [str; :]  // return a flat array of all keys
+//     vals_dict_i64(): [i64; :]  // return a flat array of all values
+//     print_lens_dict_i64()      // print the length of each bucket in the dict
+
+// TODO: copy this into the syntran repo and cover it with unit test(s)
+
+//********
+
+// The choice of the max hash fn return value offers a time/space tradeoff for
+// hash clash resolutions.  Smaller max hashes yield a smaller array of buckets
+// in the dict but increase the frequency of hash clashes and lookup times.
+// Larger max hashes take more memory but lead to faster lookups due to fewer
+// clashes
+//
+// 256 is optimial for aoc 2024 day 11
+
 let HASH_MAX_DICT = 256;
-HASH_MAX_DICT = 1024 * 8;
+//HASH_MAX_DICT = 32; // 2x as slow compared to 256 for aoc 2024 day 11
+//HASH_MAX_DICT = 128;
+//HASH_MAX_DICT = 512;
+//HASH_MAX_DICT = 1024 * 64;
 
 //==============================================================================
 
-fn hash_str_dict(s: str): i32
+// TODO: move hash fns to a shared dict_common.syntran file?  If users include
+// both dict_i32 and dict_i64 this will break
+
+fn hash_aoc(s: str): i32
 {
-	// This is the hash fn that determines which bucket a key goes into
-
-	//// djb2 hash fn
-	//let hash_ = 5381;
-	////let hash_ = 5381'i64;
-	//for j in [0: len(s)]
-	//{
-	//	hash_ = ((hash_ << 5) + hash_) + i32(s[j]);
-	//	//hash_ = hash_ * 33 + i32(s[j]);
-	//	hash_ %= HASH_MAX_DICT; // not part of djb2, but it crashes without this :(
-	//}
-	////hash_ %= HASH_MAX_DICT;
-	////return i32(hash_);
-	//return hash_;
-
 	// This is the hash fn from aoc 2023 day 15
 	let hash_ = 0;
 	for j in [0: len(s)]
@@ -31,6 +46,30 @@ fn hash_str_dict(s: str): i32
 	}
 	//println("hash_ = ", hash_);
 	return hash_;
+}
+
+fn hash_djb2(s: str): i32
+{
+	// djb2 hash fn
+	let hash_ = 5381;
+	for j in [0: len(s)]
+	{
+		//hash_ = ((hash_ << 5) + hash_) + i32(s[j]);
+		hash_ = hash_ * 33 + i32(s[j]);
+	}
+	hash_ %= HASH_MAX_DICT;
+	if (hash_ < 0) hash_ += HASH_MAX_DICT;
+
+	//println("djb2 = ", hash_);
+	return hash_;
+}
+
+fn hash_str_dict(s: str): i32
+{
+	// This is the hash fn that determines which bucket a key goes into
+
+	return hash_djb2(s);
+	//return hash_aoc(s);
 }
 
 struct dict_i64_bucket
