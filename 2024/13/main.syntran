@@ -42,6 +42,7 @@ fn part1(): i64
 		let cost_opt = costa * nmax + costb * nmax + 100;
 		let found = false;
 
+		// Brute force.  You could take the part2 approach and apply it here
 		for na in [0: nmax + 1]
 		for nb in [0: nmax + 1]
 		{
@@ -112,7 +113,8 @@ fn part2(): i64
 		let det = ax * by - ay * bx;
 		if (det == 0)
 		{
-			println("Error: singular matrix, multiple solutions!");
+			// Could be 0 solutions or multiple solutions
+			println("Error: singular matrix!");
 			exit(-1);
 		}
 
@@ -125,7 +127,7 @@ fn part2(): i64
 			na * ay + nb * by
 		];
 
-		// Check for rounding error
+		// Check for rounding error from integer determinant division
 		if all(p == vp)
 		{
 			let cost_opt = na * costa + nb * costb;
@@ -153,6 +155,7 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
+	// Expect 31065 + 93866170395343
 	sum_ += part1();
 	sum_ += part2();
 
