@@ -1,0 +1,246 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let nx = -1;
+let ny = -1;
+if ifile == 0
+{
+	nx = 11;
+	ny = 7;
+}
+else
+{
+	nx = 101;
+	ny = 103;
+}
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+	println("nx, ny = ", [nx, ny]);
+
+	let np = countln_(filename);
+
+	let ps = [-1; 2, np];
+	let vs = [-1; 2, np];
+
+	let f = open(filename);
+	for i in [0: np]
+	{
+		let str_ = readln(f);
+		println("str_ = ", str_);
+
+		let nums = parse_i32_delim(str_, "pv=, ");
+
+		ps[:,i] = nums[0: 2];
+		vs[:,i] = nums[2: 4];
+
+	}
+	close(f);
+
+	println("ps = ", ps);
+	println("vs = ", vs);
+
+	let nt = 100;
+
+	ps += nt * vs;
+
+	//ps[0,:] %= nx;
+	//ps[1,:] %= ny;
+	for i in [0: np]
+	{
+		ps[0,i] = pmod(ps[0,i], nx);
+		ps[1,i] = pmod(ps[1,i], ny);
+	}
+	println("ps = ", ps);
+
+	let nq0 = 0;
+	let nq1 = 0;
+	let nq2 = 0;
+	let nq3 = 0;
+	for i in [0: np]
+	{
+		let x = ps[0,i];
+		let y = ps[1,i];
+		if (x < nx/2 and y < ny/2) nq0 += 1;
+		if (x < nx/2 and y > ny/2) nq1 += 1;
+		if (x > nx/2 and y < ny/2) nq2 += 1;
+		if (x > nx/2 and y > ny/2) nq3 += 1;
+	}
+	sum_ = nq0 * nq1 * nq2 * nq3;
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn cat_chars(char_vec: [str; :]): str
+{
+	let str_ = "";
+	for i in [0: size(char_vec, 0)]
+		str_ += char_vec[i];
+	return str_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+	println("nx, ny = ", [nx, ny]);
+
+	let np = countln_(filename);
+
+	let ps = [-1; 2, np];
+	let vs = [-1; 2, np];
+
+	let f = open(filename);
+	for i in [0: np]
+	{
+		let str_ = readln(f);
+		println("str_ = ", str_);
+
+		let nums = parse_i32_delim(str_, "pv=, ");
+
+		ps[:,i] = nums[0: 2];
+		vs[:,i] = nums[2: 4];
+
+	}
+	close(f);
+
+	println("ps = ", ps);
+	println("vs = ", vs);
+
+	//let nt = 200;
+
+	//let strx = "";
+	//for x in [0: nx]
+	//	strx += ".";
+
+	//for it in [0: nt]
+	let it = 0;
+	let num_unique = 0;
+	while true //and it < 500
+	{
+		it += 1;
+		if (it % 100 == 0) println("it = ", it);
+		//println("it = ", it);
+
+		//ps += it * vs;
+		ps += vs;
+
+		for i in [0: np]
+		{
+			ps[0,i] = pmod(ps[0,i], nx);
+			ps[1,i] = pmod(ps[1,i], ny);
+		}
+		//println("ps = ", ps);
+
+		let chars = ["."; nx, ny];
+		let counts = [0; nx, ny];
+		let max_count = -1;
+
+		//let strs = [strx; ny];
+		for i in [0: np]
+		{
+			let x = ps[0,i];
+			let y = ps[1,i];
+			chars[x,y] = "*";
+			counts[x,y] += 1;
+			max_count = max(max_count, counts[x,y]);
+			//let str_ = strx[y];
+			//str_[x] = "*";
+			//strx[y] = str_;
+		}
+
+		if (max_count == 1)
+		{
+			// TODO: you have to search the logs manually to find the `it` that
+			// corresponds to the puzzle answer
+			//
+			// I still don't clearly understand what the puzzle is asking for.
+			// Maybe we can just break on the first num_unique, i.e. when all of
+			// the robots are in unique positions with no overlaps.  But do they
+			// necessarily form a picture of a christmas tree at that frame?
+			//
+			println("it = ", it);
+			num_unique += 1;
+			for y in [0: ny]
+				println(cat_chars(chars[:,y]));
+			if (num_unique >= 10) break;
+		}
+
+		// TODO: dead code below
+		continue;
+
+		//println("count = ", count(chars == "*"));
+		let xmid = nx / 2;
+		let is_tree = true;
+		let ymin = 2 * ny;
+		for i in [0: np]
+			ymin = min(ymin, ps[1,i]);
+		//println("ymin = ", ymin);
+
+		//for y in [0: min(nx, ny)]
+		for y in [ymin: ny]
+		{
+			let x1 = xmid - y;
+			let x2 = xmid + y;
+			if (x1 <   0) break;
+			if (x2 >= nx) break;
+			if chars[x1, y] != "*" or chars[x2, y] != "*"
+			{
+				is_tree = false;
+				break;
+			}
+		}
+
+		if (is_tree)
+		{
+			sum_ = it;
+			break;
+		}
+
+		//println();
+	}
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/14");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
