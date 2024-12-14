@@ -121,13 +121,8 @@ fn part2(): i64
 		let na = ( by * px - bx * py) / det;
 		let nb = (-ay * px + ax * py) / det;
 
-		let p =
-		[
-			na * ax + nb * bx,
-			na * ay + nb * by
-		];
-
 		// Check for rounding error from integer determinant division
+		let p = na * va + nb * vb;
 		if all(p == vp)
 		{
 			let cost_opt = na * costa + nb * costb;
