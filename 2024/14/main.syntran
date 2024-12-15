@@ -90,20 +90,6 @@ fn part1(): i64
 	return sum_;
 }
 
-fn cat_strs(str_vec: [str; :]): str
-{
-	// Concatenate a vector of strings (or chars) into one big str
-	//
-	// The built-in str() fn is similar but wraps in [brackets] and adds comma
-	// and space delimiters
-	//
-	// TODO: utils?
-	let str_ = "";
-	for i in [0: size(str_vec, 0)]
-		str_ += str_vec[i];
-	return str_;
-}
-
 fn part2(): i64
 {
 	let sum_ = 0'i64;

@@ -1,0 +1,470 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	-1,  0, // left
+	 1,  0, // right
+	 0, -1, // up
+	 0,  1  // down
+	 ;
+	 2, NDIRS
+];
+let INSTRS = "<>^v";
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let ny = 0;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	let nx = i32(len(str_));
+
+	//while not eof(f)
+	while str_ != ""
+	{
+		//println("str_ = ", str_);
+
+		ny += 1;
+		str_ = readln(f);
+	}
+
+	let chars = [""; nx, ny];
+	let ax = -1;
+	let ay = -1;
+
+	close(f);
+	f = open(filename);
+	str_ = readln(f);
+	ny = 0;
+	while str_ != ""
+	{
+		//println("str_ = ", str_);
+
+		for x in [0: nx]
+		{
+			chars[x,ny] = str_[x];
+			if chars[x,ny] == "@"
+			{
+				ax = x;
+				ay = ny;
+			}
+		}
+
+		ny += 1;
+		str_ = readln(f);
+	}
+
+	//println("nx, ny = ", [nx, ny]);
+	//println("chars = ", chars);
+
+	let instrs = "";
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		instrs += str_;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	//println("instrs = ", instrs);
+	//println("axy = ", [ax, ay]);
+
+	// Fill in robot's position with empty space
+	chars[ax, ay] = ".";
+
+	let x = ax;
+	let y = ay;
+
+	for ii in [0: len(instrs)]
+	{
+		let instr = instrs[ii];
+		//println("instr = ", instr);
+
+		let chars0 = chars;
+
+		// Get direction
+		let id = scan(INSTRS, instr);
+		//println("id = ", id);
+
+		let d = DIRS[:,id];
+
+		let x0 = x;
+		let y0 = y;
+
+		// Move robot
+		x += d[0];
+		y += d[1];
+		//println("xy = ", [x, y]);
+
+		// Move boxes if necessary
+		let ox = x;
+		let oy = y;
+		let char0 = ".";
+		while true
+		{
+			if chars0[ox,oy] == "."
+			{
+				break;
+			}
+			if chars0[ox,oy] == "#"
+			{
+				// unresolvable wall collision
+
+				// Reset x, y, chars to 0
+				x = x0;
+				y = y0;
+				chars = chars0;
+
+				break;
+			}
+
+			//if chars[ox,oy] == "O"
+			if chars0[ox,oy] == "O"
+			{
+				//println("move box");
+				chars[ox,oy] = char0;
+				ox += d[0];
+				oy += d[1];
+				//println("oxy = ", [ox, oy]);
+
+				if chars[ox,oy] != "#"
+					chars[ox,oy] = "O";
+
+				char0 = "O";
+			}
+		}
+		//println("chars = ", chars);
+		//exit(0);
+	}
+
+	//println("chars = ", chars);
+
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if (chars[x,y] != "O") continue;
+		sum_ += x + 100 * y;
+	}
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn print_chars(chars: [str; :,:])
+{
+	for y in [0: size(chars, 1)]
+		println(cat_strs(chars[:,y]));
+	return;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let ny = 0;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	let nx = i32(len(str_));
+
+	//while not eof(f)
+	while str_ != ""
+	{
+		println("str_ = ", str_);
+
+		//for x in [0: nx]
+		//	chars[x,y] = str_[x];
+
+		ny += 1;
+		str_ = readln(f);
+	}
+
+	// Twice as wide, but same height as part 1
+	nx *= 2;
+	//ny *= 2;
+
+	let chars = [""; nx, ny];
+	let ax = -1;
+	let ay = -1;
+
+	close(f);
+	f = open(filename);
+	str_ = readln(f);
+	ny = 0;
+	while str_ != ""
+	{
+		println("str_ = ", str_);
+
+		for xh in [0: nx/2]
+		{
+			let x = 2 * xh;
+
+			if str_[xh] == "O"
+			{
+				chars[x  ,ny] = "[";
+				chars[x+1,ny] = "]";
+			}
+			else if str_[xh] == "@"
+			{
+				ax = x;
+				ay = ny;
+				chars[x  ,ny] = ".";
+				chars[x+1,ny] = ".";
+			}
+			else
+			{
+				// "." or "#"
+				chars[x  ,ny] = str_[xh];
+				chars[x+1,ny] = str_[xh];
+			}
+
+		}
+
+		ny += 1;
+		str_ = readln(f);
+	}
+
+	println("nx, ny = ", [nx, ny]);
+	println("chars = ", chars);
+
+	let instrs = "";
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		instrs += str_;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("instrs = ", instrs);
+	println("axy = ", [ax, ay]);
+
+	// Fill in robot's position with empty space
+	chars[ax, ay] = ".";
+
+	let x = ax;
+	let y = ay;
+
+	//// Scan grid to make a list of boxes
+	//let nb = count(chars == "[");
+	//println("nb = ", nb);
+	//let b = [-1; 2, nb];
+	//let i = 0;
+	//for y in [0: ny]
+	//for x in [0: nx]
+	//{
+	//	if chars[x,y] == "["
+	//	{
+	//		b[:,i] = [x, y];
+	//		i += 1;
+	//	}
+	//}
+	//println("boxes = ", b);
+
+	//// Find box constraints: `bc[j,i] == true` means box i is blocked from
+	//// moving in DIRS j
+	//let bc = [false; NDIRS, nb];
+	//let bc0 = bc;
+	//while true
+	//{
+	//	// This is an iterative problem
+	//	for i in [0: nb]
+	//	{
+	//		let bx = b[0,i];
+	//		let by = b[1,i];
+	//		for id in [0: NDIRS]
+	//		{
+	//			let x = bx + DIRS[0,id];
+	//			let y = by + DIRS[1,id];
+	//			bc[id, i] = chars[x,y] == "#" or
+	//		}
+	//	}
+	//}
+
+	let stack = [-1; 2, nx * ny];
+
+	for ii in [0: len(instrs)]
+	{
+		let instr = instrs[ii];
+		println("instrs[", ii, "]= ", instr);
+
+		let chars0 = chars;
+
+		// Get direction
+		let id = scan(INSTRS, instr);
+		println("id = ", id);
+
+		let d = DIRS[:,id];
+
+		let x0 = x;
+		let y0 = y;
+
+		// Move robot
+		x += d[0];
+		y += d[1];
+		println("xy = ", [x, y]);
+
+		let sptr = 0;
+
+		// Push robot's new position onto a stack of positions to process
+		stack[:, sptr] = [x, y]; sptr += 1;
+
+		let visited = [false; nx, ny];
+
+		// Iterate until stack is empty or an unresolvable collision is found
+		while sptr > 0
+		{
+			// Pop position [px, py]
+			sptr -= 1;
+			let px = stack[0, sptr];  let py = stack[1, sptr];
+
+			if (visited[px, py]) continue;
+			visited[px, py] = true;
+
+			println();
+			println("pxy = ", [px, py]);
+			println("chars0[px, py] = ", chars0[px, py]);
+
+			let px0 = px - DIRS[0,id];  // previous position
+			let py0 = py - DIRS[1,id];
+			let char0 = chars0[px0, py0];
+			//chars[ox,oy] = char0;
+			//chars[pxn, pyn] = char0;
+			chars[px, py] = char0;
+
+			if (chars0[px, py] == ".") continue;
+
+			if (chars0[px, py] == "#")
+			{
+				// Unresolvable wall collision. Reset x, y, chars to 0
+				x = x0;
+				y = y0;
+				chars = chars0;
+				break;
+			}
+
+			// "[" or "]"
+
+			//let char0 = chars0[px, py];
+			//chars[ox,oy] = char0;
+
+			let pxn = px + DIRS[0,id];  // next position
+			let pyn = py + DIRS[1,id];
+
+			let char = chars0[px, py];
+			//let char = chars0[pxn, pyn];
+
+			println("instr, char0, char = ", instr, char0, char);
+
+			// Push next pos to stack
+			stack[:, sptr] = [pxn, pyn]; sptr += 1;
+
+			if (instr == "^" or instr == "v")
+			{
+				println("up or down");
+				// Push paired box half  to stack
+				if (char == "[")
+				{
+					println("pushing pair ]");
+					//stack[:, sptr] = [px+1, py0]; sptr += 1;
+					stack[:, sptr] = [px+1, py]; sptr += 1;
+					////stack[:, sptr] = [px+1, pyn]; sptr += 1;
+					chars[px+1, py0] = ".";
+					////stack[:, sptr] = [px+1, py ]; sptr += 1;
+					//chars[px+1, py] = chars0[px+1, py0];
+					//chars[px+1, py] = ".";
+				}
+				if (char == "]")
+				{
+					println("pushing pair [");
+					//stack[:, sptr] = [px-1, py0]; sptr += 1;
+					stack[:, sptr] = [px-1, py]; sptr += 1;
+					////stack[:, sptr] = [px-1, pyn]; sptr += 1;
+					chars[px-1, py0] = ".";
+					////stack[:, sptr] = [px-1, py ]; sptr += 1;
+					////chars[px-1, py] = chars0[px-1, py0];
+				}
+			}
+
+			//// Move paired box half pos unless already on stack
+			//if
+			//(
+			//	not (instr == "<" and char0 == "]" and char == "[") and
+			//	not (instr == ">" and char0 == "[" and char == "]")
+			//)
+			//{
+			//	if char0 == "["
+			//		chars[pxn+1, pyn] = chars0[px+1, py];
+			//	else if char0 == "]"
+			//		chars[pxn-1, pyn] = chars0[px-1, py];
+			//}
+
+			//println("stack chars =");
+			//print_chars(chars);
+		}
+
+		println("instr chars =");
+		print_chars(chars);
+
+		//if (ii == 2) exit(0);
+	}
+
+	print_chars(chars);
+
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		//if (not any(chars[x,y] == ["[", "]"])) continue;
+		if (chars[x,y] != "[") continue;
+		sum_ += x + 100 * y;
+	}
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/15");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	//sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -965,3 +965,17 @@ fn in_bounds(lo: [i32; :], x: [i32; :], hi: [i32; :]): bool
 
 //==============================================================================
 
+fn cat_strs(str_vec: [str; :]): str
+{
+	// Concatenate a vector of strings (or chars) into one big str
+	//
+	// The built-in str() fn is similar but wraps in [brackets] and adds comma
+	// and space delimiters
+	let str_ = "";
+	for i in [0: size(str_vec, 0)]
+		str_ += str_vec[i];
+	return str_;
+}
+
+//==============================================================================
+
