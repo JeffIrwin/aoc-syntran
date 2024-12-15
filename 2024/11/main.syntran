@@ -1,6 +1,16 @@
 
+// Today's solution uses an experimental syntran branch with a pass-by-reference
+// feature (this is the only sane way to implement dictionaries)
+//
+// This is only on the syntran pass-by-ref branch as of 2024-12-14 and not yet
+// merged to main
+//
+// You can look at the git history to find earlier versions which didn't rely on
+// hash map dicts at all, or used an inflexible hash map implemented using
+// global vars (which don't need references)
+
 #include("../../utils-2024.syntran");
-#include("../../dict_i64.syntran");
+#include("../../dict_i64_fn.syntran");
 
 //==============================================================================
 
@@ -81,6 +91,10 @@ fn part1(): i64
 	return sum_;
 }
 
+// There's no need for this to be a global var.  It could be created in part2
+// and passed to add_cnt
+let cnt_dict = new_dict_i64();
+
 fn add_cnt(key: i64, cnt: i64)
 //fn add_cnt(key: i64, cnt: i32)
 {
@@ -92,7 +106,7 @@ fn add_cnt(key: i64, cnt: i64)
 	let cnt64 = cnt;
 	//println("cnt = ", cnt);
 
-	let cnt0 = get_dict_i64(str_key);
+	let cnt0 = get_dict_i64(&cnt_dict, str_key);
 	//println("cnt0 = ", cnt0);
 
 	//let set_cnt = cnt0 + cnt64;
@@ -102,26 +116,8 @@ fn add_cnt(key: i64, cnt: i64)
 
 	//println("set_cnt = ", set_cnt);
 
-	set_dict_i64(str_key, set_cnt);
-	//set_dict_i64(str_key, cnt0 + cnt64);
+	set_dict_i64(&cnt_dict, str_key, set_cnt);
 
-	////println("adding ", [key, cnt]);
-	//for i in [0: nkeys]
-	//{
-	//	if keys[i] == key
-	//	{
-	//		cnts[i] += cnt;
-	//		return;
-	//	}
-	//}
-	//if (nkeys >= NKEYS_MAX)
-	//{
-	//	println("Error: NKEYS_MAX overflow!");
-	//	exit(-1);
-	//}
-	//keys[nkeys] = key;
-	//cnts[nkeys] = cnt;
-	//nkeys += 1;
 	return;
 }
 
@@ -159,11 +155,11 @@ fn part2(): i64
 		//cnts[0: nkeys] = 0;
 
 		// buffer previous counts to not corrupt next in progress counts
-		let cnts0 = vals_dict_i64();
-		let keys  = keys_dict_i64();
+		let cnts0 = vals_dict_i64(&cnt_dict);
+		let keys  = keys_dict_i64(&cnt_dict);
 		let nkeys = size(keys, 0);
 		for i in [0: nkeys]
-			set_dict_i64(keys[i], 0'i64);
+			set_dict_i64(&cnt_dict, keys[i], 0'i64);
 
 		//println("cnts0 = ", cnts0);
 
@@ -202,14 +198,14 @@ fn part2(): i64
 	//sum_ = sum(cnts[0: nkeys]);
 
 	//sum_ = sum(vals_dict_i64());
-	let vals = vals_dict_i64();
+	let vals = vals_dict_i64(&cnt_dict);
 	//println("vals = ", vals);
 	sum_ = sum(vals);
 
 	//// 3880 unique keys.  This is manageable for brute-force add_cnt()
 	//println("nkeys = ", nkeys);
 
-	//print_lens_dict_i64();
+	//print_lens_dict_i64(&cnt_dict);
 
 	println("part 2 = ", sum_);
 	return sum_;

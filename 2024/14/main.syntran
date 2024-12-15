@@ -94,7 +94,7 @@ fn cat_strs(str_vec: [str; :]): str
 {
 	// Concatenate a vector of strings (or chars) into one big str
 	//
-	// The built-in str() fn is similar but wraps in [brackes] and adds comma
+	// The built-in str() fn is similar but wraps in [brackets] and adds comma
 	// and space delimiters
 	//
 	// TODO: utils?
