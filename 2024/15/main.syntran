@@ -25,10 +25,14 @@ let DIRS =
 	 ;
 	 2, NDIRS
 ];
-let INSTRS = "<>^v";
+let INSTRS = "<>^v"; // same order as DIRS, crucially for scan() call
 
 fn part1(): i64
 {
+	// Somehow part1 is ~50% slower than part2 depsite the smaller grid size.
+	// You could probably re-implement part1 using the part2 algorithm to speed
+	// it up a bit
+
 	let sum_ = 0'i64;
 
 	let ny = 0;
@@ -37,11 +41,8 @@ fn part1(): i64
 	let str_ = readln(f);
 	let nx = i32(len(str_));
 
-	//while not eof(f)
 	while str_ != ""
 	{
-		//println("str_ = ", str_);
-
 		ny += 1;
 		str_ = readln(f);
 	}
@@ -57,7 +58,6 @@ fn part1(): i64
 	while str_ != ""
 	{
 		//println("str_ = ", str_);
-
 		for x in [0: nx]
 		{
 			chars[x,ny] = str_[x];
@@ -67,11 +67,9 @@ fn part1(): i64
 				ay = ny;
 			}
 		}
-
 		ny += 1;
 		str_ = readln(f);
 	}
-
 	//println("nx, ny = ", [nx, ny]);
 	//println("chars = ", chars);
 
@@ -80,11 +78,9 @@ fn part1(): i64
 	{
 		//println("str_ = ", str_);
 		instrs += str_;
-
 		str_ = readln(f);
 	}
 	close(f);
-
 	//println("instrs = ", instrs);
 	//println("axy = ", [ax, ay]);
 
@@ -93,7 +89,6 @@ fn part1(): i64
 
 	let x = ax;
 	let y = ay;
-
 	for ii in [0: len(instrs)]
 	{
 		let instr = instrs[ii];
@@ -137,7 +132,6 @@ fn part1(): i64
 				break;
 			}
 
-			//if chars[ox,oy] == "O"
 			if chars0[ox,oy] == "O"
 			{
 				//println("move box");
@@ -145,17 +139,12 @@ fn part1(): i64
 				ox += d[0];
 				oy += d[1];
 				//println("oxy = ", [ox, oy]);
-
-				if chars[ox,oy] != "#"
-					chars[ox,oy] = "O";
-
+				chars[ox,oy] = "O";
 				char0 = "O";
 			}
 		}
 		//println("chars = ", chars);
-		//exit(0);
 	}
-
 	//println("chars = ", chars);
 
 	for y in [0: ny]
@@ -212,6 +201,7 @@ fn part2(): i64
 		//println("str_ = ", str_);
 		for xh in [0: nx/2]
 		{
+			// Double from half-width `xh` to full-width `x`
 			let x = 2 * xh;
 			if str_[xh] == "O"
 			{
@@ -241,20 +231,16 @@ fn part2(): i64
 		ny += 1;
 		str_ = readln(f);
 	}
-
 	//println("nx, ny = ", [nx, ny]);
 	//println("chars = ", chars);
 
 	let instrs = "";
 	while not eof(f)
 	{
-		//println("str_ = ", str_);
 		instrs += str_;
-
 		str_ = readln(f);
 	}
 	close(f);
-
 	//println("instrs = ", instrs);
 	//println("axy = ", [ax, ay]);
 
@@ -264,7 +250,7 @@ fn part2(): i64
 	let x = ax;
 	let y = ay;
 
-	// Scan grid to make a list of boxes
+	// Scan grid to make a list of box positions
 	let nbox = count(chars == "[");
 	//println("nbox = ", nbox);
 	let box = [-1; 2, nbox];
@@ -272,6 +258,8 @@ fn part2(): i64
 	for y in [0: ny]
 	for x in [0: nx]
 	{
+		// Only left-brackets are saved.  Every box position in the list also
+		// has a "]" just to the right
 		if chars[x,y] == "["
 		{
 			box[:,i] = [x, y];
@@ -282,19 +270,19 @@ fn part2(): i64
 	//print_chars(chars);
 	//print_chars(chars_blank);
 
-	// Make an index matrix of the box in each grid position, to optimize
-	// collision detection without O(n**2) loop on box pairs
+	// Make an index matrix of the box that is in each grid position, to
+	// optimize collision detection without O(n**2) loop on box pairs
 	let grid_box = [-1; nx, ny];
 	for i in [0: nbox]
 	{
-		grid_box[ box[0,i]    , box[1,i] ] = i;
-		grid_box[ box[0,i] + 1, box[1,i] ] = i;
+		grid_box[ box[0,i]    , box[1,i] ] = i;  // "["
+		grid_box[ box[0,i] + 1, box[1,i] ] = i;  // "]"
 	}
 	//println("grid_box = ", grid_box);
 
-	// Unlike my first attempt in the last commit, this stack is a list of boxes
+	// Unlike my first attempt in the last commit, this stack is a list of
+	// boxes, not positions
 	let stack = [-1; nx * ny];
-
 	for ii in [0: len(instrs)]
 	{
 		let instr = instrs[ii];
@@ -302,9 +290,8 @@ fn part2(): i64
 
 		// Get direction
 		let id = scan(INSTRS, instr);
-		//println("id = ", id);
-
 		let d = DIRS[:,id];
+		//println("id = ", id);
 
 		let x0 = x;
 		let y0 = y;
@@ -316,29 +303,36 @@ fn part2(): i64
 
 		if (chars[x,y] == "#")
 		{
+			// Reset after hitting wall
 			x = x0;
 			y = y0;
 			continue;
 		}
 		if (chars[x,y] == ".")
 		{
+			//// Moving robot into free space requires no box motion logic.
+			//// Continue to next instruction
 			//println("continue");
 			continue;
 		}
 
+		// Move a literal stack of boxes (not necessarily in a straight line),
+		// using a stack data structure.  Save previous chars0, grid_box0, etc.
+		// in case anything runs into a wall and we need to reset
 		let sptr = 0;
+		let box0 = box;
 		let chars0 = chars;
 		let grid_box0 = grid_box;
 
-		// Push box (other cases break or continue, so this must be a box)
+		// Push box (other cases continue, so this must be a box)
+		stack[sptr] = grid_box[x,y]; sptr += 1;
 		//println("pushing char ", chars[x,y]);
 		//println("pushing init ", grid_box[x,y]);
-		stack[sptr] = grid_box[x,y]; sptr += 1;
 
+		// I usually call this `visited` in other stack algorithms
 		let moved = [false; nbox];
-		let box0 = box;
 
-		// Iterate
+		// Iterate until stack is empty
 		while sptr > 0
 		{
 			// Pop box
@@ -359,7 +353,7 @@ fn part2(): i64
 
 			if c == "#" or c2 == "#"
 			{
-				// Unresolvable wall collision. Reset x, y, chars to 0
+				// Unresolvable wall collision. Reset x, y, chars to previous state
 				x = x0;
 				y = y0;
 				box = box0;
@@ -369,27 +363,19 @@ fn part2(): i64
 				break;
 			}
 
-			// Don't double push same box.  Keep track of pushed ib1 if any
-			//
-			// The `moved` array that I added later should make this redundant
+			// Push the next box(es) in the stack
 			let ib1 = grid_box[bx, by];
-			//let ib1 = -1;
-			//if grid_box[bx,by] ==
 			if ib1 >= 0
 			{
-				//println("pushing ib1 = ", ib1);
-				stack[sptr] = ib1; sptr += 1;
+				stack[sptr] = ib1;
+				sptr += 1;
 			}
-
 			let ib2 = grid_box[bx+1, by];
-			if ib2 >= 0 and ib2 != ib1
+			if ib2 >= 0
 			{
-				//println("pushing ib2 = ", ib2);
-				stack[sptr] = ib2; sptr += 1;
+				stack[sptr] = ib2;
+				sptr += 1;
 			}
-
-			//println("stack chars =");
-			//print_chars(chars);
 		}
 
 		// Update chars AND grid_box. Set to chars_blank then fill in boxes
@@ -397,6 +383,10 @@ fn part2(): i64
 		grid_box = -1;
 		for i in [0: nbox]
 		{
+			// It should be possible to refactor and only use grid_box and not
+			// chars array, by also encoding free spaces and walls as magic
+			// negative numbers in grid_box.  Anyway it's helpful to have chars
+			// to print for debugging
 			chars   [ box[0,i]    , box[1,i] ] = "[";
 			chars   [ box[0,i] + 1, box[1,i] ] = "]";
 			grid_box[ box[0,i]    , box[1,i] ] =  i ;
@@ -409,7 +399,6 @@ fn part2(): i64
 		//print_chars(charsr);
 		//if (ii >= 2) exit(0);
 	}
-
 	//print_chars(chars);
 
 	for y in [0: ny]
@@ -434,6 +423,7 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
+	// Expect 1414416 + 1386070
 	sum_ += part1();
 	sum_ += part2();
 
