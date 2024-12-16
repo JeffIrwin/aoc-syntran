@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Go to every sub dir and run the aoc syntran script
+
 #set -exu
 set -eu
 
