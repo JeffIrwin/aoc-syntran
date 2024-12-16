@@ -1,16 +1,6 @@
 
-// Today's solution uses an experimental syntran branch with a pass-by-reference
-// feature (this is the only sane way to implement dictionaries)
-//
-// This is only on the syntran pass-by-ref branch as of 2024-12-14 and not yet
-// merged to main
-//
-// You can look at the git history to find earlier versions which didn't rely on
-// hash map dicts at all, or used an inflexible hash map implemented using
-// global vars (which don't need references)
-
 #include("../../utils-2024.syntran");
-#include("../../dict_i64_fn.syntran");
+#include("../../dict_i64.syntran");
 
 //==============================================================================
 
@@ -102,22 +92,15 @@ fn add_cnt(key: i64, cnt: i64)
 	// key and set its count
 
 	let str_key = str(key);
-	//let cnt32 = i32(cnt);
-	let cnt64 = cnt;
-	//println("cnt = ", cnt);
-
 	let cnt0 = get_dict_i64(&cnt_dict, str_key);
 	//println("cnt0 = ", cnt0);
 
-	//let set_cnt = cnt0 + cnt64;
-	let set_cnt = cnt64;
+	let set_cnt = cnt;
 	if (cnt0 > 0)
 		set_cnt += cnt0;
 
 	//println("set_cnt = ", set_cnt);
-
 	set_dict_i64(&cnt_dict, str_key, set_cnt);
-
 	return;
 }
 
@@ -138,9 +121,7 @@ fn part2(): i64
 	//nblinks = 6;
 
 	for i in [0: size(v, 0)]
-	{
 		add_cnt(v[i], 1'i64);
-	}
 
 	//for i in [0: nkeys]
 	//	if cnts[i] != 0
@@ -150,9 +131,6 @@ fn part2(): i64
 	for ib in [0: nblinks]
 	{
 		//println("after ", ib + 1, " blinks:");
-
-		//let cnts0 = cnts; // buffer previous counts to not corrupt next in progress counts
-		//cnts[0: nkeys] = 0;
 
 		// buffer previous counts to not corrupt next in progress counts
 		let cnts0 = vals_dict_i64(&cnt_dict);
@@ -195,15 +173,13 @@ fn part2(): i64
 		//println("sum = ", sum(cnts[0: nkeys]));
 		//println();
 	}
-	//sum_ = sum(cnts[0: nkeys]);
-
-	//sum_ = sum(vals_dict_i64());
 	let vals = vals_dict_i64(&cnt_dict);
 	//println("vals = ", vals);
 	sum_ = sum(vals);
 
-	//// 3880 unique keys.  This is manageable for brute-force add_cnt()
-	//println("nkeys = ", nkeys);
+	//// 3880 unique keys.  This is manageable for brute-force add_cnt(), but
+	//// the hash map dict version is still 10x faster
+	//println("size vals = ", size(vals, 0));
 
 	//print_lens_dict_i64(&cnt_dict);
 

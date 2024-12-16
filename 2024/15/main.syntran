@@ -132,16 +132,15 @@ fn part1(): i64
 				break;
 			}
 
-			if chars0[ox,oy] == "O"
-			{
-				//println("move box");
-				chars[ox,oy] = char0;
-				ox += d[0];
-				oy += d[1];
-				//println("oxy = ", [ox, oy]);
-				chars[ox,oy] = "O";
-				char0 = "O";
-			}
+			// chars0[ox,oy] == "O"
+
+			//println("move box");
+			chars[ox,oy] = char0;
+			ox += d[0];
+			oy += d[1];
+			//println("oxy = ", [ox, oy]);
+			chars[ox,oy] = "O";
+			char0 = "O";
 		}
 		//println("chars = ", chars);
 	}
@@ -259,7 +258,7 @@ fn part2(): i64
 	for x in [0: nx]
 	{
 		// Only left-brackets are saved.  Every box position in the list also
-		// has a "]" just to the right
+		// has a "]" immediately to its right
 		if chars[x,y] == "["
 		{
 			box[:,i] = [x, y];
