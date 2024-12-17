@@ -132,6 +132,9 @@ fn tok_i32(str_: str): [i64; :]
 {
 	// tokenize a string into the first int contained within it, then return the
 	// substring start index, end index, and length
+	//
+	// Some of these fns could be simplified with pass-by-ref to return multiple
+	// vals, but there's no huge perf impact
 
 	//println("starting tok_i32()");
 	//println("str_ = """, str_, """");
@@ -734,6 +737,8 @@ fn sort_index(v: [i32; :]): [i32; :]
 {
 	// Quick sort algorithm.  Return index array instead of modifying the input
 	// array in-place
+	//
+	// TODO: arg should be passed by ref
 
 	//println("starting sort_index()");
 	//println("v = ", v);
@@ -831,6 +836,9 @@ fn sort_inplace(v: [i32; :]): [i32; :]
 	// Quick sort algorithm.  Return the input array but sorted (no index
 	// array).  This could be DRY'd up with the index version above at the cost
 	// of some time and space overhead
+	//
+	// TODO: arg should be passed by ref and then return nothing.  Even more
+	// important for this version than sort_index()
 
 	//println("starting sort_inplace()");
 	//println("v = ", v);
@@ -927,6 +935,7 @@ fn sort_inplace(v: [i32; :]): [i32; :]
 
 fn uniq(v_in: [i32; :]): [i32; :]
 {
+	// TODO: pass by ref
 	let v = sort_inplace(v_in);
 	let u = v;
 
@@ -971,10 +980,36 @@ fn cat_strs(str_vec: [str; :]): str
 	//
 	// The built-in str() fn is similar but wraps in [brackets] and adds comma
 	// and space delimiters
+	//
+	// TODO: ref
 	let str_ = "";
 	for i in [0: size(str_vec, 0)]
 		str_ += str_vec[i];
 	return str_;
+}
+
+// TODO: add a print_char_mat() fn that uses cat_strs() to log a char matrix
+// without `, ` delimiters
+
+//==============================================================================
+
+fn read_char_mat(filename: str): [str; :,:]
+{
+	// Read a matrix of characters from a file
+	let ny = countln_(filename);
+	let f = open(filename);
+	let str_ = readln(f);
+	let nx = i32(len(str_));
+	let chars = [""; nx, ny];
+	for y in [0: ny]
+	{
+		//println("str_ = ", str_);
+		for x in [0: nx]
+			chars[x,y] = str_[x];
+		str_ = readln(f);
+	}
+	close(f);
+	return chars;
 }
 
 //==============================================================================
