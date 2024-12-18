@@ -372,10 +372,8 @@ fn part1(): i64
 				let dist = dist0 + 1;
 				if (dir != dir0) dist += 1000;
 
-				// idk why i can't just add dir here and not later
-				let junc_id = junc_grid[x,y];
-
-				if junc_id >= 0 and not visited[x,y,dir]
+				let junc_id = junc_grid[x,y] + dir;
+				if junc_grid[x,y] >= 0 and not visited[x,y,dir]
 				{
 					//println("neighbor [x,y,dir] = ", [x,y,dir]);
 
@@ -387,8 +385,7 @@ fn part1(): i64
 					for k in [0: nadj[ij]]
 					{
 						kadj = k;
-						//is_in_adj = adj[k, ij] == junc_id;
-						is_in_adj = adj[k, ij] == junc_id + dir;
+						is_in_adj = adj[k, ij] == junc_id;
 						if (is_in_adj) break;
 					}
 
@@ -398,8 +395,7 @@ fn part1(): i64
 					}
 					else
 					{
-						//adj[nadj[ij], ij] = junc_id;
-						adj[nadj[ij], ij] = junc_id + dir;
+						adj[nadj[ij], ij] = junc_id;
 						w[nadj[ij], ij] = dist;
 						nadj[ij] += 1;
 					}
