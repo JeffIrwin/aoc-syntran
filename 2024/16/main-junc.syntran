@@ -246,16 +246,11 @@ fn part1(): i64
 			if (not in_bounds([0,0], [xn,yn], [nx,ny])) continue;
 			if (chars[xn, yn] == "#") continue;
 
-			//junc[:, njunc + nout] = [x, y, dir];
-			//if (junc_grid[x,y] < 0) junc_grid[x,y] = njunc;
-			//if (nout == 0) junc_grid[x,y] = njunc;
-
 			nout += 1;
 		}
 
 		// Count "S" and "E" as junctions regardless of nout
 		if (not (nout > 2 or c == "S" or c == "E")) continue;
-		//if (nout <= 2) continue;
 
 		if (junc_grid[x,y] < 0) junc_grid[x,y] = njunc;
 
@@ -279,9 +274,7 @@ fn part1(): i64
 		// Junction positions have multiplicity.  Because turning has a cost on
 		// the score, count each outlet direction at one position as a separate
 		// junction
-		//njunc += nout;
 		njunc += NDIRS;
-		//njunc += 1;
 
 		chars2[x,y] = "J";
 		//chars2[x,y] = str(nout);
@@ -298,7 +291,7 @@ fn part1(): i64
 	// From the list of junctions, find the distance to each of its immediately reachable
 	// neighbor junctions by flood filling.  Put this data into an adjacency
 	// table
-	let NADJ_MAX = NDIRS * 4;
+	let NADJ_MAX = NDIRS * 2;
 	let nadj = [ 0; njunc];            // number of neighbors
 	let  adj = [-1; NADJ_MAX, njunc];  // list of neighbors
 	let w    = [-1; NADJ_MAX, njunc];  // weights/distances/scores between neighbors
@@ -313,8 +306,6 @@ fn part1(): i64
 		let y   = junc[1, ij];
 		let dir = junc[2, ij];
 
-		//let ijn = ij + 1;
-		//let ijn = ij;
 		let ijn = ij - 4;
 		while true
 		{
@@ -326,8 +317,8 @@ fn part1(): i64
 			let xn   = junc[0, ijn];
 			let yn   = junc[1, ijn];
 			let dirn = junc[2, ijn];
-			if (xn != x) continue; //break;
-			if (yn != y) continue; //break;
+			if (xn != x) continue;
+			if (yn != y) continue;
 			let ddir = abs(dirn - dir);
 			if (ddir != 1 and ddir != 3) continue;
 			println("    nei");
@@ -335,12 +326,9 @@ fn part1(): i64
 			adj[nadj[ij], ij] = ijn; 
 			w  [nadj[ij], ij] = 1000;
 			nadj[ij] += 1;
-
-			//ijn += 1;
 		}
 	}
 	println("adj = ", adj);
-	//exit(0);
 
 	// Now do flood fill for neighbors with different positions
 	for ij in [0: njunc]
@@ -356,9 +344,12 @@ fn part1(): i64
 		stack[  4, sptr] = 0;           // dist
 		sptr += 1;
 
+		// I can reduce the rank of visited (without directions) and get the
+		// right answer for the test input, but not the real input
 		let visited = [false; nx, ny, NDIRS];
-		//let visited = [false; nx, ny];
 		visited[ junc[0,ij], junc[1,ij], junc[2,ij] ] = true;
+		//let visited = [false; nx, ny];
+		//visited[ junc[0,ij], junc[1,ij] ] = true;
 
 		// DFS until neighbors are found
 		while sptr > 0
@@ -385,7 +376,10 @@ fn part1(): i64
 				let dist = dist0 + 1;
 				if (dir != dir0) dist += 1000;
 
+				// idk why i can't just add dir here and not later
 				let junc_id = junc_grid[x,y];
+				//let junc_id = junc_grid[x,y] + dir;
+
 				//if junc_id >= 0
 				if junc_id >= 0 and not visited[x,y,dir]
 				//if junc_id >= 0 and not visited[x,y]
@@ -393,27 +387,30 @@ fn part1(): i64
 					//println("neighbor [x,y,dir] = ", [x,y,dir]);
 
 					// fill in adjacency data
-					//
-					// TODO: check if already in adj?  If already listed,
-					// compare weights and only save min weight
 
-					adj[nadj[ij], ij] = junc_id + dir; // TODO: is +dir correct or do i need to iterate over 4 and check if dir matches?
-					//adj[nadj[ij], ij] = junc_id;
-
-					//w[nadj[ij], ij] = dist;
-					if w[nadj[ij], ij] < 0
+					// Check if neigbor is already listed as adjacent
+					let is_in_adj = false;
+					let kadj = -1;
+					for k in [0: nadj[ij]]
 					{
-						w[nadj[ij], ij] = dist;
+						kadj = k;
+						//is_in_adj = adj[k, ij] == junc_id;
+						is_in_adj = adj[k, ij] == junc_id + dir;
+						if (is_in_adj) break;
+					}
+
+					if is_in_adj
+					{
+						w[kadj, ij] = min(w[kadj, ij], dist);
 					}
 					else
 					{
-						w[nadj[ij], ij] = min(w[nadj[ij], ij], dist);
-						println("else");
-						// unreachable? so we can just set it unconditionally
-						exit(0);
+						//adj[nadj[ij], ij] = junc_id;
+						adj[nadj[ij], ij] = junc_id + dir;
+						w[nadj[ij], ij] = dist;
+						nadj[ij] += 1;
 					}
 
-					nadj[ij] += 1;
 					if (nadj[ij] >= NADJ_MAX)
 					{
 						println("Error: NADJ_MAX overflow!");
@@ -473,8 +470,8 @@ fn part1(): i64
 
 		for iv in [0: nadj[id0]]
 		{
-			let v   =       adj[iv, id0];
-			let alt = dist0 + w[iv, id0];
+			let v   = adj[iv, id0];
+			let alt =   w[iv, id0] + dist0;
 			if alt < dist[v]
 			{
 				dist[v] = alt;
