@@ -191,18 +191,7 @@ fn pop_(): [i32; :]
 
 fn part1(): i64
 {
-	// This runs in ~5 minutes.  I was in the process of thinking about writing
-	// a compressed-graph version while it ran
-	//
-	// It should be a lot faster if you search a graph of only junctions as
-	// nodes, not every "." in the input character matrix as a graph node
-	//
-	// You would then need to construct an adjacency array listing which
-	// junctions (and start and end points) are next to which other junctions,
-	// along with the "distance" score that it would take to travel between
-	// them.  The turning score +1000 makes this complicated, I'm not sure how
-	// that would be built into the adjacency table.  Maybe each junction node
-	// would have to be repeated for every possible facing direction
+	// This runs in ~30 seconds
 
 	let sum_ = 0'i64;
 
@@ -360,6 +349,8 @@ fn part1(): i64
 		let stack = [-1; 4, STACK_CAP];
 		let sptr = 0;
 
+		//println("junc[:, ", ij, "] = ", junc[:,ij]);
+
 		// push
 		stack[0:4, sptr] = junc[:, ij]; // x, y, dir
 		stack[  4, sptr] = 0;           // dist
@@ -370,7 +361,6 @@ fn part1(): i64
 		visited[ junc[0,ij], junc[1,ij], junc[2,ij] ] = true;
 
 		// DFS until neighbors are found
-		println("junc[:, ", ij, "] = ", junc[:,ij]);
 		while sptr > 0
 		{
 			// Pop
@@ -400,11 +390,11 @@ fn part1(): i64
 				if junc_id >= 0 and not visited[x,y,dir]
 				//if junc_id >= 0 and not visited[x,y]
 				{
-					println("neighbor [x,y,dir] = ", [x,y,dir]);
+					//println("neighbor [x,y,dir] = ", [x,y,dir]);
 
 					// fill in adjacency data
 					//
-					// TODO: check if already in adj.  If already listed,
+					// TODO: check if already in adj?  If already listed,
 					// compare weights and only save min weight
 
 					adj[nadj[ij], ij] = junc_id + dir; // TODO: is +dir correct or do i need to iterate over 4 and check if dir matches?
@@ -419,7 +409,7 @@ fn part1(): i64
 					{
 						w[nadj[ij], ij] = min(w[nadj[ij], ij], dist);
 						println("else");
-						// unreachable?
+						// unreachable? so we can just set it unconditionally
 						exit(0);
 					}
 
@@ -429,10 +419,6 @@ fn part1(): i64
 						println("Error: NADJ_MAX overflow!");
 						exit(-3);
 					}
-
-					// TODO: may be junc_id+1 or +2. need to account for
-					// direction (be careful not to mix up east/west and
-					// north/south based on in-going vs out-going dir)
 
 					// stop search when another junction is found
 					//visited[x, y] = true;
@@ -450,7 +436,6 @@ fn part1(): i64
 	}
 	println("adj = ", adj);
 	println("w = ", w);
-	//exit(0);
 
 	// Dijkstra's algorithm with bad O(n) pop_() linear scan
 	let DIST_INFTY = 2_000_000_000;
@@ -474,7 +459,6 @@ fn part1(): i64
 		let dist0 = u[0];
 		let id0   = u[1];
 
-		//if x0 == xe and y0 == ye
 		if id0 == end_id_east or id0 == end_id_north
 			dist_end = min(dist_end, dist0);
 
@@ -487,25 +471,12 @@ fn part1(): i64
 		if (visited[id0]) continue;
 		visited[id0] = true;
 
-		//for dir in [0: NDIRS]
 		for iv in [0: nadj[id0]]
 		{
-			//let x = x0 + DIRS[0, dir];
-			//let y = y0 + DIRS[1, dir];
-			//// Check bounds and walls
-			//if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
-			//if (chars[x,y] == "#") continue;
-
-			//let alt = dist0 + 1;
-			//if (dir != dir0) alt += 1000;
 			let v   =       adj[iv, id0];
 			let alt = dist0 + w[iv, id0];
-
-			//if alt < dist[x, y, dir]
 			if alt < dist[v]
 			{
-				//dist[x, y, dir] = alt;
-				//push_([alt, x, y, dir]);
 				dist[v] = alt;
 				push_([alt, v]);
 			}
