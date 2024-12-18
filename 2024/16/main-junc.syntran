@@ -199,7 +199,7 @@ fn part1(): i64
 	let nx = i32(size(chars, 0));
 	let ny = i32(size(chars, 1));
 	//println("chars = ", chars);
-	print_char_mat(&chars);
+	//print_char_mat(&chars);
 
 	// Find start and end points
 	let xs = -1;
@@ -279,14 +279,13 @@ fn part1(): i64
 		chars2[x,y] = "J";
 		//chars2[x,y] = str(nout);
 	}
-	println("njunc = ", njunc);
-	println("chars2 = ");
-	print_char_mat(&chars2);
+	//println("njunc = ", njunc);
+	//println("chars2 = ");
+	//print_char_mat(&chars2);
 
 	junc = junc[:, 0: njunc]; // trim
-	println("junc = ", junc);
-
-	println("junc_grid = ", junc_grid);
+	//println("junc = ", junc);
+	//println("junc_grid = ", junc_grid);
 
 	// From the list of junctions, find the distance to each of its immediately reachable
 	// neighbor junctions by flood filling.  Put this data into an adjacency
@@ -300,8 +299,8 @@ fn part1(): i64
 	// without moving forward
 	for ij in [0: njunc]
 	{
-		println();
-		println("ij = ", ij);
+		//println();
+		//println("ij = ", ij);
 		let x   = junc[0, ij];
 		let y   = junc[1, ij];
 		let dir = junc[2, ij];
@@ -310,7 +309,7 @@ fn part1(): i64
 		while true
 		{
 			ijn += 1;
-			println("    ijn = ", ijn);
+			//println("    ijn = ", ijn);
 			if (ijn >= njunc)  break;
 			if (ijn >= ij + 4) break;
 
@@ -321,14 +320,14 @@ fn part1(): i64
 			if (yn != y) continue;
 			let ddir = abs(dirn - dir);
 			if (ddir != 1 and ddir != 3) continue;
-			println("    nei");
+			//println("    nei");
 
 			adj[nadj[ij], ij] = ijn; 
 			w  [nadj[ij], ij] = 1000;
 			nadj[ij] += 1;
 		}
 	}
-	println("adj = ", adj);
+	//println("adj = ", adj);
 
 	// Now do flood fill for neighbors with different positions
 	for ij in [0: njunc]
@@ -348,8 +347,6 @@ fn part1(): i64
 		// right answer for the test input, but not the real input
 		let visited = [false; nx, ny, NDIRS];
 		visited[ junc[0,ij], junc[1,ij], junc[2,ij] ] = true;
-		//let visited = [false; nx, ny];
-		//visited[ junc[0,ij], junc[1,ij] ] = true;
 
 		// DFS until neighbors are found
 		while sptr > 0
@@ -371,22 +368,18 @@ fn part1(): i64
 				if (chars[x, y] == "#") continue;
 
 				if (visited[x, y, dir]) continue;
-				//if (visited[x, y]) continue;
 
 				let dist = dist0 + 1;
 				if (dir != dir0) dist += 1000;
 
 				// idk why i can't just add dir here and not later
 				let junc_id = junc_grid[x,y];
-				//let junc_id = junc_grid[x,y] + dir;
 
-				//if junc_id >= 0
 				if junc_id >= 0 and not visited[x,y,dir]
-				//if junc_id >= 0 and not visited[x,y]
 				{
 					//println("neighbor [x,y,dir] = ", [x,y,dir]);
 
-					// fill in adjacency data
+					// Fill in adjacency data
 
 					// Check if neigbor is already listed as adjacent
 					let is_in_adj = false;
@@ -417,12 +410,10 @@ fn part1(): i64
 						exit(-3);
 					}
 
-					// stop search when another junction is found
-					//visited[x, y] = true;
+					// Stop search when another junction is found
 					visited[x, y, dir] = true;
 					continue;
 				}
-				//visited[x, y] = true;
 				visited[x, y, dir] = true;
 
 				// push
@@ -431,8 +422,8 @@ fn part1(): i64
 			}
 		}
 	}
-	println("adj = ", adj);
-	println("w = ", w);
+	//println("adj = ", adj);
+	//println("w = ", w);
 
 	// Dijkstra's algorithm with bad O(n) pop_() linear scan
 	let DIST_INFTY = 2_000_000_000;
@@ -481,8 +472,8 @@ fn part1(): i64
 	}
 	sum_ = dist_end;
 
-	println("dist end_id_east  = ", dist[end_id_east]);
-	println("dist end_id_north = ", dist[end_id_north]);
+	//println("dist end_id_east  = ", dist[end_id_east]);
+	//println("dist end_id_north = ", dist[end_id_north]);
 
 	println("part 1 = ", sum_);
 	return sum_;
