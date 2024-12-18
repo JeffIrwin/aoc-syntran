@@ -50,7 +50,8 @@ let queue_end0 = 0;
 fn sort_queue()
 {
 	// Quick sort
-	println("starting qsort()");
+
+	//println("starting qsort()");
 	////println("queue = ", queue);
 
 	let l = queue_beg;
@@ -139,7 +140,7 @@ fn push_(v: [i32; :])
 	if queue_end >= QUEUE_CAP
 	{
 		println("Error: QUEUE_CAP overflow!");
-		println();
+		exit(-1);
 	}
 	queue[:, queue_end] = v;
 	queue_end += 1;
@@ -192,15 +193,25 @@ fn pop_(): [i32; :]
 
 fn part1(): i64
 {
-	// This runs in 8 minutes.  I was in the process of writing a
-	// compressed-graph version while it ran
+	// This runs in ~5 minutes.  I was in the process of thinking about writing
+	// a compressed-graph version while it ran
+	//
+	// It should be a lot faster if you search a graph of only junctions as
+	// nodes, not every "." in the input character matrix as a graph node
+	//
+	// You would then need to construct an adjacency array listing which
+	// junctions (and start and end points) are next to which other junctions,
+	// along with the "distance" score that it would take to travel between
+	// them.  The turning score +1000 makes this complicated, I'm not sure how
+	// that would be built into the adjacency table.  Maybe each junction node
+	// would have to be repeated for every possible facing direction
 
 	let sum_ = 0'i64;
 
 	let chars = read_char_mat(filename);
 	let nx = i32(size(chars, 0));
 	let ny = i32(size(chars, 1));
-	println("chars = ", chars);
+	//println("chars = ", chars);
 
 	// Find start and end points
 	let xs = -1;
@@ -221,7 +232,7 @@ fn part1(): i64
 			ye = y;
 		}
 	}
-	println("xys = ", [xs, ys]);
+	//println("xys = ", [xs, ys]);
 
 	// Dijkstra's algorithm with bad O(n) pop_() linear scan
 	let DIST_INFTY = 2_000_000_000;
@@ -253,7 +264,7 @@ fn part1(): i64
 		if (dist_end < dist_progress)
 		{
 			dist_progress = dist_end;
-			println("dist_progress = ", dist_progress);
+			//println("dist_progress = ", dist_progress);
 		}
 
 		if (visited[x0, y0, dir0]) continue;
@@ -291,7 +302,7 @@ fn part2(): i64
 	let chars = read_char_mat(filename);
 	let nx = i32(size(chars, 0));
 	let ny = i32(size(chars, 1));
-	println("chars = ", chars);
+	//println("chars = ", chars);
 
 	// Find start and end points
 	let xs = -1;
@@ -312,7 +323,7 @@ fn part2(): i64
 			ye = y;
 		}
 	}
-	println("xys = ", [xs, ys]);
+	//println("xys = ", [xs, ys]);
 
 	// Dijkstra's algorithm with bad O(n) pop_() linear scan
 	let DIST_INFTY = 2_000_000_000;
@@ -364,7 +375,7 @@ fn part2(): i64
 		if (dist_end < dist_progress)
 		{
 			dist_progress = dist_end;
-			println("dist_progress = ", dist_progress);
+			//println("dist_progress = ", dist_progress);
 		}
 
 		if (visited[x0, y0, dir0]) continue;
@@ -407,8 +418,8 @@ fn part2(): i64
 // 18
 // 19      return dist[], prev[]
 
-	println("dir_end = ", dir_end);
-	println("backtracking");
+	//println("dir_end = ", dir_end);
+	//println("backtracking");
 
 	// Backtrack all optimal paths
 	let STACK_CAP = nx * ny * 10; // probably don't need 10x
@@ -416,14 +427,10 @@ fn part2(): i64
 	let sptr = 0;
 
 	// You can end facing north or east, because the end point is in the
-	// top-right
-	//
-	// TODO: off-by-one.  check that dist == dist_end before pushing each of
-	// these
-	stack[:, sptr] = [xe, ye, NORTH]; sptr += 1;
-	stack[:, sptr] = [xe, ye, EAST ]; sptr += 1;
+	// top-right.  However, one of those might not be part of an optimal path
+	if (dist[xe, ye, NORTH] == dist_end) { stack[:, sptr] = [xe, ye, NORTH]; sptr += 1; }
+	if (dist[xe, ye, EAST ] == dist_end) { stack[:, sptr] = [xe, ye, EAST ]; sptr += 1; }
 
-	println("sptr = ", sptr);
 	visited = false;
 	while sptr > 0
 	{
@@ -433,9 +440,7 @@ fn part2(): i64
 		let y0   = stack[1, sptr];
 		let dir0 = stack[2, sptr];
 
-		if (x0 < 0 or y0 < 0) continue; // noop?
-
-		println("xy0 dir0 = ", [x0, y0, dir0]);
+		//println("xy0 dir0 = ", [x0, y0, dir0]);
 
 		chars[x0, y0] = "O";
 
@@ -451,9 +456,7 @@ fn part2(): i64
 		}
 	}
 	chars[xs, ys] = "O";
-
-	// TODO: cleanup logging
-	println("chars = ", chars);
+	//println("chars = ", chars);
 
 	sum_ = count(chars == "O");
 
@@ -472,7 +475,9 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
-	//sum_ += part1();
+	// Expect 73432 + 496
+
+	sum_ += part1();
 	sum_ += part2();
 
 	println("Ending AOC syntran main");

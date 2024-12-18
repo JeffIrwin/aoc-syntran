@@ -988,8 +988,15 @@ fn cat_strs(str_vec: [str; :]): str
 	return str_;
 }
 
-// TODO: add a print_char_mat() fn that uses cat_strs() to log a char matrix
-// without `, ` delimiters
+//==============================================================================
+
+fn print_char_mat(chars: &[str; :,:])
+{
+	for iy in [0: size(chars, 1)]
+		println(cat_strs(chars[:,iy]));
+	println();
+	return;
+}
 
 //==============================================================================
 

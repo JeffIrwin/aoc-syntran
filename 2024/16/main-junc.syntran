@@ -1,0 +1,718 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	 1,  0, // east
+	 0, -1, // north
+	-1,  0, // west
+	 0,  1  // south
+	 ;
+	 2, NDIRS
+];
+let EAST  = 0;
+let NORTH = 1;
+let WEST  = 2;
+let SOUTH = 3;
+
+// Number of state variables.  State contains:
+//
+//     0. score, aka distance
+//     1. node/junction ID (includes direction)
+//
+let NSTATE = 2;
+
+// Queue data structure.  I don't have pass-by-reference but I do have
+// pass-by-global-variable :)
+let QUEUE_CAP = 2 * 1024 * 1024;
+let queue = [-1; NSTATE, QUEUE_CAP];
+let queue_beg  = 0;
+let queue_end  = 0;
+let queue_end0 = 0;
+
+fn sort_queue()
+{
+	// Quick sort
+
+	//println("starting qsort()");
+	////println("queue = ", queue);
+
+	let l = queue_beg;
+	let h = queue_end - 1;
+
+	if (l < h)
+	{
+		let stack = [0; h - l + 1];
+
+		let top = -1;
+
+		top += 1;
+		stack[top] = l;
+
+		top += 1;
+		stack[top] = h;
+
+		while top >= 0
+		{
+			h = stack[top];
+			top -= 1;
+
+			l = stack[top];
+			top -= 1;
+
+			// TODO: use median-of-3 pivot like later day(s)
+			let x = queue[0,h];
+
+			let i = l - 1;
+			for j in [l: h]
+				if queue[0,j] <= x
+				{
+					i += 1;
+					for k in [0: NSTATE]
+					{
+						// TODO: slice instead of loop
+						let tmp     = queue[k, i];
+						queue[k, i] = queue[k, j];
+						queue[k, j] = tmp;
+					}
+				}
+			for k in [0: NSTATE]
+			{
+				let tmp       = queue[k, i+1];
+				queue[k, i+1] = queue[k, h];
+				queue[k, h] = tmp;
+			}
+
+			let p = i + 1;
+
+			if p - 1 > l
+			{
+				top += 1;
+				stack[top] = l;
+			
+				top += 1;
+				stack[top] = p - 1;
+			}
+
+			if p + 1 < h
+			{
+				top += 1;
+				stack[top] = p + 1;
+
+				top += 1;
+				stack[top] = h;
+			}
+		}
+	}
+	//println("queue = ", queue);
+
+	// This could also prune popped elements entirely to avoid QUEUE_CAP issues
+	while queue[0, queue_beg] < 0 and queue_beg < queue_end
+		queue_beg += 1;
+
+	// After sorting, new unsorted elements will be pushed onto the queue after
+	// this position
+	queue_end0 = queue_end;
+	return;
+}
+
+let push_count = 0;
+fn push_(v: [i32; :])
+{
+	//println("pushing ", v);
+	if queue_end >= QUEUE_CAP
+	{
+		println("Error: QUEUE_CAP overflow!");
+		exit(-1);
+	}
+	queue[:, queue_end] = v;
+	queue_end += 1;
+
+	// Sort the queue periodically for perf.  This is a poor man's priority
+	// queue / min heap
+	if push_count % 3000 == 0
+	//if push_count % 500 == 0
+		sort_queue();
+
+	push_count += 1;
+	return;
+}
+
+fn pop_(): [i32; :]
+{
+	// Linear scan because I'm not implementing a min-heap queue :(
+
+	// queue_beg is guaranteed to be in the queue (i think)
+	let i = queue_beg;
+	let imin = i;
+	let min_ = queue[0,i];
+
+	// Scan only the unsorted part of the queue
+	let x = [-1; NSTATE];
+	i = queue_end0;
+	while i < queue_end
+	{
+		if queue[0,i] >= 0
+		{
+			if queue[0,i] < min_
+			{
+				min_ = queue[0,i];
+				imin = i;
+			}
+		}
+		i += 1;
+	}
+	x = queue[:, imin];
+
+	queue[0, imin] = -1;  // mark popped element as out of queue
+
+	// When queue[0,:] happens to get popped, increment it to the next element
+	// still in queue
+	while queue[0, queue_beg] < 0 and queue_beg < queue_end
+		queue_beg += 1;
+
+	return x;
+}
+
+fn part1(): i64
+{
+	// This runs in ~5 minutes.  I was in the process of thinking about writing
+	// a compressed-graph version while it ran
+	//
+	// It should be a lot faster if you search a graph of only junctions as
+	// nodes, not every "." in the input character matrix as a graph node
+	//
+	// You would then need to construct an adjacency array listing which
+	// junctions (and start and end points) are next to which other junctions,
+	// along with the "distance" score that it would take to travel between
+	// them.  The turning score +1000 makes this complicated, I'm not sure how
+	// that would be built into the adjacency table.  Maybe each junction node
+	// would have to be repeated for every possible facing direction
+
+	let sum_ = 0'i64;
+
+	let chars = read_char_mat(filename);
+	let nx = i32(size(chars, 0));
+	let ny = i32(size(chars, 1));
+	//println("chars = ", chars);
+	print_char_mat(&chars);
+
+	// Find start and end points
+	let xs = -1;
+	let ys = -1;
+	let xe = -1;
+	let ye = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if chars[x,y] == "S"
+		{
+			xs = x;
+			ys = y;
+		}
+		else if chars[x,y] == "E"
+		{
+			xe = x;
+			ye = y;
+		}
+	}
+	//println("xys = ", [xs, ys]);
+
+	// Pre-process input to find junctions.  It might help to also find
+	// dead-ends (1 outlet), mark them, and optimize them later
+	let chars2 = chars;
+	let njunc = 0;
+	let junc = [-1; 3, nx * ny]; // a junction is [x, y, dir]
+	let junc_grid = [-1; nx, ny];
+	let start_id    = -1;
+	let end_id_east  = -1;
+	let end_id_north = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		let c = chars[x,y];
+		if (c == "#") continue; // skip walls
+
+		// Count number of outlets (or inlets) to/from position [x,y]
+		let nout = 0;
+		for dir in [0: NDIRS]
+		{
+			let xn = x + DIRS[0, dir];
+			let yn = y + DIRS[1, dir];
+			if (not in_bounds([0,0], [xn,yn], [nx,ny])) continue;
+			if (chars[xn, yn] == "#") continue;
+
+			//junc[:, njunc + nout] = [x, y, dir];
+			//if (junc_grid[x,y] < 0) junc_grid[x,y] = njunc;
+			//if (nout == 0) junc_grid[x,y] = njunc;
+
+			nout += 1;
+		}
+
+		// Count "S" and "E" as junctions regardless of nout
+		if (not (nout > 2 or c == "S" or c == "E")) continue;
+		//if (nout <= 2) continue;
+
+		if (junc_grid[x,y] < 0) junc_grid[x,y] = njunc;
+
+		junc[:, njunc + EAST ] = [x, y, EAST ];
+		junc[:, njunc + NORTH] = [x, y, NORTH];
+		junc[:, njunc + WEST ] = [x, y, WEST ];
+		junc[:, njunc + SOUTH] = [x, y, SOUTH];
+
+		// Save start/end junc IDs.  Start faces east, end can face north or
+		// east
+		if (x == xs and y == ys)
+		{
+			start_id = njunc + EAST;
+		}
+		if (x == xe and y == ye)
+		{
+			end_id_east  = njunc + EAST ;
+			end_id_north = njunc + NORTH;
+		}
+
+		// Junction positions have multiplicity.  Because turning has a cost on
+		// the score, count each outlet direction at one position as a separate
+		// junction
+		//njunc += nout;
+		njunc += NDIRS;
+		//njunc += 1;
+
+		chars2[x,y] = "J";
+		//chars2[x,y] = str(nout);
+	}
+	println("njunc = ", njunc);
+	println("chars2 = ");
+	print_char_mat(&chars2);
+
+	junc = junc[:, 0: njunc]; // trim
+	println("junc = ", junc);
+
+	println("junc_grid = ", junc_grid);
+
+	// From the list of junctions, find the distance to each of its immediately reachable
+	// neighbor junctions by flood filling.  Put this data into an adjacency
+	// table
+	let NADJ_MAX = NDIRS * 4;
+	let nadj = [ 0; njunc];            // number of neighbors
+	let  adj = [-1; NADJ_MAX, njunc];  // list of neighbors
+	let w    = [-1; NADJ_MAX, njunc];  // weights/distances/scores between neighbors
+
+	// First, list adjacent junctions which can be reached by only turning
+	// without moving forward
+	for ij in [0: njunc]
+	{
+		println();
+		println("ij = ", ij);
+		let x   = junc[0, ij];
+		let y   = junc[1, ij];
+		let dir = junc[2, ij];
+
+		//let ijn = ij + 1;
+		//let ijn = ij;
+		let ijn = ij - 4;
+		while true
+		{
+			ijn += 1;
+			println("    ijn = ", ijn);
+			if (ijn >= njunc)  break;
+			if (ijn >= ij + 4) break;
+
+			let xn   = junc[0, ijn];
+			let yn   = junc[1, ijn];
+			let dirn = junc[2, ijn];
+			if (xn != x) continue; //break;
+			if (yn != y) continue; //break;
+			let ddir = abs(dirn - dir);
+			if (ddir != 1 and ddir != 3) continue;
+			println("    nei");
+
+			adj[nadj[ij], ij] = ijn; 
+			w  [nadj[ij], ij] = 1000;
+			nadj[ij] += 1;
+
+			//ijn += 1;
+		}
+	}
+	println("adj = ", adj);
+	//exit(0);
+
+	// Now do flood fill for neighbors with different positions
+	for ij in [0: njunc]
+	{
+		let STACK_CAP = nx * ny;
+		let stack = [-1; 4, STACK_CAP];
+		let sptr = 0;
+
+		// push
+		stack[0:4, sptr] = junc[:, ij]; // x, y, dir
+		stack[  4, sptr] = 0;           // dist
+		sptr += 1;
+
+		let visited = [false; nx, ny, NDIRS];
+		//let visited = [false; nx, ny];
+		visited[ junc[0,ij], junc[1,ij], junc[2,ij] ] = true;
+
+		// DFS until neighbors are found
+		println("junc[:, ", ij, "] = ", junc[:,ij]);
+		while sptr > 0
+		{
+			// Pop
+			sptr -= 1;
+			let x0    = stack[0, sptr];
+			let y0    = stack[1, sptr];
+			let dir0  = stack[2, sptr];
+			let dist0 = stack[3, sptr];
+			//println("xy0 dir0 = ", [x0, y0, dir0]);
+
+			for dir in [0: NDIRS]
+			{
+				let x = x0 + DIRS[0, dir];
+				let y = y0 + DIRS[1, dir];
+				if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
+
+				if (chars[x, y] == "#") continue;
+
+				if (visited[x, y, dir]) continue;
+				//if (visited[x, y]) continue;
+
+				let dist = dist0 + 1;
+				if (dir != dir0) dist += 1000;
+
+				let junc_id = junc_grid[x,y];
+				//if junc_id >= 0
+				if junc_id >= 0 and not visited[x,y,dir]
+				//if junc_id >= 0 and not visited[x,y]
+				{
+					println("neighbor [x,y,dir] = ", [x,y,dir]);
+
+					// fill in adjacency data
+					//
+					// TODO: check if already in adj.  If already listed,
+					// compare weights and only save min weight
+
+					adj[nadj[ij], ij] = junc_id + dir; // TODO: is +dir correct or do i need to iterate over 4 and check if dir matches?
+					//adj[nadj[ij], ij] = junc_id;
+
+					//w[nadj[ij], ij] = dist;
+					if w[nadj[ij], ij] < 0
+					{
+						w[nadj[ij], ij] = dist;
+					}
+					else
+					{
+						w[nadj[ij], ij] = min(w[nadj[ij], ij], dist);
+						println("else");
+						// unreachable?
+						exit(0);
+					}
+
+					nadj[ij] += 1;
+					if (nadj[ij] >= NADJ_MAX)
+					{
+						println("Error: NADJ_MAX overflow!");
+						exit(-3);
+					}
+
+					// TODO: may be junc_id+1 or +2. need to account for
+					// direction (be careful not to mix up east/west and
+					// north/south based on in-going vs out-going dir)
+
+					// stop search when another junction is found
+					//visited[x, y] = true;
+					visited[x, y, dir] = true;
+					continue;
+				}
+				//visited[x, y] = true;
+				visited[x, y, dir] = true;
+
+				// push
+				stack[:, sptr] = [x, y, dir, dist];
+				sptr += 1;
+			}
+		}
+	}
+	println("adj = ", adj);
+	println("w = ", w);
+	//exit(0);
+
+	// Dijkstra's algorithm with bad O(n) pop_() linear scan
+	let DIST_INFTY = 2_000_000_000;
+	let dist = [DIST_INFTY; njunc];
+	let visited = [false  ; njunc];
+
+	// `prev` is only needed to backtrack the whole path. we don't need it to
+	// get the optimal score/dist
+
+	// Initialize source vertex to 0 distance
+	dist[start_id] = 0;
+	push_([0, start_id]);
+
+	let dist_end = DIST_INFTY;
+	let dist_progress = dist_end + 1;
+	while queue_beg < queue_end
+	{
+		let u = pop_();
+
+		// unpack from array
+		let dist0 = u[0];
+		let id0   = u[1];
+
+		//if x0 == xe and y0 == ye
+		if id0 == end_id_east or id0 == end_id_north
+			dist_end = min(dist_end, dist0);
+
+		if (dist_end < dist_progress)
+		{
+			dist_progress = dist_end;
+			//println("dist_progress = ", dist_progress);
+		}
+
+		if (visited[id0]) continue;
+		visited[id0] = true;
+
+		//for dir in [0: NDIRS]
+		for iv in [0: nadj[id0]]
+		{
+			//let x = x0 + DIRS[0, dir];
+			//let y = y0 + DIRS[1, dir];
+			//// Check bounds and walls
+			//if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
+			//if (chars[x,y] == "#") continue;
+
+			//let alt = dist0 + 1;
+			//if (dir != dir0) alt += 1000;
+			let v   =       adj[iv, id0];
+			let alt = dist0 + w[iv, id0];
+
+			//if alt < dist[x, y, dir]
+			if alt < dist[v]
+			{
+				//dist[x, y, dir] = alt;
+				//push_([alt, x, y, dir]);
+				dist[v] = alt;
+				push_([alt, v]);
+			}
+		}
+	}
+	sum_ = dist_end;
+
+	println("dist end_id_east  = ", dist[end_id_east]);
+	println("dist end_id_north = ", dist[end_id_north]);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+//fn part2(): i64
+//{
+//	let sum_ = 0'i64;
+//
+//	let chars = read_char_mat(filename);
+//	let nx = i32(size(chars, 0));
+//	let ny = i32(size(chars, 1));
+//	//println("chars = ", chars);
+//
+//	// Find start and end points
+//	let xs = -1;
+//	let ys = -1;
+//	let xe = -1;
+//	let ye = -1;
+//	for y in [0: ny]
+//	for x in [0: nx]
+//	{
+//		if chars[x,y] == "S"
+//		{
+//			xs = x;
+//			ys = y;
+//		}
+//		else if chars[x,y] == "E"
+//		{
+//			xe = x;
+//			ye = y;
+//		}
+//	}
+//	//println("xys = ", [xs, ys]);
+//
+//	// Dijkstra's algorithm with bad O(n) pop_() linear scan
+//	let DIST_INFTY = 2_000_000_000;
+//	let dist = [DIST_INFTY; nx, ny, NDIRS];
+//	let visited = [false  ; nx, ny, NDIRS];
+//
+//	// Prev has a `4` dimension here because we need to keep track of *all*
+//	// equally optimal paths that lead from the start to the end.  nprev is
+//	// incremented to track this
+//	let nprev = [ 0       ; nx, ny, NDIRS];
+//	let prev  = [-1       ; 4, NSTATE, nx, ny, NDIRS];
+//
+//	// Initialize source vertex to 0 distance
+//	dist[xs, ys, EAST] = 0;
+//	push_([0, xs, ys, EAST]);
+//
+////  1  function Dijkstra(Graph, source):
+////  2     
+////  3      for each vertex v in Graph.Vertices:
+////  4          dist[v] ← INFINITY
+////  5          prev[v] ← UNDEFINED
+////  6          add v to Q
+////  7      dist[source] ← 0
+////  8     
+//
+//	let dist_end = DIST_INFTY;
+//	let dist_progress = dist_end + 1;
+//	let dir_end = -1;
+//	while queue_beg < queue_end
+//	{
+//		let u = pop_();
+//
+//		// unpack from array
+//		let dist0 = u[0];
+//		let x0    = u[1];
+//		let y0    = u[2];
+//		let dir0  = u[3];
+//
+//		if x0 == xe and y0 == ye
+//		{
+//			if dist0 <= dist_end
+//			{
+//				//println("dist0 = ", dist0);
+//				dist_end = dist0;
+//				dir_end  = dir0;
+//			}
+//		}
+//
+//		if (dist_end < dist_progress)
+//		{
+//			dist_progress = dist_end;
+//			//println("dist_progress = ", dist_progress);
+//		}
+//
+//		if (visited[x0, y0, dir0]) continue;
+//		visited[x0, y0, dir0] = true;
+//
+//		for dir in [0: NDIRS]
+//		{
+//			let x = x0 + DIRS[0, dir];
+//			let y = y0 + DIRS[1, dir];
+//
+//			// Check bounds and walls
+//			if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
+//			if (chars[x,y] == "#") continue;
+//
+//			let alt = dist0 + 1;
+//			if (dir != dir0) alt += 1000;
+//
+//			// Use `<=`, not `<`, to get all optimal paths, not just one
+//			if alt <= dist[x, y, dir]
+//			{
+//				dist[x, y, dir] = alt;
+//
+//				let n = nprev[x, y, dir];
+//				nprev[x, y, dir] += 1;
+//				prev[n, :, x, y, dir] = u;
+//
+//				push_([alt, x, y, dir]);
+//			}
+//		}
+//	}
+////  9      while Q is not empty:
+//// 10          u ← vertex in Q with minimum dist[u]
+//// 11          remove u from Q
+//// 12         
+//// 13          for each neighbor v of u still in Q:
+//// 14              alt ← dist[u] + Graph.Edges(u, v)
+//// 15              if alt < dist[v]:
+//// 16                  dist[v] ← alt
+//// 17                  prev[v] ← u
+//// 18
+//// 19      return dist[], prev[]
+//
+//	//println("dir_end = ", dir_end);
+//	//println("backtracking");
+//
+//	// Backtrack all optimal paths
+//	let STACK_CAP = nx * ny * 10; // probably don't need 10x
+//	let stack = [-1; 3, STACK_CAP];
+//	let sptr = 0;
+//
+//	// You can end facing north or east, because the end point is in the
+//	// top-right.  However, one of those might not be part of an optimal path
+//	if (dist[xe, ye, NORTH] == dist_end) { stack[:, sptr] = [xe, ye, NORTH]; sptr += 1; }
+//	if (dist[xe, ye, EAST ] == dist_end) { stack[:, sptr] = [xe, ye, EAST ]; sptr += 1; }
+//
+//	visited = false;
+//	while sptr > 0
+//	{
+//		// Pop
+//		sptr -= 1;
+//		let x0   = stack[0, sptr];
+//		let y0   = stack[1, sptr];
+//		let dir0 = stack[2, sptr];
+//
+//		//println("xy0 dir0 = ", [x0, y0, dir0]);
+//
+//		chars[x0, y0] = "O";
+//
+//		if (visited[x0, y0, dir0]) continue;
+//		visited[x0, y0, dir0] = true;
+//
+//		for i in [0: nprev[x0, y0, dir0]]
+//		{
+//			let x   = prev[i, 1, x0, y0, dir0];
+//			let y   = prev[i, 2, x0, y0, dir0];
+//			let dir = prev[i, 3, x0, y0, dir0];
+//			stack[:, sptr] = [x, y, dir]; sptr += 1;
+//		}
+//	}
+//	chars[xs, ys] = "O";
+//	//println("chars = ", chars);
+//
+//	sum_ = count(chars == "O");
+//
+//	println("part 2 = ", sum_);
+//	return sum_;
+//}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/16");
+
+	let sum_ = 0'i64;
+
+	// Expect 73432 + 496
+
+	sum_ += part1();
+	//sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
