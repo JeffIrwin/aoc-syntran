@@ -1021,3 +1021,27 @@ fn read_char_mat(filename: str): [str; :,:]
 
 //==============================================================================
 
+fn read_i32_mat(filename: str): [i32; :,:]
+{
+	// Read a matrix of comma-delimited i32 integers from a file
+	//
+	// TODO: should we take the delimiter(s) as an arg?
+	let delims = ",";
+	let ny = countln_(filename);
+	let f = open(filename);
+	let str_ = readln(f);
+	let row = parse_i32_delim(str_, delims);
+	let nx = size(row, 0);
+	let mat = [0; nx, ny];
+	for y in [0: ny]
+	{
+		//println("str_ = ", str_);
+		mat[:,y] = parse_i32_delim(str_, delims);
+		str_ = readln(f);
+	}
+	close(f);
+	return mat;
+}
+
+//==============================================================================
+

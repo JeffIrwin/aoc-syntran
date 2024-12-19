@@ -1,0 +1,212 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let np = -1;
+let nx = -1;
+let ny = -1;
+if ifile == 0
+{
+	np = 12;
+	nx = 6 + 1;
+	ny = 6 + 1;
+}
+else
+{
+	np = 1024;
+	nx = 70 + 1;
+	ny = 70 + 1;
+}
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	-1,  0, // west
+	 1,  0, // east
+	 0, -1, // north
+	 0,  1  // south
+	 ;
+	 2, NDIRS
+];
+let WEST  = 0;
+let EAST  = 1;
+let NORTH = 2;
+let SOUTH = 3;
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let p = read_i32_mat(filename); // positions (of bytes)
+	//println("p = ", p);
+
+	let grid = [false; nx, ny];
+	for ip in [0: np]
+		grid[ p[0,ip], p[1,ip] ] = true;
+	//println("grid = ", grid);
+
+	// BFS
+
+	let QUEUE_CAP = nx * ny * 4;    // TODO: check overflow
+	let queue = [-1; 3, QUEUE_CAP]; // x, y, dist
+	let queue_beg = 0;
+	let queue_end = 0;
+
+	let visited = [false; nx, ny];
+
+	// Push
+	queue[:, queue_end] = [0, 0, 0]; queue_end += 1;
+
+	let dist_end = 2_000_000_000;
+	while queue_beg < queue_end
+	{
+		// Pop
+		let u = queue[:, queue_beg]; queue_beg += 1;
+
+		// Unpack from vec
+		let x0    = u[0];
+		let y0    = u[1];
+		let dist0 = u[2];
+
+		if x0 == nx - 1 and y0 == ny - 1
+		{
+			//sum_ = dist0;
+			dist_end = min(dist_end, dist0);
+		}
+
+		if (visited[x0, y0]) continue;
+		visited[x0, y0] = true;
+
+		for idir in [0: NDIRS]
+		{
+			let dir = DIRS[:, idir];
+			let x = x0 + dir[0];
+			let y = y0 + dir[1];
+
+			if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
+			if (grid[x,y]) continue;
+
+			// Push neighbor
+			queue[:, queue_end] = [x, y, dist0 + 1]; queue_end += 1;
+		}
+	}
+
+	sum_ = dist_end;
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let p = read_i32_mat(filename); // positions (of bytes)
+	//println("p = ", p);
+
+	// Bisect manually by copy/pasting these numbers from `np` output
+	// 
+	// TODO: automate the bisection search
+	let n1 = 2911;
+	let n2 = 2912;
+	np = i32(0.5 * (n1 + n2));
+
+	np = 2911;
+	np = 2912;
+
+	println("np = ", np);
+
+	let grid = [false; nx, ny];
+	for ip in [0: np]
+		grid[ p[0,ip], p[1,ip] ] = true;
+	println("p[:, np-1] = ", p[:, np-1]); // TODO: print this as the answer
+	//println("grid = ", grid);
+
+	// BFS
+
+	let QUEUE_CAP = nx * ny * 4;    // TODO: check overflow
+	let queue = [-1; 3, QUEUE_CAP]; // x, y, dist
+	let queue_beg = 0;
+	let queue_end = 0;
+
+	let visited = [false; nx, ny];
+
+	// Push
+	queue[:, queue_end] = [0, 0, 0]; queue_end += 1;
+
+	let dist_end = 2_000_000_000;
+	while queue_beg < queue_end
+	{
+		// Pop
+		let u = queue[:, queue_beg]; queue_beg += 1;
+
+		// Unpack from vec
+		let x0    = u[0];
+		let y0    = u[1];
+		let dist0 = u[2];
+
+		if x0 == nx - 1 and y0 == ny - 1
+		{
+			//sum_ = dist0;
+			dist_end = min(dist_end, dist0);
+		}
+
+		if (visited[x0, y0]) continue;
+		visited[x0, y0] = true;
+
+		for idir in [0: NDIRS]
+		{
+			let dir = DIRS[:, idir];
+			let x = x0 + dir[0];
+			let y = y0 + dir[1];
+
+			if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
+			if (grid[x,y]) continue;
+
+			// Push neighbor
+			queue[:, queue_end] = [x, y, dist0 + 1]; queue_end += 1;
+		}
+	}
+
+	sum_ = dist_end;
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

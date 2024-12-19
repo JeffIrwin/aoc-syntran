@@ -457,6 +457,7 @@ fn part2(): i64
 	}
 	chars[xs, ys] = "O";
 	//println("chars = ", chars);
+	print_char_mat(&chars);
 
 	sum_ = count(chars == "O");
 
@@ -477,7 +478,7 @@ fn main(): i64
 
 	// Expect 73432 + 496
 
-	sum_ += part1();
+	//sum_ += part1();
 	sum_ += part2();
 
 	println("Ending AOC syntran main");
