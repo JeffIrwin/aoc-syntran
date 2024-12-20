@@ -161,45 +161,82 @@ fn part2(): i64
 		for i in [0: len_str_]
 			println(starters[0: nstarters[i], i]);
 
-		// Push
-		for ia in starters[0:nstarters[0], 0]
+		let nmatches = [0'i64; len_str_]; // num of total possible matches from i to end of str
+		//let nmatches = [0'i64; len_str_]; // num of matches from i to end of str
+		//let nmatch = 0'i64;
+
+		// Iterate from the end of the string to the start
+		println("nstarters = ", nstarters);
+		//for i in [len_str_ - 1: -1: -1]
+
+		//nmatches[len_str_ - 1] = nstarters[len_str_ - 1];
+
+		// Add up suffixes first
+		for i in [0: len_str_]
+			for ia in starters[0: nstarters[i], i]
+			{
+				if len_a[ia] == len_str_ - i
+					nmatches[i] += 1;
+			}
+
+		println("nmatches  = ", nmatches);
+		for i in [len_str_ - 2: -1: -1]
 		{
-			stack[stack_end] = len_a[ia];
-			stack_end += 1;
+			//nmatches[i] *= nstarters[i];
+
+			for ia in starters[0: nstarters[i], i]
+			{
+				if i + len_a[ia] < len_str_
+					nmatches[i] += nmatches[i + len_a[ia]];
+			}
+			//println("i = ", i);
+			//let nmatch0 = nmatch;
 		}
+		println("nmatches  = ", nmatches);
+		//println("len_str_ = ", len_str_);
 
-		let len_max = 0;
-		while stack_end > 0
-		{
-			// Pop
-			stack_end -= 1;
-			let len_ = stack[stack_end];
+		sum_ += nmatches[0];
+		//exit(0);
 
-			if (len_ > len_max)
-			{
-				println("match at len ", len_);
-				len_max = len_;
-			}
+		//// Push
+		//for ia in starters[0:nstarters[0], 0]
+		//{
+		//	stack[stack_end] = len_a[ia];
+		//	stack_end += 1;
+		//}
 
-			if len_ == len_str_
-			{
-				sum_ += 1;
-				//println("whole match **** ", sum_);
-				if (sum_ % 1_000_000 == 0) println("sum_ = ", sum_);
-				continue;
-			}
+		//let len_max = 0;
+		//while stack_end > 0
+		//{
+		//	// Pop
+		//	stack_end -= 1;
+		//	let len_ = stack[stack_end];
+
+		//	if (len_ > len_max)
+		//	{
+		//		println("match at len ", len_);
+		//		len_max = len_;
+		//	}
+
+		//	if len_ == len_str_
+		//	{
+		//		sum_ += 1;
+		//		//println("whole match **** ", sum_);
+		//		if (sum_ % 1_000_000 == 0) println("sum_ = ", sum_);
+		//		continue;
+		//	}
 	
-			for ia in starters[0: nstarters[len_], len_]
-			{
-				stack[stack_end] = len_ + len_a[ia];
-				stack_end += 1;
-				if stack_end >= STACK_CAP
-				{
-					println("Error: STACK_CAP overflow!");
-					exit(-1);
-				}
-			}
-		}
+		//	for ia in starters[0: nstarters[len_], len_]
+		//	{
+		//		stack[stack_end] = len_ + len_a[ia];
+		//		stack_end += 1;
+		//		if stack_end >= STACK_CAP
+		//		{
+		//			println("Error: STACK_CAP overflow!");
+		//			exit(-1);
+		//		}
+		//	}
+		//}
 		println();
 		str_ = readln(f);
 	}
