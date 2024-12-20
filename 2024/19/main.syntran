@@ -100,7 +100,7 @@ fn part2(): i64
 	// Array of smaller strings that we use to build a larger string
 	let ain = split_(str_, ", ");
 	let nain = i32(size(ain, 0));
-	println("nain = ", nain);
+	//println("nain = ", nain);
 	//println("a  = ", a);
 
 	str_ = readln(f); // skip blank line
@@ -116,13 +116,15 @@ fn part2(): i64
 	str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 		let len_str_ = len(str_);
 
 		let stack_end = 0;
 
 		// Prune words from input dictionary `ain` that never appear in the
-		// current sentence `str_` to avoid them entirely in the BFS here
+		// current sentence `str_` to avoid them entirely.  I came up with this
+		// optimization while working on BFS, but the suffix matcher could
+		// probably perform well without it
 		let a = ain;
 		let na = 0;
 		for ia in [0: nain]
@@ -132,17 +134,17 @@ fn part2(): i64
 			a[na] = ain[ia];
 			na += 1;
 		}
-		println("na = ", na);
-		println("a = ", a[0: na]);
+		//println("na = ", na);
+		//println("a = ", a[0: na]);
 
 		let len_a = [0; na];
 		for ia in [0: na]
 			len_a[ia] = len(a[ia]);
-		println("len_a = ", len_a);
+		//println("len_a = ", len_a);
 		//exit(0);
 
-		// Build a table of a list of `a` entries that exist at each location of
-		// str_
+		// Build a table of a list of `a` entries that exist starting at each
+		// location of str_
 		let starters  = [-1; na, len_str_];
 		let nstarters = [ 0;     len_str_];
 		for i in [0: len_str_]
@@ -157,87 +159,65 @@ fn part2(): i64
 			}
 		}
 		//println("starters = ", starters);
-		println("starters = ");
-		for i in [0: len_str_]
-			println(starters[0: nstarters[i], i]);
+		//println("starters = ");
+		//for i in [0: len_str_]
+		//	println(starters[0: nstarters[i], i]);
+		//println("nstarters = ", nstarters);
 
-		let nmatches = [0'i64; len_str_]; // num of total possible matches from i to end of str
-		//let nmatches = [0'i64; len_str_]; // num of matches from i to end of str
-		//let nmatch = 0'i64;
 
-		// Iterate from the end of the string to the start
-		println("nstarters = ", nstarters);
-		//for i in [len_str_ - 1: -1: -1]
+		// I struggled for a long time trying to use a stack to BFS the string
+		// from the start to the end.  It turns out that it's better to avoid
+		// BFS and work from the end of the string to the start instead.  This
+		// approach iteratively counts suffixes and uses those cached counts to
+		// sum up match counts towards the start of the string
+		//
+		// I had to look at the reddit megathread before I figured this out.
+		// Mainly I looked at this recursive solution:
+		//
+		//     https://github.com/hugseverycat/aoc2024/blob/master/day19.py
+		//
+		// It still took me a while to figure out how to port the recursion to
+		// an iterative algorithm
 
-		//nmatches[len_str_ - 1] = nstarters[len_str_ - 1];
 
-		// Add up suffixes first
+		// This is the number of total possible matches of a suffix from i to
+		// end of str. There will be just a few short suffixes that match the
+		// end, and then exponentiallly more as we get towards the start of the
+		// str
+		let nmatches = [0'i64; len_str_];
+
+		// Base case: first, add up complete suffixes which match to the end of
+		// the str
 		for i in [0: len_str_]
 			for ia in starters[0: nstarters[i], i]
-			{
 				if len_a[ia] == len_str_ - i
 					nmatches[i] += 1;
-			}
+		//println("nmatches  = ", nmatches);
 
-		println("nmatches  = ", nmatches);
-		for i in [len_str_ - 2: -1: -1]
+		// Now iterate from the end of the string to the start
+		for i in [len_str_ - 1: -1: -1]
 		{
-			//nmatches[i] *= nstarters[i];
-
 			for ia in starters[0: nstarters[i], i]
 			{
+				// Check bounds
 				if i + len_a[ia] < len_str_
+				{
+					// For every 1 substring match found here, we add all of the
+					// suffix matches that have been found in previous
+					// iterations
 					nmatches[i] += nmatches[i + len_a[ia]];
+				}
 			}
-			//println("i = ", i);
-			//let nmatch0 = nmatch;
 		}
-		println("nmatches  = ", nmatches);
+		//println("nmatches  = ", nmatches);
 		//println("len_str_ = ", len_str_);
 
+		// nmatches[0] is the total number of ways to build the whole string.
+		// the other entries nmatches[i] are ways to build shorter suffixes
+		// str_[i: end]
 		sum_ += nmatches[0];
-		//exit(0);
 
-		//// Push
-		//for ia in starters[0:nstarters[0], 0]
-		//{
-		//	stack[stack_end] = len_a[ia];
-		//	stack_end += 1;
-		//}
-
-		//let len_max = 0;
-		//while stack_end > 0
-		//{
-		//	// Pop
-		//	stack_end -= 1;
-		//	let len_ = stack[stack_end];
-
-		//	if (len_ > len_max)
-		//	{
-		//		println("match at len ", len_);
-		//		len_max = len_;
-		//	}
-
-		//	if len_ == len_str_
-		//	{
-		//		sum_ += 1;
-		//		//println("whole match **** ", sum_);
-		//		if (sum_ % 1_000_000 == 0) println("sum_ = ", sum_);
-		//		continue;
-		//	}
-	
-		//	for ia in starters[0: nstarters[len_], len_]
-		//	{
-		//		stack[stack_end] = len_ + len_a[ia];
-		//		stack_end += 1;
-		//		if stack_end >= STACK_CAP
-		//		{
-		//			println("Error: STACK_CAP overflow!");
-		//			exit(-1);
-		//		}
-		//	}
-		//}
-		println();
+		//println();
 		str_ = readln(f);
 	}
 	close(f);
@@ -257,7 +237,8 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
-	//sum_ += part1();
+	// Expect 367 + 724388733465031
+	sum_ += part1();
 	sum_ += part2();
 
 	println("Ending AOC syntran main");
