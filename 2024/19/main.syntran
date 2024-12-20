@@ -1,0 +1,229 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	let a = split_(str_, ", ");
+	let na = size(a, 0);
+	//println("na = ", na);
+	//println("a  = ", a);
+
+	str_ = readln(f); // skip blank line
+
+	str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let len_str_ = len(str_);
+
+		// Stack contains the length of the substring of `str_` that we've
+		// matched so far
+		let STACK_CAP = 128;
+		let stack = [-1; STACK_CAP];
+		let sptr = 0;
+
+		stack[sptr] = 0; sptr += 1; // push
+
+		let visited = [false; len_str_, na];
+
+		let matched = false;
+		while true
+		{
+			if (sptr == 0) break;
+
+			// Pop
+			sptr -= 1;
+			let i = stack[sptr];
+			//println("i = ", i);
+
+			if (i == len_str_)
+			{
+				matched = true;
+				break;
+			}
+
+			for ia in [0: na]
+			{
+				if (visited[i, ia]) continue;
+				visited[i, ia] = true;
+
+				if starts_with_(str_[i: len_str_], a[ia])
+				{
+					//println("starts_with_ ", i, " ", a[ia]);
+					stack[sptr] = i + len(a[ia]); sptr += 1; // push
+
+					if sptr >= STACK_CAP
+					{
+						println("Error: stack overflow");
+						exit(-1);
+					}
+				}
+			}
+		}
+		//println("matched = ", matched);
+		if (matched) sum_ += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+
+	// Array of smaller strings that we use to build a larger string
+	let ain = split_(str_, ", ");
+	let nain = i32(size(ain, 0));
+	println("nain = ", nain);
+	//println("a  = ", a);
+
+	str_ = readln(f); // skip blank line
+
+	let STACK_CAP = -1;
+	if ifile == 0
+		STACK_CAP = 1024 * 1024;
+	else
+		STACK_CAP = 1024 * 1024 * 2;
+
+	let stack = [-1; STACK_CAP]; // match length so far, and index in `a`
+
+	str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+		let len_str_ = len(str_);
+
+		let stack_end = 0;
+
+		// Prune words from input dictionary `ain` that never appear in the
+		// current sentence `str_` to avoid them entirely in the BFS here
+		let a = ain;
+		let na = 0;
+		for ia in [0: nain]
+		{
+			let amin = index_   (str_, ain[ia]);
+			if (amin < 0) continue;
+			a[na] = ain[ia];
+			na += 1;
+		}
+		println("na = ", na);
+		println("a = ", a[0: na]);
+
+		// Build a table of a list of `a` entries that exist at each location of
+		// str_
+		let starters  = [-1; na, len_str_];
+		let nstarters = [ 0;     len_str_];
+		for i in [0: len_str_]
+		{
+			for ia in [0: na]
+			{
+				if (starts_with_(str_[i: len_str_], a[ia]))
+				{
+					starters[ nstarters[i] , i] = ia;
+					nstarters[i] += 1;
+				}
+			}
+		}
+		//println("starters = ", starters);
+		println("starters = ");
+		for i in [0: len_str_]
+			println(starters[0: nstarters[i], i]);
+
+		// Push
+		for ia in starters[0:nstarters[0], 0]
+		{
+			stack[stack_end] = i32(len(a[ia]));
+			stack_end += 1;
+		}
+
+		let len_max = 0;
+		while stack_end > 0
+		{
+			// Pop
+			stack_end -= 1;
+			let len_ = stack[stack_end];
+
+			if (len_ > len_max)
+			{
+				println("match at len ", len_);
+				len_max = len_;
+			}
+
+			if len_ == len_str_
+			{
+				sum_ += 1;
+				//println("whole match **** ", sum_);
+				continue;
+			}
+	
+			for ia in starters[0: nstarters[len_], len_]
+			{
+				stack[stack_end] = len_ + i32(len(a[ia]));
+				stack_end += 1;
+				if stack_end >= STACK_CAP
+				{
+					println("Error: STACK_CAP overflow!");
+					exit(-1);
+				}
+			}
+		}
+		println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/19");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

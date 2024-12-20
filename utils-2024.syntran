@@ -629,6 +629,23 @@ fn reverse_str(str_: str): str
 
 //==============================================================================
 
+fn starts_with_(str_: str, substr_: str): bool
+{
+	if (len(substr_) > len(str_)) return false;
+	return str_[0: len(substr_)] == substr_;
+}
+	//// Unit tests
+	//println("starts_with_ = ", starts_with_("abcde", "abcd"));
+	//println("starts_with_ = ", starts_with_("abcde", "abc"));
+	//println("starts_with_ = ", starts_with_("abcde", "ab"));
+	//println("starts_with_ = ", starts_with_("abcde", "a"));
+	//println("starts_with_ = ", starts_with_("abcde", ""));
+	//println("starts_with_ = ", starts_with_("abcde", "abcdef"));
+	//println("starts_with_ = ", starts_with_("abcde", "abcdf"));
+	//println("starts_with_ = ", starts_with_("abcde", "_"));
+
+//==============================================================================
+
 fn ends_with_(str_: str, char_: str): bool
 {
 	return str_[ len(str_) - 1 ] == char_;
@@ -1041,6 +1058,38 @@ fn read_i32_mat(filename: str): [i32; :,:]
 	}
 	close(f);
 	return mat;
+}
+
+//==============================================================================
+
+fn base_n(a: i64, n: i64): [i32; :]
+{
+	// TODO: this is not well-tested.  I tried to use it in 2024/19 but then
+	// switched to another approach without really using this.  On the other
+	// hand, it is based on a base-3 converter from 2024/7
+
+	// Convert `a` to base n.  Max 64 (base n) digits allowed.  This is ok for
+	// the value of nvmax
+	let DIGITS_CAP = 64;
+	let res = [0'i32; DIGITS_CAP];
+	let iout = -1;
+	for i in [0: DIGITS_CAP]
+	{
+		iout = i;
+		let r = a % n;
+		a /= n;
+		res[i] = r;  // endianness is not important for aoc problem
+		if (a == 0) break;
+	}
+	//println("base3 = ", res);
+
+	return res;
+
+	//// Trimming?
+	//let ndigits = iout;
+	//if res[ndigits] == 0 and ndigits > 1
+	//	ndigits -= 1;
+	//return res[0: ndigits + 1]; // trim
 }
 
 //==============================================================================
