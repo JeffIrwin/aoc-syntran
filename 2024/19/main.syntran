@@ -105,21 +105,11 @@ fn part2(): i64
 
 	str_ = readln(f); // skip blank line
 
-	let STACK_CAP = -1;
-	if ifile == 0
-		STACK_CAP = 1024 * 1024;
-	else
-		STACK_CAP = 1024 * 1024 * 2;
-
-	let stack = [-1; STACK_CAP]; // match length so far
-
 	str_ = readln(f);
 	while not eof(f)
 	{
 		//println("str_ = ", str_);
 		let len_str_ = len(str_);
-
-		let stack_end = 0;
 
 		// Prune words from input dictionary `ain` that never appear in the
 		// current sentence `str_` to avoid them entirely.  I came up with this
