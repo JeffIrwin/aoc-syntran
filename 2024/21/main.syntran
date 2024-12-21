@@ -165,7 +165,8 @@ fn get_dirpad_instrs_base(char0: str, str_: str): str
 {
 	// Base case: assemble instructions from scratch
 	//
-	// TODO: part1 could use this version, i.e. without any dict caching
+	// My first implementation of part1 initially used something like this
+	// without any dict caching
 
 	let out = "";
 	let idx0 = scan(DPAD_STR, char0);
@@ -241,7 +242,8 @@ fn init_counts(str_: str): dict_i64
 
 fn get_dirpad_instrs(dict: &dict_str, counts: &dict_i64): dict_i64
 {
-	// The output is a dict of counts for the next iteration
+	// The output is a dict of counts for the next iteration.  It restarts at 0
+	// every time
 	let out = new_dict_i64();
 
 	// Like this year's "plutonian pebbles" puzzle, the order of DPAD
@@ -300,49 +302,43 @@ fn get_dirpad_instrs(dict: &dict_str, counts: &dict_i64): dict_i64
 	return out;
 }
 
-//fn part1(): i64
-//{
-//	let sum_ = 0'i64;
-//
-//	let f = open(filename);
-//	let str_ = readln(f);
-//	while not eof(f)
-//	{
-//		println("str_ = ", str_);
-//
-//		let num = read_i32(str_);
-//
-//		let instrs = get_numpad_instrs(str_);
-//		println("(num) instrs = ", instrs);
-//
-//		for i in [0: 2]
-//		{
-//			instrs = g e t _ d i r p a d _ i n  s t r s(instrs);
-//			println("(dir[", i, "]) instrs = ", instrs);
-//		}
-//
-//		let len_ = len(instrs);
-//
-//		println("len_ = ", len_);
-//		println("num = ", num);
-//		println();
-//
-//		sum_ += num * len_;
-//
-//		str_ = readln(f);
-//	}
-//	close(f);
-//
-//	println("part 1 = ", sum_);
-//	return sum_;
-//}
+fn part1(): i64
+{
+	// Copied from part2 because I don't feel like fixing my original part1() to
+	// work with the edited get_dirpad_instrs(_base)()
+
+	let sum_ = 0'i64;
+	let dict = new_dict_str();
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		let num = read_i32(str_);
+		let instrs = get_numpad_instrs(str_);
+		let counts = init_counts(instrs);
+		for i in [0: 2'i64]
+			counts = get_dirpad_instrs(&dict, &counts);
+
+		let len_ = 0'i64;
+		for key in keys_dict_i64(&counts)
+		{
+			let count = get_dict_i64(&counts, key);
+			len_ += count * (len(key) - 1); // subtract 1 to account for leading previous char0
+		}
+		sum_ += num * len_;
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
 
 fn part2(): i64
 {
 	let sum_ = 0'i64;
-
-	//let dict = new_dict_i64();
-	let dict = new_dict_str();
+	let dict = new_dict_str(); // shared dict for all DPAD iterations
 
 	let f = open(filename);
 	let str_ = readln(f);
@@ -353,8 +349,6 @@ fn part2(): i64
 		let num = read_i32(str_);
 		let instrs = get_numpad_instrs(str_);
 		let counts = init_counts(instrs);
-
-		// You can just change this 25 to 2 for part 1
 		for i in [0: 25'i64]
 		{
 			counts = get_dirpad_instrs(&dict, &counts);
@@ -371,13 +365,11 @@ fn part2(): i64
 			let count = get_dict_i64(&counts, key);
 			len_ += count * (len(key) - 1); // subtract 1 to account for leading previous char0
 		}
-
 		//println("len_ = ", len_);
 		//println("num = ", num);
 		//println();
 
 		sum_ += num * len_;
-
 		str_ = readln(f);
 	}
 	close(f);
@@ -398,7 +390,7 @@ fn main(): i64
 	let sum_ = 0'i64;
 
 	// Expect 137870 + 170279148659464
-	//sum_ += part1();
+	sum_ += part1();
 	sum_ += part2();
 
 	println("Ending AOC syntran main");
