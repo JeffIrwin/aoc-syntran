@@ -155,12 +155,6 @@ fn part2(): i64
 		//println("nstarters = ", nstarters);
 
 
-		// I struggled for a long time trying to use a stack to BFS the string
-		// from the start to the end.  It turns out that it's better to avoid
-		// BFS and work from the end of the string to the start instead.  This
-		// approach iteratively counts suffixes and uses those cached counts to
-		// sum up match counts towards the start of the string
-		//
 		// I had to look at the reddit megathread before I figured this out.
 		// Mainly I looked at this recursive solution:
 		//
@@ -170,42 +164,37 @@ fn part2(): i64
 		// an iterative algorithm
 
 
-		// This is the number of total possible matches of a suffix from i to
-		// end of str. There will be just a few short suffixes that match the
-		// end, and then exponentiallly more as we get towards the start of the
-		// str
+		// This is the number of total possible matches of a prefix up to
+		// position i in the str. There will be just a few short suffixes that
+		// match the start, and then exponentiallly more as we get towards the
+		// end of the str
 		let nmatches = [0'i64; len_str_];
 
-		// Base case: first, add up complete suffixes which match to the end of
-		// the str
-		for i in [0: len_str_]
-			for ia in starters[0: nstarters[i], i]
-				if len_a[ia] == len_str_ - i
-					nmatches[i] += 1;
-		//println("nmatches  = ", nmatches);
+		// Base case: first, add up complete prefixes which match the very start
+		// of the str
+		for ia in starters[0: nstarters[0], 0]
+			nmatches[0 + len_a[ia] - 1] += 1;
 
-		// Now iterate from the end of the string to the start
-		for i in [len_str_ - 1: -1: -1]
-		{
+		// Now iterate to the end of the string and sum up compound prefixes
+		for i in [1: len_str_]
 			for ia in starters[0: nstarters[i], i]
 			{
 				// Check bounds
-				if i + len_a[ia] < len_str_
+				if i + len_a[ia] <= len_str_
 				{
 					// For every 1 substring match found here, we add all of the
-					// suffix matches that have been found in previous
-					// iterations
-					nmatches[i] += nmatches[i + len_a[ia]];
+					// prefix matches that have been found before
+					nmatches[i + len_a[ia] - 1] += nmatches[i - 1];
 				}
 			}
-		}
+
 		//println("nmatches  = ", nmatches);
 		//println("len_str_ = ", len_str_);
 
-		// nmatches[0] is the total number of ways to build the whole string.
-		// the other entries nmatches[i] are ways to build shorter suffixes
-		// str_[i: end]
-		sum_ += nmatches[0];
+		// nmatches[end] is the total number of ways to build the whole string.
+		// the other entries nmatches[i] are ways to build shorter
+		// prefixes str_[1: i+1]
+		sum_ += nmatches[len_str_ - 1];
 
 		//println();
 		str_ = readln(f);
