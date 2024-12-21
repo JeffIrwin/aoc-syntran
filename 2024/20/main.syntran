@@ -153,11 +153,14 @@ fn part2(): i64
 	let nx = i32(size(chars, 0));
 	let ny = i32(size(chars, 1));
 
-	// Find start and end locations
+	// Find start and end locations and valid path points
 	let xs = -1;
 	let ys = -1;
 	let xe = -1;
 	let ye = -1;
+	let NP_CAP = nx * ny;
+	let p = [-1; 2, NP_CAP];
+	let np = 0;
 	for y in [0: ny]
 	for x in [0: nx]
 	{
@@ -171,9 +174,17 @@ fn part2(): i64
 			xe = x;
 			ye = y;
 		}
+		if chars[x,y] != "#"
+		{
+			p[:,np] = [x, y];
+			np += 1;
+		}
 	}
+	p = p[:, 0: np]; // trim
+
 	println("xys = ", [xs, ys]);
 	println("xye = ", [xe, ye]);
+	//println("p = ", p);
 
 	// First, do a BFS to find the usual path without any shortcuts
 
@@ -224,26 +235,22 @@ fn part2(): i64
 	println("dists[xe,ye] = ", dists[xe,ye]);
 	//println("dists = ", dists);
 
-	// TODO: 4 nested loops isn't great for perf.  Iterate once over grid to
-	// build up a list of non-wall points
-
 	// Iterate through pairs of points
-	for y1 in [1: ny-1]
-	for x1 in [1: ny-1] { if (chars[x1,y1] == "#") continue;
-	for y2 in [1: ny-1]
-	for x2 in [1: ny-1] { if (chars[x2,y2] == "#") continue;
+	for i1 in [0: np] {
+	let x1 = p[0,i1];
+	let y1 = p[1,i1];
+	for i2 in [0: i1]
 	{
+		let x2 = p[0,i2];
+		let y2 = p[1,i2];
+
 		let norm1 = abs(x2 - x1) + abs(y2 - y1);
 		if (norm1 > 20) continue;
 
-		//let diff = abs(dists[x2,y2] - dists[x1,y1]) - norm1;
-		let diff = dists[x2,y2] - dists[x1,y1];
-		if (diff < 0) continue;
-		diff -= norm1;
+		let diff = abs(dists[x2,y2] - dists[x1,y1]) - norm1;
 
-		//if (diff >= 76) sum_ += 1; // test input
 		if (diff >= 100) sum_ += 1;
-	}}}
+	}}
 
 	println("part 2 = ", sum_);
 	return sum_;
