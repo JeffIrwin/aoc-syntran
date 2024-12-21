@@ -17,7 +17,16 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
-let CHUNK_LEN = 4;
+// CHUNK_LEN 2 is optimal for part 2.  Len 1 will break my algo, idk why.  This
+// is probably indicative that I should not be using dicts at all, there's
+// probably an array-based solution.  With only 5 chars on the DPAD and strings
+// of CHUNK_LEN 2, there are only 25 possible strings, so an array instead of a
+// dict should be possible :shrug:
+//
+// Larger CHUNK_LEN gives the correct answer but it's slower
+
+let CHUNK_LEN = 2;
+//CHUNK_LEN = 4;
 //CHUNK_LEN = 8;
 //CHUNK_LEN = 16;
 //CHUNK_LEN = 32;
@@ -168,20 +177,14 @@ fn get_numpad_instrs(str_: str): str
 	return out;
 }
 
-//fn get_dirpad_instrs_base(str_: str): str
 fn get_dirpad_instrs_base(char0: str, str_: str): str
 {
 	// Base case: assemble instructions from scratch
 	//
-	// TODO: part1 should just use this version, i.e. without any dict caching
+	// TODO: part1 could use this version, i.e. without any dict caching
 
 	let out = "";
-
-	//let idx0 = DPAD_A;
 	let idx0 = scan(DPAD_STR, char0);
-
-	//let char0 = "A";
-
 	let do_x_first = str_[0] == ">";
 
 	for i in [0: len(str_)]
@@ -230,7 +233,6 @@ fn get_dirpad_instrs_base(char0: str, str_: str): str
 fn init_counts(str_: str): dict_i64
 {
 	let counts = new_dict_i64();
-
 	let char0 = "A";
 	let nchunk = len(str_) / CHUNK_LEN;
 	for i in [0: nchunk + 1]
@@ -240,9 +242,6 @@ fn init_counts(str_: str): dict_i64
 
 		// State depends on char0 from previous chunk (or "A" initially)
 		let key = char0 + chunk;
-		//let val = get_dict_str(&dict, key);
-		//set_dict_str(&dict, key, val);
-
 		set_dict_i64(&counts, key, 1'i64);
 
 		// update char0
@@ -255,42 +254,43 @@ fn init_counts(str_: str): dict_i64
 	return counts;
 }
 
-//fn get_dirpad_instrs(str_: str, dict: &dict_str, counts: &dict_i64): str
 fn get_dirpad_instrs(dict: &dict_str, counts: &dict_i64): dict_i64
 {
-	//let NOUT_CAP = 4_000_000_000;
-	//let NOUT_CAP = 20_000_000;
-
-	//let out = "";
-	//let nout = 0'i64;
-
 	// The output is a dict of counts for the next iteration
 	let out = new_dict_i64();
 
-	//let char0 = "A";
-	//let nchunk = len(str_) / CHUNK_LEN;
-	//for i in [0: nchunk + 1]
 	for key in keys_dict_i64(&counts)
 	{
 		// State depends on char0 from previous chunk (or "A" initially)
-		//let chunk = str_[CHUNK_LEN * i: min(CHUNK_LEN * (i+1), len(str_))];
-		//println("char0, chunk = """, char0, ", ", chunk, """");
-		//let key = char0 + chunk;
-
 		let char0 = key[0];
 		let chunk = key[1: len(key)];
 
 		let val = get_dict_str(&dict, key);
-		//if (true or val == "")
 		if (val == "")
 		{
 			// Cache miss.  Calculate instrs from scratch
 			val = get_dirpad_instrs_base(char0, chunk);
 			set_dict_str(&dict, key, val);
 
+			// Even though key is not in (str) dict, it is in (i64) counts dict.
+			// This is the last bug I fixed before getting the answer and that
+			// took a while to figure out.  Because init_counts() initializes
+			// the same chunks, this is guaranteed to be set
 			let count_in = get_dict_i64(&counts, key);
-			println("count_in = ", count_in);
+			if (count_in < 0)
+			{
+				// Unreachable :exploding-head:
+				println("Error: could not find count");
+				exit(-1);
+			}
+			//println("count_in = ", count_in);
 
+			// `val`, the output of the DPAD transformation, acts as the key
+			// into the new count dict.  split it into chunks of appropriate
+			// size
+			//
+			// This is basically init_counts() inlined but incrementing instead
+			// of directly setting
 			let out_key = val;
 			let nchunk = len(out_key) / CHUNK_LEN;
 			let char0 = "A";
@@ -302,8 +302,9 @@ fn get_dirpad_instrs(dict: &dict_str, counts: &dict_i64): dict_i64
 				// State depends on char0 from previous chunk (or "A" initially)
 				let key = char0 + chunk;
 
+				// Add to existing count if any
 				let cnt0 = get_dict_i64(&out, key);
-				let cnt = count_in; //1'i64;
+				let cnt = count_in;
 				if (cnt0 > 0) cnt += cnt0;
 				set_dict_i64(&out, key, cnt);
 
@@ -319,6 +320,7 @@ fn get_dirpad_instrs(dict: &dict_str, counts: &dict_i64): dict_i64
 			let count_in = get_dict_i64(&counts, key);
 			//println("count_in = ", count_in);
 
+			// Yeah this is a WET mess
 			let out_key = val;
 			let nchunk = len(out_key) / CHUNK_LEN;
 			let char0 = "A";
@@ -337,12 +339,7 @@ fn get_dirpad_instrs(dict: &dict_str, counts: &dict_i64): dict_i64
 
 				char0 = chunk[len(chunk)-1];
 			}
-
 		}
-
-		//out += val;
-
-		//char0 = chunk[len(chunk)-1];
 	}
 	//println("CHUNK_LEN = ", CHUNK_LEN);
 	//println("nchunk    = ", nchunk);
@@ -398,41 +395,27 @@ fn part2(): i64
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let num = read_i32(str_);
 
-		//let NOUT_CAP = 4_000_000_000;
-
 		let instrs = get_numpad_instrs(str_);
-		println("(num) instrs = ", instrs);
+		//println("(num) instrs = ", instrs);
 
-		//let counts = init_counts(str_);
 		let counts = init_counts(instrs);
 
+		// You can just change this 25 to 2 for part 1
 		for i in [0: 25'i64]
-		//for i in [0: 13'i64]
-		//for i in [0: 2'i64]
 		{
-			//instrs = get_dirpad_instrs(instrs, &dict, &counts);
-			//instrs = get_dirpad_instrs(&dict, &counts);
-
-			//counts = get_dirpad_instrs(&dict, &counts);
 			let new_counts = get_dirpad_instrs(&dict, &counts);
 			counts = new_counts;
 
-			println("i = ", i);
+			//println("i = ", i);
 			//println("counts = ");
 			//println(keys_dict_i64(&counts));
 			//println(vals_dict_i64(&counts));
-
-			//println("(dir[", i, "]) instrs = ", instrs);
-			//println("i, len = ", [i, len(instrs)]);
 		}
 
-		//let len_ = len(instrs);
-
-		//let len_ = sum(vals_dict_i64(&counts));
 		let len_ = 0'i64;
 		for key in keys_dict_i64(&counts)
 		{
@@ -440,25 +423,9 @@ fn part2(): i64
 			len_ += count * (len(key) - 1); // subtract 1 to account for leading previous char0
 		}
 
-		println("len_ = ", len_);
-		println("num = ", num);
-		println();
-		//exit(0);
-
-
-		////let dict = new_dict_i64();
-		//let nchunk = len(instrs) / CHUNK_LEN;
-		//for i in [0: nchunk + 1]
-		//{
-		//	//let chunk = instrs[CHUNK_LEN * i: CHUNK_LEN * (i+1)];
-		//	let chunk = instrs[CHUNK_LEN * i: min(CHUNK_LEN * (i+1), len(instrs))];
-		//	println("chunk = """, chunk, """");
-		//	set_dict_str(&dict, chunk, "_");
-		//}
-		//println("CHUNK_LEN = ", CHUNK_LEN);
-		//println("nchunk    = ", nchunk);
-		////println("dict keys = ", keys_dict_str(&dict));
-		//println("dict len  = ", len_dict_str(&dict));
+		//println("len_ = ", len_);
+		//println("num = ", num);
+		//println();
 
 		sum_ += num * len_;
 
@@ -481,7 +448,7 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
-	// Expect 137870 + ???
+	// Expect 137870 + 170279148659464
 	//sum_ += part1();
 	sum_ += part2();
 
