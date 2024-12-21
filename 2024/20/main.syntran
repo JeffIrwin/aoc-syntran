@@ -35,7 +35,7 @@ fn part1(): i64
 	let sum_ = 0'i64;
 
 	let chars = read_char_mat(filename);
-	print_char_mat(&chars);
+	//print_char_mat(&chars);
 
 	let nx = i32(size(chars, 0));
 	let ny = i32(size(chars, 1));
@@ -59,8 +59,8 @@ fn part1(): i64
 			ye = y;
 		}
 	}
-	println("xys = ", [xs, ys]);
-	println("xye = ", [xe, ye]);
+	//println("xys = ", [xs, ys]);
+	//println("xye = ", [xe, ye]);
 
 	// First, do a BFS to find the usual path without any shortcuts
 
@@ -108,7 +108,7 @@ fn part1(): i64
 			}
 		}
 	}
-	println("dists[xe,ye] = ", dists[xe,ye]);
+	//println("dists[xe,ye] = ", dists[xe,ye]);
 	//println("dists = ", dists);
 
 	// Search for shortcuts.  Sides/edges can't be shortcuts and this saves us
@@ -148,7 +148,7 @@ fn part2(): i64
 	let sum_ = 0'i64;
 
 	let chars = read_char_mat(filename);
-	print_char_mat(&chars);
+	//print_char_mat(&chars);
 
 	let nx = i32(size(chars, 0));
 	let ny = i32(size(chars, 1));
@@ -182,8 +182,8 @@ fn part2(): i64
 	}
 	p = p[:, 0: np]; // trim
 
-	println("xys = ", [xs, ys]);
-	println("xye = ", [xe, ye]);
+	//println("xys = ", [xs, ys]);
+	//println("xye = ", [xe, ye]);
 	//println("p = ", p);
 
 	// First, do a BFS to find the usual path without any shortcuts
@@ -232,7 +232,7 @@ fn part2(): i64
 			}
 		}
 	}
-	println("dists[xe,ye] = ", dists[xe,ye]);
+	//println("dists[xe,ye] = ", dists[xe,ye]);
 	//println("dists = ", dists);
 
 	// Iterate through pairs of points
@@ -267,6 +267,7 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
+	// Expect 1521 + 1013106
 	sum_ += part1();
 	sum_ += part2();
 
