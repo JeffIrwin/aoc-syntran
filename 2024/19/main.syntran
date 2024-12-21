@@ -161,7 +161,11 @@ fn part2(): i64
 		//     https://github.com/hugseverycat/aoc2024/blob/master/day19.py
 		//
 		// It still took me a while to figure out how to port the recursion to
-		// an iterative algorithm
+		// an iterative algorithm.  First I did a back-to-front iterator over
+		// the string which matches the recursive solution more closely (it
+		// doesn't start hitting caches until it gets all the way to the end of
+		// the str).  Then I converted it to a front-to-back iterator which is
+		// equivalent but saves a nested loop and a bounds check
 
 
 		// This is the number of total possible matches of a prefix up to

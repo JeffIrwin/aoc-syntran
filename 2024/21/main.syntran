@@ -1,0 +1,281 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+// Numeric keypad:
+//
+//     +---+---+---+
+//     | 7 | 8 | 9 |
+//     +---+---+---+
+//     | 4 | 5 | 6 |
+//     +---+---+---+
+//     | 1 | 2 | 3 |
+//     +---+---+---+
+//         | 0 | A |
+//         +---+---+
+//
+let LEN_NPAD = 11;
+
+// Coordinates [x,y] from top-left:
+let NPAD =
+[
+	0, 0, // 7
+	1, 0, // 8
+	2, 0, // 9
+	0, 1, // 4
+	1, 1, // 5
+	2, 1, // 6
+	0, 2, // 1
+	1, 2, // 2
+	2, 2, // 3
+	1, 3, // 0
+	2, 3  // A
+	;
+	2, LEN_NPAD
+];
+
+// Index of each numpad button as a row in NPAD array above:
+let NPAD_7 =  0;
+let NPAD_8 =  1;
+let NPAD_9 =  2;
+let NPAD_4 =  3;
+let NPAD_5 =  4;
+let NPAD_6 =  5;
+let NPAD_1 =  6;
+let NPAD_2 =  7;
+let NPAD_3 =  8;
+let NPAD_0 =  9;
+let NPAD_A = 10;
+
+let NPAD_STR = "7894561230A";
+
+// Directional keypad:
+//
+//         +---+---+
+//         | ^ | A |
+//     +---+---+---+
+//     | < | v | > |
+//     +---+---+---+
+let LEN_DPAD = 5;
+
+let DPAD = // coordinates
+[
+	1, 0, // ^ (U)
+	2, 0, // A (A)
+	0, 1, // < (L)
+	1, 1, // v (D)
+	2, 1  // > (R)
+	;
+	2, LEN_DPAD
+];
+
+let DPAD_U = 0; // indices
+let DPAD_A = 1; // indices
+let DPAD_L = 2; // indices
+let DPAD_D = 3; // indices
+let DPAD_R = 4; // indices
+
+let DPAD_STR = "^A<v>";
+
+fn get_numpad_instrs(str_: str): str
+{
+	let out = "";
+	let idx0 = NPAD_A;
+	let char0 = "A";
+
+	let do_x_first = true;
+	//let do_x_first = false;
+
+	for i in [0: len(str_)]
+	{
+		let char_ = str_[i];
+		let idx = scan(NPAD_STR, char_);
+
+		// Relative motion vector to get from previous button idx0 to current button
+		let vec = NPAD[:, idx] - NPAD[:, idx0];
+		let dx = vec[0];
+		let dy = vec[1];
+
+		//println("char_, vec = ", char_, vec);
+
+		// We have to avoid the gap.  Also we want to make the next robot able
+		// to use as short a sequence as possible, so this impacts the order
+		// that we permute x and y motions
+
+		if      (char0 == "1" and char_ == "0") do_x_first = true;
+		else if (char0 == "4" and char_ == "0") do_x_first = true;
+		else if (char0 == "7" and char_ == "0") do_x_first = true;
+		else if (char0 == "1" and char_ == "A") do_x_first = true;
+		else if (char0 == "4" and char_ == "A") do_x_first = true;
+		else if (char0 == "7" and char_ == "A") do_x_first = true;
+		else if (char0 == "0" and char_ == "1") do_x_first = false;
+		else if (char0 == "0" and char_ == "4") do_x_first = false;
+		else if (char0 == "0" and char_ == "7") do_x_first = false;
+		else if (char0 == "A" and char_ == "1") do_x_first = false;
+		else if (char0 == "A" and char_ == "4") do_x_first = false;
+		else if (char0 == "A" and char_ == "7") do_x_first = false;
+		else do_x_first = dx < 0;
+
+		if do_x_first
+			for x in [0: abs(dx)]
+			{
+				if (dx > 0) out += ">";
+				if (dx < 0) out += "<";
+			}
+		for y in [0: abs(dy)]
+		{
+			if (dy > 0) out += "v";
+			if (dy < 0) out += "^";
+		}
+		if not do_x_first
+			for x in [0: abs(dx)]
+			{
+				if (dx > 0) out += ">";
+				if (dx < 0) out += "<";
+			}
+
+		out += "A";
+
+		idx0  = idx;
+		char0 = char_;
+	}
+	return out;
+}
+
+fn get_dirpad_instrs(str_: str): str
+{
+	let out = "";
+	let idx0 = DPAD_A;
+	let char0 = "A";
+	let dx0 = 0;
+	let dy0 = 0;
+
+	//let do_x_first = true;
+	//let do_x_first = false;
+	let do_x_first = str_[0] == ">";
+
+	for i in [0: len(str_)]
+	{
+		let char_ = str_[i];
+		let idx = scan(DPAD_STR, char_);
+
+		// Relative motion vector to get from previous button idx0 to current button
+		let vec = DPAD[:, idx] - DPAD[:, idx0];
+		let dx = vec[0];
+		let dy = vec[1];
+
+		//println("char_, vec = ", char_, vec);
+
+		if      (char0 == "<" and char_ == "^")
+			do_x_first = true;
+		else if (char0 == "<" and char_ == "A")
+			do_x_first = true;
+		else if (char0 == "^" and char_ == "<")
+			do_x_first = false;
+		else if (char0 == "A" and char_ == "<")
+			do_x_first = false;
+		else
+			do_x_first = dx > 0;
+
+		if do_x_first
+			for x in [0: abs(dx)]
+			{
+				if (dx > 0) out += ">";
+				if (dx < 0) out += "<";
+			}
+		for y in [0: abs(dy)]
+		{
+			if (dy > 0) out += "v";
+			if (dy < 0) out += "^";
+		}
+		if not do_x_first
+			for x in [0: abs(dx)]
+			{
+				if (dx > 0) out += ">";
+				if (dx < 0) out += "<";
+			}
+		out += "A";
+
+		idx0  = idx;
+		char0 = char_;
+	}
+	return out;
+}
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let num = read_i32(str_);
+
+		let instrs = get_numpad_instrs(str_);
+		println("(num) instrs = ", instrs);
+
+		instrs = get_dirpad_instrs(instrs);
+		println("(dir0) instrs = ", instrs);
+
+		instrs = get_dirpad_instrs(instrs);
+		println("(dir1) instrs = ", instrs);
+
+		let len_ = len(instrs);
+
+		println("len_ = ", len_);
+		println("num = ", num);
+		println();
+
+		sum_ += num * len_;
+
+		//if (str_ == "179A") exit(0); // TODO
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	//sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
