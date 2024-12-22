@@ -137,7 +137,10 @@ fn part2(): i64
 		for it in [NSEQ: NCHANGES]
 		{
 			let seq = diffs[it-NSEQ: it, imon];
-			let seq_str = str(seq);
+
+			// Use a compact str to make hashing slightly faster
+			let seq_str = str(seq[0], ",", seq[1], ",", seq[2], ",", seq[3]);
+			//let seq_str = str(seq); // default str with brackets and spaces
 
 			// Check if we've already seen this sequence and skip if necessary.
 			// The monkey sells as soon as it first sees a sequence
@@ -149,15 +152,11 @@ fn part2(): i64
 			let price0 = get_dict_i64(&all, seq_str);
 			if (price0 > 0) price += price0;
 
-			// Could track max here and eliminate need for the other loop later
+			sum_ = max(sum_, i64(price));
 
 			set_dict_i64(&all, seq_str, i64(price));
 		}
 	}
-
-	sum_ = 0;
-	for price in vals_dict_i64(&all)
-		sum_ = max(sum_, price);
 
 	println("part 2 = ", sum_);
 	return sum_;
