@@ -1,6 +1,7 @@
 
 #include("../../utils-2024.syntran");
 #include("../../dict_i64.syntran");
+//HASH_MAX_DICT_I64 = 2048;
 
 //==============================================================================
 
@@ -17,7 +18,7 @@ let filename = filenames[ifile];
 //==============================================================================
 
 let PRUNE = 16_777_216;
-fn next_(num: i64): i64
+fn next_(num: i32): i32
 {
 	num ^= num * 64;
 	num %= PRUNE;
@@ -25,9 +26,10 @@ fn next_(num: i64): i64
 	num ^= num / 32;
 	num %= PRUNE;
 
-	//num = (i64(num) ^ (num * 2048'i64)) % PRUNE;
-	num ^= num * 2048;
-	num %= PRUNE;
+	// This is the only step that overflows i32
+	num = (i64(num) ^ (num * 2048'i64)) % PRUNE;
+	//num ^= num * 2048;
+	//num %= PRUNE;
 
 	//println("next_ = ", num);
 
@@ -40,27 +42,13 @@ fn part1(): i64
 {
 	let sum_ = 0'i64;
 
-	//// Small test:
-	//let num = 123'i64;
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//num = next_(num);
-	//exit(0);
-
 	let f = open(filename);
 	let str_ = readln(f);
 	while not eof(f)
 	{
 		//println("str_ = ", str_);
 
-		let num = parse_i64(str_);
+		let num = parse_i32(str_);
 		for i in [0: NCHANGES]
 			num = next_(num);
 		//println("num = ", num);
@@ -75,30 +63,33 @@ fn part1(): i64
 	return sum_;
 }
 
-//fn sum_bananas(&prices, &diffs, &seq): i64 // TODO: parser crash (bad arg types/names)
-fn sum_bananas(prices: &[i32; :,:], diffs: &[i32; :,:], seq: &[i32; :]): i64
-{
-	println("starting sum_bananas()");
-	let nbananas = 0'i64;
-	let nseq = size(seq, 0);
-	let nmonkey = size(prices, 1);
-	for imon in [0: nmonkey]
-	{
-		//println("imon = ", imon);
-		for it in [0: NCHANGES - nseq + 1]
-		{
-			if all(diffs[it: it + nseq, imon] == seq)
-			{
-				println("price = ", prices[it + nseq - 1, imon]);
-				nbananas += prices[it + nseq - 1, imon];
-				break;
-			}
-		}
-		//println();
-	}
-	println();
-	return nbananas;
-}
+// TODO: sum_bananas is commented-out because it's unused now, but I've left it
+// here because there's a parser crash (double-commented) that needs to be fixed
+//
+////fn sum_bananas(&prices, &diffs, &seq): i64 // TODO: parser crash (bad arg types/names)
+//fn sum_bananas(prices: &[i32; :,:], diffs: &[i32; :,:], seq: &[i32; :]): i64
+//{
+//	println("starting sum_bananas()");
+//	let nbananas = 0'i64;
+//	let nseq = size(seq, 0);
+//	let nmonkey = size(prices, 1);
+//	for imon in [0: nmonkey]
+//	{
+//		//println("imon = ", imon);
+//		for it in [0: NCHANGES - nseq + 1]
+//		{
+//			if all(diffs[it: it + nseq, imon] == seq)
+//			{
+//				println("price = ", prices[it + nseq - 1, imon]);
+//				nbananas += prices[it + nseq - 1, imon];
+//				break;
+//			}
+//		}
+//		//println();
+//	}
+//	println();
+//	return nbananas;
+//}
 
 fn part2(): i64
 {
@@ -113,7 +104,7 @@ fn part2(): i64
 	for imon in [0: nmonkey]
 	{
 		//println("str_ = ", str_);
-		let num = parse_i64(str_);
+		let num = parse_i32(str_);
 		for i in [0: NCHANGES]
 		{
 			let num0 = num % 10;
@@ -142,7 +133,7 @@ fn part2(): i64
 		// not.  I need a boolean dict or an in-dict method
 		let mon = new_dict_i64();
 
-		if (imon % 10 == 0) println("imon = ", imon);
+		//if (imon % 10 == 0) println("imon = ", imon);
 		for it in [NSEQ: NCHANGES]
 		{
 			let seq = diffs[it-NSEQ: it, imon];
@@ -165,26 +156,8 @@ fn part2(): i64
 	}
 
 	sum_ = 0;
-
-	let seq_best = "";
-	for key in keys_dict_i64(&all)
-	{
-		let price = get_dict_i64(&all, key);
-		if price > sum_
-		{
-			sum_ = price;
-			seq_best = key;
-		}
-	}
-
-	println("len all  = ", len_dict_i64(&all));
-	println("seq_best = ", seq_best);
-	let iseq = parse_i32_delim(seq_best, "[], ");
-	let nbananas = sum_bananas(&prices, &diffs, &iseq); // just call it to check individual prices per-monkey
-
-	//// Easier way to iterate if you're not curious what the actual sequence is
-	//for price in vals_dict_i64(&all)
-	//	sum_ = max(sum_, price);
+	for price in vals_dict_i64(&all)
+		sum_ = max(sum_, price);
 
 	println("part 2 = ", sum_);
 	return sum_;
@@ -202,7 +175,7 @@ fn main(): i64
 	let sum_ = 0'i64;
 
 	// Expect 13584398738 + 1612
-	//sum_ += part1(); // TODO
+	sum_ += part1();
 	sum_ += part2();
 
 	println("Ending AOC syntran main");
