@@ -91,6 +91,79 @@ fn part1(): i64
 //	return nbananas;
 //}
 
+//fn part2dict(): i64
+//{
+//	// This was my initial dict-based implementation.  After I finished it, the
+//	// array-based solution was clear
+//	let sum_ = 0'i64;
+//
+//	let nmonkey = countln_(filename);
+//	let prices = [-1; NCHANGES, nmonkey];
+//	let diffs  = [-1; NCHANGES, nmonkey];
+//
+//	let f = open(filename);
+//	let str_ = readln(f);
+//	for imon in [0: nmonkey]
+//	{
+//		//println("str_ = ", str_);
+//		let num = parse_i32(str_);
+//		for i in [0: NCHANGES]
+//		{
+//			let num0 = num % 10;
+//			num = next_(num);
+//			let diff = (num % 10) - num0;
+//
+//			prices[i, imon] = num % 10;
+//			diffs [i, imon] = diff;
+//		}
+//		//println("num = ", num);
+//		str_ = readln(f);
+//	}
+//	close(f);
+//
+//	// Dict for all monkeys, containing the sum of bananas that we can get so
+//	// far (they are slowly added up per-monkey and updated)
+//	//
+//	// Honestly you could just use an 18x18x18x18 array (size ~100_000) for this
+//	// indexed by the 4 numbers in the sequence, shifted by +9
+//	let all = new_dict_i64();
+//
+//	let NSEQ = 4;
+//	for imon in [0: nmonkey]
+//	{
+//		// Dict for this monkey.  Only stores 1 to check if we've seen it or
+//		// not.  I need a boolean dict or an in-dict method
+//		let mon = new_dict_i64();
+//
+//		//if (imon % 10 == 0) println("imon = ", imon);
+//		for it in [NSEQ: NCHANGES]
+//		{
+//			let seq = diffs[it-NSEQ: it, imon];
+//
+//			// Use a compact str to make hashing slightly faster
+//			let seq_str = str(seq[0], ",", seq[1], ",", seq[2], ",", seq[3]);
+//			//let seq_str = str(seq); // default str with brackets and spaces
+//
+//			// Check if we've already seen this sequence and skip if necessary.
+//			// The monkey sells as soon as it first sees a sequence
+//			let seen = get_dict_i64(&mon, seq_str);
+//			if (seen > 0) continue;
+//			set_dict_i64(&mon, seq_str, 1'i64); // mark as seen
+//
+//			let price = prices[it-1, imon];
+//			let price0 = get_dict_i64(&all, seq_str);
+//			if (price0 > 0) price += price0;
+//
+//			sum_ = max(sum_, i64(price));
+//
+//			set_dict_i64(&all, seq_str, i64(price));
+//		}
+//	}
+//
+//	println("part 2 = ", sum_);
+//	return sum_;
+//}
+
 fn part2(): i64
 {
 	let sum_ = 0'i64;
@@ -119,42 +192,51 @@ fn part2(): i64
 	}
 	close(f);
 
-	// Dict for all monkeys, containing the sum of bananas that we can get so
+	// Array for all monkeys, containing the sum of bananas that we can get so
 	// far (they are slowly added up per-monkey and updated)
 	//
-	// Honestly you could just use an 18x18x18x18 array (size ~100_000) for this
-	// indexed by the 4 numbers in the sequence, shifted by +9
-	let all = new_dict_i64();
+	// This is a 19x19x19x19 array (size ~130_000) for each [-9:10] quadruplet
+	// sequence , shifted by +9
+	//
+	// Many entries of this array will never be used, e.g. you can't have a
+	// sequence of diffs [+9, +9] because this would take your price over the
+	// max limit of 9!  But I need a rectangular array and this is an easy and
+	// very fast way to do it
+	//
+	// The array runs both parts in 13 seconds, as opposed to 3 minutes for the
+	// hash map version
+	let LEN = 2 * 9 + 1;
+	let all = [0; LEN, LEN, LEN, LEN];
 
 	let NSEQ = 4;
 	for imon in [0: nmonkey]
 	{
-		// Dict for this monkey.  Only stores 1 to check if we've seen it or
-		// not.  I need a boolean dict or an in-dict method
-		let mon = new_dict_i64();
+		// Array for this monkey.  Only stores bool to check if we've seen it or
+		// not
+		let mon = [false; LEN, LEN, LEN, LEN];
 
 		//if (imon % 10 == 0) println("imon = ", imon);
 		for it in [NSEQ: NCHANGES]
 		{
 			let seq = diffs[it-NSEQ: it, imon];
-
-			// Use a compact str to make hashing slightly faster
-			let seq_str = str(seq[0], ",", seq[1], ",", seq[2], ",", seq[3]);
-			//let seq_str = str(seq); // default str with brackets and spaces
+			let s0 = seq[0] + 9; // unpack and shift for array indexing
+			let s1 = seq[1] + 9;
+			let s2 = seq[2] + 9;
+			let s3 = seq[3] + 9;
 
 			// Check if we've already seen this sequence and skip if necessary.
 			// The monkey sells as soon as it first sees a sequence
-			let seen = get_dict_i64(&mon, seq_str);
-			if (seen > 0) continue;
-			set_dict_i64(&mon, seq_str, 1'i64); // mark as seen
+			let seen = mon[s0, s1, s2, s3];
+			if (seen) continue;
+			mon[s0, s1, s2, s3] = true;
 
 			let price = prices[it-1, imon];
-			let price0 = get_dict_i64(&all, seq_str);
-			if (price0 > 0) price += price0;
+			let price0 = all[s0, s1, s2, s3];
+			price += price0;
 
 			sum_ = max(sum_, i64(price));
 
-			set_dict_i64(&all, seq_str, i64(price));
+			all[s0, s1, s2, s3] = price;
 		}
 	}
 
