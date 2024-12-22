@@ -192,6 +192,9 @@ fn part2(): i64
 	}
 	close(f);
 
+	// Shift for array indexing with ranges [0: 19] instead of [-9: 10]
+	diffs += 9;
+
 	// Array for all monkeys, containing the sum of bananas that we can get so
 	// far (they are slowly added up per-monkey and updated)
 	//
@@ -219,10 +222,10 @@ fn part2(): i64
 		for it in [NSEQ: NCHANGES]
 		{
 			let seq = diffs[it-NSEQ: it, imon];
-			let s0 = seq[0] + 9; // unpack and shift for array indexing
-			let s1 = seq[1] + 9;
-			let s2 = seq[2] + 9;
-			let s3 = seq[3] + 9;
+			let s0 = seq[0]; // unpack
+			let s1 = seq[1];
+			let s2 = seq[2];
+			let s3 = seq[3];
 
 			// Check if we've already seen this sequence and skip if necessary.
 			// The monkey sells as soon as it first sees a sequence
