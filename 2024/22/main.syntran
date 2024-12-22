@@ -1,0 +1,312 @@
+
+#include("../../utils-2024.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let PRUNE = 16_777_216;
+fn next_(num: i64): i64
+{
+	num ^= num * 64;
+	num %= PRUNE;
+
+	num ^= num / 32;
+	num %= PRUNE;
+
+	//num = (i64(num) ^ (num * 2048'i64)) % PRUNE;
+	num ^= num * 2048;
+	num %= PRUNE;
+
+	//println("next_ = ", num);
+
+	return num;
+}
+
+let NCHANGES = 2000;
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	//// Small test:
+	//let num = 123'i64;
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//num = next_(num);
+	//exit(0);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let num = parse_i64(str_);
+		for i in [0: NCHANGES]
+			num = next_(num);
+		//println("num = ", num);
+
+		sum_ += num;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+//let nbananas = sum_bananas(&prices, &diffs, &seq);
+//fn sum_bananas(&prices, &diffs, &seq): i64 // TODO: parser crash (bad arg types/names)
+fn sum_bananas(prices: &[i32; :,:], diffs: &[i32; :,:], seq: &[i32; :]): i64
+{
+	let nbananas = 0'i64;
+	let nseq = size(seq, 0);
+	let nmonkey = size(prices, 1);
+	for imon in [0: nmonkey]
+	{
+		//println("imon = ", imon);
+		for it in [0: NCHANGES - nseq + 1]
+		{
+			if all(diffs[it: it + nseq, imon] == seq)
+			{
+				//println("price = ", prices[it + nseq - 1, imon]);
+				nbananas += prices[it + nseq - 1, imon];
+				break;
+			}
+		}
+		//println();
+	}
+	return nbananas;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let nmonkey = countln_(filename);
+	let prices = [-1; NCHANGES, nmonkey];
+	let diffs  = [-1; NCHANGES, nmonkey];
+
+	let f = open(filename);
+	let str_ = readln(f);
+	for imon in [0: nmonkey]
+	{
+		//println("str_ = ", str_);
+
+		let num = parse_i64(str_);
+		for i in [0: NCHANGES]
+		{
+			let num0 = num % 10;
+			num = next_(num);
+			let diff = (num % 10) - num0;
+
+			prices[i, imon] = num % 10;
+			diffs [i, imon] = diff;
+		}
+		//println("num = ", num);
+
+		//sum_ += num;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	// Test with the known best sequence
+	//
+	// Careful, part 2 sample input is different
+	let seq = [-2, 1, -1, 3];
+	let nbananas = sum_bananas(&prices, &diffs, &seq);
+	//println("nbananas = ", nbananas);
+
+	// Dict for all monkeys
+	let all = new_dict_i64();
+
+	//// Dict of banana payments per monkey
+	//let empty = new_dict_i64();
+	//let mons = [empty; nmonkey];
+
+	let NSEQ = 4;
+	for imon in [0: nmonkey]
+	{
+
+	// Dict for this monkey (to skip sequences we've seen earlier)
+	let mon = new_dict_i64();
+
+	if (imon % 1 == 0) println("imon = ", imon);
+	for it in [NSEQ: NCHANGES]
+	{
+		let seq = diffs[it-NSEQ: it, imon];
+		let seq_str = str(seq);
+
+		// Check if we've already tried this sequences and skip if necessary
+		let tried_this = get_dict_i64(&mon, seq_str);
+		if tried_this > 0
+		{
+			//println("cache hit");
+			continue;
+		}
+		set_dict_i64(&mon, seq_str, 1'i64);
+
+		let price = prices[it-1, imon];
+		let price0 = get_dict_i64(&all, seq_str);
+		if (price0 > 0) price += price0;
+
+		set_dict_i64(&all, seq_str, i64(price));
+
+		//let nbananas = sum_bananas(&prices, &diffs, &seq);
+		////println("nbananas = ", nbananas);
+		//if nbananas > sum_
+		//{
+		//	println("******** nbananas = ", nbananas);
+		//	sum_ = nbananas;
+		//}
+	}}
+
+	sum_ = 0;
+	for price in vals_dict_i64(&all)
+		sum_ = max(sum_, price);
+
+	println("len all = ", len_dict_i64(&all));
+	println("part 2 = ", sum_);
+	exit(0);
+
+	// Try any sequence that is known to yield a 9 from any one monkey
+	let tried = new_dict_i64();
+	for imon in [0: nmonkey]
+	{
+	if (imon % 1 == 0) println("imon = ", imon);
+	for it in [NSEQ: NCHANGES]
+	{
+		//// Heuristic
+
+		//if prices[it-1, imon] == 9
+		//if prices[it-1, imon] >= 8
+		if prices[it-1, imon] >= 5
+		{
+			let seq = diffs[it-NSEQ: it, imon];
+			let seq_str = str(seq);
+
+			// Check if we've already tried this sequences and skip if necessary
+			let tried_this = get_dict_i64(&tried, seq_str);
+			if tried_this > 0
+			{
+				//println("cache hit");
+				continue;
+			}
+
+			set_dict_i64(&tried, seq_str, 1'i64);
+
+			let nbananas = sum_bananas(&prices, &diffs, &seq);
+			//println("nbananas = ", nbananas);
+			if nbananas > sum_
+			{
+				println("******** nbananas = ", nbananas);
+				sum_ = nbananas;
+			}
+			//exit(0);
+		}
+	}
+	}
+	println("len tried = ", len_dict_i64(&tried));
+	println("part 2 = ", sum_);
+	exit(0);
+
+	// Generate all possible sequences
+	//
+	// Takes 4 minutes for test input (4 monkeys).  Way to slow for real input
+	// (1600 monkeys)
+	let nseq_tot = 0;
+	for s0 in [-9: 9 + 1]
+	{
+	println("s0 = ", s0);
+	for s1 in [max(-9, -9 - (s0)): min(9 - (s0) + 1, 9)]
+	{
+	//println("s01 = ", [s0, s1]);
+	for s2 in [max(-9, -9 - (s0+s1)): min(9 - (s0+s1) + 1, 9)]
+	{
+	//println("s012 = ", [s0, s1, s2]);
+	for s3 in [max(-9, -9 - (s0+s1+s2)): min(9 - (s0+s1+s2) + 1, 9)]
+	{
+		nseq_tot += 1;
+
+		//println("s0123 = ", [s0, s1, s2, s3]);
+
+		let seq = [s0, s1, s2, s3];
+		//println("seq = ", seq);
+
+		let nbananas = 0'i64;
+		let nseq = size(seq, 0);
+		for imon in [0: nmonkey]
+		{
+			//println("imon = ", imon);
+			for it in [0: NCHANGES - nseq + 1]
+			{
+				if all(diffs[it: it + nseq, imon] == seq)
+				{
+					//println("price = ", prices[it + nseq - 1, imon]);
+					nbananas += prices[it + nseq - 1, imon];
+					break;
+				}
+			}
+			//println();
+		}
+		//sum_ = max(sum_, nbananas);
+		if nbananas > sum_
+		{
+			println("nbananas = ", nbananas);
+			sum_ = nbananas;
+		}
+
+	}}}}
+	println("nseq_tot = ", nseq_tot);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/22");
+
+	let sum_ = 0'i64;
+
+	// Expect 13584398738 + ???
+	//sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
