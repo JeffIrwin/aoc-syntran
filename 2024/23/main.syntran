@@ -44,10 +44,12 @@ fn part1(): i64
 	let npairs = countln_(filename);
 	let pairs = [-1; 2, npairs];
 
-	let NIDS = 26 ** 2; // number of 2-char alphabetical names
+	// Max number of 2-char alphabetical names.  Some may not be present
+	let NIDS = 26 ** 2;
 
+	// Adjacency matrix.  You could also use a dict for this which could save
+	// memory but incur more expensive lookups
 	let cons = [false; NIDS, NIDS];
-	let is_id = [false; NIDS];
 
 	let f = open(filename);
 	let str_ = readln(f);
@@ -65,18 +67,14 @@ fn part1(): i64
 		cons[id0, id1] = true;
 		cons[id1, id0] = true;
 
-		is_id[id0] = true;
-		is_id[id1] = true;
-
 		str_ = readln(f);
 	}
 	close(f);
 	//println("pairs = ", pairs);
 	//println("count(cons)  = ", count(cons));
-	//println("count(is_id) = ", count(is_id));
 
 	// Build adjacency table
-	let NADJ_CAP = 64;
+	let NADJ_CAP = 32;
 	let nadj = [ 0; NIDS];
 	let adj  = [-1; NADJ_CAP, NIDS];
 	for ip in [0: npairs]
@@ -104,11 +102,12 @@ fn part1(): i64
 	}
 	//println("adj = ", adj);
 
-	// Find the LAN parties
+	// Find the LAN parties.  This algo is fast but it may visit a party
+	// multiple times.  Use a dict to equivalence the set of parties
 	let parties = new_dict_i64();
 
-	let NCAP = 64;
-	let STACK_CAP = 1024;
+	let NCAP = 32;  // 8 is too small but 16 is safe for me
+	let STACK_CAP = 32;
 	let stack    = [-1; STACK_CAP];
 	let subgraph = [-1; NCAP];
 	for id0 in [0: NIDS]
@@ -127,7 +126,7 @@ fn part1(): i64
 
 		while sptr > 0
 		{
-			// pop
+			// pop from stack but not subgraph
 			sptr -= 1;
 			let id1 = stack[sptr];
 
@@ -145,9 +144,19 @@ fn part1(): i64
 				}
 				if (not all_connected) continue;
 
-				// push. TODO: check both CAPS
+				// push
 				stack[sptr] = id; sptr += 1;
 				subgraph[n] = id; n    += 1;
+				if sptr >= STACK_CAP
+				{
+					println("Error: STACK_CAP overflow!");
+					exit(-1);
+				}
+				if n >= NCAP
+				{
+					println("Error: NCAP overflow!");
+					exit(-1);
+				}
 			}
 		}
 		//println("n = ", n);
@@ -164,7 +173,7 @@ fn part1(): i64
 			let i2 = subgraph[j2];
 
 			//println("i0 = ", i0);
-			//if (not (i0 < i1 and i1 < i2)) continue; // dict takes care of this
+			//if (not (i0 < i1 and i1 < i2)) continue; // dict and sorting takes care of this
 			if (not (starts_t(i0) or starts_t(i1) or starts_t(i2))) continue;
 
 			let key = str(sort_inplace([i0, i1, i2]));
@@ -186,7 +195,6 @@ fn part2(): str
 	let NIDS = 26 ** 2; // number of 2-char alphabetical names
 
 	let cons = [false; NIDS, NIDS];
-	let is_id = [false; NIDS];
 
 	let f = open(filename);
 	let str_ = readln(f);
@@ -204,18 +212,14 @@ fn part2(): str
 		cons[id0, id1] = true;
 		cons[id1, id0] = true;
 
-		is_id[id0] = true;
-		is_id[id1] = true;
-
 		str_ = readln(f);
 	}
 	close(f);
 	//println("pairs = ", pairs);
 	//println("count(cons)  = ", count(cons));
-	//println("count(is_id) = ", count(is_id));
 
 	// Build adjacency table
-	let NADJ_CAP = 64;
+	let NADJ_CAP = 32;
 	let nadj = [ 0; NIDS];
 	let adj  = [-1; NADJ_CAP, NIDS];
 	for ip in [0: npairs]
@@ -244,8 +248,16 @@ fn part2(): str
 	//println("adj = ", adj);
 
 	// Find largest directly connected subgraph of max allowed size NCAP
-	let NCAP = 64;
-	let STACK_CAP = 1024;
+	//
+	// idk if this is proper graph terminology, but by "subgraph" i mean a
+	// subset of the graph where every node is directly connected to all other
+	// nodes in the subgraph.  having an intermediary node in between but no
+	// direct immediate connection doesn't count
+	//
+	// i guess the technical term is "strongly connected component"
+	//
+	let NCAP = 32;
+	let STACK_CAP = 32;
 	let stack    = [-1; STACK_CAP];
 	let subgraph = [-1; NCAP];
 	let subgraph_big = subgraph;
@@ -284,16 +296,22 @@ fn part2(): str
 				}
 				if (not all_connected) continue;
 
-				// push. TODO: check both CAPS
+				// push
 				stack[sptr] = id; sptr += 1;
 				subgraph[n] = id; n    += 1;
+				if sptr >= STACK_CAP
+				{
+					println("Error: STACK_CAP overflow!");
+					exit(-1);
+				}
+				if n >= NCAP
+				{
+					println("Error: NCAP overflow!");
+					exit(-1);
+				}
 			}
 		}
 		//println("n = ", n);
-
-		// TODO: to port this to part 1, sort subgraph, stringify it into a key,
-		// and set it in a dict.  Finally, get the len of that dict as the part
-		// 1 answer
 
 		if n > nbig
 		{
@@ -307,15 +325,11 @@ fn part2(): str
 	// sorting alphabetically
 	subgraph_big = sort_inplace(subgraph_big);
 
-	let names_vec = [""; nbig];
-	for i in [0: nbig]
-		names_vec[i] = id_to_name(subgraph_big[i]);
-
 	// compact csv single str
 	let names = "";
 	for i in [0: nbig]
 	{
-		names += names_vec[i];
+		names += id_to_name(subgraph_big[i]);
 		if (i < nbig - 1) names += ",";
 	}
 
@@ -325,7 +339,7 @@ fn part2(): str
 
 //==============================================================================
 
-fn main(): i64
+fn main(): str
 {
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
@@ -340,7 +354,7 @@ fn main(): i64
 
 	println("Ending AOC syntran main");
 	println();
-	return sum_;
+	return str(p1, ":", p2);
 }
 
 //==============================================================================
