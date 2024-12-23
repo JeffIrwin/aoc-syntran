@@ -104,8 +104,6 @@ fn part1(): i64
 
 fn part2(): str
 {
-	let sum_ = 0'i64;
-
 	let npairs = countln_(filename);
 	let pairs = [-1; 2, npairs];
 
@@ -169,12 +167,13 @@ fn part2(): str
 	}
 	//println("adj = ", adj);
 
-	// Find largest directly connected subgraph of max size NCAP
+	// Find largest directly connected subgraph of max allowed size NCAP
 	let NCAP = 64;
 	let STACK_CAP = 1024;
 	let stack    = [-1; STACK_CAP];
 	let subgraph = [-1; NCAP];
 	let subgraph_big = subgraph;
+	let nbig = 0;
 	for id0 in [0: NIDS]
 	{
 		let sptr = 0;
@@ -202,11 +201,10 @@ fn part2(): str
 				let all_connected = true;
 				for idg in subgraph[0: n]
 				{
-					if (not cons[id, idg])
-					{
-						all_connected = false;
-						break;
-					}
+					// this effectively acts as a `visited` check. node IDs are
+					// not connected to themselves!
+					all_connected = cons[id, idg];
+					if (not all_connected) break;
 				}
 				if (not all_connected) continue;
 
@@ -217,32 +215,32 @@ fn part2(): str
 		}
 		//println("n = ", n);
 
-		//sum_ = max(sum_, i64(n));
-		if n > sum_
+		// TODO: to port this to part 1, sort subgraph, stringify it into a key,
+		// and set it in a dict.  Finally, get the len of that dict as the part
+		// 1 answer
+
+		if n > nbig
 		{
-			sum_ = n;
+			nbig = n;
 			subgraph_big = subgraph;
 		}
-
 	}
+	subgraph_big = subgraph_big[0: nbig];  // trim
 
-	subgraph_big = subgraph_big[0: sum_];  // trim
-	//println("subgraph_big = ", subgraph_big);
+	// With my name_to_id() endianness convention, sorting numerically *is*
+	// sorting alphabetically
 	subgraph_big = sort_inplace(subgraph_big);
-	//println("subgraph_big = ", subgraph_big);
 
-	let names_vec = [""; sum_];
-	for i in [0: sum_]
+	let names_vec = [""; nbig];
+	for i in [0: nbig]
 		names_vec[i] = id_to_name(subgraph_big[i]);
-
-	//println("names_vec = ", names_vec);
 
 	// compact csv single str
 	let names = "";
-	for i in [0: sum_]
+	for i in [0: nbig]
 	{
 		names += names_vec[i];
-		if (i < sum_ - 1) names += ",";
+		if (i < nbig - 1) names += ",";
 	}
 
 	println("part 2 = ", names);
@@ -261,7 +259,7 @@ fn main(): i64
 	let sum_ = 0'i64;
 
 	// Expect 893 and "cw,dy,ef,iw,ji,jv,ka,ob,qv,ry,ua,wt,xz"
-	let p1 = part1();
+	//let p1 = part1();
 	let p2 = part2();
 
 	println("Ending AOC syntran main");
