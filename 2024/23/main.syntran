@@ -1,0 +1,277 @@
+
+#include("../../utils-2024.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn name_to_id(name: str): i32
+{
+	// 2-char lowercase alphabetical name to int id
+	let i0 = i32(name[0]) - i32("a");
+	let i1 = i32(name[1]) - i32("a");
+	return 26 * i0 + i1;
+}
+fn id_to_name(id: i32): str
+{
+	let i0 = id / 26;
+	let i1 = id % 26;
+	let c0 = char(i0 + i32("a"));
+	let c1 = char(i1 + i32("a"));
+	return c0 + c1;
+}
+
+fn starts_t(id: i32): bool
+{
+	return (id / 26) == (i32("t") - i32("a"));
+}
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let npairs = countln_(filename);
+	let pairs = [-1; 2, npairs];
+
+	let NIDS = 26 ** 2; // number of 2-char alphabetical names
+
+	let cons = [false; NIDS, NIDS];
+	let is_id = [false; NIDS];
+
+	let f = open(filename);
+	let str_ = readln(f);
+	for ip in [0: npairs]
+	{
+		//println("str_ = ", str_);
+
+		let name0 = str_[0:2];
+		let name1 = str_[3:5];
+
+		let id0 = name_to_id(name0);
+		let id1 = name_to_id(name1);
+
+		pairs[:, ip] = [id0, id1];
+		cons[id0, id1] = true;
+		cons[id1, id0] = true;
+
+		is_id[id0] = true;
+		is_id[id1] = true;
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("pairs = ", pairs);
+	//println("count(cons)  = ", count(cons));
+	//println("count(is_id) = ", count(is_id));
+
+	// It would probably be faster to work with an adjacency table like part 2
+	// instead of this adjacency matrix `cons`
+	//
+	// TODO: port part 2 algo to part 1.  Part 1 takes 30 seconds and part 2 is
+	// instantaneous
+	//
+	for id0 in [0: NIDS] { if (not is_id[id0]) continue;
+	for id1 in [0: NIDS] { if (not is_id[id1]) continue;
+	for id2 in [0: NIDS] { if (not is_id[id2]) continue;
+		
+		// Only consider unique triplets with this order to avoid duplicates
+		if not (id0 < id1 and id1 < id2) continue;
+
+		// Triplet is connected
+		if not (cons[id0, id1] and cons[id1, id2] and cons[id2, id0]) continue;
+
+		// At least one starts with "t"
+		if not (starts_t(id0) or starts_t(id1) or starts_t(id2)) continue;
+
+		sum_ += 1;
+
+		//println("ids = ", [id0, id1, id2]);
+	}}}
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let npairs = countln_(filename);
+	let pairs = [-1; 2, npairs];
+
+	let NIDS = 26 ** 2; // number of 2-char alphabetical names
+
+	let cons = [false; NIDS, NIDS];
+	let is_id = [false; NIDS];
+
+	let f = open(filename);
+	let str_ = readln(f);
+	for ip in [0: npairs]
+	{
+		//println("str_ = ", str_);
+
+		let name0 = str_[0:2];
+		let name1 = str_[3:5];
+
+		let id0 = name_to_id(name0);
+		let id1 = name_to_id(name1);
+
+		pairs[:, ip] = [id0, id1];
+		cons[id0, id1] = true;
+		cons[id1, id0] = true;
+
+		is_id[id0] = true;
+		is_id[id1] = true;
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("pairs = ", pairs);
+	//println("count(cons)  = ", count(cons));
+	//println("count(is_id) = ", count(is_id));
+
+	// Build adjacency table
+	let NADJ_CAP = 64;
+	let nadj = [ 0; NIDS];
+	let adj  = [-1; NADJ_CAP, NIDS];
+	for ip in [0: npairs]
+	{
+		let id0 = pairs[0, ip];
+		let id1 = pairs[1, ip];
+
+		// Add first half-connection (they're symmetric)
+		adj[ nadj[id0], id0 ] = id1;
+		nadj[id0] += 1;
+		if nadj[id0] >= NADJ_CAP
+		{
+			println("Error: NADJ_CAP overflow!");
+			exit(-1);
+		}
+
+		// Add second half going the other way
+		adj[ nadj[id1], id1 ] = id0;
+		nadj[id1] += 1;
+		if nadj[id1] >= NADJ_CAP
+		{
+			println("Error: NADJ_CAP overflow!");
+			exit(-1);
+		}
+	}
+	//println("adj = ", adj);
+
+	// Find largest directly connected subgraph of max size NCAP
+	let NCAP = 64;
+	let STACK_CAP = 1024;
+	let stack    = [-1; STACK_CAP];
+	let subgraph = [-1; NCAP];
+	let subgraph_big = subgraph;
+	for id0 in [0: NIDS]
+	{
+		let sptr = 0;
+		let n = 0; // subgraph size
+
+		// Find a subgraph starting with id0
+
+		// IDs are added and removed to/from stack.  They are only added but
+		// never removed from subgraph
+
+		// push
+		stack[sptr] = id0; sptr += 1;
+		subgraph[n] = id0; n    += 1;
+
+		while sptr > 0
+		{
+			// pop
+			sptr -= 1;
+			let id1 = stack[sptr];
+
+			// iterate over connections of id1
+			for id in adj[0: nadj[id1], id1]
+			{
+				// check if id is connected to everything in subgraph
+				let all_connected = true;
+				for idg in subgraph[0: n]
+				{
+					if (not cons[id, idg])
+					{
+						all_connected = false;
+						break;
+					}
+				}
+				if (not all_connected) continue;
+
+				// push. TODO: check both CAPS
+				stack[sptr] = id; sptr += 1;
+				subgraph[n] = id; n    += 1;
+			}
+		}
+		//println("n = ", n);
+
+		//sum_ = max(sum_, i64(n));
+		if n > sum_
+		{
+			sum_ = n;
+			subgraph_big = subgraph;
+		}
+
+	}
+
+	subgraph_big = subgraph_big[0: sum_];  // trim
+	//println("subgraph_big = ", subgraph_big);
+	subgraph_big = sort_inplace(subgraph_big);
+	//println("subgraph_big = ", subgraph_big);
+
+	let names_vec = [""; sum_];
+	for i in [0: sum_]
+		names_vec[i] = id_to_name(subgraph_big[i]);
+
+	//println("names_vec = ", names_vec);
+
+	// compact csv single str
+	let names = "";
+	for i in [0: sum_]
+	{
+		names += names_vec[i];
+		if (i < sum_ - 1) names += ",";
+	}
+
+	println("part 2 = ", names);
+	return names;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/23");
+
+	let sum_ = 0'i64;
+
+	// Expect 893 and "cw,dy,ef,iw,ji,jv,ka,ob,qv,ry,ua,wt,xz"
+	let p1 = part1();
+	let p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
