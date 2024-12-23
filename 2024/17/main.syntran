@@ -143,197 +143,6 @@ fn part1(): str
 	return out_str;
 }
 
-fn part2brute(): str
-{
-	let sum_ = 0'i64;
-
-	let f = open(filename);
-
-	let str_ = readln(f);
-	let reg_a = read_i32(str_); // this is ignored for part 2
-
-	str_ = readln(f);
-	let reg_b = read_i32(str_);
-
-	str_ = readln(f);
-	let reg_c = read_i32(str_);
-
-	//println("reg a, b, c = ", [reg_a, reg_b, reg_c]);
-
-	str_ = readln(f); // skip blank line
-
-	str_ = readln(f);
-	let program = read_i32s(str_);
-	//println("program = ", program);
-
-	////let program_str = str_;
-	//let program_str = "";
-	//for p in program
-	//	program_str += str(p, ",");
-	//program_str = program_str[0: len(program_str) - 1]; // trim extra trailing comma
-	//println("program_str = ", program_str);
-
-	close(f);
-
-	//let reg_a0 = reg_a;
-	let reg_b0 = reg_b;
-	let reg_c0 = reg_c;
-
-	let nprogram = size(program, 0);
-	reg_a = 0;
-	while true
-	{
-		if (reg_a % 100_000 == 0) println("reg_a = ", reg_a);
-		sum_ = reg_a;
-
-		// Reset to input values after modification by previous program
-		reg_b = reg_b0;
-		reg_c = reg_c0;
-
-		let is_quine = true;
-		let nout = 0;
-
-		//let out_str = "";
-		let iptr = 0;
-		while 0 <= iptr and iptr < nprogram
-		{
-			let instr         = program[iptr + 0];
-			let combo_operand = program[iptr + 1];
-
-			//println();
-			//println("iptr = ", iptr);
-			//println("instr = ", instr);
-			//println("combo = ", combo_operand);
-
-			// default to literal operand
-			let operand_val = combo_operand;
-
-			if any(instr == [ADV, BDV, CDV, BST, OUT])
-			{
-				if combo_operand == 4
-				{
-					operand_val = reg_a;
-					//println("break 1");
-					//exit(0);
-				}
-				else if combo_operand == 5
-					operand_val = reg_b;
-				else if combo_operand == 6
-					operand_val = reg_c;
-				else if combo_operand == 7
-				{
-					println("Error: invalid combo_operand 7");
-					exit(-1);
-				}
-			}
-
-			if instr == ADV
-			{
-				reg_a = reg_a / (2 ** operand_val);
-				//println("break 2");
-				//exit(0);
-			}
-			else if instr == BDV
-			{
-				reg_b = reg_a / (2 ** operand_val);
-				//println("break 3");
-				//exit(0);
-			}
-			else if instr == CDV
-			{
-				reg_c = reg_a / (2 ** operand_val);
-				//println("break 3");
-				//exit(0);
-			}
-			else if instr == BXL
-			{
-				reg_b ^= operand_val;
-				//reg_b = reg_b ^ operand_val;
-			}
-			else if instr == BST
-			{
-				//reg_b %= 8;
-				//reg_b = reg_b % 8;
-				reg_b = operand_val % 8;
-			}
-			else if instr == JNZ
-			{
-				//println("break 4");
-				//exit(0);
-				if reg_a != 0
-				{
-					iptr = operand_val;
-					//println("jnz ", iptr);
-					continue;
-				}
-			}
-			else if instr == BXC
-			{
-				reg_b ^= reg_c;
-				//reg_b = reg_b ^ reg_c;
-			}
-			else if instr == OUT
-			{
-				let out_val = operand_val % 8;
-
-				if nout >= nprogram
-				{
-					// Answer too long compared to expected output
-					is_quine = false;
-					break;
-				}
-				else if out_val != program[nout]
-				{
-					// Wrong answer.  No need to eval the rest of the program
-					is_quine = false;
-					break;
-				}
-				nout += 1;
-
-				//out_str += str(operand_val % 8, ",");
-				//out_str = str(out_str, operand_val % 8, ",");
-			}
-			else
-			{
-				println("Error: invalid instruction ", instr);
-				exit(-2);
-			}
-
-			// skipped for jnz reg_a != 0
-			iptr += 2;
-		}
-		//out_str = out_str[0: len(out_str) - 1]; // trim extra trailing comma
-
-		//if out_str == program_str
-		//{
-		//	//sum_ = reg_a; // set earlier
-		//	break;
-		//}
-		if (is_quine and nout == nprogram)
-		{
-			break;
-		}
-
-		//// TODO
-		//if (sum_ == 117442)
-		//{
-		//	println("nout = ", nout);
-		//	println("is_quine = ", is_quine);
-		//	break;
-		//}
-
-		reg_a = sum_ + 1;
-	}
-
-	//println("reg_a = ", reg_a);
-	//println("reg_b = ", reg_b);
-	//println("reg_c = ", reg_c);
-	//println();
-
-	println("part 2 = ", sum_);
-	return str(sum_);
-}
-
 fn eval_prog(program: &[i32; :], reg_a: i64, reg_b: i64, reg_c: i64): [i32; :]
 {
 	// part1 should use this. will require casting for registers
@@ -472,7 +281,7 @@ fn part2(): str
 	str_ = readln(f);
 	let reg_c = i64(read_i32(str_));
 
-	println("reg a, b, c = ", [reg_a, reg_b, reg_c]);
+	//println("reg a, b, c = ", [reg_a, reg_b, reg_c]);
 
 	str_ = readln(f); // skip blank line
 
@@ -525,7 +334,7 @@ fn part2(): str
 		reg_a += iouter;
 		istart = 0;
 	}
-	println("reg_a  = ", reg_a);
+	//println("reg_a  = ", reg_a);
 	println("part 2 = ", reg_a);
 
 	return str(reg_a);
