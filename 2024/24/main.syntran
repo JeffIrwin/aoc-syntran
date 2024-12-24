@@ -1,0 +1,498 @@
+
+#include("../../utils-2024.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let dict = new_dict_i64();
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//while not eof(f)
+	while str_ != ""
+	{
+		// Load initialization
+		//println("str_ = ", str_);
+
+		let strs = split_(str_, ":");
+		let key = strs[0];
+		let val = parse_i64(strs[1]);
+
+		//println("key, val = ", key, " ", val);
+
+		// save keys/vals
+		set_dict_i64(&dict, key, val);
+
+		str_ = readln(f);
+	}
+	str_ = readln(f); // skip blank
+
+	let NGATES_CAP = 512;
+	let ngates = 0;
+	let left  = [""; NGATES_CAP];
+	let op    = [""; NGATES_CAP];
+	let right = [""; NGATES_CAP];
+	let res   = [""; NGATES_CAP];
+
+	while not eof(f)
+	{
+		// Load operation rules
+		//println("str_ = ", str_);
+
+		let strs = split_(str_, "-> ");
+		left [ngates] = strs[0];
+		op   [ngates] = strs[1];
+		right[ngates] = strs[2];
+		res  [ngates] = strs[3];
+
+		ngates += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	// Trim
+	left  = left [0: ngates];
+	op    = op   [0: ngates];
+	right = right[0: ngates];
+	res   = res  [0: ngates];
+
+	//println("left  = ", left [0:9]);
+	//println("op    = ", op   [0:9]);
+	//println("right = ", right[0:9]);
+	//println("res   = ", res  [0:9]);
+
+	let has_val = [false; ngates];
+
+	// Lazy brute: just make multiple passes until we can calculate everything.
+	// Would be better to check dependencies in a graph data struct
+	while true
+	{
+		let all_have_vals = true;
+		for i in [0: ngates]
+		{
+			if (has_val[i]) continue; // skip if already calculated
+			all_have_vals = false;
+
+			// ^ this does one extra redundant pass at end :(
+
+			let left_val = get_dict_i64(&dict, left[i]);
+			if (left_val < 0) continue;  // left not calculated yet
+
+			let right_val = get_dict_i64(&dict, right[i]);
+			if (right_val < 0) continue;
+
+			//println("left op right = ", left[i], op[i], right[i]);
+			let res_val = 0'i64;
+			if op[i] == "AND"
+			{
+				if (left_val == 1 and right_val == 1) res_val = 1;
+			}
+			else if op[i] == "OR"
+			{
+				if (left_val == 1 or right_val == 1) res_val = 1;
+			}
+			else if op[i] == "XOR"
+			{
+				if (left_val != right_val) res_val = 1;
+			}
+			set_dict_i64(&dict, res[i], res_val);
+			has_val[i] = true;
+
+		}
+		if (all_have_vals) break;
+	}
+
+	// Combine the z* bits
+	for i in [0: 64]
+	{
+		let zkey = "z";
+		if (i < 10) zkey += "0" + str(i);
+		else        zkey +=       str(i);
+		//println("zkey = ", zkey);
+
+		let zval = get_dict_i64(&dict, zkey);
+		if (zval < 0) continue;
+		//println("zval = ", zval);
+
+		sum_ |= (zval << i);
+	}
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let dict = new_dict_i64();
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//while not eof(f)
+	while str_ != ""
+	{
+		// Load initialization
+
+		let strs = split_(str_, ":");
+		let key = strs[0];
+		let val = parse_i64(strs[1]);
+
+		// save keys/vals
+		set_dict_i64(&dict, key, val);
+
+		str_ = readln(f);
+	}
+	str_ = readln(f); // skip blank
+
+	let NGATES_CAP = 512;
+	let ngates = 0;
+	let left  = [""; NGATES_CAP];
+	let op    = [""; NGATES_CAP];
+	let right = [""; NGATES_CAP];
+	let res   = [""; NGATES_CAP];
+
+	while not eof(f)
+	{
+		// Load operation rules
+
+		let strs = split_(str_, "-> ");
+		left [ngates] = strs[0];
+		op   [ngates] = strs[1];
+		right[ngates] = strs[2];
+		res  [ngates] = strs[3];
+
+		ngates += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	// Trim
+	left  = left [0: ngates];
+	op    = op   [0: ngates];
+	right = right[0: ngates];
+	res   = res  [0: ngates];
+
+	// TODO: plan:
+	//
+	// Set some input hard-coded x_in and y_in numbers (up to 45-bit).  Use bit
+	// ops to assign x00-x44 and y00-y44 in the dict.  Try x_in and y_in with
+	// only single bits set, run the math, and compare resulting z to expected
+	// value.  This can be hard-coded and trial by error.  Might need to find ~4
+	// different test cases for each swap.  Then for each test case, find the
+	// pair that needs to be swapped
+	//
+	// If doing multiple test cases, rember to clear reset new_dict_i64 and
+	// reset has_val false
+
+	// My actual input (at least I can know the expected value regardless of if
+	// it's impacted by bad op swap)
+	let x_in = 0b111100101001000011100011110010101111011001101'i64; // careful to reverse endianness
+	let y_in = 0b110001010011000010001101100110010100000011001'i64;
+	//let x_in = 0b101100110111101010011110001110000100101001111'i64;
+	//let y_in = 0b100110000001010011001101100010000110010100011'i64;
+
+	x_in = 1'i64; // works
+	y_in = 1'i64;
+
+	// Apply known swaps
+	println();
+	let tmp = ""; let s1a = -1; let s1b = -1;
+
+	//s1a = 109; s1b = 32; // sps rrr
+	//s1a = 88; s1b = 24; // z12 z11 BAD
+	//s1a = 139; s1b = 32; // tdd rrr
+	//s1a = 179; s1b = 109; // tff sps
+	////s1a = 139; s1b = 179;
+	//s1a = 88; s1b = 32; // bad
+	s1a = 109; s1b = 24;
+	println("swapping ", res[s1a], " ", res[s1b]);
+	tmp = res[s1a];
+	res[s1a] = res[s1b];
+	res[s1b] = tmp;
+
+	//s1a = 101; s1b = 3; // bad
+	//s1a = 101; s1b = 50; // bad
+	s1a = 101; s1b = 131;
+	//s1a = 101; s1b = 191; // bad
+	println("swapping ", res[s1a], " ", res[s1b]);
+	tmp = res[s1a];
+	res[s1a] = res[s1b];
+	res[s1b] = tmp;
+
+	s1a = 177; s1b = 74;
+	println("swapping ", res[s1a], " ", res[s1b]);
+	tmp = res[s1a];
+	res[s1a] = res[s1b];
+	res[s1b] = tmp;
+
+	//s1a = 33; s1b = 9;
+	s1a = 33; s1b = 20;
+	println("swapping ", res[s1a], " ", res[s1b]);
+	tmp = res[s1a];
+	res[s1a] = res[s1b];
+	res[s1b] = tmp;
+
+	println();
+
+	// do_not_swap option for experimenting with these cases
+	let do_not_swap = false;
+
+	//***********
+
+	// Test case
+	//
+	// Fixed by swapping 177 74 tst z05 // ***
+	x_in = 1 << 5;
+	//x_in |= (1'i64 << 6);
+	//y_in = 1 << 5;
+	y_in = 0;
+	//do_not_swap = true;
+
+	// Test case
+	//
+	// Fixed by swapping 109 32 sps rrr or others
+	x_in = 0 << 11;
+	x_in |= (0'i64 << 12);
+	y_in = 1 << 11;
+	do_not_swap = true;
+
+	//// Test case
+	////
+	//// Fixed by swapping 33  9 z23 jkv or others
+	//x_in = 0 << 23;
+	//x_in |= (1'i64 << 24);
+	//y_in = 0 << 23;
+	//do_not_swap = true;
+
+	//// fixed by swapping 101 3 pmd tpd or others
+	//x_in = 1'i64 << 38;
+	//y_in = 1'i64 << 38;
+	////do_not_swap = true;
+
+	////****************
+	//// New test cases that I haven't tried swapping yet:
+
+	////x_in = 0;
+	////y_in = 1'i64 << 5;
+	//////do_not_swap = true;
+
+	////x_in = 0;
+	////y_in = 1'i64 << 11;
+	//////do_not_swap = true;
+
+	////x_in = 0;
+	////y_in = 1'i64 << 23;
+	//////do_not_swap = true;
+
+	//// problems at bits 5, 11, 23, 28
+	//x_in = 0b111100101001000011100011110010101111011001101'i64; // careful to reverse endianness
+	//y_in = 0b110001010011000010001101100110010100000011001'i64;
+
+	x_in = 0b111111111111111111111111111111111111111111111'i64; // careful to reverse endianness
+	y_in = 0b111111111111111111111111111111111111111111111'i64;
+	//x_in ^= (1'i64 << 5);
+	//y_in ^= (1'i64 << 5);
+	//x_in ^= (1'i64 << 11);
+	y_in ^= (1'i64 << 11);
+	do_not_swap = true;
+
+	//*************************
+
+	let zexp = x_in + y_in;
+
+	println("x_in, y_in = ", [x_in, y_in]);
+
+	//// Swap pair inputs
+	//let s0a = 0;
+	//let s0b = 1;
+
+	let res_in = res; // backup input
+
+	// Iterate until we find the right pair to swap
+	let z = 0'i64;
+	//for s0a in [179: ngates] { // TODO
+	for s0a in [1: ngates] {
+
+	//let resa = res[s0a]; // did they say we can't swap "z" wires?
+	//if (resa[0] == "z") continue;
+
+	for s0b in [0: s0a]
+	{
+
+	//let resb = res[s0b];
+	//if (resb[0] == "z") continue;
+
+	//// TODO
+	//if (s0a == 33 and s0b == 9) continue;
+	//if (s0a == 64 and s0b == 33) continue;
+	//if (s0a == 88 and s0b == 24) continue;
+	//if (s0a == 88 and s0b == 32) continue;
+	//if (s0a == 109 and s0b == 24) continue;
+	//if (s0a == 109 and s0b == 32) continue;
+	//if (s0a == 139 and s0b == 32) continue;
+	//if (s0a == 179 and s0b == 88) continue;
+	//if (s0a == 179 and s0b == 109) continue;
+
+	// Reset from last swap
+	res = res_in;
+
+	if not do_not_swap
+	{
+		// Perform swap
+		println("swapping ", s0a, " ", s0b, " ", res[s0a], " ", res[s0b]);
+		let tmp = res[s0a];
+		res[s0a] = res[s0b];
+		res[s0b] = tmp;
+	}
+
+	// Reset
+	dict = new_dict_i64();
+
+	// Set x and y in the dict
+
+	for i in [0: 64]
+	{
+		let key = "x";
+		if (i < 10) key += "0" + str(i);
+		else        key +=       str(i);
+
+		let bit = (x_in >> i) & 1'i64;
+		set_dict_i64(&dict, key, bit);
+	}
+
+	for i in [0: 64]
+	{
+		let key = "y";
+		if (i < 10) key += "0" + str(i);
+		else        key +=       str(i);
+
+		let bit = (y_in >> i) & 1'i64;
+		set_dict_i64(&dict, key, bit);
+	}
+
+	let has_val = [false; ngates];
+
+	// Lazy brute: just make multiple passes until we can calculate everything.
+	// Would be better to check dependencies in a graph data struct
+	let pass_count = 0;
+	while true
+	{
+		pass_count += 1;
+		let all_have_vals = true;
+		for i in [0: ngates]
+		{
+			if (has_val[i]) continue; // skip if already calculated
+			all_have_vals = false;
+
+			// ^ this does one extra redundant pass at end :(
+
+			// TODO: use arrays instead of dicts.  Lookup IDs in one pass ahead of time
+			let left_val = get_dict_i64(&dict, left[i]);
+			if (left_val < 0) continue;  // left not calculated yet
+
+			let right_val = get_dict_i64(&dict, right[i]);
+			if (right_val < 0) continue;
+
+			let res_val = 0'i64;
+			if op[i] == "AND"
+			{
+				if (left_val == 1 and right_val == 1) res_val = 1;
+			}
+			else if op[i] == "OR"
+			{
+				if (left_val == 1 or right_val == 1) res_val = 1;
+			}
+			else if op[i] == "XOR"
+			{
+				if (left_val != right_val) res_val = 1;
+			}
+			set_dict_i64(&dict, res[i], res_val);
+			has_val[i] = true;
+
+		}
+		if (all_have_vals) break;
+		if (pass_count > 50) break; // idk how else to avoid bad swaps which induce infinite loops
+	}
+	//println("pass_count = ", pass_count);
+	if (pass_count > 50) continue;
+
+	// Combine the z* bits
+	z = 0'i64;
+	for i in [0: 64]
+	{
+		let zkey = "z";
+		if (i < 10) zkey += "0" + str(i);
+		else        zkey +=       str(i);
+
+		let bit = get_dict_i64(&dict, zkey);
+		if (bit < 0) continue;
+
+		z |= (bit << i);
+	}
+	//println("z    = ", z);
+	//println("zexp = ", zexp);
+
+	if (z == zexp or do_not_swap)
+	{
+		// Need break outer in syntran
+		println("z, zexp = ", [z, zexp]);
+		break;
+	}
+
+	} // end swap loop b
+	if (z == zexp or do_not_swap) break;
+	} // end swap loop a
+
+	if z != zexp
+	{
+		println("Error: unexpected result for Z value!");
+		exit(-1);
+	}
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
