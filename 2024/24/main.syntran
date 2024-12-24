@@ -189,7 +189,10 @@ fn part2(): i64
 	right = right[0: ngates];
 	res   = res  [0: ngates];
 
-	// TODO: plan:
+	// ****************
+	//
+	// I do not have an automated solution for part 2 but I got the answer
+	// iteratively through trial and error
 	//
 	// Set some input hard-coded x_in and y_in numbers (up to 45-bit).  Use bit
 	// ops to assign x00-x44 and y00-y44 in the dict.  Try x_in and y_in with
@@ -200,6 +203,22 @@ fn part2(): i64
 	//
 	// If doing multiple test cases, rember to clear reset new_dict_i64 and
 	// reset has_val false
+	//
+	// I think you actually need a few more than 4 test cases.  There are 4
+	// problematic bits, but if you test something like 0b0100 + 0b0000 for bit
+	// 2 for example, you may get a bad swap that works by coincidence but fails
+	// for another case that carries a bit, e.g. 0b0100 + 0b0100
+	//
+	// It takes 2 to 3 minutes for my code to iterate through every possible
+	// single swap to find a fix for a test case, so this was very time
+	// consuming.  I also had to manually add `continue` statements to go past
+	// the first swap and find all the other possible swaps that fix a single
+	// test case
+	//
+	// Initially I thought we shouldn't swap anything starting with a "z" but
+	// that's wrong, so I wasted a lot of time searching for impossible fixes
+	//
+	// ****************
 
 	// My actual input (at least I can know the expected value regardless of if
 	// it's impacted by bad op swap)
@@ -212,6 +231,10 @@ fn part2(): i64
 	y_in = 1'i64;
 
 	// Apply known swaps
+	//
+	// Put these in one-by-one as you fix test cases.  Once you have the IDs
+	// encoded, this will print the identifiers for the final swaps.  You still
+	// have to sort them alphabeticaly by hand afterwards
 	println();
 	let tmp = ""; let s1a = -1; let s1b = -1;
 
@@ -482,7 +505,11 @@ fn main(): i64
 
 	let sum_ = 0'i64;
 
+	// Expect 60714423975686
 	sum_ += part1();
+
+	// Expect "cgh,frt,pmd,sps,tst,z05,z11,z23", but my solution is not
+	// automated
 	sum_ += part2();
 
 	println("Ending AOC syntran main");
