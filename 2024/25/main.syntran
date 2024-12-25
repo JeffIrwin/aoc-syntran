@@ -27,7 +27,7 @@ fn part1(): i64
 
 	// Number of diagrams (keys plus locks)
 	let ndiag = (n + 1) / (ny + 1);
-	println("ndiag = ", ndiag);
+	//println("ndiag = ", ndiag);
 
 	let NCAP = ndiag;
 	let nkey  = 0;
@@ -43,14 +43,11 @@ fn part1(): i64
 		for y in [0: ny]
 		{
 			let str_ = readln(f);
-			println("str_ = ", str_);
+			//println("str_ = ", str_);
 			for x in [0: nx]
 				diag[x,y] = str_[x] == "#";
 		}
-		//println("str_ = ", str_);
-
-		println("diag = ", diag);
-		//exit(0);
+		//println("diag = ", diag);
 
 		if all(diag[:,0])
 		{
@@ -85,12 +82,14 @@ fn main(): i64
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2024/xx");
+	println("Starting AOC syntran main 2024/25");
 
 	let sum_ = 0'i64;
 
+	// Expect 3356
+	//
+	// There is no part 2 for day 25
 	sum_ += part1();
-	//sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
