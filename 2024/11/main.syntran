@@ -106,6 +106,9 @@ fn add_cnt(key: i64, cnt: i64)
 
 fn part2(): i64
 {
+	// I had to cheat by looking at other people's code in the reddit megathread
+	// to figure out part 2
+
 	let sum_ = 0'i64;
 
 	let f = open(filename);

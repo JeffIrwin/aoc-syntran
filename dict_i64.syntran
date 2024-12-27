@@ -1,8 +1,23 @@
 
+// This file includes a single hash map dictionary that maps str keys to i64
+// values.  The primary functions for setting and getting key/value pairs are:
+//
+//     new_dict_i64(): dict_i64  // initialize an empty dictionary
+//     set_dict_i64(dict: &dict_i64, key: str, val: i64)
+//     get_dict_i64(dict: &dict_i64, key: str): i64
+//
+// There are several related functions:
+//
+//     keys_dict_i64(dict: &dict_i64): [str; :]  // return a flat array of all keys
+//     vals_dict_i64(dict: &dict_i64): [i64; :]  // return a flat array of all values
+//     len_dict_i64(dict: &dict_i64): i32        // return the total number of keys
+//     print_lens_dict_i64(dict: &dict_i64)      // print the length of each bucket in the dict
+
+//****************
+
 // Be careful about using very large HASH_MAX_DICT_I64 values (>~10k).  Besides the
 // memory footprint, keys_dict_i64() and vals_dict_i64() make a pass over all
 // buckets, so they can become slow
-
 let HASH_MAX_DICT_I64 = 256;
 //HASH_MAX_DICT_I64 = 1024 * 8;
 
@@ -148,7 +163,6 @@ fn vals_dict_i64(dict: &dict_i64): [i64; :]
 	return vals;
 }
 
-//fn set_dict_i64(dict: &dict_i64, key: str, val: i64): dict_i64
 fn set_dict_i64(dict: &dict_i64, key: str, val: i64)
 {
 	let ib = hash_dict_i64(key); // bucket index
