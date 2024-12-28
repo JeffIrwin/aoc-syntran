@@ -40,7 +40,7 @@ fn get_val_from_bits(var_name: str, dict: &dict_i64): i64
 	return val;
 }
 
-// TODO: left, op, right, and res args should be encapsulated in an adder struct
+// TODO: left, op, right, etc. should be encapsulated in an adder struct
 fn run_adder(
 	x_in: i64, y_in: i64,
 	left : &[str; :],
@@ -115,40 +115,44 @@ fn run_adder(
 
 	// Build `s` with known x and y inputs first
 	//
-	// This could be done in a more general way from the nadj array after build
-	// it
-	for i in [0: NBITS]
-	{
-		let key = "x";
-		if (i < 10) key += "0" + str(i);
-		else        key +=       str(i);
-		//println("key = ", key);
-		let id = get_dict_i64(&ids, key);
-		s[sptr] = id; sptr += 1;
-	}
-	for i in [0: NBITS]
-	{
-		let key = "y";
-		if (i < 10) key += "0" + str(i);
-		else        key +=       str(i);
-		//println("key = ", key);
-		let id = get_dict_i64(&ids, key);
-		s[sptr] = id; sptr += 1;
-	}
-	//println("s = ", s[0: sptr]);
-	//println("ngates = ", ngates);
-	//println("n vars = ", nvars);
+	//// This could be done in a more general way from the nadj array after
+	//// building it
+	//for i in [0: NBITS]
+	//{
+	//	let key = "x";
+	//	if (i < 10) key += "0" + str(i);
+	//	else        key +=       str(i);
+	//	//println("key = ", key);
+	//	let id = get_dict_i64(&ids, key);
+	//	s[sptr] = id; sptr += 1;
+	//}
+	//for i in [0: NBITS]
+	//{
+	//	let key = "y";
+	//	if (i < 10) key += "0" + str(i);
+	//	else        key +=       str(i);
+	//	//println("key = ", key);
+	//	let id = get_dict_i64(&ids, key);
+	//	s[sptr] = id; sptr += 1;
+	//}
+	////println("s = ", s[0: sptr]);
+	////println("ngates = ", ngates);
+	////println("n vars = ", nvars);
 
 	// Build adjacency table
 	let NADJ_CAP = 4;
 	let nadj = [ 0; nvars];
+	let ninc = [ 0; nvars];
 	let  adj = [-1; NADJ_CAP, nvars];
 	for i in [0: ngates]
 	{
 		let il =  left_id[i];
 		let ir = right_id[i];
 
-		adj[ nadj[il], il ] = i; // not res_id!
+		//ninc[i] += 2;
+		ninc[res_id[i]] += 2;
+
+		adj[ nadj[il], il ] = i; // not res_id!  i think this could be refactored to index arrays more cleanly
 		nadj[il] += 1;
 
 		adj[ nadj[ir], ir ] = i;
@@ -156,6 +160,17 @@ fn run_adder(
 	}
 	//println("nadj = ", nadj);
 	//println("adj = ", adj);
+
+	// Build `s` with known x and y inputs first
+	for i in [0: nvars]
+		//if nadj[i] == 0
+		if ninc[i] == 0
+		{
+			s[sptr] = i;
+			//s[sptr] = res_id[i];
+			sptr += 1;
+		}
+	println("s = ", s[0: sptr]);
 
 	let has_val = [false; nvars];
 	for u in s[0: sptr]
@@ -377,10 +392,10 @@ fn part2(): str
 		let y = 0'i64;
 		let z = run_adder(x, y, &left, &op, &right, &res);
 		let zexp = x + y;
-		println("x + y ?= z:  ", [x, y, z, zexp]);
+		//println("x + y ?= z:  ", [x, y, z, zexp]);
 		if z != zexp
 		{
-			println("bad bit ", i);
+			//println("bad bit ", i);
 			bad_bits[nbad] = i;
 			nbad += 1;
 		}
@@ -499,8 +514,8 @@ fn main(): str
 
 	// Expect "cgh,frt,pmd,sps,tst,z05,z11,z23", but my solution is not
 	// automated
-	//let p2 = "";
-	let p2 = part2();
+	let p2 = "";
+	//let p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();
