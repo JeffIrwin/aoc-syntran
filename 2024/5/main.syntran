@@ -362,16 +362,17 @@ fn sort_topo(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
 
 fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:]): [i32; :]
 {
-	// Topological sort
-	let nodes = new_dict_i64();  // dict of node IDs
-	let k = 0'i64;
-	for node in v
-	{
-		let key = str(node);
-		set_dict_i64(&nodes, key, k);
-		k += 1;
-	}
-	//println("nodes = ", keys_dict_i64(&nodes));
+	// Topological sort using tables instead of dicts
+
+	//let nodes = new_dict_i64();  // dict of node IDs
+	//let k = 0'i64;
+	//for node in v
+	//{
+	//	let key = str(node);
+	//	set_dict_i64(&nodes, key, k);
+	//	k += 1;
+	//}
+	////println("nodes = ", keys_dict_i64(&nodes));
 
 	let nv = size(v,0);
 	let NADJ_CAP = nv;
@@ -388,15 +389,22 @@ fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:]): [i32; :]
 	for i in [0: size(rules,1)]
 	{
 		// rules[0,i] is source, rules[1,i] is sink
-
 		let r0 = rules[0,i];
 		let r1 = rules[1,i];
 
-		let i0 = get_dict_i64(&nodes, str(r0));
-		let i1 = get_dict_i64(&nodes, str(r1));
+		//let i0 = get_dict_i64(&nodes, str(r0));
 
-		if (i0 < 0) continue;
-		if (i1 < 0) continue;
+		// Scan the whole node vector instead of doing a dict lookup.  Slightly
+		// faster for this problem's data but it probably doesn't scale in
+		// general
+		let i0 = 0;
+		while (v[i0] != r0 and i0 < nv) i0 += 1;
+		if (i0 >= nv) continue;
+
+		//let i1 = get_dict_i64(&nodes, str(r1));
+		let i1 = 0;
+		while (v[i1] != r1 and i1 < nv) i1 += 1;
+		if (i1 >= nv) continue;
 
 		adj[ nadj[i0], i0 ] = i1;
 		nadj[i0] += 1;
@@ -434,7 +442,8 @@ fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:]): [i32; :]
 		{
 			let m = adj[im, n];
 
-			// Remove edge e from the graph
+			// Remove edge e from the graph.  No need to modify adj/nadj because
+			// we're processing the whole row in this loop
 			ninc[m] -= 1;
 			if ninc[m] == 0
 			{
@@ -754,8 +763,8 @@ fn main(): i64
 	// Expect 5452 + 4598
 	sum_ += part1();
 
-	//sum_ += part2();  // 0.8 s
-	sum_ += part2topo_tab();  // 1.6 s
+	sum_ += part2();  // 0.8 s (qsort with dict compare)
+	//sum_ += part2topo_tab();  // 1.6 s
 	//sum_ += part2topo();  // 6.7 s
 	//sum_ += part2qsort();  // 3.1 s
 

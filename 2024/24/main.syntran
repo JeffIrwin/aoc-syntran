@@ -146,8 +146,14 @@ fn run_adder(
 	res  : &[str; :],
 	): i64
 {
-	// This dict starts fresh on every run
-	let dict = new_dict_i64();
+	//// This dict starts fresh on every run
+	//let dict = new_dict_i64();
+
+	// Map IDs for input and result values
+	let ids = new_dict_i64();
+	let id = 0'i64;
+	let NVALS_CAP = 1024;
+	let vals = [-1; NVALS_CAP];
 
 	// Set x and y in the dict
 
@@ -158,7 +164,9 @@ fn run_adder(
 		else        key +=       str(i);
 
 		let bit = (x_in >> i) & 1'i64;
-		set_dict_i64(&dict, key, bit);
+		//set_dict_i64(&dict, key, bit); // TODO: obsolete
+		vals[id] = bit;
+		set_dict_i64(&ids , key, id); id += 1;
 	}
 
 	for i in [0: 64]
@@ -168,11 +176,36 @@ fn run_adder(
 		else        key +=       str(i);
 
 		let bit = (y_in >> i) & 1'i64;
-		set_dict_i64(&dict, key, bit);
+		//set_dict_i64(&dict, key, bit);
+		vals[id] = bit;
+		set_dict_i64(&ids , key, id); id += 1;
 	}
 
 	let ngates = size(left, 0);
 	let has_val = [false; ngates];
+
+	// Map result IDs
+	//
+	// TODO: almost all of the ID mapping (except for swapped ones) could be
+	// done outside of swap search loop
+	let res_id = [0; ngates];
+	for i in [0: ngates]
+	{
+		res_id[i] = id;
+		set_dict_i64(&ids, res[i], id); id += 1;
+	}
+
+	// Map left and right operand IDs
+	let left_id  = [0; ngates];
+	let right_id = [0; ngates];
+	for i in [0: ngates]
+	{
+		left_id [i] = get_dict_i64(&ids, left [i]);
+		right_id[i] = get_dict_i64(&ids, right[i]);
+	}
+	//println("left_id = ", left_id);
+
+	let z = 0'i64;
 
 	// Lazy brute: just make multiple passes until we can calculate everything.
 	// Would be better to check dependencies in a graph data struct
@@ -188,11 +221,12 @@ fn run_adder(
 
 			// ^ this does one extra redundant pass at end :(
 
-			// TODO: use arrays instead of dicts.  Lookup IDs in one pass ahead of time
-			let left_val = get_dict_i64(&dict, left[i]);
+			//let left_val = get_dict_i64(&dict, left[i]);
+			let left_val = vals[ left_id[i] ];
 			if (left_val < 0) continue;  // left not calculated yet
 
-			let right_val = get_dict_i64(&dict, right[i]);
+			//let right_val = get_dict_i64(&dict, right[i]);
+			let right_val = vals[ right_id[i] ];
 			if (right_val < 0) continue;
 
 			let res_val = 0'i64;
@@ -208,8 +242,19 @@ fn run_adder(
 			{
 				if (left_val != right_val) res_val = 1;
 			}
-			set_dict_i64(&dict, res[i], res_val);
+
+			//set_dict_i64(&dict, res[i], res_val);
+			vals[ res_id[i] ] = res_val;
 			has_val[i] = true;
+
+			let res_name = res[i];
+			if (res_name[0] != "z") continue;
+
+			// Combine the z* bits
+
+			let iz = parse_i32(res_name[1:3]);
+			//z |= (bit << i);
+			z |= (res_val << iz);
 
 		}
 		if (all_have_vals) break;
@@ -223,21 +268,18 @@ fn run_adder(
 	//if (pass_count > 50) continue;  // TODO: ban continue in fn scope (outside of loops)?
 	if (pass_count > 50) return -1'i64;
 
-	// Combine the z* bits
-	let z = 0'i64;
-	for i in [0: 64]
-	{
-		let zkey = "z";
-		if (i < 10) zkey += "0" + str(i);
-		else        zkey +=       str(i);
+	//// Combine the z* bits
+	//for i in [0: 64]
+	//{
+	//	let zkey = "z";
+	//	if (i < 10) zkey += "0" + str(i);
+	//	else        zkey +=       str(i);
+	//	let bit = get_dict_i64(&dict, zkey);
+	//	if (bit < 0) continue;
+	//	z |= (bit << i);
+	//}
 
-		let bit = get_dict_i64(&dict, zkey);
-		if (bit < 0) continue;
-
-		z |= (bit << i);
-	}
 	return z;
-	//return 0'i64;
 }
 
 fn sort_swaps(swaps: [str; :]): [str; :]
@@ -392,9 +434,8 @@ fn part2(): str
 	let z = 0'i64;
 	let tests_passed = true;
 	for s0a in [1: ngates] {
-	//for s0a in [s0a_start: ngates] { // TODO
 
-	//println("swapping ", s0a);
+	println("swapping ", s0a);
 
 	for s0b in [0: s0a]
 	{
@@ -464,7 +505,8 @@ fn main(): str
 
 	// Expect "cgh,frt,pmd,sps,tst,z05,z11,z23", but my solution is not
 	// automated
-	let p2 = part2();
+	//let p2 = "";
+	let p2 = part2(); // TODO
 
 	println("Ending AOC syntran main");
 	println();
