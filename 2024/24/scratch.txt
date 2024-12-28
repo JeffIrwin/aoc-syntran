@@ -57,8 +57,12 @@ cgh,frt,pmd,sps,tff,tst,z05,z23
 
 //**************************
 // submission #3:
-//
 // CORRECT
+//
+swapping 177 74 tst z05 // ***
+swapping 109 24 sps z11 // ***
+swapping 33 20 z23 frt // ***
+swapping 131 101 cgh pmd // ***
 
 cgh,frt,pmd,sps,tst,z05,z11,z23
 

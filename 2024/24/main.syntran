@@ -465,6 +465,9 @@ fn part2(): str
 	// bad bit independently with a single swap.  If they carry into each other
 	// that won't work
 
+	let res_in = res; // backup input
+	let res_id_in = res_id;
+
 	for bad_bit in bad_bits
 	{
 
@@ -491,8 +494,26 @@ fn part2(): str
 
 	//*************************
 
-	let res_in = res; // backup input
-	let res_id_in = res_id;
+	// TODO: don't iterate over every possible pair of results to swap.
+	// Instead, do a BFS back by a small (~4?) number of steps and only try
+	// swapping variables reachable by that search
+	//
+	// But if z** is one of the results to swap, how do we find which other
+	// result to start BFS from?
+
+	//let zkey = "z";
+	//if (bad_bit < 10) zkey += "0" + str(bad_bit);
+	//else              zkey +=       str(bad_bit);
+
+	//// Scan for `root` result index matching bad bit
+	//let root = 0;
+	//while (res[root] != zkey) root += 1;
+
+	//println("res = ", res[root]);
+	////println("res = ", res[ res_id[root] ]);
+	//println("res id = ", res_id[root]);
+
+	//exit(0);
 
 	// Iterate until we find the right pair to swap
 	let z = 0'i64;
