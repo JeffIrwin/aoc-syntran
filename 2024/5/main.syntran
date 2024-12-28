@@ -360,22 +360,16 @@ fn sort_topo(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
 	return l;
 }
 
-fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
+fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:]): [i32; :]
 {
 	// Topological sort
-
-	let nodes        = new_dict_i64();  // dict of node IDs
-	//let num_incoming = new_dict_i64();  // number of incoming edges for each node
-
+	let nodes = new_dict_i64();  // dict of node IDs
 	let k = 0'i64;
 	for node in v
 	{
 		let key = str(node);
-		//set_dict_i64(&nodes, key, 1'i64);
 		set_dict_i64(&nodes, key, k);
 		k += 1;
-
-		//set_dict_i64(&num_incoming, key, 0'i64);
 	}
 	//println("nodes = ", keys_dict_i64(&nodes));
 
@@ -386,13 +380,11 @@ fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
 	// exist in this "update"
 	//
 	// Because topo sort is more concerned with "incoming" edges, this adjacency
-	// table is a bit of an inverse of the usual adj/nadj arrays that I usually
-	// use to represent graphs
+	// table also has an ninc count of incoming edges (as opposed to outgoing
+	// edges nadj)
 	let ninc = [0; nv];
 	let nadj = [0; nv];
-	let  inc = [0; NADJ_CAP, nv];
 	let  adj = [0; NADJ_CAP, nv];
-	//let edges = new_dict_i64();
 	for i in [0: size(rules,1)]
 	{
 		// rules[0,i] is source, rules[1,i] is sink
@@ -403,26 +395,14 @@ fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
 		let i0 = get_dict_i64(&nodes, str(r0));
 		let i1 = get_dict_i64(&nodes, str(r1));
 
-		//let node_key = str(rules[1,i]);
 		if (i0 < 0) continue;
 		if (i1 < 0) continue;
 
-		inc[ ninc[i1], i1 ] = i0;
-		ninc[i1] += 1;
-
 		adj[ nadj[i0], i0 ] = i1;
 		nadj[i0] += 1;
-
-		//let nin = get_dict_i64(&num_incoming, node_key);
-		//nin += 1;
-		//set_dict_i64          (&num_incoming, node_key, nin);
-
-		//let edge_key = str(rules[0,i], "|", rules[1,i]);
-		//set_dict_i64(&edges, edge_key, 1'i64);
-		////println("edge_key = ", edge_key);
+		ninc[i1] += 1;
 	}
 	//println("ninc = ", ninc);
-	//println("inc = ", inc);
 
 	let l = [0; nv]; // empty list that will contain the sorted elements
 	let s = [0; nv]; // set (stack) of all nodes with no incoming edge
@@ -433,9 +413,7 @@ fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
 	{
 		if ninc[i] == 0
 		{
-			//s[sptr] = parse_i32(key);
-			//s[sptr] = v[i];
-			s[sptr] = i; // store indices, not values
+			s[sptr] = i; // store indices in s, not values
 			sptr += 1;
 		}
 	}
@@ -449,41 +427,23 @@ fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
 
 		// Add n (value, not index) to l
 		l[lptr] = v[n];
-		//l[lptr] = n;
 		lptr += 1;
 
 		// For each sink node `m` with an edge e from n to m
 		for im in [0: nadj[n]]
-		//for im in [0: ninc[n]]
-		//for edge in keys_dict_i64(&edges)
 		{
-			//let edge_val = get_dict_i64(&edges, edge);
-			//if (edge_val != 1) continue;
-			//let strs = split_(edge, "|");
-			//let source = strs[0];
-			//if (source != str(n)) continue;
-			//let sink = strs[1];
 			let m = adj[im, n];
 
 			// Remove edge e from the graph
 			ninc[m] -= 1;
-
-			//set_dict_i64(&edges, edge, -1'i64);
-			//let nin = get_dict_i64(&num_incoming, sink);
-			//nin -= 1;
-			//set_dict_i64(&num_incoming, sink, nin);
-
 			if ninc[m] == 0
-			//if nin == 0
 			{
 				// If m has no other incoming edges, insert m into s
 				s[sptr] = m;
-				//s[sptr] = parse_i32(sink);
 				sptr += 1;
 			}
 		}
 	}
-
 	return l;
 }
 
@@ -691,7 +651,7 @@ fn part2topo_tab(): i64
 		if (not ordered)
 		{
 			//println("v = ", v);
-			let s = sort_topo_tab(v, &rules, &rulesd);
+			let s = sort_topo_tab(v, &rules);
 			//println("s = ", s);
 			//println();
 			sum_ += s[nv / 2];
