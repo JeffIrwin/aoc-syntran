@@ -24,7 +24,6 @@ fn part1(): i64
 
 	let f = open(filename);
 	let str_ = readln(f);
-	//while not eof(f)
 	while str_ != ""
 	{
 		// Load initialization
@@ -76,6 +75,8 @@ fn part1(): i64
 	//println("op    = ", op   [0:9]);
 	//println("right = ", right[0:9]);
 	//println("res   = ", res  [0:9]);
+
+	// TODO: extract x and y inputs and then just call run_adder() like part 2
 
 	let has_val = [false; ngates];
 
@@ -146,9 +147,6 @@ fn run_adder(
 	res  : &[str; :],
 	): i64
 {
-	//// This dict starts fresh on every run
-	//let dict = new_dict_i64();
-
 	// Map IDs for input and result values
 	let ids = new_dict_i64();
 	let id = 0'i64;
@@ -164,7 +162,6 @@ fn run_adder(
 		else        key +=       str(i);
 
 		let bit = (x_in >> i) & 1'i64;
-		//set_dict_i64(&dict, key, bit); // TODO: obsolete
 		vals[id] = bit;
 		set_dict_i64(&ids , key, id); id += 1;
 	}
@@ -176,7 +173,6 @@ fn run_adder(
 		else        key +=       str(i);
 
 		let bit = (y_in >> i) & 1'i64;
-		//set_dict_i64(&dict, key, bit);
 		vals[id] = bit;
 		set_dict_i64(&ids , key, id); id += 1;
 	}
@@ -221,11 +217,9 @@ fn run_adder(
 
 			// ^ this does one extra redundant pass at end :(
 
-			//let left_val = get_dict_i64(&dict, left[i]);
 			let left_val = vals[ left_id[i] ];
 			if (left_val < 0) continue;  // left not calculated yet
 
-			//let right_val = get_dict_i64(&dict, right[i]);
 			let right_val = vals[ right_id[i] ];
 			if (right_val < 0) continue;
 
@@ -243,7 +237,6 @@ fn run_adder(
 				if (left_val != right_val) res_val = 1;
 			}
 
-			//set_dict_i64(&dict, res[i], res_val);
 			vals[ res_id[i] ] = res_val;
 			has_val[i] = true;
 
@@ -251,11 +244,8 @@ fn run_adder(
 			if (res_name[0] != "z") continue;
 
 			// Combine the z* bits
-
 			let iz = parse_i32(res_name[1:3]);
-			//z |= (bit << i);
 			z |= (res_val << iz);
-
 		}
 		if (all_have_vals) break;
 
@@ -267,17 +257,6 @@ fn run_adder(
 
 	//if (pass_count > 50) continue;  // TODO: ban continue in fn scope (outside of loops)?
 	if (pass_count > 50) return -1'i64;
-
-	//// Combine the z* bits
-	//for i in [0: 64]
-	//{
-	//	let zkey = "z";
-	//	if (i < 10) zkey += "0" + str(i);
-	//	else        zkey +=       str(i);
-	//	let bit = get_dict_i64(&dict, zkey);
-	//	if (bit < 0) continue;
-	//	z |= (bit << i);
-	//}
 
 	return z;
 }
@@ -321,7 +300,6 @@ fn part2(): str
 
 	let f = open(filename);
 	let str_ = readln(f);
-	//while not eof(f)
 	while str_ != ""
 	{
 		// Load initialization
@@ -427,9 +405,6 @@ fn part2(): str
 
 	let res_in = res; // backup input
 
-	//let s0a_start = 105;
-	//if (bad_bit == 5) s0a_start = 176;
-
 	// Iterate until we find the right pair to swap
 	let z = 0'i64;
 	let tests_passed = true;
@@ -506,7 +481,7 @@ fn main(): str
 	// Expect "cgh,frt,pmd,sps,tst,z05,z11,z23", but my solution is not
 	// automated
 	//let p2 = "";
-	let p2 = part2(); // TODO
+	let p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();
