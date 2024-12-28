@@ -51,16 +51,15 @@ fn get_ids
 		right_id: &[i32; :],
 		res_id  : &[i32; :],
 		nvars   : &i32,
+		nadj    : &[i32; :],
+		ninc    : &[i32; :],
+		 adj    : &[i32; :,:],
 	)
 {
-	// TODO: edit (swap) the outputs of this for part2 without rebuilding from
-	// scratch
-
 	// Map IDs for input and result values
 	let ids = new_dict_i64();
 	let id = 0'i64;
 	let NVALS_CAP = 1024;
-	//let vals = [-1; NVALS_CAP];
 
 	// Set x and y in the dict
 
@@ -70,8 +69,6 @@ fn get_ids
 		if (i < 10) key += "0" + str(i);
 		else        key +=       str(i);
 
-		//let bit = (x_in >> i) & 1'i64;
-		//vals[id] = bit;
 		set_dict_i64(&ids , key, id); id += 1;
 	}
 
@@ -81,8 +78,6 @@ fn get_ids
 		if (i < 10) key += "0" + str(i);
 		else        key +=       str(i);
 
-		//let bit = (y_in >> i) & 1'i64;
-		//vals[id] = bit;
 		set_dict_i64(&ids , key, id); id += 1;
 	}
 
@@ -104,11 +99,33 @@ fn get_ids
 		left_id [i] = get_dict_i64(&ids, left [i]);
 		right_id[i] = get_dict_i64(&ids, right[i]);
 	}
-	println("left_id = ", left_id);
+	//println("left_id = ", left_id);
 
 	nvars = len_dict_i64(&ids);
 
-	// TODO: build adjacency table too.  May be a little harder to swap edit
+	// TODO: build adjacency table too.  May be a little harder to swap edit.
+	// Unless it's not impacted by swaps at all!
+
+	// Build adjacency table
+	let NADJ_CAP = 4;
+	nadj = [ 0; nvars];
+	ninc = [ 0; nvars];
+	adj = [-1; NADJ_CAP, nvars];
+	for i in [0: ngates]
+	{
+		let il =  left_id[i];
+		let ir = right_id[i];
+
+		ninc[res_id[i]] += 2;
+
+		adj[ nadj[il], il ] = i; // not res_id!  i think this could be refactored to index arrays more cleanly
+		nadj[il] += 1;
+
+		adj[ nadj[ir], ir ] = i;
+		nadj[ir] += 1;
+	}
+	//println("nadj = ", nadj);
+	//println("adj = ", adj);
 
 	return;
 }
@@ -116,7 +133,7 @@ fn get_ids
 // TODO: left, op, right, etc. should be encapsulated in an adder struct
 fn run_adder(
 	x_in: i64, y_in: i64,
-	left : &[str; :], // `left` and `right` are (mostly) unused after refactoring
+	left : &[str; :], // `left` and `right` are (mostly) unused since refactoring
 	op   : &[str; :],
 	right: &[str; :],
 	res  : &[str; :],
@@ -124,10 +141,13 @@ fn run_adder(
 	right_id: &[i32; :],
 	res_id  : &[i32; :],
 	nvars   : i32,
+	nadj    : &[i32; :],
+	ninc    : &[i32; :],
+	 adj    : &[i32; :,:],
 	): i64
 {
 	let id = 0'i64;
-	let NVALS_CAP = 1024;
+	let NVALS_CAP = 512;
 	let vals = [-1; NVALS_CAP];
 
 	// Set x and y in vals array
@@ -159,26 +179,6 @@ fn run_adder(
 	let s = [0; nvars]; // stack
 	let sptr = 0;
 
-	// Build adjacency table
-	let NADJ_CAP = 4;
-	let nadj = [ 0; nvars];
-	let ninc = [ 0; nvars];
-	let  adj = [-1; NADJ_CAP, nvars];
-	for i in [0: ngates]
-	{
-		let il =  left_id[i];
-		let ir = right_id[i];
-
-		ninc[res_id[i]] += 2;
-
-		adj[ nadj[il], il ] = i; // not res_id!  i think this could be refactored to index arrays more cleanly
-		nadj[il] += 1;
-
-		adj[ nadj[ir], ir ] = i;
-		nadj[ir] += 1;
-	}
-	//println("nadj = ", nadj);
-	//println("adj = ", adj);
 
 	// Build `s` with known x and y inputs first
 	for i in [0: nvars]
@@ -315,14 +315,19 @@ fn part1(): i64
 	let right_id = [0];
 	let res_id   = [0];
 	let nvars    =  0 ;
+	let nadj     = [0];
+	let ninc     = [0];
+	let  adj     = [0; 1,1];
 	get_ids(&left, &op, &right, &res,
-		&left_id, &right_id, &res_id, &nvars
+		&left_id, &right_id, &res_id, &nvars,
+		&nadj, &ninc, &adj,
 	);
 
 	let z = run_adder(
 		x_in, y_in,
 		&left, &op, &right, &res,
 		&left_id, &right_id, &res_id, nvars,
+		&nadj, &ninc, &adj,
 	);
 
 	sum_ = z;
@@ -417,14 +422,13 @@ fn part2(): str
 	let right_id = [0];
 	let res_id   = [0];
 	let nvars    =  0 ;
+	let nadj     = [0];
+	let ninc     = [0];
+	let  adj     = [0; 1,1];
 	get_ids(&left, &op, &right, &res,
-		&left_id, &right_id, &res_id, &nvars);
-
-	//let z = run_adder(
-	//	x_in, y_in,
-	//	&left, &op, &right, &res,
-	//	&left_id, &right_id, &res_id, nvars,
-	//	);
+		&left_id, &right_id, &res_id, &nvars,
+		&nadj, &ninc, &adj,
+	);
 
 	// Find the bad bits that don't add correctly
 	let bad_bits = [-1; NSWAPS];
@@ -434,11 +438,11 @@ fn part2(): str
 		let x = 1'i64 << i;
 		let y = 0'i64;
 
-		//let z = run_adder(x, y, &left, &op, &right, &res);
 		let z = run_adder(
 			x, y,
 			&left, &op, &right, &res,
 			&left_id, &right_id, &res_id, nvars,
+			&nadj, &ninc, &adj,
 		);
 
 		let zexp = x + y;
@@ -504,7 +508,9 @@ fn part2(): str
 		res_id = res_id_in;
 
 		// Perform swap
+
 		//println("swapping ", s0a, " ", s0b, " ", res[s0a], " ", res[s0b]);
+		//println("swap ids ", [res_id[s0a], res_id[s0b]]);
 
 		let tmp = res[s0a];
 		res[s0a] = res[s0b];
@@ -521,11 +527,11 @@ fn part2(): str
 			let x = test_cases[0,i];
 			let y = test_cases[1,i];
 
-			//z = run_adder(x, y, &left, &op, &right, &res);
 			let z = run_adder(
 				x, y,
 				&left, &op, &right, &res,
 				&left_id, &right_id, &res_id, nvars,
+				&nadj, &ninc, &adj,
 			);
 
 			let zexp = x + y;
