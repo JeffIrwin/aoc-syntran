@@ -360,6 +360,133 @@ fn sort_topo(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
 	return l;
 }
 
+fn sort_topo_tab(v: [i32; :], rules: &[i32; :,:], rulesd: &dict_i64): [i32; :]
+{
+	// Topological sort
+
+	let nodes        = new_dict_i64();  // dict of node IDs
+	//let num_incoming = new_dict_i64();  // number of incoming edges for each node
+
+	let k = 0'i64;
+	for node in v
+	{
+		let key = str(node);
+		//set_dict_i64(&nodes, key, 1'i64);
+		set_dict_i64(&nodes, key, k);
+		k += 1;
+
+		//set_dict_i64(&num_incoming, key, 0'i64);
+	}
+	//println("nodes = ", keys_dict_i64(&nodes));
+
+	let nv = size(v,0);
+	let NADJ_CAP = nv;
+
+	// Iterate over all rules and save only the relevant edges with nodes that
+	// exist in this "update"
+	//
+	// Because topo sort is more concerned with "incoming" edges, this adjacency
+	// table is a bit of an inverse of the usual adj/nadj arrays that I usually
+	// use to represent graphs
+	let ninc = [0; nv];
+	let nadj = [0; nv];
+	let  inc = [0; NADJ_CAP, nv];
+	let  adj = [0; NADJ_CAP, nv];
+	//let edges = new_dict_i64();
+	for i in [0: size(rules,1)]
+	{
+		// rules[0,i] is source, rules[1,i] is sink
+
+		let r0 = rules[0,i];
+		let r1 = rules[1,i];
+
+		let i0 = get_dict_i64(&nodes, str(r0));
+		let i1 = get_dict_i64(&nodes, str(r1));
+
+		//let node_key = str(rules[1,i]);
+		if (i0 < 0) continue;
+		if (i1 < 0) continue;
+
+		inc[ ninc[i1], i1 ] = i0;
+		ninc[i1] += 1;
+
+		adj[ nadj[i0], i0 ] = i1;
+		nadj[i0] += 1;
+
+		//let nin = get_dict_i64(&num_incoming, node_key);
+		//nin += 1;
+		//set_dict_i64          (&num_incoming, node_key, nin);
+
+		//let edge_key = str(rules[0,i], "|", rules[1,i]);
+		//set_dict_i64(&edges, edge_key, 1'i64);
+		////println("edge_key = ", edge_key);
+	}
+	//println("ninc = ", ninc);
+	//println("inc = ", inc);
+
+	let l = [0; nv]; // empty list that will contain the sorted elements
+	let s = [0; nv]; // set (stack) of all nodes with no incoming edge
+	let sptr = 0; let lptr = 0;
+
+	// Build s
+	for i in [0: nv]
+	{
+		if ninc[i] == 0
+		{
+			//s[sptr] = parse_i32(key);
+			//s[sptr] = v[i];
+			s[sptr] = i; // store indices, not values
+			sptr += 1;
+		}
+	}
+	//println("s = ", s[0: sptr]);
+
+	while sptr > 0
+	{
+		// Pop node n from s
+		sptr -= 1;
+		let n = s[sptr];
+
+		// Add n (value, not index) to l
+		l[lptr] = v[n];
+		//l[lptr] = n;
+		lptr += 1;
+
+		// For each sink node `m` with an edge e from n to m
+		for im in [0: nadj[n]]
+		//for im in [0: ninc[n]]
+		//for edge in keys_dict_i64(&edges)
+		{
+			//let edge_val = get_dict_i64(&edges, edge);
+			//if (edge_val != 1) continue;
+			//let strs = split_(edge, "|");
+			//let source = strs[0];
+			//if (source != str(n)) continue;
+			//let sink = strs[1];
+			let m = adj[im, n];
+
+			// Remove edge e from the graph
+			ninc[m] -= 1;
+
+			//set_dict_i64(&edges, edge, -1'i64);
+			//let nin = get_dict_i64(&num_incoming, sink);
+			//nin -= 1;
+			//set_dict_i64(&num_incoming, sink, nin);
+
+			if ninc[m] == 0
+			//if nin == 0
+			{
+				// If m has no other incoming edges, insert m into s
+				s[sptr] = m;
+				//s[sptr] = parse_i32(sink);
+				sptr += 1;
+			}
+		}
+	}
+
+	return l;
+}
+
 // Quicksort version takes ~3.1 s off laptop charger
 fn part2qsort(): i64
 {
@@ -489,10 +616,82 @@ fn part2topo(): i64
 		if (not ordered)
 		{
 			//println("v = ", v);
-
-			//let s = sort_rule(v, rules);
 			let s = sort_topo(v, &rules, &rulesd);
+			//println("s = ", s);
+			//println();
+			sum_ += s[nv / 2];
+		}
 
+		str_ = readln(f);
+	}
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+fn part2topo_tab(): i64
+{
+	let sum_ = 0'i64;
+
+	// Count the number of ordering rules
+	let nrules = 0;
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f) and str_ != ""
+	{
+		//println("str_ = ", str_);
+		nrules += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("nrules = ", nrules);
+
+	let rules = [0; 2, nrules];
+	let rulesd = new_dict_i64();
+	f = open(filename);
+	for i in [0: nrules]
+	{
+		str_ = readln(f);
+		rules[:, i] = parse_i32_delim(str_, "|");
+
+		// Put the rule in a dictionary, in the input format with "|" as a
+		// delimiter
+		set_dict_i64(&rulesd, str_, 1'i64);
+	}
+	//println("rules = ", rules);
+	//println("keys = ", keys_dict_i64(&rulesd));
+
+	// Skip blank line
+	str_ = readln(f);
+
+	str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let v = parse_i32_delim(str_, ",");
+		let nv = size(v, 0);
+		//println("v = ", v);
+
+		// Check if each pair of adjacent numbers in "update" vector v is in the
+		// correct order
+		let ordered = true;
+		for i in [0: nv - 1]
+		{
+			// Is v[i] < v[i+1] ? according to given ordering rules, not the usual `<`
+			ordered = true;
+			let va = v[i];
+			let vb = v[i+1];
+
+			//ordered = is_le_rule(va, vb, rules);
+			ordered = is_le_dict(va, vb, &rulesd);
+
+			if (not ordered) break;
+		}
+		if (not ordered)
+		{
+			//println("v = ", v);
+			let s = sort_topo_tab(v, &rules, &rulesd);
 			//println("s = ", s);
 			//println();
 			sum_ += s[nv / 2];
@@ -568,11 +767,7 @@ fn part2(): i64
 		if (not ordered)
 		{
 			//println("v = ", v);
-
-			//let s = sort_rule(v, rules);
-			//let s = sort_topo(v, &rules, &rulesd);
 			let s = qsort_dict(v, &rulesd);
-
 			//println("s = ", s);
 			//println();
 			sum_ += s[nv / 2];
@@ -599,7 +794,8 @@ fn main(): i64
 	// Expect 5452 + 4598
 	sum_ += part1();
 
-	sum_ += part2();  // 0.8 s
+	//sum_ += part2();  // 0.8 s
+	sum_ += part2topo_tab();  // 1.6 s
 	//sum_ += part2topo();  // 6.7 s
 	//sum_ += part2qsort();  // 3.1 s
 
