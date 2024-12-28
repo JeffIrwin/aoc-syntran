@@ -16,6 +16,8 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
+// TODO: z values have one more bit than x and y values and my code is a mess in
+// handling this difference
 let NBITS = 46;
 
 fn get_val_from_bits(var_name: str, dict: &dict_i64): i64
@@ -78,7 +80,6 @@ fn run_adder(
 	}
 
 	let ngates = size(left, 0);
-	//let has_val = [false; ngates];
 
 	// Map result IDs
 	//
@@ -108,7 +109,8 @@ fn run_adder(
 
 	// No need to build `l` like in day 5.  We just evaluate the node
 	// immediately instead of building a sorted list and evaluating later
-	let s = [0; ngates]; // stack
+	let nvars = len_dict_i64(&ids);
+	let s = [0; nvars]; // stack
 	let sptr = 0;
 
 	// Build `s` with known x and y inputs first
@@ -133,12 +135,9 @@ fn run_adder(
 		let id = get_dict_i64(&ids, key);
 		s[sptr] = id; sptr += 1;
 	}
-	println("s = ", s[0: sptr]);
-
-	let nvars = len_dict_i64(&ids);
-
-	println("ngates = ", ngates);
-	println("n vars = ", nvars);
+	//println("s = ", s[0: sptr]);
+	//println("ngates = ", ngates);
+	//println("n vars = ", nvars);
 
 	// Build adjacency table
 	let NADJ_CAP = 4;
@@ -148,15 +147,14 @@ fn run_adder(
 	{
 		let il =  left_id[i];
 		let ir = right_id[i];
-		let io =   res_id[i]; // "out"
 
-		adj[ nadj[il], il ] = i;//io;
+		adj[ nadj[il], il ] = i; // not res_id!
 		nadj[il] += 1;
 
-		adj[ nadj[ir], ir ] = i;//io;
+		adj[ nadj[ir], ir ] = i;
 		nadj[ir] += 1;
 	}
-	println("nadj = ", nadj);
+	//println("nadj = ", nadj);
 	//println("adj = ", adj);
 
 	let has_val = [false; nvars];
@@ -174,34 +172,20 @@ fn run_adder(
 		for im in [0: nadj[n]]
 		{
 			let m = adj[im, n];
-
-			println();
-			println("m = ", m);
-
-			//if (has_val[m]) continue;
 			if (has_val[ res_id[m] ]) continue;
 
-			println("res name 1 = ", res[m]);
-			//println("res name 2 = ", res[ res_id[m] ]);
-
-			// "Remove edge e from the graph"
+			// "Remove edge e from the graph" (nothing to do today, unlike day 5)
 
 			let il =  left_id[m];
 			let ir = right_id[m];
-			println("il, ir = ", [il, ir]);
 			if has_val[il] and has_val[ir]
 			{
-				println("has both vals");
-
 				// If m has no other incoming edges, insert m into s
 				s[sptr] = res_id[m]; sptr += 1;
-				//s[sptr] = m; sptr += 1;
 
 				// Calculate value
-				let left_val  = vals[  left_id[m] ];
-				let right_val = vals[ right_id[m] ];
-				println("lv, rv = ", [left_val, right_val]);
-
+				let left_val  = vals[il];
+				let right_val = vals[ir];
 				let res_val = 0'i64;
 				if op[m] == "AND"
 				{
@@ -215,18 +199,11 @@ fn run_adder(
 				{
 					if (left_val != right_val) res_val = 1;
 				}
-
-				//vals[ m ] = res_val;
 				vals[ res_id[m] ] = res_val;
-
-				//has_val[m] = true;
 				has_val[ res_id[m] ] = true;
 
 				let res_name = res[m];
-
 				if (res_name[0] != "z") continue;
-
-				println("res_val = ", res_val);
 
 				// Combine the z* bits
 				let iz = parse_i32(res_name[1:3]);
@@ -234,68 +211,6 @@ fn run_adder(
 			}
 		}
 	}
-	return z;
-
-	//*******************
-	// TODO: dead code
-
-	// Lazy brute: just make multiple passes until we can calculate everything.
-	// Would be better to check dependencies in a graph data struct
-	let pass_count = 0;
-	let all_have_vals = true;
-	while true
-	{
-		pass_count += 1;
-		all_have_vals = true;
-		for i in [0: ngates]
-		{
-			if (has_val[i]) continue; // skip if already calculated
-			all_have_vals = false;
-
-			// ^ this does one extra redundant pass at end :(
-
-			let left_val = vals[ left_id[i] ];
-			if (left_val < 0) continue;  // left not calculated yet
-
-			let right_val = vals[ right_id[i] ];
-			if (right_val < 0) continue;
-
-			let res_val = 0'i64;
-			if op[i] == "AND"
-			{
-				if (left_val == 1 and right_val == 1) res_val = 1;
-			}
-			else if op[i] == "OR"
-			{
-				if (left_val == 1 or right_val == 1) res_val = 1;
-			}
-			else if op[i] == "XOR"
-			{
-				if (left_val != right_val) res_val = 1;
-			}
-
-			vals[ res_id[i] ] = res_val;
-			has_val[i] = true;
-
-			let res_name = res[i];
-			if (res_name[0] != "z") continue;
-
-			// Combine the z* bits
-			let iz = parse_i32(res_name[1:3]);
-			z |= (res_val << iz);
-		}
-		if (all_have_vals) break;
-
-		// Easy way to avoid bad swaps which induce infinite loops.  With 45 bit
-		// numbers, we should never require much more than 45 iterations
-		if (pass_count > NBITS+2) break; 
-	}
-	//println("pass_count = ", pass_count);
-
-	//if (pass_count > NBITS+1) continue;  // TODO: ban continue in fn scope (outside of loops)?
-	//if (pass_count > NBITS+2) return -1'i64;
-	if (not all_have_vals) return -1'i64;
-
 	return z;
 }
 
@@ -400,13 +315,7 @@ fn sort_swaps(swaps: [str; :]): [str; :]
 fn part2(): str
 {
 	let sum_ = 0'i64;
-
 	let dict = new_dict_i64();
-
-	//let test = ["z05", "tst", "z11", "sps", "frt", "z23", "pmd", "cgh"];
-	//test = sort_swaps(test);
-	//println("test = ", test);
-	//exit(0);
 
 	let f = open(filename);
 	let str_ = readln(f);
@@ -462,16 +371,16 @@ fn part2(): str
 	// Find the bad bits that don't add correctly
 	let bad_bits = [-1; NSWAPS];
 	let nbad = 0;
-	for i in [0: NBITS]
+	for i in [0: 45] // not over-valued NBITS
 	{
 		let x = 1'i64 << i;
 		let y = 0'i64;
 		let z = run_adder(x, y, &left, &op, &right, &res);
 		let zexp = x + y;
-		//println("x + y ?= z:  ", [x, y, z, zexp]);
+		println("x + y ?= z:  ", [x, y, z, zexp]);
 		if z != zexp
 		{
-			//println("bad bit ", i);
+			println("bad bit ", i);
 			bad_bits[nbad] = i;
 			nbad += 1;
 		}
@@ -590,8 +499,8 @@ fn main(): str
 
 	// Expect "cgh,frt,pmd,sps,tst,z05,z11,z23", but my solution is not
 	// automated
-	let p2 = "";
-	//let p2 = part2();
+	//let p2 = "";
+	let p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();
