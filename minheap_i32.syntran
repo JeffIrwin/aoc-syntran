@@ -19,13 +19,6 @@
 // Besides pushing and popping, binary trees can efficiently offer other
 // operations, e.g. pushing and popping in one step.  These are not implemented
 // here
-//
-// TODO: use this in one of the AOC Dijkstra problems.  It might not be useful
-// as a heap of scalar i32 values.  Instead, I might need to copy and modify
-// this to make a heap of vectors in a rank-2 array, where rank-1 vectors are
-// pushed and popped, and element-0 of each vector is used for the `<` or `<=`
-// ordering comparisons.  Dijkstra typically needs a position or an index, not
-// just an ordered "distance" scalar
 
 //****************
 
@@ -60,7 +53,7 @@ fn push_minheap_i32(mh: &minheap_i32, val: i32)
 		else
 			mh.cap *= 2;
 		let tmp = mh.vals;
-		mh.vals = [0'i64; mh.cap];
+		mh.vals = [0'i32; mh.cap];
 		for i in [0: mh.len]
 			mh.vals[i] = tmp[i];
 	}

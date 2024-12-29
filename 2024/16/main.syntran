@@ -1,5 +1,6 @@
 
 #include("../../utils-2024.syntran");
+#include("../../minheap_vec_i32.syntran");
 
 //==============================================================================
 
@@ -49,7 +50,7 @@ fn sort_queue()
 {
 	// Quick sort
 
-	//println("starting qsort()");
+	println("starting qsort()");
 	////println("queue = ", queue);
 
 	let l = queue_beg;
@@ -421,27 +422,31 @@ fn part1(): i64
 	//println("adj = ", adj);
 	//println("w = ", w);
 
-	// Dijkstra's algorithm with bad O(n) pop_() linear scan
+	// Dijkstra's algorithm with a proper minheap
 	let DIST_INFTY = 2_000_000_000;
 	let dist = [DIST_INFTY; njunc];
 	let visited = [false  ; njunc];
+
+	println("starting Dijkstra");
 
 	// `prev` is only needed to backtrack the whole path. we don't need it to
 	// get the optimal score/dist
 
 	// Initialize source vertex to 0 distance
 	dist[start_id] = 0;
-	push_([0, start_id]);
+	let q = new_minheap_vec_i32();
+	push_minheap_vec_i32(&q, [0, start_id]);
 
 	let dist_end = DIST_INFTY;
 	let dist_progress = dist_end + 1;
-	while queue_beg < queue_end
+	while q.len > 0 // TODO: make an is_empty_minheap*() fn
 	{
-		let u = pop_();
+		let u = pop_minheap_vec_i32(&q);
 
 		// unpack from array
 		let dist0 = u[0];
 		let id0   = u[1];
+		//println("dist0 = ", dist0);
 
 		if id0 == end_id_east or id0 == end_id_north
 			dist_end = min(dist_end, dist0);
@@ -462,7 +467,7 @@ fn part1(): i64
 			if alt < dist[v]
 			{
 				dist[v] = alt;
-				push_([alt, v]);
+				push_minheap_vec_i32(&q, [alt, v]);
 			}
 		}
 	}
@@ -964,7 +969,7 @@ fn main(): i64
 	// Expect 73432 + 496
 
 	sum_ += part1();
-	sum_ += part2();
+	//sum_ += part2(); // TODO
 
 	println("Ending AOC syntran main");
 	println();

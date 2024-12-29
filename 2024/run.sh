@@ -18,8 +18,8 @@ for dir in ${dirs[@]} ; do
 	main=main.syntran
 	grep 'Expect' "$main" | tr -d '\t'
 
-	#time syntran "$main"
-	syntran "$main"
+	time syntran "$main"
+	#syntran "$main"
 
 	echo
 	popd >/dev/null
