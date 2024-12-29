@@ -26,7 +26,7 @@ let DIRS =
 
 //==============================================================================
 
-fn get_visited(g: &[str; :,:], xin: i32, yin: i32): [bool; :,:]
+fn get_visited(g: &[str; :,:], xin: i32, yin: i32): [i32; :,:]
 {
 	let x = xin;
 	let y = yin;
@@ -34,12 +34,21 @@ fn get_visited(g: &[str; :,:], xin: i32, yin: i32): [bool; :,:]
 	let nx = size(g, 0);
 	let ny = size(g, 1);
 
+	let loc = [-1; 2, nx*ny];
+	let nloc = 0;
+
 	let visited = [false; nx, ny];
 	let inside = true;
 	let id = 0;
 	while true
 	{
+		if not visited[x,y]
+		{
+			loc[:, nloc] = [x, y];
+			nloc += 1;
+		}
 		visited[x, y] = true;
+
 		let x0 = x;
 		let y0 = y;
 
@@ -55,7 +64,8 @@ fn get_visited(g: &[str; :,:], xin: i32, yin: i32): [bool; :,:]
 			id = (id + 1) % 4;
 		}
 	}
-	return visited;
+	loc = loc[:, 0: nloc]; // trim
+	return loc;
 }
 
 fn part1(): i64
@@ -95,8 +105,8 @@ fn part1(): i64
 	//println("g = ", g);
 	//println("guard = ", [guardx, guardy]);
 
-	let visited = get_visited(&g, guardx, guardy);
-	sum_ = count(visited);
+	let loc = get_visited(&g, guardx, guardy);
+	sum_ = size(loc, 1);
 
 	println("part 1 = ", sum_);
 	return sum_;
@@ -142,9 +152,7 @@ fn part2(): i64
 	// Get visited locations without any extra obstructions first.  These are
 	// the only locations where placing an extra obstruction will make a
 	// difference
-	let v0 = get_visited(&g, guardx, guardy);
-	//let nv0 = count(v0);
-	//let obs = [-1; 2, nv0];
+	let loc = get_visited(&g, guardx, guardy);
 
 	// Iterate over all possible obstruction locations
 	//
@@ -154,11 +162,10 @@ fn part2(): i64
 	// also place obstructions on the path in order, and then remember the state
 	// just before hitting it to save some work
 	//
-	for ox in [0: nx] {
-	//println("ox = ", ox);
-	for oy in [0: ny]
+	for iloc in [0: size(loc, 1)]
 	{
-		if (not v0[ox, oy]) continue;
+		let ox = loc[0, iloc];
+		let oy = loc[1, iloc];
 
 		//println("oy = ", oy);
 
@@ -192,7 +199,7 @@ fn part2(): i64
 			}
 		}
 		if (looping) sum_ += 1;
-	}}
+	}
 
 	println("part 2 = ", sum_);
 	return sum_;
