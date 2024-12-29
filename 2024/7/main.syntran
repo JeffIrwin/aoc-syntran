@@ -20,8 +20,7 @@ fn base3(a: i32): [i32; :]
 	// Convert `a` to base 3.  Max 12 (base 3) digits allowed.  This is ok for
 	// the value of nvmax
 	//
-	// TODO: is this worth generalizing and/or moving to utils?  Does this work
-	// for negatives?
+	// Now generalize in utils
 	let res = [0'i32; 12];
 	for i in [0: 12]
 	{
@@ -92,63 +91,43 @@ fn part2(): i64
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		//println("k = ", k);
 		k += 1;
-		//println();
 		//println("str_ = ", str_);
 
 		let strs = split_(str_, ":");
 
 		let ans = parse_i64(strs[0]);
 		let v = parse_i64_delim(strs[1], " ");
-		//println("ans = ", ans);
-		//println("v = ", v);
 
 		let nv = i32(size(v, 0));
 		nvmax = max(nvmax, nv);
 
-		//println("nv = ", nv);
-
 		let nop = nv - 1;  // one less operator than value
 		let op = [0; nop];
-
-		//let idig = 0;  // digit index
 		let idig = -1;  // digit index
-
-		//println("op = ", op);
 
 		// Cache results in this array until each op digit rolls over.  On most
 		// iterations (exactly 2/3), only the last operator is different
 		let results = [v[0]; nv];
 
-		//let k = 0;
 		while true
 		{
 			//println("op = ", op);
 			//println("results = ", results);
 
-			//let res = 0;
-			//let res = v[0];
-
 			let j0 = 1;
 			if (idig >= 0) j0 = nop - idig;
-
 			let res = results[j0 - 1];
-			//let res = results[nop - idig - 1];
-			//let res = results[nop - idig];
 
 			for j in [j0: nv]
-			//for j in [nop - idig: nv]
-			//for j in [1: nv]
 			{
-				//println("j = ", j);
 				let vb = v[j];
 
-				//let op_bit = op[nop - j];
+				let op_bit = op[nop - j];
 
-				if (op[nop-j] == 0)
+				if (op_bit == 0)
 					res += vb;
-				else if (op[nop-j] == 1)
+				else if (op_bit == 1)
 					res *= vb;
 				else
 				{
@@ -156,11 +135,6 @@ fn part2(): i64
 					res = parse_i64(str(res) + str(vb));
 				}
 				results[j] = res;
-
-				//// Don't continue if we've already overshot.  No significant
-				//// perf boost
-				//if res > ans
-				//	break;
 			}
 
 			if res == ans
@@ -171,8 +145,8 @@ fn part2(): i64
 			}
 
 			// Increment op vec as if it's a base-3 big num with digit 0 as the
-			// least significant digit
-
+			// least significant digit.  You could reverse the digits but it
+			// seemed natural to do it this way, with a lot af `x - idig` above
 			idig = 0;
 			while op[idig] == 2
 			{
@@ -182,126 +156,6 @@ fn part2(): i64
 			if (idig >= nop) break;
 			op[0: idig] = 0;
 			op[idig] += 1;
-			//if op[idig] < 2
-			//{
-			//	op[idig] += 1;
-			//}
-			//else
-			//{
-			//	op[idig] = 0;
-			//	idig += 1;
-			//	op[idig] += 1;
-			//	idig = 0;
-			//}
-
-			//if (k >= 30) break; // TODO
-			//k += 1;
-
-			//if all(op == 2)
-			//	break;
-		}
-		//println("k = ", k);
-
-		//if (k == 8) exit(0);
-
-		//for i in [0: 3 ** (nv - 1)] // permutations
-		//{
-		//	let i3 = base3(i);
-		//	let res = v[0];
-		//	for j in [1: nv]
-		//	{
-		//		//println("j = ", j);
-		//		let vb = v[j];
-		//		let op_bit = i3[j-1]; // actually a trit, not a bit, but yolo
-		//		if (op_bit == 0)
-		//			res += vb;
-		//		else if (op_bit == 1)
-		//			res *= vb;
-		//		else
-		//		{
-		//			// concat (in base ten)
-		//			res = parse_i64(str(res) + str(vb));
-		//		}
-		//		//// Don't continue if we've already overshot.  No significant
-		//		//// perf boost
-		//		//if res > ans
-		//		//	break;
-		//		//println("res = ", res);
-		//	}
-		//	if res == ans
-		//	{
-		//		//println("expected ans = ", ans);
-		//		sum_ += ans;
-		//		break;
-		//	}
-		//}
-
-		//println();
-		str_ = readln(f);
-	}
-	close(f);
-	//println("nvmax = ", nvmax);
-
-	println("part 2 = ", sum_);
-	return sum_;
-}
-
-fn part2old(): i64
-{
-	let sum_ = 0'i64;
-
-	let nvmax = 0'i32;
-	let k = 0; // debug progress only
-	let f = open(filename);
-	let str_ = readln(f);
-	while not eof(f)
-	{
-		//println("k = ", k);
-		k += 1;
-		//println("str_ = ", str_);
-
-		let strs = split_(str_, ":");
-
-		let ans = parse_i64(strs[0]);
-		let v = parse_i64_delim(strs[1], " ");
-		//println("ans = ", ans);
-		//println("v = ", v);
-
-		let nv = i32(size(v, 0));
-		nvmax = max(nvmax, nv);
-
-		for i in [0: 3 ** (nv - 1)] // permutations
-		{
-			let i3 = base3(i);
-			let res = v[0];
-			for j in [1: nv]
-			{
-				//println("j = ", j);
-				let vb = v[j];
-				let op_bit = i3[j-1]; // actually a trit, not a bit, but yolo
-				if (op_bit == 0)
-					res += vb;
-				else if (op_bit == 1)
-					res *= vb;
-				else
-				{
-					// concat (in base ten)
-					res = parse_i64(str(res) + str(vb));
-				}
-
-				//// Don't continue if we've already overshot.  No significant
-				//// perf boost
-				//if res > ans
-				//	break;
-
-				//println("res = ", res);
-			}
-			if res == ans
-			{
-				//println("expected ans = ", ans);
-				sum_ += ans;
-				break;
-			}
 		}
 		//println();
 		str_ = readln(f);
