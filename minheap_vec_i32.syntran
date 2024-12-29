@@ -19,6 +19,13 @@
 // Besides pushing and popping, binary trees can efficiently offer other
 // operations, e.g. pushing and popping in one step.  These are not implemented
 // here
+//
+// TODO: it would probably be a little more efficient to pass around an index
+// array instead of swapping entire rows of values.  But for Dijkstra's
+// algorithm, the main application of minheaps (in my limited experience), the
+// state is usually only a vector of size ~5 in the worst case, so it's not that
+// expensive, and it was very easy to generalize the scalar minheap by copying
+// and modifying
 
 //****************
 

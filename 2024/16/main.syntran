@@ -31,165 +31,6 @@ let NORTH = 1;
 let WEST  = 2;
 let SOUTH = 3;
 
-// Number of state variables.  State contains:
-//
-//     0. score, aka distance
-//     1. node/junction ID (includes direction)
-//
-let NSTATE = 2;
-
-// Queue data structure.  I don't have pass-by-reference but I do have
-// pass-by-global-variable :)
-let QUEUE_CAP = 2 * 1024 * 1024;
-let queue = [-1; NSTATE, QUEUE_CAP];
-let queue_beg  = 0;
-let queue_end  = 0;
-let queue_end0 = 0;
-
-fn sort_queue()
-{
-	// Quick sort
-
-	//println("starting qsort()");
-	////println("queue = ", queue);
-
-	let l = queue_beg;
-	let h = queue_end - 1;
-
-	if (l < h)
-	{
-		let stack = [0; h - l + 1];
-
-		let top = -1;
-
-		top += 1;
-		stack[top] = l;
-
-		top += 1;
-		stack[top] = h;
-
-		while top >= 0
-		{
-			h = stack[top];
-			top -= 1;
-
-			l = stack[top];
-			top -= 1;
-
-			// TODO: use median-of-3 pivot like later day(s)
-			let x = queue[0,h];
-
-			let i = l - 1;
-			for j in [l: h]
-				if queue[0,j] <= x
-				{
-					i += 1;
-					for k in [0: NSTATE]
-					{
-						// TODO: slice instead of loop
-						let tmp     = queue[k, i];
-						queue[k, i] = queue[k, j];
-						queue[k, j] = tmp;
-					}
-				}
-			for k in [0: NSTATE]
-			{
-				let tmp       = queue[k, i+1];
-				queue[k, i+1] = queue[k, h];
-				queue[k, h] = tmp;
-			}
-
-			let p = i + 1;
-
-			if p - 1 > l
-			{
-				top += 1;
-				stack[top] = l;
-			
-				top += 1;
-				stack[top] = p - 1;
-			}
-
-			if p + 1 < h
-			{
-				top += 1;
-				stack[top] = p + 1;
-
-				top += 1;
-				stack[top] = h;
-			}
-		}
-	}
-	//println("queue = ", queue);
-
-	// This could also prune popped elements entirely to avoid QUEUE_CAP issues
-	while queue[0, queue_beg] < 0 and queue_beg < queue_end
-		queue_beg += 1;
-
-	// After sorting, new unsorted elements will be pushed onto the queue after
-	// this position
-	queue_end0 = queue_end;
-	return;
-}
-
-let push_count = 0;
-fn push_(v: [i32; :])
-{
-	//println("pushing ", v);
-	if queue_end >= QUEUE_CAP
-	{
-		println("Error: QUEUE_CAP overflow!");
-		exit(-1);
-	}
-	queue[:, queue_end] = v;
-	queue_end += 1;
-
-	// Sort the queue periodically for perf.  This is a poor man's priority
-	// queue / min heap
-	if push_count % 3000 == 0
-	//if push_count % 500 == 0
-		sort_queue();
-
-	push_count += 1;
-	return;
-}
-
-fn pop_(): [i32; :]
-{
-	// Linear scan because I'm not implementing a min-heap queue :(
-
-	// queue_beg is guaranteed to be in the queue (i think)
-	let i = queue_beg;
-	let imin = i;
-	let min_ = queue[0,i];
-
-	// Scan only the unsorted part of the queue
-	let x = [-1; NSTATE];
-	i = queue_end0;
-	while i < queue_end
-	{
-		if queue[0,i] >= 0
-		{
-			if queue[0,i] < min_
-			{
-				min_ = queue[0,i];
-				imin = i;
-			}
-		}
-		i += 1;
-	}
-	x = queue[:, imin];
-
-	queue[0, imin] = -1;  // mark popped element as out of queue
-
-	// When queue[0,:] happens to get popped, increment it to the next element
-	// still in queue
-	while queue[0, queue_beg] < 0 and queue_beg < queue_end
-		queue_beg += 1;
-
-	return x;
-}
-
 fn part1(): i64
 {
 	let sum_ = 0'i64;
@@ -421,18 +262,12 @@ fn part2(): i64
 	}
 	//println("adj = ", adj);
 
-	//let PATH_LEN_CAP = nx * ny;
-	//let p = [-1; 2, PATH_LEN_CAP];  // list of positions in a path from one junction to another
-
 	// Now do flood fill from each junc to get neighbors with different positions
 	for ij in [0: njunc]
 	{
 		let STACK_CAP = nx * ny;
 		let stack = [-1; 4, STACK_CAP];
 		let sptr  = 0;
-		//let sptr0 = 0;
-		//p = -1;
-
 		//println("junc[:, ", ij, "] = ", junc[:,ij]);
 
 		// push
@@ -508,7 +343,6 @@ fn part2(): i64
 
 					// Stop search when another junction is found
 					visited[x, y, dir] = true;
-					//sptr0 = sptr;
 					continue;
 				}
 				visited[x, y, dir] = true;
@@ -537,7 +371,6 @@ fn part2(): i64
 	dist[start_id] = 0;
 	let q = new_minheap_vec_i32();
 	push_minheap_vec_i32(&q, [0, start_id]);
-	//push_([0, start_id]);
 
 	let dist_end = DIST_INFTY;
 	let dist_progress = dist_end + 1;
@@ -576,7 +409,6 @@ fn part2(): i64
 				nprev[v] += 1;
 				prev[n, v] = id0;
 
-				//push_([alt, v]);
 				push_minheap_vec_i32(&q, [alt, v]);
 			}
 		}
@@ -722,7 +554,6 @@ fn part2(): i64
 							while true
 							{
 								//println("xy1 = ", [x1, y1]);
-								//p[:, np] = [x1, y1]; np += 1;
 								chars[x1, y1] = "O";
 								let xp = x1;
 								let yp = y1;
