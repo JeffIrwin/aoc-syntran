@@ -107,7 +107,10 @@ fn part2(): i64
 		let idig = -1;  // digit index
 
 		// Cache results in this array until each op digit rolls over.  On most
-		// iterations (exactly 2/3), only the last operator is different
+		// iterations (exactly 2/3), only the last operator is different.  I
+		// think you could more aggresively cache from the right of the current
+		// op digit too using a dict somehow, but the left-to-right order of
+		// operations and non-commutative concat op makes it complicated
 		let results = [v[0]; nv];
 
 		while true
@@ -124,7 +127,6 @@ fn part2(): i64
 				let vb = v[j];
 
 				let op_bit = op[nop - j];
-
 				if (op_bit == 0)
 					res += vb;
 				else if (op_bit == 1)

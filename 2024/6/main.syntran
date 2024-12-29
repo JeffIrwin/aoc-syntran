@@ -26,6 +26,38 @@ let DIRS =
 
 //==============================================================================
 
+fn get_visited(g: &[str; :,:], xin: i32, yin: i32): [bool; :,:]
+{
+	let x = xin;
+	let y = yin;
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+
+	let visited = [false; nx, ny];
+	let inside = true;
+	let id = 0;
+	while true
+	{
+		visited[x, y] = true;
+		let x0 = x;
+		let y0 = y;
+
+		x += DIRS[0, id];
+		y += DIRS[1, id];
+
+		inside = (x >= 0 and x < nx and y >= 0 and y < ny);
+		if (not inside) break;
+		if g[x, y] == "#"
+		{
+			x = x0;
+			y = y0;
+			id = (id + 1) % 4;
+		}
+	}
+	return visited;
+}
+
 fn part1(): i64
 {
 	let sum_ = 0'i64;
@@ -63,32 +95,7 @@ fn part1(): i64
 	//println("g = ", g);
 	//println("guard = ", [guardx, guardy]);
 
-	let x = guardx;
-	y = guardy;
-
-	let visited = [false; nx, ny];
-	let inside = true;
-	let id = 0;
-	while true
-	{
-		visited[x, y] = true;
-		let x0 = x;
-		let y0 = y;
-
-		x += DIRS[0, id];
-		y += DIRS[1, id];
-
-		inside = (x >= 0 and x < nx and y >= 0 and y < ny);
-		if (not inside) break;
-		if g[x, y] == "#"
-		{
-			x = x0;
-			y = y0;
-			//id += 1;
-			//id %= 4;
-			id = (id + 1) % 4;
-		}
-	}
+	let visited = get_visited(&g, guardx, guardy);
 	sum_ = count(visited);
 
 	println("part 1 = ", sum_);
@@ -132,6 +139,13 @@ fn part2(): i64
 	//println("g = ", g);
 	//println("guard = ", [guardx, guardy]);
 
+	// Get visited locations without any extra obstructions first.  These are
+	// the only locations where placing an extra obstruction will make a
+	// difference
+	let v0 = get_visited(&g, guardx, guardy);
+	//let nv0 = count(v0);
+	//let obs = [-1; 2, nv0];
+
 	// Iterate over all possible obstruction locations
 	//
 	// From part 1, i know that only about 1/3 of all locations are visited in
@@ -144,6 +158,8 @@ fn part2(): i64
 	//println("ox = ", ox);
 	for oy in [0: ny]
 	{
+		if (not v0[ox, oy]) continue;
+
 		//println("oy = ", oy);
 
 		let x = guardx;
