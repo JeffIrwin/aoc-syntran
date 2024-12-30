@@ -87,6 +87,44 @@ fn part2(): i64
 		let nv = i32(size(v, 0));
 		//println("nv = ", nv);
 
+		//// Do a DFS.  Stack stores vector value and its index
+		////
+		//// DFS allows us to exit early if an answer is found.  BFS would search
+		//// nearly everything before completing
+		////
+		//// Again, clever, but not actually faster
+		////
+		//let s = [0'i64; 2, 3 ** (nv-1)];
+		//let ptr = 0;
+
+		//// Push
+		//s[:, ptr] = [v[0], 0'i64]; ptr += 1;
+		//while ptr > 0
+		//{
+		//	// Pop
+		//	ptr -= 1;
+		//	let vi = s[0, ptr];
+		//	let  i = s[1, ptr] + 1;
+
+		//	if vi > ans
+		//		continue;
+		//	if i == nv
+		//	{
+		//		if vi == ans
+		//		{
+		//			sum_ += ans;
+		//			break;
+		//		}
+		//		else
+		//			continue;
+		//	}
+
+		//	// Push
+		//	s[:, ptr] = [vi + v[i], i]; ptr += 1;
+		//	s[:, ptr] = [vi * v[i], i]; ptr += 1;
+		//	s[:, ptr] = [parse_i64(str(vi, v[i])), i]; ptr += 1;
+		//}
+
 		// Are you fucking kidding me?  Just saving every permutation in a big
 		// ass array is faster than any of the clever stuff that I tried?
 		let nums  = [0'i64; 3 ** (nv-1)];
