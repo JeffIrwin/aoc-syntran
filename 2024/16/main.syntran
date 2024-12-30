@@ -242,6 +242,7 @@ fn part2(): i64
 		while true
 		{
 			ijn += 1;
+			if (ijn < 0) continue;
 			//println("    ijn = ", ijn);
 			if (ijn >= njunc)  break;
 			if (ijn >= ij + 4) break;
@@ -271,8 +272,8 @@ fn part2(): i64
 		//println("junc[:, ", ij, "] = ", junc[:,ij]);
 
 		// push
-		stack[0:4, sptr] = junc[:, ij]; // x, y, dir
-		stack[  4, sptr] = 0;           // dist
+		stack[0:3, sptr] = junc[:, ij]; // x, y, dir
+		stack[  3, sptr] = 0;           // dist
 		sptr += 1;
 
 		// I can reduce the rank of visited (without directions) and get the
@@ -417,7 +418,7 @@ fn part2(): i64
 	//println("dist end_id_north = ", dist[end_id_north]);
 
 	// Backtrack all optimal paths using DFS
-	let STACK_CAP = nx * ny * 10; // probably don't need 10x
+	let STACK_CAP = nx * ny;
 	let stack = [-1; STACK_CAP];
 	let sptr = 0;
 
@@ -467,8 +468,8 @@ fn part2(): i64
 			//println("junc[:, ", i1, "] = ", junc[:,i1]);
 	
 			// push
-			stack2[0:4, sptr2] = junc[:, i0]; // x, y, dir
-			stack2[  4, sptr2] = 0;           // dist
+			stack2[0:3, sptr2] = junc[:, i0]; // x, y, dir
+			stack2[  3, sptr2] = 0;           // dist
 			sptr2 += 1;
 	
 			let visited2 = [false; nx, ny, NDIRS];
@@ -583,7 +584,9 @@ fn part2(): i64
 	chars[xs, ys] = "O";
 	sum_ = count(chars == "O");
 	//println("chars = ", chars);
+
 	//print_char_mat(&chars);
+	//println();
 
 	println("part 2 = ", sum_);
 	return sum_;
