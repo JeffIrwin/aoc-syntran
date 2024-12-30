@@ -104,9 +104,6 @@ fn get_ids
 
 	nvars = len_dict_i64(&ids);
 
-	// TODO: build adjacency table too.  May be a little harder to swap edit.
-	// Unless it's not impacted by swaps at all!
-
 	// Build adjacency table
 	let NADJ_CAP = 4;
 	nadj = [ 0; nvars];
@@ -185,7 +182,6 @@ fn run_adder(
 	// immediately instead of building a sorted list and evaluating later
 	let s = [0; nvars]; // stack
 	let sptr = 0;
-
 
 	// Build `s` with known x and y inputs first
 	for i in [0: nvars]
@@ -458,7 +454,7 @@ fn part2(): str
 		//println("x + y ?= z:  ", [x, y, z, zexp]);
 		if z != zexp
 		{
-			println("bad bit ", i);
+			//println("bad bit ", i);
 			bad_bits[nbad] = i;
 			nbad += 1;
 		}
@@ -480,7 +476,7 @@ fn part2(): str
 	for bad_bit in bad_bits
 	{
 
-	println("searching swaps for bad bit ", bad_bit);
+	//println("searching swaps for bad bit ", bad_bit);
 
 	// Put all the broken test cases in an array
 	//
@@ -546,7 +542,7 @@ fn part2(): str
 	let tests_passed = true;
 	for s0a in [1: ngates] {
 
-	println("swapping ", s0a);
+	//println("swapping ", s0a);
 
 	for s0b in [0: s0a]
 	{
@@ -602,11 +598,11 @@ fn part2(): str
 
 	// TODO: handle error if test still not passed
 
-	println("swaps = ", swaps);
+	//println("swaps = ", swaps);
 
 	} // bad_bits loop
 
-	println("unsorted swaps = ", swaps);
+	//println("unsorted swaps = ", swaps);
 	swaps = sort_swaps(swaps);
 	let ans = "";
 	for swap in swaps
@@ -626,11 +622,8 @@ fn main(): str
 	println();
 	println("Starting AOC syntran main 2024/24");
 
-	// Expect 60714423975686
+	// Expect "60714423975686:cgh,frt,pmd,sps,tst,z05,z11,z23"
 	let p1 = str(part1());
-
-	// Expect "cgh,frt,pmd,sps,tst,z05,z11,z23", but my solution is not
-	// automated
 	let p2 = part2();
 
 	println("Ending AOC syntran main");
