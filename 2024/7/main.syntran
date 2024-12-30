@@ -1,5 +1,8 @@
 
 #include("../../utils-2024.syntran");
+#include("../../dict_i64.syntran");
+HASH_MAX_DICT_I64 = 2048;
+HASH_MAX_DICT_I64 = 8192;
 
 //==============================================================================
 
@@ -39,6 +42,7 @@ fn part1(): i64
 
 	let f = open(filename);
 	let str_ = readln(f);
+	let nvmax = 0'i64;
 	while not eof(f)
 	{
 		//println("str_ = ", str_);
@@ -51,6 +55,7 @@ fn part1(): i64
 		//println("v = ", v);
 
 		let nv = size(v, 0);
+		nvmax = max(nvmax, nv);
 		for i in [0: 2 ** (nv - 1)] // permutations
 		{
 			let res = v[0];
@@ -76,6 +81,7 @@ fn part1(): i64
 		str_ = readln(f);
 	}
 	close(f);
+	println("nvmax = ", nvmax);
 
 	println("part 1 = ", sum_);
 	return sum_;
@@ -85,12 +91,12 @@ fn part2(): i64
 {
 	let sum_ = 0'i64;
 
-	let nvmax = 0'i32;
 	let k = 0; // debug progress only
 	let f = open(filename);
 	let str_ = readln(f);
 	while not eof(f)
 	{
+		println("k = ", k);
 		k += 1;
 		//println("str_ = ", str_);
 
@@ -100,7 +106,59 @@ fn part2(): i64
 		let v = parse_i64_delim(strs[1], " ");
 
 		let nv = i32(size(v, 0));
-		nvmax = max(nvmax, nv);
+		//println("nv = ", nv);
+
+		// Are you fucking kidding me?  Just saving every permutation in a big
+		// ass array is faster than any of the clever stuff that I tried?
+		let nums  = [0'i64; 3 ** (nv-1)];
+		let nums0 = nums;
+		nums[0] = v[0]; let ptr = 1;
+		for i in [1: nv]
+		{
+			nums0 = nums;
+			let ptr0 = ptr;
+			ptr = 0;
+			for j in [0: ptr0]
+			{
+				nums[ptr] = nums0[j] + v[i]; ptr += 1;
+				nums[ptr] = nums0[j] * v[i]; ptr += 1;
+				nums[ptr] = parse_i64(str(nums0[j], v[i])); ptr += 1;
+			}
+		}
+		if any(nums == ans)
+			sum_ += ans;
+		str_ = readln(f);
+		continue;
+		// TODO: dead code below
+
+		//// This is based on a reddit post.  I'm using a dict as a set:
+		////
+		////     https://www.reddit.com/r/adventofcode/comments/1h8l3z5/comment/m39dj4i/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+		////
+		//// Unfortunately it's slow AF and I don't think there are many
+		//// duplicates that provide savings as a set
+		//let nums  = new_dict_i64();
+		//let nums0 = new_dict_i64();
+		//set_dict_i64(&nums, str(v[0]), v[0]);
+		//for i in [1: nv]
+		//{
+		//	//println("v[i] = ", v[i]);
+		//	nums0 = nums;
+		//	nums  = new_dict_i64();
+		//	for num0 in vals_dict_i64(&nums0)
+		//	{
+		//		//println("num0 = ", num0);
+		//		let x = -1'i64;
+		//		x = num0 + v[i]               ; set_dict_i64(&nums, str(x), x);
+		//		x = num0 * v[i]               ; set_dict_i64(&nums, str(x), x);
+		//		x = parse_i64(str(num0, v[i])); set_dict_i64(&nums, str(x), x);
+		//	}
+		//}
+		//if get_dict_i64(&nums, str(ans)) >= 0
+		//	sum_ += ans;
+		//str_ = readln(f);
+		//continue;
+		//// TODO: dead code below
 
 		let nop = nv - 1;  // one less operator than value
 		let op = [0; nop];
@@ -163,7 +221,6 @@ fn part2(): i64
 		str_ = readln(f);
 	}
 	close(f);
-	//println("nvmax = ", nvmax);
 
 	println("part 2 = ", sum_);
 	return sum_;
