@@ -1,11 +1,10 @@
 
 #include("../../utils-2024.syntran");
-//#include("../../dict_i64.syntran");
 
 //==============================================================================
 
 let ifile = 0;
-//ifile = 1;
+ifile = 1;
 
 let filenames =
 [
@@ -24,13 +23,45 @@ fn part1(): i64
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
+
+		let dims = parse_i32_delim(str_, "x");
+		let a0 = dims[0] * dims[1];
+		let a1 = dims[1] * dims[2];
+		let a2 = dims[2] * dims[0];
+
+		sum_ += 2 * (a0 + a1 + a2) + min(a0, a1, a2);
 
 		str_ = readln(f);
 	}
 	close(f);
 
 	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let dims = parse_i32_delim(str_, "x");
+		let p0 = dims[0] + dims[1];
+		let p1 = dims[1] + dims[2];
+		let p2 = dims[2] + dims[0];
+
+		sum_ += 2 * min(p0, p1, p2) + product(dims);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
 	return sum_;
 }
 
@@ -41,12 +72,12 @@ fn main(): i64
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2024/xx");
+	println("Starting AOC syntran main 2015/2");
 
 	let sum_ = 0'i64;
 
 	sum_ += part1();
-	//sum_ += part2();
+	sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();

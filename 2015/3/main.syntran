@@ -1,0 +1,135 @@
+
+#include("../../utils-2024.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	// Could make 2 passes and use an array, but a dict can do 1 pass w/o
+	// knowing bounds ahead of time
+	let locs = new_dict_i64();
+
+	let loc = [0; 2];
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	// Starting location counts
+	set_dict_i64(&locs, str(loc), 1'i64);
+
+	for i in [0: len(str_)]
+	{
+		let char_ = str_[i];
+		if char_ == ">"
+			loc += [1, 0];
+		else if char_ == "<"
+			loc += [-1, 0];
+		else if char_ == "^"
+			loc += [0, -1];
+		else if char_ == "v"
+			loc += [0, 1];
+		else
+		{
+			println("Error: unexpected char '" + char_ + "'");
+			exit(-1);
+		}
+
+		set_dict_i64(&locs, str(loc), 1'i64);
+	}
+
+	let sum_ = len_dict_i64(&locs);
+	println("part 1 = ", sum_);
+	return i64(sum_);
+}
+
+fn part2(): i64
+{
+	// Could make 2 passes and use an array, but a dict can do 1 pass w/o
+	// knowing bounds ahead of time
+	let locs = new_dict_i64();
+
+	let loc = [0; 2]; // santa location
+	let rloc = loc;   // robo-santa location
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	// Starting location counts
+	set_dict_i64(&locs, str(loc), 1'i64);
+
+	for i in [0: len(str_)]
+	{
+		let char_ = str_[i];
+		let del = [0, 0];
+		if char_ == ">"
+			del = [1, 0];
+		else if char_ == "<"
+			del = [-1, 0];
+		else if char_ == "^"
+			del = [0, -1];
+		else if char_ == "v"
+			del = [0, 1];
+		else
+		{
+			println("Error: unexpected char '" + char_ + "'");
+			exit(-1);
+		}
+		if i % 2 == 0
+		{
+			loc  += del;
+			set_dict_i64(&locs, str(loc), 1'i64);
+		}
+		else
+		{
+			rloc += del;
+			set_dict_i64(&locs, str(rloc), 1'i64);
+		}
+	}
+
+	let sum_ = len_dict_i64(&locs);
+	println("part 2 = ", sum_);
+	return i64(sum_);
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/3");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
