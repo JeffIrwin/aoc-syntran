@@ -1,0 +1,135 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	//while not eof(f)
+	for y in [0: ny]
+	{
+		let str_ = readln(f);
+		//println("str_ = ", str_);
+
+		let vowels = "aeiou";
+		let nvowels = 0;
+		for i in [0: len(str_)]
+		{
+			if (index_(vowels, str_[i]) >= 0) nvowels += 1;
+			if (nvowels >= 3) break;
+		}
+		if (nvowels < 3) continue;
+
+		let double = false;
+		for i in [0: len(str_) - 1]
+			if str_[i] == str_[i+1]
+			{
+				double = true;
+				break;
+			}
+		if (not double) continue;
+
+		let has_naughty = false;
+		let naughties = ["ab", "cd", "pq", "xy"];
+		for naughty in naughties
+			if index_(str_, naughty) >= 0
+			{
+				has_naughty = true;
+				break;
+			}
+		if (has_naughty) continue;
+
+		sum_ += 1;
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	for y in [0: ny]
+	{
+		let str_ = readln(f);
+
+		// It contains a pair of any two letters that appears at least twice in
+		// the string without overlapping, like xyxy (xy) or aabcdefgaa (aa),
+		// but not like aaa (aa, but it overlaps).
+		let has_sub = false;
+		for i in [0: len(str_) - 2]
+		{
+			let sub = str_[i: i+2];
+			if index_(str_[i+2: len(str_)], sub) >= 0
+			{
+				has_sub = true;
+				break;
+			}
+		}
+		if (not has_sub) continue;
+
+		let has_repeat = false;
+		for i in [0: len(str_) - 2]
+		{
+			if str_[i] == str_[i+2]
+			{
+				has_repeat = true;
+				break;
+			}
+		}
+		if (not has_repeat) continue;
+
+		sum_ += 1;
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/5");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
