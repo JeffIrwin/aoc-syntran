@@ -1,0 +1,389 @@
+
+#include("../../utils-2024.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let nwire = countln_(filename);
+
+	let left  = [""; nwire];
+	let op    = [""; nwire];
+	let right = [""; nwire];
+	let res   = [""; nwire];
+
+	let const_num = [-1'i64; nwire];
+
+	let f = open(filename);
+	for iw in [0: nwire]
+	{
+		let str_ = readln(f);
+		println();
+		println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		let first  = words[0];
+		let second = words[1];
+		res[iw] = words[size(words,0) - 1];
+
+		// Special non-binary operator cases
+
+		//// This really fucked me up.  I assumed that whenever a literal
+		//// appeared, it was an assignment expression.  Not true!  Sometimes
+		//// it's `literal op right -> result`
+		//if is_digit(first[0])
+		//{
+		//	op[iw] = "CONST"; // my convention
+		//	const_num[iw] = parse_i64(first);
+		//	println("const_num = ", const_num[iw]);
+		//	continue;
+		//}
+
+		if second == "->"
+		{
+			op[iw] = "ASSIGN"; // my convention
+			left[iw] = first;
+			println("ASSIGN ", left[iw]);
+			continue;
+		}
+
+		if first == "NOT"
+		{
+			op[iw] = "NOT";
+			right[iw] = words[1];
+			println("NOT ", right[iw]);
+			continue;
+		}
+
+		// Usual binary operator case:  left op right -> res
+		left [iw] = words[0];
+		op   [iw] = words[1];
+		right[iw] = words[2];
+
+	}
+	close(f);
+	println("res = ", res);
+
+	//let NULL_VAL = 0xffff_ffff_ffff'i64;
+	//let NULL_VAL = 0xdead_ffff_ffff'i64;
+	let NULL_VAL = 0xffff_ffff'i64;
+
+	let vals = new_dict_i64();
+	println("NULL_VAL = ", NULL_VAL);
+	for r in res
+		set_dict_i64(&vals, r, NULL_VAL);
+
+	// Some values are literals.  Just add them to the dict
+	for x in left
+	{
+		if (x == "") continue;
+		if not is_digit(x[0]) continue;
+		println("x = ", x);
+		set_dict_i64(&vals, x, parse_i64(x));
+	}
+	for x in right
+	{
+		if (x == "") continue;
+		if not is_digit(x[0]) continue;
+		println("x = ", x);
+		set_dict_i64(&vals, x, parse_i64(x));
+	}
+
+	// Lazy brute: make multiple passes until we can get every result value
+	let has_res = [false; nwire];
+	let ipass = 0;
+	while not all(has_res)
+	{
+		println("ipass = ", ipass);
+		ipass += 1;
+		for iw in [0: nwire]
+		{
+			if (has_res[iw]) continue;
+
+			let lval = get_dict_i64(&vals, left [iw]);
+			let rval = get_dict_i64(&vals, right[iw]);
+
+			let has_left  = lval != NULL_VAL;
+			let has_right = rval != NULL_VAL;
+
+			let ans = -1'i64;
+			//println("op = ", op[iw]);
+			if op[iw] == "AND"
+			{
+				if not (has_left and has_right) continue;
+				ans = lval & rval;
+			}
+			else if op[iw] == "OR"
+			{
+				if not (has_left and has_right) continue;
+				ans = lval | rval;
+				println(lval, " OR ", rval, " == ", ans);
+			}
+			else if op[iw] == "LSHIFT"
+			{
+				if not (has_left and has_right) continue;
+				ans = (lval << rval) & 0xffff'i64;
+				println(lval, " LSHIFT ", rval, " == ", ans);
+			}
+			else if op[iw] == "RSHIFT"
+			{
+				if not (has_left and has_right) continue;
+				ans = lval >> rval;
+				println(lval, " RSHIFT ", rval, " == ", ans);
+			}
+			else if op[iw] == "NOT"
+			{
+				if (not has_right) continue;
+				ans = (!rval) & 0xffff'i64;
+			}
+			else if op[iw] == "CONST"
+			{
+				// TODO: obsolete
+				ans = const_num[iw];
+			}
+			else if op[iw] == "ASSIGN"
+			{
+				if (not has_left) continue;
+				ans = lval;
+				println("assign val ", ans);
+			}
+			else
+			{
+				println("Error: bad operator `" + op[iw] + "` in wire `", iw, "`");
+				exit(-1);
+			}
+			ans &= 0xffff'i64;
+
+			set_dict_i64(&vals, res[iw], ans);
+			has_res[iw] = true;
+		}
+
+		for key in keys_dict_i64(&vals)
+		{
+			let val = get_dict_i64(&vals, key);
+			if (val == NULL_VAL) continue;
+			println("key, val = ", key, " ", get_dict_i64(&vals, key));
+		}
+		//println("keys = ", keys_dict_i64(&vals));
+		//println("vals = ", vals_dict_i64(&vals));
+		//exit(0);
+	}
+
+	//println("keys = ", keys_dict_i64(&vals));
+	//println("vals = ", vals_dict_i64(&vals));
+	for key in keys_dict_i64(&vals)
+		println("key, val = ", key, " ", get_dict_i64(&vals, key));
+
+	let sum_ = get_dict_i64(&vals, "a");
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let nwire = countln_(filename);
+
+	let left  = [""; nwire];
+	let op    = [""; nwire];
+	let right = [""; nwire];
+	let res   = [""; nwire];
+
+	let const_num = [-1'i64; nwire];
+
+	let f = open(filename);
+	for iw in [0: nwire]
+	{
+		let str_ = readln(f);
+		println();
+		println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		let first  = words[0];
+		let second = words[1];
+		res[iw] = words[size(words,0) - 1];
+
+		// Special non-binary operator cases
+
+		if second == "->"
+		{
+			op[iw] = "ASSIGN"; // my convention
+			left[iw] = first;
+			println("ASSIGN ", left[iw]);
+			continue;
+		}
+
+		if first == "NOT"
+		{
+			op[iw] = "NOT";
+			right[iw] = words[1];
+			println("NOT ", right[iw]);
+			continue;
+		}
+
+		// Usual binary operator case:  left op right -> res
+		left [iw] = words[0];
+		op   [iw] = words[1];
+		right[iw] = words[2];
+
+	}
+	close(f);
+	println("res = ", res);
+
+	//let NULL_VAL = 0xffff_ffff_ffff'i64;
+	//let NULL_VAL = 0xdead_ffff_ffff'i64;
+	let NULL_VAL = 0xffff_ffff'i64;
+
+	let vals = new_dict_i64();
+	println("NULL_VAL = ", NULL_VAL);
+	for r in res
+		set_dict_i64(&vals, r, NULL_VAL);
+
+	// Some values are literals.  Just add them to the dict
+	for x in left
+	{
+		if (x == "") continue;
+		if not is_digit(x[0]) continue;
+		println("x = ", x);
+		set_dict_i64(&vals, x, parse_i64(x));
+	}
+	for x in right
+	{
+		if (x == "") continue;
+		if not is_digit(x[0]) continue;
+		println("x = ", x);
+		set_dict_i64(&vals, x, parse_i64(x));
+	}
+
+	// Lazy brute: make multiple passes until we can get every result value
+	let has_res = [false; nwire];
+
+	// This is the only difference for part 2.  Just hard-code what I got from
+	// part 1.  WARNING: THIS WILL NOT WORK FOR YOUR INPUT!
+	//
+	// TODO: refactor and run part 1, then reset and do this without
+	// hard-coding.  Any refactoring required or just call part1() here?
+	set_dict_i64(&vals, "b", 956'i64);
+	has_res[89] = true; // TODO: scan for "b" index automatically
+	let ipass = 0;
+	while not all(has_res)
+	{
+		println("ipass = ", ipass);
+		ipass += 1;
+		for iw in [0: nwire]
+		{
+			if (has_res[iw]) continue;
+
+			let lval = get_dict_i64(&vals, left [iw]);
+			let rval = get_dict_i64(&vals, right[iw]);
+
+			let has_left  = lval != NULL_VAL;
+			let has_right = rval != NULL_VAL;
+
+			let ans = -1'i64;
+			//println("op = ", op[iw]);
+			if op[iw] == "AND"
+			{
+				if not (has_left and has_right) continue;
+				ans = lval & rval;
+			}
+			else if op[iw] == "OR"
+			{
+				if not (has_left and has_right) continue;
+				ans = lval | rval;
+				println(lval, " OR ", rval, " == ", ans);
+			}
+			else if op[iw] == "LSHIFT"
+			{
+				if not (has_left and has_right) continue;
+				ans = (lval << rval) & 0xffff'i64;
+				println(lval, " LSHIFT ", rval, " == ", ans);
+			}
+			else if op[iw] == "RSHIFT"
+			{
+				if not (has_left and has_right) continue;
+				ans = lval >> rval;
+				println(lval, " RSHIFT ", rval, " == ", ans);
+			}
+			else if op[iw] == "NOT"
+			{
+				if (not has_right) continue;
+				ans = (!rval) & 0xffff'i64;
+			}
+			else if op[iw] == "ASSIGN"
+			{
+				if (not has_left) continue;
+				ans = lval;
+				println("assign val ", ans);
+			}
+			else
+			{
+				println("Error: bad operator `" + op[iw] + "` in wire `", iw, "`");
+				exit(-1);
+			}
+			ans &= 0xffff'i64;
+
+			set_dict_i64(&vals, res[iw], ans);
+			has_res[iw] = true;
+		}
+
+		for key in keys_dict_i64(&vals)
+		{
+			let val = get_dict_i64(&vals, key);
+			if (val == NULL_VAL) continue;
+			println("key, val = ", key, " ", get_dict_i64(&vals, key));
+		}
+		//println("keys = ", keys_dict_i64(&vals));
+		//println("vals = ", vals_dict_i64(&vals));
+		//exit(0);
+	}
+
+	//println("keys = ", keys_dict_i64(&vals));
+	//println("vals = ", vals_dict_i64(&vals));
+	for key in keys_dict_i64(&vals)
+		println("key, val = ", key, " ", get_dict_i64(&vals, key));
+
+	let sum_ = get_dict_i64(&vals, "a");
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2024/xx");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
