@@ -1,0 +1,195 @@
+
+#include("../../utils-2024.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let locs  = new_dict_i64();  // individual locations
+	let dists = new_dict_i64();  // distances between pairs (symmetric)
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		//let sides = split_(str_, "=");
+		let words = split_(str_, "= ");
+
+		let loc0 = words[0];
+		let loc1 = words[2];
+		let dist = parse_i64(words[3]);
+
+		//println("loc0 = ", loc0);
+		//println("loc1 = ", loc1);
+		//println("dist = ", dist);
+		//println();
+
+		set_dict_i64(&locs, loc0, 1'i64);
+		set_dict_i64(&locs, loc1, 1'i64);
+
+		set_dict_i64(&dists, loc0 + ":" + loc1, dist);
+		set_dict_i64(&dists, loc1 + ":" + loc0, dist); // symmetry
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	// Copy distances to a matrix to save dict lookups later in the perm loop
+	let loc_keys = keys_dict_i64(&locs);
+	let nlocs = len_dict_i64(&locs);
+	let dist_mat = [0; nlocs, nlocs];
+	for j in [0: nlocs]
+	for i in [0: nlocs]
+	{
+		if (i == j) continue;
+		let dist_key = loc_keys[i] + ":" + loc_keys[j];
+		let dist = get_dict_i64(&dists, dist_key);
+		//println(dist_key, " = ", dist);
+
+		dist_mat[i,j] = dist;
+	}
+
+	let perm = [0: nlocs];
+	let dist_min = -1;
+	while true
+	{
+		//println("perm = ", perm);
+		let dist_sum = 0;
+		for i in [0: nlocs-1]
+		{
+			//let dist_key = loc_keys[perm[i]] + ":" + loc_keys[perm[i+1]];
+			//dist_sum += get_dict_i64(&dists, dist_key);
+			dist_sum += dist_mat[perm[i], perm[i+1]];
+		}
+		//println("dist_sum = ", dist_sum);
+		if dist_min < 0
+			dist_min = dist_sum;
+		else
+			dist_min = min(dist_min, dist_sum);
+
+		if not next_perm(&perm) break;
+	}
+	sum_ = dist_min;
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let locs  = new_dict_i64();  // individual locations
+	let dists = new_dict_i64();  // distances between pairs (symmetric)
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		//let sides = split_(str_, "=");
+		let words = split_(str_, "= ");
+
+		let loc0 = words[0];
+		let loc1 = words[2];
+		let dist = parse_i64(words[3]);
+
+		//println("loc0 = ", loc0);
+		//println("loc1 = ", loc1);
+		//println("dist = ", dist);
+		//println();
+
+		set_dict_i64(&locs, loc0, 1'i64);
+		set_dict_i64(&locs, loc1, 1'i64);
+
+		set_dict_i64(&dists, loc0 + ":" + loc1, dist);
+		set_dict_i64(&dists, loc1 + ":" + loc0, dist); // symmetry
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	// Copy distances to a matrix to save dict lookups later in the perm loop
+	let loc_keys = keys_dict_i64(&locs);
+	let nlocs = len_dict_i64(&locs);
+	let dist_mat = [0; nlocs, nlocs];
+	for j in [0: nlocs]
+	for i in [0: nlocs]
+	{
+		if (i == j) continue;
+		let dist_key = loc_keys[i] + ":" + loc_keys[j];
+		let dist = get_dict_i64(&dists, dist_key);
+		//println(dist_key, " = ", dist);
+
+		dist_mat[i,j] = dist;
+	}
+
+	let perm = [0: nlocs];
+	let dist_max = -1;
+	while true
+	{
+		//println("perm = ", perm);
+		let dist_sum = 0;
+		for i in [0: nlocs-1]
+		{
+			//let dist_key = loc_keys[perm[i]] + ":" + loc_keys[perm[i+1]];
+			//dist_sum += get_dict_i64(&dists, dist_key);
+			dist_sum += dist_mat[perm[i], perm[i+1]];
+		}
+		//println("dist_sum = ", dist_sum);
+		if dist_max < 0
+			dist_max = dist_sum;
+		else
+			dist_max = max(dist_max, dist_sum);
+
+		if not next_perm(&perm) break;
+	}
+	sum_ = dist_max;
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/9");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
