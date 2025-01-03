@@ -47,6 +47,8 @@ fn part2(): i64
 {
 	let sum_ = 0'i64;
 
+	// I think this took ~20 minutes to run
+
 	let f = open(filename);
 	let str_ = readln(f);
 	//println("str_ = ", str_);

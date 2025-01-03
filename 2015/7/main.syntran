@@ -31,8 +31,8 @@ fn part1(): i64
 	for iw in [0: nwire]
 	{
 		let str_ = readln(f);
-		println();
-		println("str_ = ", str_);
+		//println();
+		//println("str_ = ", str_);
 
 		let words = split_(str_, " ");
 		let first  = words[0];
@@ -56,7 +56,7 @@ fn part1(): i64
 		{
 			op[iw] = "ASSIGN"; // my convention
 			left[iw] = first;
-			println("ASSIGN ", left[iw]);
+			//println("ASSIGN ", left[iw]);
 			continue;
 		}
 
@@ -64,7 +64,7 @@ fn part1(): i64
 		{
 			op[iw] = "NOT";
 			right[iw] = words[1];
-			println("NOT ", right[iw]);
+			//println("NOT ", right[iw]);
 			continue;
 		}
 
@@ -75,14 +75,14 @@ fn part1(): i64
 
 	}
 	close(f);
-	println("res = ", res);
+	//println("res = ", res);
 
 	//let NULL_VAL = 0xffff_ffff_ffff'i64;
 	//let NULL_VAL = 0xdead_ffff_ffff'i64;
 	let NULL_VAL = 0xffff_ffff'i64;
 
 	let vals = new_dict_i64();
-	println("NULL_VAL = ", NULL_VAL);
+	//println("NULL_VAL = ", NULL_VAL);
 	for r in res
 		set_dict_i64(&vals, r, NULL_VAL);
 
@@ -91,14 +91,14 @@ fn part1(): i64
 	{
 		if (x == "") continue;
 		if not is_digit(x[0]) continue;
-		println("x = ", x);
+		//println("x = ", x);
 		set_dict_i64(&vals, x, parse_i64(x));
 	}
 	for x in right
 	{
 		if (x == "") continue;
 		if not is_digit(x[0]) continue;
-		println("x = ", x);
+		//println("x = ", x);
 		set_dict_i64(&vals, x, parse_i64(x));
 	}
 
@@ -107,7 +107,7 @@ fn part1(): i64
 	let ipass = 0;
 	while not all(has_res)
 	{
-		println("ipass = ", ipass);
+		//println("ipass = ", ipass);
 		ipass += 1;
 		for iw in [0: nwire]
 		{
@@ -130,19 +130,19 @@ fn part1(): i64
 			{
 				if not (has_left and has_right) continue;
 				ans = lval | rval;
-				println(lval, " OR ", rval, " == ", ans);
+				//println(lval, " OR ", rval, " == ", ans);
 			}
 			else if op[iw] == "LSHIFT"
 			{
 				if not (has_left and has_right) continue;
 				ans = (lval << rval) & 0xffff'i64;
-				println(lval, " LSHIFT ", rval, " == ", ans);
+				//println(lval, " LSHIFT ", rval, " == ", ans);
 			}
 			else if op[iw] == "RSHIFT"
 			{
 				if not (has_left and has_right) continue;
 				ans = lval >> rval;
-				println(lval, " RSHIFT ", rval, " == ", ans);
+				//println(lval, " RSHIFT ", rval, " == ", ans);
 			}
 			else if op[iw] == "NOT"
 			{
@@ -158,7 +158,7 @@ fn part1(): i64
 			{
 				if (not has_left) continue;
 				ans = lval;
-				println("assign val ", ans);
+				//println("assign val ", ans);
 			}
 			else
 			{
@@ -171,12 +171,12 @@ fn part1(): i64
 			has_res[iw] = true;
 		}
 
-		for key in keys_dict_i64(&vals)
-		{
-			let val = get_dict_i64(&vals, key);
-			if (val == NULL_VAL) continue;
-			println("key, val = ", key, " ", get_dict_i64(&vals, key));
-		}
+		//for key in keys_dict_i64(&vals)
+		//{
+		//	let val = get_dict_i64(&vals, key);
+		//	if (val == NULL_VAL) continue;
+		//	println("key, val = ", key, " ", get_dict_i64(&vals, key));
+		//}
 		//println("keys = ", keys_dict_i64(&vals));
 		//println("vals = ", vals_dict_i64(&vals));
 		//exit(0);
@@ -184,8 +184,8 @@ fn part1(): i64
 
 	//println("keys = ", keys_dict_i64(&vals));
 	//println("vals = ", vals_dict_i64(&vals));
-	for key in keys_dict_i64(&vals)
-		println("key, val = ", key, " ", get_dict_i64(&vals, key));
+	//for key in keys_dict_i64(&vals)
+	//	println("key, val = ", key, " ", get_dict_i64(&vals, key));
 
 	let sum_ = get_dict_i64(&vals, "a");
 
@@ -208,8 +208,8 @@ fn part2(): i64
 	for iw in [0: nwire]
 	{
 		let str_ = readln(f);
-		println();
-		println("str_ = ", str_);
+		//println();
+		//println("str_ = ", str_);
 
 		let words = split_(str_, " ");
 		let first  = words[0];
@@ -222,7 +222,7 @@ fn part2(): i64
 		{
 			op[iw] = "ASSIGN"; // my convention
 			left[iw] = first;
-			println("ASSIGN ", left[iw]);
+			//println("ASSIGN ", left[iw]);
 			continue;
 		}
 
@@ -230,7 +230,7 @@ fn part2(): i64
 		{
 			op[iw] = "NOT";
 			right[iw] = words[1];
-			println("NOT ", right[iw]);
+			//println("NOT ", right[iw]);
 			continue;
 		}
 
@@ -241,14 +241,14 @@ fn part2(): i64
 
 	}
 	close(f);
-	println("res = ", res);
+	//println("res = ", res);
 
 	//let NULL_VAL = 0xffff_ffff_ffff'i64;
 	//let NULL_VAL = 0xdead_ffff_ffff'i64;
 	let NULL_VAL = 0xffff_ffff'i64;
 
 	let vals = new_dict_i64();
-	println("NULL_VAL = ", NULL_VAL);
+	//println("NULL_VAL = ", NULL_VAL);
 	for r in res
 		set_dict_i64(&vals, r, NULL_VAL);
 
@@ -257,31 +257,33 @@ fn part2(): i64
 	{
 		if (x == "") continue;
 		if not is_digit(x[0]) continue;
-		println("x = ", x);
+		//println("x = ", x);
 		set_dict_i64(&vals, x, parse_i64(x));
 	}
 	for x in right
 	{
 		if (x == "") continue;
 		if not is_digit(x[0]) continue;
-		println("x = ", x);
+		//println("x = ", x);
 		set_dict_i64(&vals, x, parse_i64(x));
 	}
 
 	// Lazy brute: make multiple passes until we can get every result value
 	let has_res = [false; nwire];
 
-	// This is the only difference for part 2.  Just hard-code what I got from
-	// part 1.  WARNING: THIS WILL NOT WORK FOR YOUR INPUT!
-	//
-	// TODO: refactor and run part 1, then reset and do this without
-	// hard-coding.  Any refactoring required or just call part1() here?
-	set_dict_i64(&vals, "b", 956'i64);
-	has_res[89] = true; // TODO: scan for "b" index automatically
+	// This is the only difference for part 2
+	let bval = part1();
+	//println("bval = ", bval);
+	set_dict_i64(&vals, "b", bval);
+	let bidx = 0;
+	while res[bidx] != "b"
+		bidx += 1;
+	has_res[bidx] = true;
+
 	let ipass = 0;
 	while not all(has_res)
 	{
-		println("ipass = ", ipass);
+		//println("ipass = ", ipass);
 		ipass += 1;
 		for iw in [0: nwire]
 		{
@@ -304,19 +306,19 @@ fn part2(): i64
 			{
 				if not (has_left and has_right) continue;
 				ans = lval | rval;
-				println(lval, " OR ", rval, " == ", ans);
+				//println(lval, " OR ", rval, " == ", ans);
 			}
 			else if op[iw] == "LSHIFT"
 			{
 				if not (has_left and has_right) continue;
 				ans = (lval << rval) & 0xffff'i64;
-				println(lval, " LSHIFT ", rval, " == ", ans);
+				//println(lval, " LSHIFT ", rval, " == ", ans);
 			}
 			else if op[iw] == "RSHIFT"
 			{
 				if not (has_left and has_right) continue;
 				ans = lval >> rval;
-				println(lval, " RSHIFT ", rval, " == ", ans);
+				//println(lval, " RSHIFT ", rval, " == ", ans);
 			}
 			else if op[iw] == "NOT"
 			{
@@ -327,7 +329,7 @@ fn part2(): i64
 			{
 				if (not has_left) continue;
 				ans = lval;
-				println("assign val ", ans);
+				//println("assign val ", ans);
 			}
 			else
 			{
@@ -340,12 +342,12 @@ fn part2(): i64
 			has_res[iw] = true;
 		}
 
-		for key in keys_dict_i64(&vals)
-		{
-			let val = get_dict_i64(&vals, key);
-			if (val == NULL_VAL) continue;
-			println("key, val = ", key, " ", get_dict_i64(&vals, key));
-		}
+		//for key in keys_dict_i64(&vals)
+		//{
+		//	let val = get_dict_i64(&vals, key);
+		//	if (val == NULL_VAL) continue;
+		//	//println("key, val = ", key, " ", get_dict_i64(&vals, key));
+		//}
 		//println("keys = ", keys_dict_i64(&vals));
 		//println("vals = ", vals_dict_i64(&vals));
 		//exit(0);
@@ -353,8 +355,8 @@ fn part2(): i64
 
 	//println("keys = ", keys_dict_i64(&vals));
 	//println("vals = ", vals_dict_i64(&vals));
-	for key in keys_dict_i64(&vals)
-		println("key, val = ", key, " ", get_dict_i64(&vals, key));
+	//for key in keys_dict_i64(&vals)
+	//	//println("key, val = ", key, " ", get_dict_i64(&vals, key));
 
 	let sum_ = get_dict_i64(&vals, "a");
 
@@ -369,7 +371,7 @@ fn main(): i64
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2024/xx");
+	println("Starting AOC syntran main 2015/7");
 
 	let sum_ = 0'i64;
 

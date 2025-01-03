@@ -16,7 +16,7 @@ let filename = filenames[ifile];
 
 //==============================================================================
 
-fn part1(): i64
+fn part1(): str
 {
 	let sum_ = 0'i64;
 
@@ -31,26 +31,26 @@ fn part1(): i64
 	close(f);
 
 	println("part 1 = ", sum_);
-	return sum_;
+	return str(sum_);
 }
 
 //==============================================================================
 
-fn main(): i64
+fn main(): str
 {
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2024/xx");
+	println("Starting AOC syntran main 2015/xx");
 
-	let sum_ = 0'i64;
+	let p1 = ""; let p2 = "";
 
-	sum_ += part1();
-	//sum_ += part2();
+	p1 = part1();
+	//p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();
-	return sum_;
+	return p1 + ":" + p2;
 }
 
 //==============================================================================
