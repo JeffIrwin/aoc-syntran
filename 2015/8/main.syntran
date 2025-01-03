@@ -1,0 +1,141 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		if str_[0] != """"
+		{
+			println("Error: str does not start with ""!");
+			exit(-1);
+		}
+
+		let i = 1;
+		let len_code = len(str_);
+		let len_ = 0'i64;
+		while i < len_code - 1
+		{
+			let char_ = str_[i];
+			if char_ == """"
+			{
+				println("Error: premature end of str!");
+				exit(-1);
+			}
+
+			len_ += 1;
+			if char_ == "\"  // " this comment is just to fix syntax highlighting
+			{
+				let peek = str_[i+1];
+				if peek == "\"  // " ibid
+				{
+					//println("backslash");
+					i += 1;
+				}
+				else if peek == """"
+				{
+					//println("quote");
+					i += 1;
+				}
+				else if peek == "x"
+				{
+					//println("hex");
+					i += 3;
+				}
+			}
+			i += 1;
+		}
+
+		if str_[i] != """"
+		{
+			println("Error: str does not end with ""!");
+			exit(-1);
+		}
+		//println("len_code, len_ = ", [len_code, len_]);
+		//println("diff = ", len_code - len_);
+		//println();
+
+		sum_ += len_code - len_;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let diff = 2'i64;  // start at 2 because of surrounding quotes
+		for i in [0: len(str_)]
+		{
+			let char_ = str_[i];
+			if any(char_ == ["""", "\"]) diff += 1;  // "
+		}
+		//println("diff = ", diff);
+
+		sum_ += diff;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/8");
+
+	let sum_ = 0'i64;
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
