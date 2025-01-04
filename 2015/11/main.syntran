@@ -1,0 +1,296 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let alpha = "";
+	for i in [i32("a"): i32("z") + 1]
+	{
+		let c = char(i);
+		//if not any(c == block)
+			alpha += c;
+	}
+	//println("alpha = ", alpha);
+
+	let nalpha = len(alpha); // 26
+	//println("nalpha = ", nalpha);
+
+	// Allowed chars are lowercase letters except for these
+	let block= ["i", "o", "l"];
+
+	// Convert to ints
+	let nblock = size(block, 0);
+	let iblock = [0; nblock];
+	for i in [0: nblock]
+	{
+		//iblock[i] = i32(block[i]);
+		iblock[i] = i32(block[i]) - i32("a");
+	}
+	//println("iblock = ", iblock);
+	//exit(0);
+
+	// Convert input str into an int vector `v` representing a base-26 number
+	let nv = len(str_);
+	let v = [0; nv];
+	for i in [0: nv]
+	{
+		v[i] = scan(alpha, str_[i]);
+
+		// If we hit something in the block list, round the current digit up and
+		// leave the remaining digits at 0.  Old password doesn't necessarily
+		// meet the new rules
+		//
+		// Assume no consecutive letters in block list
+		if any(iblock == v[i])
+		//if v[i] < 0
+		{
+			v[i] += 1;
+			//let c = char(i32(str_[i]) + 1);
+			//v[i] = scan(alpha, c);
+			break;
+		}
+	}
+	//println("v = ", v);
+	//exit(0);
+
+	// Find next valid password
+	while true
+	{
+		// Increment big-endian base-26 (base-nalpha) big num by 1
+		let i = nv - 1;
+		let carry = v[i] == nalpha - 1;
+		while carry
+		{
+			v[i] = 0; // assume "a" and "z" not blocked
+			if i == 0
+			{
+				println("Error: exhausted all passwords without finding anything valid");
+				exit(-1);
+			}
+			i -= 1;
+			carry = v[i] == nalpha - 1;
+		}
+		v[i] += 1;
+		while any(iblock == v[i]) i += 1;
+
+		//if carry
+		//{
+		//	v[i+1: nv] = 0;
+		//}
+
+		//println("v = ", v);
+
+		let has_straight = false;
+		for i in [0: nv - 2]
+		{
+			has_straight = v[i] + 1 == v[i+1] and v[i] + 2 == v[i+2];
+			if (has_straight) break;
+		}
+		if (not has_straight) continue;
+
+		let has_first_pair = false;
+		let ip1 = -1;
+		for i in [0: nv - 1]
+		{
+			ip1 = v[i];
+			has_first_pair = v[i] == v[i+1];
+			if (has_first_pair) break;
+		}
+		if (not has_first_pair) continue;
+
+		let has_second_pair = false;
+		for i in [0: nv - 1]
+		{
+			if (v[i] == ip1) continue; // different from first pair (TODO?)
+			has_second_pair = v[i] == v[i+1];
+			if (has_second_pair) break;
+		}
+		if (not has_second_pair) continue;
+
+		let is_valid = true;
+
+		//if is_valid
+		break;
+	}
+
+	// Convert from int vec back to str
+	let ans = "";
+	for i in [0: nv]
+		ans += char(v[i] + i32("a"));
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(): str
+{
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let alpha = "";
+	for i in [i32("a"): i32("z") + 1]
+	{
+		let c = char(i);
+		//if not any(c == block)
+			alpha += c;
+	}
+	//println("alpha = ", alpha);
+
+	let nalpha = len(alpha); // 26
+	//println("nalpha = ", nalpha);
+
+	// Allowed chars are lowercase letters except for these
+	let block= ["i", "o", "l"];
+
+	// Convert to ints
+	let nblock = size(block, 0);
+	let iblock = [0; nblock];
+	for i in [0: nblock]
+	{
+		//iblock[i] = i32(block[i]);
+		iblock[i] = i32(block[i]) - i32("a");
+	}
+	//println("iblock = ", iblock);
+	//exit(0);
+
+	// Convert input str into an int vector `v` representing a base-26 number
+	let nv = len(str_);
+	let v = [0; nv];
+	for i in [0: nv]
+	{
+		v[i] = scan(alpha, str_[i]);
+
+		// If we hit something in the block list, round the current digit up and
+		// leave the remaining digits at 0.  Old password doesn't necessarily
+		// meet the new rules
+		//
+		// Assume no consecutive letters in block list
+		if any(iblock == v[i])
+		//if v[i] < 0
+		{
+			v[i] += 1;
+			//let c = char(i32(str_[i]) + 1);
+			//v[i] = scan(alpha, c);
+			break;
+		}
+	}
+	//println("v = ", v);
+	//exit(0);
+
+	// Find next valid password twice
+	for iouter in [0: 2]
+	while true
+	{
+		// Increment big-endian base-26 (base-nalpha) big num by 1
+		let i = nv - 1;
+		let carry = v[i] == nalpha - 1;
+		while carry
+		{
+			v[i] = 0; // assume "a" and "z" not blocked
+			if i == 0
+			{
+				println("Error: exhausted all passwords without finding anything valid");
+				exit(-1);
+			}
+			i -= 1;
+			carry = v[i] == nalpha - 1;
+		}
+		v[i] += 1;
+		while any(iblock == v[i]) i += 1;
+
+		//if carry
+		//{
+		//	v[i+1: nv] = 0;
+		//}
+
+		//println("v = ", v);
+
+		let has_straight = false;
+		for i in [0: nv - 2]
+		{
+			has_straight = v[i] + 1 == v[i+1] and v[i] + 2 == v[i+2];
+			if (has_straight) break;
+		}
+		if (not has_straight) continue;
+
+		let has_first_pair = false;
+		let ip1 = -1;
+		for i in [0: nv - 1]
+		{
+			ip1 = v[i];
+			has_first_pair = v[i] == v[i+1];
+			if (has_first_pair) break;
+		}
+		if (not has_first_pair) continue;
+
+		let has_second_pair = false;
+		for i in [0: nv - 1]
+		{
+			if (v[i] == ip1) continue; // different from first pair (TODO?)
+			has_second_pair = v[i] == v[i+1];
+			if (has_second_pair) break;
+		}
+		if (not has_second_pair) continue;
+
+		let is_valid = true;
+
+		//if is_valid
+		break;
+	}
+
+	// Convert from int vec back to str
+	let ans = "";
+	for i in [0: nv]
+		ans += char(v[i] + i32("a"));
+
+	println("part 2 = ", ans);
+	return ans;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/11");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
