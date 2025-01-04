@@ -1,0 +1,134 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let nums = read_mi32s(str_);
+	sum_ = sum(nums);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let STACK_CAP = 1024;
+	let stack  = [0; STACK_CAP];     // stack of sums
+	let rstack = [false; STACK_CAP]; // stack of `has_red` values
+	let sp = 0;
+
+	let i = 0;
+	let has_red = false;
+	//println();
+	while i < len(str_)
+	{
+		let char_ = str_[i];
+		if char_ == "{"
+		{
+			//println("push");
+			sp += 1;
+			if sp >= STACK_CAP
+			{
+				println("Error: stack overflow!");
+				exit(-1);
+			}
+			stack[sp]  = 0;        // sum starts at 0 at "{"
+			rstack[sp] = has_red;  // redness inherits from parent
+		}
+		else if char_ == "}"
+		{
+			//println("pop");
+			sp -= 1;
+			//println("has_red = ", has_red);
+
+			if not has_red
+				stack[sp] += stack[sp+1];  // sum includes children
+
+			has_red = rstack[sp]; // restore what we had before pushing
+			//println("has_red = ", has_red);
+
+		}
+		else if is_digit(char_) or char_ == "-"
+		{
+			let i0 = i;
+			while (is_digit(str_[i]) or str_[i] == "-") i += 1;
+
+			let num = parse_i32(str_[i0: i]);
+			//println("adding ", num, " at sp ", sp);
+			stack[sp] += num;
+			i -= 1;  // backtrack to add one at end of loop later
+		}
+		else if char_ == ":"
+		{
+			if str_[i: min(len(str_), i+6'i64)] == ":""red"""
+			{
+				//println("red");
+				has_red = true;
+				rstack[sp] = has_red;
+				// could inc i here
+			}
+		}
+
+		i += 1;
+	}
+	//println("stack[0: 10] = ", stack[0: 10]);
+	sum_ = stack[0];
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/12");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

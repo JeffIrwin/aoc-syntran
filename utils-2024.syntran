@@ -582,6 +582,8 @@ fn split_(str_: str, delims: str): [str; :]
 
 	let n = len(str_);
 	//println("n = ", n);
+	if n == 0
+		return [""; 0];
 
 	let nout = 0;
 	if (any_str_eq_set(str_[0], delims)) nout -= 1;
