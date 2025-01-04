@@ -1,0 +1,138 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	for k in [0: 40]
+	{
+		//println("k = ", k);
+		let i = 0;
+		let n = i32(len(str_));
+		let out = repeat(" ", 2 * n);  // pre-allocate for reduced amortization
+		let nout = 0;
+		while i < n
+		{
+			let i0 = i;
+			let char_ = str_[i];
+			let reps = 0;
+			while (str_[i] == char_)
+			{
+				i += 1;
+				if (i >= n) break;
+			}
+			//println(i - i0, " ", char_, "'s");
+
+			//out += str(i - i0, char_);
+			out[nout] = str(i - i0);  nout += 1;
+			out[nout] = char_      ;  nout += 1;
+
+		}
+		out = out[0: nout]; // trim
+		//println("out = ", out);
+		str_ = out;
+	}
+	sum_ = len(str_);
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename);
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	for k in [0: 50]
+	{
+		//println("k = ", k);
+		let i = 0;
+		let n = i32(len(str_));
+		let out = repeat(" ", 2 * n);
+		let nout = 0;
+		while i < n
+		{
+			let i0 = i;
+			let char_ = str_[i];
+			let reps = 0;
+			while (str_[i] == char_)
+			{
+				i += 1;
+				if (i >= n) break;
+			}
+			//println(i - i0, " ", char_, "'s");
+
+			out[nout] = str(i - i0);  nout += 1;
+			out[nout] = char_      ;  nout += 1;
+
+		}
+		out = out[0: nout];
+		//println("out = ", out);
+		str_ = out;
+	}
+	sum_ = len(str_);
+
+	println("part 2 = ", sum_);
+	return sum_;
+}
+
+//==============================================================================
+
+fn main(): i64
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/10");
+
+	let sum_ = 0'i64;
+
+	// This runs both parts in 30 s, which is good enough for me.  You could
+	// probably speed it up with memoization.  That would require splitting the
+	// str into chunks, with the chunks carefully divided at character changes.
+	// I don't know what to do with the resulting transformation, as the order
+	// still matters
+	//
+	// It feels similar to 2024/21 (keypad conundrum), but there is a
+	// cross-chunk dependency that looks back more than 1 char (possibly 3 chars
+	// back)
+
+	sum_ += part1();
+	sum_ += part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return sum_;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

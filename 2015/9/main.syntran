@@ -73,12 +73,7 @@ fn part1(): i64
 		//println("perm = ", perm);
 		let dist_sum = 0;
 		for i in [0: nlocs-1]
-		{
-			//let dist_key = loc_keys[perm[i]] + ":" + loc_keys[perm[i+1]];
-			//dist_sum += get_dict_i64(&dists, dist_key);
 			dist_sum += dist_mat[perm[i], perm[i+1]];
-		}
-		//println("dist_sum = ", dist_sum);
 		if dist_min < 0
 			dist_min = dist_sum;
 		else
@@ -149,12 +144,8 @@ fn part2(): i64
 		//println("perm = ", perm);
 		let dist_sum = 0;
 		for i in [0: nlocs-1]
-		{
-			//let dist_key = loc_keys[perm[i]] + ":" + loc_keys[perm[i+1]];
-			//dist_sum += get_dict_i64(&dists, dist_key);
 			dist_sum += dist_mat[perm[i], perm[i+1]];
-		}
-		//println("dist_sum = ", dist_sum);
+
 		if dist_max < 0
 			dist_max = dist_sum;
 		else
