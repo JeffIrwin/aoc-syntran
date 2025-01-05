@@ -1,0 +1,171 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let race_time = 2503;
+if ifile == 0
+	race_time = 1000;
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	//println("race_time = ", race_time);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println();
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		let speed     = nums[0];
+		let fly_time  = nums[1];
+		let rest_time = nums[2];
+		//println("speed, fly, rest = ", [speed, fly_time, rest_time]);
+
+		// I was expecting part 2 to crank up the race time to a billion or
+		// something, so I did this with a div and a mod instead of iterating
+		// individual seconds
+		let period_time = fly_time + rest_time;
+		let nfly = race_time / period_time;
+
+		let rem_time = min(fly_time, race_time % period_time);
+
+		let sum_fly_time = i64(nfly) * fly_time + rem_time;
+		let dist = speed * sum_fly_time;
+		//println("dist = ", dist);
+
+		sum_ = max(sum_, dist);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	//println();
+	//println(repeat("*", 40));
+	//println("race_time = ", race_time);
+
+	let n = countln_(filename);
+	let speed     = [0; n];
+	let fly_time  = [0; n];
+	let rest_time = [0; n];
+
+	let f = open(filename);
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println();
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		speed    [i] = nums[0];
+		fly_time [i] = nums[1];
+		rest_time[i] = nums[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("speed = ", speed);
+	//println("fly_time = ", fly_time);
+	//println("rest_time = ", rest_time);
+
+	let time = [0; n];
+	let pos  = [0; n];
+	let points = [0'i64; n];
+	let is_fly = [true; n];
+	for it in [0: race_time]  // time loop
+	{
+		for i in [0: n]           // reindeer loop
+		{
+			time[i] += 1;
+			if is_fly[i]
+			{
+				pos[i] += speed[i];
+				if time[i] >= fly_time[i]
+				{
+					time[i] = 0;
+					is_fly[i] = false;
+				}
+			}
+			else
+			{
+				if time[i] >= rest_time[i]
+				{
+					time[i] = 0;
+					is_fly[i] = true;
+				}
+			}
+
+		}
+
+		// Get max dist and award points
+		let max_pos = 0;
+		for i in [0: n]
+			max_pos = max(max_pos, pos[i]);
+
+		for i in [0: n]
+			if pos[i] == max_pos  // ties are possible
+				points[i] += 1;
+	}
+	//println("pos = ", pos);
+	//println("points = ", points);
+
+	sum_ = 0;
+	for i in [0: n]
+		sum_ = max(sum_, points[i]);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/14");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
