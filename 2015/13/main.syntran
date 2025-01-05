@@ -1,0 +1,205 @@
+
+#include("../../utils-2024.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let names = new_dict_i64();
+	let gains = new_dict_i64();
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		// Alice would gain 71 happiness units by sitting next to Eric.
+		// Alice would lose 76 happiness units by sitting next to Mallory.
+		// Bob would lose 14 happiness units by sitting next to Alice.
+
+		let words = split_(str_, ". ");
+		let name0 = words[0];
+		let name1 = words[size(words, 0) - 1];
+
+		let gain  = parse_i64(words[3]);
+		if words[2] == "lose"
+			gain *= -1;
+
+		//println(name0, ":", name1, " = ", gain);
+
+		set_dict_i64(&names, name0, 1'i64);
+		set_dict_i64(&names, name1, 1'i64);
+
+		set_dict_i64(&gains, name0 + ":" + name1, gain);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let nnames =  len_dict_i64(&names);
+	let vnames = keys_dict_i64(&names); // names vector (array)
+
+	// Copy gains dict to matrix.  Both the graph and matrix are asymmetric
+	let gmat = [0; nnames, nnames];
+	for i in [0: nnames]
+	for j in [0: nnames]
+	{
+		if (i == j) continue;
+		gmat[i,j] = get_dict_i64(&gains, vnames[i] + ":" + vnames[j]);
+	}
+	//println("gmat = ", gmat);
+
+	// We can rotate any seating arrangement circle and it will still have the
+	// same score.  Reduce the number of permutations by always putting
+	// vnames[0] at location 0 to avoid duplicate arrangements with same score
+	let perm_tail = [1: nnames];
+	sum_ = 0;
+	while true
+	{
+		let perm = [[0], perm_tail];
+		//println("perm = ", perm);
+
+		// Calculate score
+		let score = 0'i64;
+		for i in [0: nnames-1]
+		{
+			score += gmat[perm[i]  , perm[i+1]];
+			score += gmat[perm[i+1], perm[i]  ];
+		}
+
+		// Arrangement is circular, i.e. 0 is also next to end
+		score += gmat[perm[0], perm[nnames-1]];
+		score += gmat[perm[nnames-1], perm[0]];
+
+		sum_ = max(sum_, score);
+
+		if not next_perm(&perm_tail) break;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let names = new_dict_i64();
+	let gains = new_dict_i64();
+
+	let f = open(filename);
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		// Alice would gain 71 happiness units by sitting next to Eric.
+		// Alice would lose 76 happiness units by sitting next to Mallory.
+		// Bob would lose 14 happiness units by sitting next to Alice.
+
+		let words = split_(str_, ". ");
+		let name0 = words[0];
+		let name1 = words[size(words, 0) - 1];
+
+		let gain  = parse_i64(words[3]);
+		if words[2] == "lose"
+			gain *= -1;
+
+		//println(name0, ":", name1, " = ", gain);
+
+		set_dict_i64(&names, name0, 1'i64);
+		set_dict_i64(&names, name1, 1'i64);
+
+		set_dict_i64(&gains, name0 + ":" + name1, gain);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let nnames =  len_dict_i64(&names) + 1; // add yourself for part 2
+	let vnames = keys_dict_i64(&names); // names vector (array)
+
+	// Copy gains dict to matrix.  Both the graph and matrix are asymmetric
+	let gmat = [0; nnames, nnames];
+	for i in [0: nnames]
+	for j in [0: nnames]
+	{
+		if (i == 0) continue;
+		if (j == 0) continue;
+		if (i == j) continue;
+		gmat[i,j] = get_dict_i64(&gains, vnames[i-1] + ":" + vnames[j-1]);
+	}
+	//println("gmat = ", gmat);
+
+	// We can rotate any seating arrangement circle and it will still have the
+	// same score.  Reduce the number of permutations by always putting
+	// vnames[0] at location 0 to avoid duplicate arrangements with same score
+	let perm_tail = [1: nnames];
+	sum_ = 0;
+	while true
+	{
+		let perm = [[0], perm_tail];
+		//println("perm = ", perm);
+
+		// Calculate score
+		let score = 0'i64;
+		for i in [0: nnames-1]
+		{
+			score += gmat[perm[i]  , perm[i+1]];
+			score += gmat[perm[i+1], perm[i]  ];
+		}
+
+		// Arrangement is circular
+		score += gmat[perm[0], perm[nnames-1]];
+		score += gmat[perm[nnames-1], perm[0]];
+
+		sum_ = max(sum_, score);
+
+		if not next_perm(&perm_tail) break;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/13");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
