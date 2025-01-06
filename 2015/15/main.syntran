@@ -1,0 +1,218 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn mul_mat_vec_i32(mat: [i32; :,:], vec: [i32; :]): [i32; :]
+{
+	// Integer matrix-vector multiplication.  Return mat * vec
+	//
+	// TODO: utils?
+	if size(mat, 1) != size(vec, 0)
+	{
+		println("Error in mul_mat_vec_i32: mat/vec dimensions do not agree!");
+		exit(-1);
+	}
+	let ans =    [0; size(mat,0)];
+	for     j in [0: size(mat,1)]
+		for i in [0: size(mat,0)]
+			ans[i] += mat[i,j] * vec[j];
+	return ans;
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	let row = read_mi32s(str_);
+	let nx = i32(size(row, 0));  // includes last "calories" col
+
+	//println("nx, ny = ", [nx, ny]);
+	let mat = [0; nx, ny];
+
+	let iy = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let row = read_mi32s(str_);
+		mat[:, iy] = row;
+
+		iy += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("mat = ", mat);
+
+	// The vector dimension size of our search space is ny
+	let nv = ny;
+	let v = [0; nv];
+	let nmax = 100;
+	//nmax = 10; // TODO
+
+	v[0] = nmax;
+	while true
+	{
+		//println("v = ", v);
+		let res = mul_mat_vec_i32(mat, v);
+		//println("res = ", res);
+
+		// Negatives become zero (and hence zero product score)
+		let score = 0'i64;
+		//if any(res <= 0) continue;
+		if all(res > 0)
+			score = product(i64(res[0: nx-1])); // ignore last "calories" dim
+		sum_ = max(sum_, score);
+
+		// Increment to next v which sums to nmax
+		//
+		// There's probably a smarter way to selectively iterate over these
+		// without so much cycling on things that don't sum
+		if (v[nv-1] == nmax) break;
+		while true
+		{
+			let iv = 0;
+			let carry = v[iv] == nmax;
+			while carry
+			{
+				v[iv] = 0;
+				iv += 1;
+				if (iv >= nv) break;
+				carry = v[iv] == nmax;
+			}
+			if (carry) break;  // last iteration
+			v[iv] += 1;
+			if (sum(v) == nmax) break;
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let ny = countln_(filename);
+
+	let f = open(filename);
+	let str_ = readln(f);
+	let row = read_mi32s(str_);
+	let nx = i32(size(row, 0));  // includes last "calories" col
+
+	//println("nx, ny = ", [nx, ny]);
+	let mat = [0; nx, ny];
+
+	let iy = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let row = read_mi32s(str_);
+		mat[:, iy] = row;
+
+		iy += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("mat = ", mat);
+
+	// The vector dimension size of our search space is ny
+	let nv = ny;
+	let v = [0; nv];
+	let nmax = 100;
+	//nmax = 10; // TODO
+
+	let sum0 = sum_;
+	v[0] = nmax;
+	while true
+	{
+		//println("v = ", v);
+		let res = mul_mat_vec_i32(mat, v);
+		//println("res = ", res);
+
+		// Negatives become zero (and hence zero product score)
+		let score = 0'i64;
+		//if any(res <= 0) continue;
+		if all(res > 0)
+			score = product(i64(res[0: nx-1])); // ignore last "calories" dim
+
+		// Only change for part 2
+		if res[nx-1] != 500
+			score = 0;
+
+		sum_ = max(sum_, score);
+
+		//// Progress logger
+		//if (sum_ > sum0) println("sum_ = ", sum_);
+		//sum0 = sum_;
+
+		// Increment to next v which sums to nmax
+		//
+		// There's probably a smarter way to selectively iterate over these
+		// without so much cycling on things that don't sum
+		if (v[nv-1] == nmax) break;
+		while true
+		{
+			let iv = 0;
+			let carry = v[iv] == nmax;
+			while carry
+			{
+				v[iv] = 0;
+				iv += 1;
+				if (iv >= nv) break;
+				carry = v[iv] == nmax;
+			}
+			if (carry) break;  // last iteration
+			v[iv] += 1;
+			if (sum(v) == nmax) break;
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/15");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
