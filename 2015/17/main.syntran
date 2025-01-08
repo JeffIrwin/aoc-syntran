@@ -1,0 +1,130 @@
+
+#include("../../utils-2024.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let liters = 150;
+if ifile == 0
+	liters = 25;
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+	let jugs = [0; n];
+
+	let f = open(filename);
+	for i in [0: n]
+	{
+		jugs[i] = parse_i32(readln(f));
+	}
+	close(f);
+	//println("jugs = ", jugs);
+
+	let bits = 0;
+	for i in [0: 2 ** n]
+	{
+		let filled = 0;
+		for j in [0: n]
+			if i & (1 << j) != 0
+				filled += jugs[j];
+		//println("filled = ", filled);
+
+		if filled == liters
+		{
+			//println(sum_);
+			sum_ += 1;
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+	let jugs = [0; n];
+
+	let f = open(filename);
+	for i in [0: n]
+	{
+		jugs[i] = parse_i32(readln(f));
+	}
+	close(f);
+	//println("jugs = ", jugs);
+
+	let bits = 0;
+	let min_containers = 2_000_000;
+	for i in [0: 2 ** n]
+	{
+		let filled = 0;
+		let num_containers = 0;
+		for j in [0: n]
+			if i & (1 << j) != 0
+			{
+				num_containers += 1;
+				filled += jugs[j];
+			}
+		//println("filled = ", filled);
+
+		if filled == liters
+		{
+			//println(sum_);
+			if num_containers < min_containers
+			{
+				sum_ = 1;
+				min_containers = num_containers;
+			}
+			else if num_containers == min_containers
+			{
+				sum_ += 1;
+			}
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/17");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
