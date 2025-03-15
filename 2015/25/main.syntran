@@ -1,0 +1,92 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let nums = read_i32s(str_) - 1;  // convert to 0-based indexing
+	let xc = nums[1];
+	let yc = nums[0];
+
+	println("xc, yc = ", [xc, yc]);
+
+	// Iterate diagonally to find how many steps we have to go through to get to
+	// [xc, yc].  There's probably a clever way to do this without iterating
+	let n = 0;
+	let y0 = 0;
+	let found = false;
+	while not found
+	{
+		//println("y0 = ", y0);
+		let x = 0;
+		for y in [y0: -1: -1]
+		{
+			//println("x, y = ", [x, y]);
+			found = (x == xc and y == yc);
+			if (found) break;
+			x += 1;
+			n += 1;
+		}
+		if (found) break;
+		y0 += 1;
+	}
+	println("n = ", n);
+
+	let code = 20_151_125'i64;
+	for i in [0: n]
+	{
+		code *= 252_533;
+		code %= 33_554_393;
+	}
+	sum_ = code;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/25");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -1,0 +1,167 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let ninstr = countln_(filename);
+
+	let instrs = [""; ninstr];
+	let args0  = [""; ninstr];
+	let args1  = [""; ninstr];
+
+	let f = open(filename, "r");
+	for i in [0: ninstr]
+	{
+		let str_ = readln(f);
+		println("str_ = ", str_);
+
+		let words = split_(str_, ", ");
+		instrs[i] = words[0];
+		args0[i] = words[1];
+		if (size(words, 0) >= 3) args1[i] = words[2];
+
+	}
+	close(f);
+	println("instrs = ", instrs);
+	println("args0 = ", args0);
+	println("args1 = ", args1);
+
+	let reg_a = 0;
+	let reg_b = 0;
+
+	let iptr = 0;
+	while true
+	{
+		if (iptr >= ninstr) break;
+		println("iptr, a, b = ", [iptr, reg_a, reg_b]);
+
+		// hlf r sets register r to half its current value, then continues with the next instruction.
+		// tpl r sets register r to triple its current value, then continues with the next instruction.
+		// inc r increments register r, adding 1 to it, then continues with the next instruction.
+		// jmp offset is a jump; it continues with the instruction offset away relative to itself.
+		// jie r, offset is like jmp, but only jumps if register r is even ("jump if even").
+		// jio r, offset is like jmp, but only jumps if register r is 1 ("jump if one", not odd).
+
+		let instr = instrs[iptr];
+		let arg0  =  args0[iptr];
+		let arg1  =  args1[iptr];
+
+		let reg = -1;
+		if arg0 == "a"
+			reg = reg_a;
+		else if arg0 == "b"
+			reg = reg_b;
+		else
+		{
+			reg = parse_i32(arg0);
+			println("reg = ", reg);
+		}
+
+		let offset = -1;
+		if arg1 != ""
+			offset = parse_i32(arg1);
+
+		if instr == "hlf"
+		{
+			println("hlf ", reg);
+			reg /= 2;
+			println(reg);
+		}
+		else if instr == "tpl"
+		{
+			println("tpl ", reg);
+			reg *= 3;
+			println(reg);
+		}
+		else if instr == "inc"
+		{
+			println("inc ", reg);
+			reg += 1;
+			println(reg);
+		}
+		else if instr == "jmp"
+		{
+			println("jmp ", reg);
+			iptr += reg;
+			continue;
+		}
+		else if instr == "jie"
+		{
+			if reg % 2 == 0
+			{
+				println("jie ", offset);
+				iptr += offset;
+				continue;
+			}
+		}
+		else if instr == "jio"
+		{
+			//if reg % 2 == 1
+			if reg == 1  // ugh, rtfm
+			{
+				println("jio ", offset);
+				iptr += offset;
+				continue;
+			}
+		}
+		else
+		{
+			println("Error: bad instruction " + instr);
+			exit(-1);
+		}
+
+		if arg0 == "a"
+			reg_a = reg;
+		else if arg0 == "b"
+			reg_b = reg;
+
+		iptr += 1;
+	}
+	sum_ = reg_b;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/23");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

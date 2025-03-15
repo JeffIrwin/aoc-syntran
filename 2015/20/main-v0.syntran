@@ -1,0 +1,107 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let nin = parse_i32(str_);
+	//nin = 150;
+	let n = nin / 10;
+	println("n = ", n);
+
+	let NCAP = n;
+	//NCAP = n / 3;
+	NCAP = n / 4;
+	//NCAP = n / 6;
+	//NCAP = 10;
+
+	let v = [0; NCAP];
+	let vmaxmax = 0;
+	for i in [1: NCAP]
+	{
+		if i % 10_000 == 0
+		{
+			let vmax = 0;
+			for vi in v
+				vmax = max(vmax, vi);
+			println("i, vmax = ", [i, vmax]);
+		}
+		//println("i = ", i);
+		//v[i: i: NCAP] += 1;
+		v[i: i: NCAP] += i;
+
+		//let vmax = 0;
+		//for vi in v[i: i: NCAP]
+		//	vmax = max(vmax, vi);
+		////println("vmax = ", vmax);
+		//if vmax > vmaxmax
+		//{
+		//	vmaxmax = vmax;
+		//	println("vmaxmax = ", vmaxmax);
+		//	if vmaxmax >= n
+		//	{
+		//		//// this isn't actually the house number
+		//		//sum_ = i;
+		//
+		//		sum_ = 0;
+		//		while v[sum_] != vmaxmax
+		//			sum_ += 1;
+		//		break;
+		//	}
+		//}
+	}
+	//println("v = ", v);
+	sum_ = 0;
+	while v[sum_] < n
+		sum_ += 1;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/20");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

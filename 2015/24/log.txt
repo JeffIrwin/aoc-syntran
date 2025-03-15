@@ -1,0 +1,14 @@
+
+ [95msyntran 0.0.59[0m
+ [95mhttps://github.com/JeffIrwin/syntran[0m
+
+ Interpreting file "main.syntran"
+
+Starting AOC syntran main 2015/24
+packages = [113, 109, 107, 103, 101, 97, 89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 31, 29, 23, 19, 17, 13, 11, 5, 3, 1]
+weight_sum = 1548
+target = 387
+NSTATE = 13
+ngroup0_min = 5
+    qent_min = 251263659
+    qent_min = 77387711

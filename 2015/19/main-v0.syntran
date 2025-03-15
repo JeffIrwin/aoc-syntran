@@ -1,0 +1,270 @@
+
+#include("../../utils.syntran");
+#include("../../dict_str.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+// Part 2 uses a different test input
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn is_lower(char_: str): bool
+{
+	return i32("a") <= i32(char_) and i32(char_) <= i32("z");
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+
+	// Load replacements
+	let reps = new_dict_str();
+	let str_ = readln(f);
+	//while not eof(f)
+	while str_ != ""
+	{
+		println("str_ = ", str_);
+
+		let words = split_(str_, " => ");
+		let atom = words[0];
+		let rep = words[1];
+		println("atom, rep = ", [atom, rep]);
+
+		let rep0 = get_dict_str(&reps, atom);
+
+		// Delimit by colons.  We'll split later
+		set_dict_str(&reps, atom, rep0 + rep + ":");
+
+		str_ = readln(f);
+	}
+
+	// Initial molecule
+	let mole = readln(f);
+	println("mole = ", mole);
+
+	// Debug only
+	for key in keys_dict_str(&reps)
+	{
+		let val = get_dict_str(&reps, key);
+		println("key, val = ", [key, val]);
+	}
+
+	let new_moles = new_dict_str();
+
+	// Process molecule
+	let i = 0;
+	//for i in [0: len(mole)]
+	while i < len(mole)
+	{
+		let i0 = i;
+		//let new_mole = mole[0: i];
+
+		let atom = mole[i];
+		i += 1;
+		while is_lower(mole[i])
+		{
+			atom += mole[i];
+			i += 1;
+		}
+		println("atom = ", atom);
+
+		//// Split had a bug for empty strings, which is now fixed, that this
+		//// worked around
+		//let atom_reps = get_dict_str(&reps, atom);
+		//if (atom_reps == "") continue;
+		//let reps = split_(atom_reps, ":");  // shadowing
+
+		let reps = split_(get_dict_str(&reps, atom), ":"); // shadowing
+		println("reps = ", reps);
+		//if (size(reps,0) == 0) continue;
+
+		for rep in reps
+		//for ir in [0: size(reps, 0)]
+		{
+			let new_mole = mole[0: i0] + rep + mole[i: len(mole)];
+			//let new_mole = mole[0: i0] + reps[ir] + mole[i0: len(mole)];
+			//println("new_mole = ", new_mole);
+
+			set_dict_str(&new_moles, new_mole, "exists");
+		}
+		println();
+	}
+	sum_ = len_dict_str(&new_moles);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+
+	// Load replacements
+	let reps = new_dict_str();
+	let str_ = readln(f);
+	while str_ != ""
+	{
+		println("str_ = ", str_);
+
+		let words = split_(str_, " => ");
+		let atom = words[0];
+		let rep = words[1];
+		println("atom, rep = ", [atom, rep]);
+
+		let rep0 = get_dict_str(&reps, atom);
+
+		// Delimit by colons.  We'll split later
+		set_dict_str(&reps, atom, rep0 + rep + ":");
+
+		str_ = readln(f);
+	}
+
+	// Target medicine molecule
+	let medi = readln(f);
+	println("medi = ", medi);
+
+	// Debug only
+	for key in keys_dict_str(&reps)
+	{
+		let val = get_dict_str(&reps, key);
+		println("key, val = ", [key, val]);
+	}
+
+	let new_moles = new_dict_str();
+
+	// Do a BFS (or DFS?).  Index the target medicine for each newly generated
+	// molecule.  If it doesn't exist as a substring, don't bother pushing it to
+	// the queue.  Actually, that last part isn't right, because a
+	// transformation can change an atom in the middle of the string.  Might
+	// have to brute the whole BFS
+
+	let CAP = 1024 * 8192;
+
+	// Queue of molecules
+	let q = [""; CAP];
+	let qs = 0;  let qe = 0;  // start and end queue pointers/indices
+	
+	// Queue of distances or steps from start of process.  Shares same qs/qe
+	let qd = [0; CAP];
+	
+	// Dict of molecules that we've already seen before, to avoid redundant
+	// reprocessing and infinite loops
+	let seen = new_dict_str();
+
+	// Start with just "e" as the molecule
+	let mole = "e";
+
+	// Push to queues but not dict yet
+	q [qe] = mole;
+	qd[qe] = 0;  // step distance 0
+	qe += 1;
+	//set_dict_str(&seen, mole, "exists");
+
+	while true
+	{
+		if (qs >= qe)
+		{
+			println("Error: queue is empty");
+			exit(-1);
+		}
+
+		// Pop
+		mole = q [qs];
+		let dist = qd[qs];
+		qs += 1;
+		//println("mole = ", mole);
+		//if (qs >= 10) exit(0);
+
+		// Have we visited this graph node before?
+		if (get_dict_str(&seen, mole) != "") continue;
+		set_dict_str(&seen, mole, "exists");
+
+		println("mole = ", mole);
+
+		// Check if we found the target medicine
+		if mole == medi
+		{
+			sum_ = dist;
+			break;
+		}
+
+		// Process replacement transformations for this molecule
+		let i = 0;
+		while i < len(mole)
+		{
+			let i0 = i;
+			let atom = mole[i];
+			i += 1;
+			while is_lower(mole[i])
+			{
+				atom += mole[i];
+				i += 1;
+			}
+			//println("atom = ", atom);
+
+			let reps = split_(get_dict_str(&reps, atom), ":"); // shadowing
+			//println("reps = ", reps);
+
+			for rep in reps
+			{
+				let new_mole = mole[0: i0] + rep + mole[i: len(mole)];
+				//println("new_mole = ", new_mole);
+				//set_dict_str(&new_moles, new_mole, "exists");
+
+				// Push queues
+				q [qe] = new_mole;
+				qd[qe] = dist + 1;
+				qe += 1;
+				if qe >= CAP
+				{
+					println("Error: queue overflow!");
+					exit(-1);
+				}
+			}
+			//println();
+		}
+	}
+	//sum_ = len_dict_str(&new_moles);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/19");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

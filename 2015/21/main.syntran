@@ -1,0 +1,269 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+// Weapons:    Cost  Damage  Armor
+// Dagger        8     4       0
+// Shortsword   10     5       0
+// Warhammer    25     6       0
+// Longsword    40     7       0
+// Greataxe     74     8       0
+let weapons = [
+	 8,    4,      0,
+	10,    5,      0,
+	25,    6,      0,
+	40,    7,      0,
+	74,    8,      0
+	;
+	3, 5
+];
+let weapons_cost   = weapons[0,:];
+let weapons_damage = weapons[1,:];
+let weapons_armor  = weapons[2,:];
+
+//Armor:      Cost  Damage  Armor
+//Leather      13     0       1
+//Chainmail    31     0       2
+//Splintmail   53     0       3
+//Bandedmail   75     0       4
+//Platemail   102     0       5
+let armors = [
+	 13,     0,       1,
+	 31,     0,       2,
+	 53,     0,       3,
+	 75,     0,       4,
+	102,     0,       5
+	;
+	3, 5
+];
+let armors_cost   = armors[0,:];
+let armors_damage = armors[1,:];
+let armors_armor  = armors[2,:];
+
+//Rings:      Cost  Damage  Armor
+//Damage +1    25     1       0
+//Damage +2    50     2       0
+//Damage +3   100     3       0
+//Defense +1   20     0       1
+//Defense +2   40     0       2
+//Defense +3   80     0       3
+let rings = [
+	 25,     1,       0,
+	 50,     2,       0,
+	100,     3,       0,
+	 20,     0,       1,
+	 40,     0,       2,
+	 80,     0,       3
+	 ;
+	 3, 6
+];
+let rings_cost   = rings[0,:];
+let rings_damage = rings[1,:];
+let rings_armor  = rings[2,:];
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+
+	let boss_hp0    = read_i32(readln(f));
+	let boss_damage = read_i32(readln(f));
+	let boss_armor  = read_i32(readln(f));
+	close(f);
+
+	//println("boss_hp0    = ", boss_hp0);
+	//println("boss_damage = ", boss_damage);
+	//println("boss_armor  = ", boss_armor);
+	//println();
+
+	////println("weapons = ", weapons);
+	//println("weapons_cost   = ", weapons_cost);
+	//println("weapons_damage = ", weapons_damage);
+	//println("weapons_armor  = ", weapons_armor);
+	//println();
+
+	//println("armors_cost   = ", armors_cost);
+	//println("armors_damage = ", armors_damage);
+	//println("armors_armor  = ", armors_armor);
+	//println();
+
+	//println("rings_cost   = ", rings_cost);
+	//println("rings_damage = ", rings_damage);
+	//println("rings_armor  = ", rings_armor);
+	//println();
+
+	let nweapons = size(weapons_cost, 0);
+	let narmors  = size(armors_cost , 0);
+	let nrings   = size(rings_cost  , 0);
+
+	// Iterate over combos of items to purchase (or none if optional)
+	//
+	// Must buy 1 weapon
+	//
+	// 0 or 1 armors
+	//
+	// 0, 1, or 2 rings and *no* duplicate rings
+
+	//let iw  = nweapons - 1; //0;
+	//let ia  = narmors  - 1; //0;
+	//let ir0 = nrings   - 2; //0;
+	//let ir1 = nrings   - 1; //1;
+
+	let cost_min = 2_000_000;
+	for iw in [0: nweapons]
+	for ia in [0: narmors + 1]  // when ia overflows, buy no armor
+	for ir0 in [0: nrings + 1]
+	for ir1 in [0: nrings + 1]
+	{
+
+	let player_hp = 100;
+
+	// Check bounds in case of optional armor/ring(s)
+
+	//let player_damage = weapons_damage[iw] + rings_damage[ir0] + rings_damage[ir1];
+	//let player_armor  = armors_armor  [ia] + rings_armor [ir0] + rings_armor [ir1];
+
+	let player_damage = weapons_damage[iw];
+	if (ir0 < nrings) player_damage += rings_damage[ir0];
+	if (ir1 < nrings) player_damage += rings_damage[ir1];
+
+	let player_armor = armors_armor[ia];
+	if (ir0 < nrings) player_armor += rings_armor[ir0];
+	if (ir1 < nrings) player_armor += rings_armor[ir1];
+
+	let cost = weapons_cost[iw];
+	if (ia < narmors) cost += armors_cost[ia];
+	if (ir0 < nrings) cost += rings_cost[ir0];
+	if (ir1 < nrings) cost += rings_cost[ir1];
+	//println("cost = ", cost);
+
+	let boss_hp = boss_hp0;
+	while true
+	{
+		// Player attacks first
+		boss_hp -= max(player_damage - boss_armor, 1);
+		if boss_hp <= 0
+		{
+			cost_min = min(cost_min, cost);
+			//println("player wins");
+			break;
+		}
+
+		player_hp -= max(boss_damage - player_armor, 1);
+		if player_hp <= 0
+		{
+			//println("player loses");
+			break;
+		}
+	}
+	}
+	sum_ = cost_min;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+
+	let boss_hp0    = read_i32(readln(f));
+	let boss_damage = read_i32(readln(f));
+	let boss_armor  = read_i32(readln(f));
+	close(f);
+
+	let nweapons = size(weapons_cost, 0);
+	let narmors  = size(armors_cost , 0);
+	let nrings   = size(rings_cost  , 0);
+
+	let cost_max = 0;
+	for iw in [0: nweapons]
+	for ia in [0: narmors + 1]  // when ia overflows, buy no armor
+	for ir0 in [0: nrings + 1]
+	for ir1 in [0: nrings + 1]
+	{
+
+	let player_hp = 100;
+
+	// Check bounds in case of optional armor/ring(s)
+
+	let player_damage = weapons_damage[iw];
+	if (ir0 < nrings) player_damage += rings_damage[ir0];
+	if (ir1 < nrings) player_damage += rings_damage[ir1];
+
+	let player_armor = armors_armor[ia];
+	if (ir0 < nrings) player_armor += rings_armor[ir0];
+	if (ir1 < nrings) player_armor += rings_armor[ir1];
+
+	let cost = weapons_cost[iw];
+	if (ia < narmors) cost += armors_cost[ia];
+	if (ir0 < nrings) cost += rings_cost[ir0];
+	if (ir1 < nrings) cost += rings_cost[ir1];
+	//println("cost = ", cost);
+
+	let boss_hp = boss_hp0;
+	while true
+	{
+		// Player attacks first
+		boss_hp -= max(player_damage - boss_armor, 1);
+		if boss_hp <= 0
+		{
+			break;
+		}
+
+		player_hp -= max(boss_damage - player_armor, 1);
+		if player_hp <= 0
+		{
+			cost_max = max(cost_max, cost);
+			break;
+		}
+	}
+	}
+	sum_ = cost_max;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/21");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

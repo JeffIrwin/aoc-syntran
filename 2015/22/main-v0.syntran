@@ -1,0 +1,301 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+//Magic Missile costs 53 mana. It instantly does 4 damage.
+//Drain costs 73 mana. It instantly does 2 damage and heals you for 2 hit points.
+//Shield costs 113 mana. It starts an effect that lasts for 6 turns. While it is active, your armor is increased by 7.
+//Poison costs 173 mana. It starts an effect that lasts for 6 turns. At the start of each turn while it is active, it deals the boss 3 damage.
+//Recharge costs 229 mana. It starts an effect that lasts for 5 turns. At the start of each turn while it is active, it gives you 101 new mana.
+
+//    cost duration damage heal armor mana
+//-----------------------------------------
+//      53        1      4    0     0    0    magic missile
+//      73        1      2    2     0    0    drain
+//     113        6      0    0     7    0    shield
+//     173        6      3    0     0    0    poison
+//     229        5      0    0     0  101    recharge
+
+let spells = [
+	 53,        1,      4,    0,     0,    0,
+	 73,        1,      2,    2,     0,    0,
+	113,        6,      0,    0,     7,    0,
+	173,        6,      3,    0,     0,    0,
+	229,        5,      0,    0,     0,  101
+	;
+	6, 5
+];
+let spells_cost     = spells[0,:];
+let spells_duration = spells[1,:];
+let spells_damage   = spells[2,:];
+let spells_heal     = spells[3,:];
+let spells_armor    = spells[4,:];
+let spells_mana     = spells[5,:];
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+
+	let boss_hp0    = read_i32(readln(f));
+
+	let boss_damage = read_i32(readln(f));
+	close(f);
+
+	println("boss_hp0    = ", boss_hp0);
+	println("boss_damage = ", boss_damage);
+	println();
+
+	println("spells = ", spells);
+
+	// Plan: use a queue to BFS through each choice of spells at each turn.
+	// Stop pushing when someone wins.  Queue stores state:
+	//
+	//     spell_timers[:]
+	//     boss_hp
+	//     player_hp
+	//     player_mana
+	//     spent_mana
+	//
+	// Spell timers implicitly cover which spells have been selected
+	//
+	// I was thinking of iterating over base-5 big nums (5 spells) but you don't
+	// know how many digits are in the number (you don't know how many turns a
+	// game will take).  Maybe you could assume 50 pairs of turns max (player
+	// has 50 hp, boss should to at least 1 damage), but there will be a lot of
+	// wasted big nums that don't take that long
+
+	let player_hp = 50;
+	let player_mana = 500;
+
+	let nspells = size(spells, 1);
+	let spell_timers = [0; nspells];
+	println("spell_timers = ", spell_timers);
+
+	let boss_hp = boss_hp0;
+	let spent_mana = 0;
+
+	// Queue
+	let QCAP = 1024 * 1024 * 2;
+	let q = [0; nspells + 4, QCAP];
+	let qs = 0;  let qe = 0;
+
+	// Push each spell for the first turn
+	for i in [0: nspells]
+	{
+		q[:, qe] = 0;
+		q[i, qe] = spells_duration[i];
+
+		q[ nspells + 0, qe ] = boss_hp;
+		q[ nspells + 1, qe ] = player_hp;
+
+		//q[ nspells + 2, qe ] = player_mana;
+		q[ nspells + 2, qe ] = player_mana - spells_cost[i];
+
+		q[ nspells + 3, qe ] = spells_cost[i] + spent_mana;
+
+		qe += 1;
+	}
+	println("q = ", q[:, 0: nspells]);
+	//exit(0);
+
+	let visited = new_dict_i64();
+
+	// Iterate on queue
+	let mana_min = 2_000_000_000;
+	let boss_hp_min = 2_000_000_000;
+	while qs < qe
+	{
+		// Pop
+		spell_timers = q[0: nspells, qs];
+
+		boss_hp     = q[ nspells + 0, qs ];
+		player_hp   = q[ nspells + 1, qs ];
+		player_mana = q[ nspells + 2, qs ];
+		spent_mana  = q[ nspells + 3, qs ];
+
+		qs += 1;
+
+		// State loops are possible. Or at least, multiple paths to arrive at
+		// the same state
+		let state_str = str(q[:, qs-1]);
+		if (get_dict_i64(&visited, state_str) == 1)
+		{
+			//println("already visited");
+			continue;
+			//exit(0);
+		}
+		set_dict_i64(&visited, state_str, 1'i64);
+
+		//println();
+		//println("player_hp, boss_hp = ", [player_hp, boss_hp]);
+		//println("spell_timers = ", spell_timers);
+
+		// Player went first by casting spell in initial push in loop above
+
+		//****************
+		// Boss turn
+
+		// Process spells
+		//let player_damage = 0;
+		let player_armor  = 0;
+		for i in [0: nspells]
+		{
+			if (spell_timers[i] == 0) continue;
+			spell_timers[i] -= 1;
+
+			//println("spell ", i);
+
+			// Do nothing with cost here
+
+			//player_damage += spells_damage[i];
+			boss_hp -= spells_damage[i];
+			//if (spells_damage[i] > 0) println("damage ", spells_damage[i]);
+			//println("boss_hp = ", boss_hp);
+			if boss_hp < boss_hp_min
+			{
+				println("boss_hp = ", boss_hp);
+				boss_hp_min = boss_hp;
+			}
+
+			player_hp     += spells_heal[i];
+			player_armor  += spells_armor[i];
+			player_mana   += spells_mana[i];
+		}
+		if boss_hp <= 0
+		{
+			//println("player wins");
+			//mana_min = min(mana_min, spent_mana);
+			if spent_mana < mana_min
+			{
+				mana_min = spent_mana;
+				println("mana_min = ", mana_min);
+			}
+			continue;
+		}
+
+		// Boss attacks
+		player_hp -= max(boss_damage - player_armor, 1);
+		if player_hp <= 0
+		{
+			//println("player loses");
+			continue;
+		}
+
+		//****************
+		// Player turn
+
+		// Process spells.  Armor does nothing during player's turn
+		//let player_damage = 0;
+		//let player_armor  = 0;
+		for i in [0: nspells]
+		{
+			if (spell_timers[i] == 0) continue;
+			spell_timers[i] -= 1;
+
+			// Do nothing with cost here
+
+			//player_damage += spells_damage[i];
+			boss_hp -= spells_damage[i];
+			//if (spells_damage[i] > 0) println("damage ", spells_damage[i]);
+			//println("boss_hp = ", boss_hp);
+			if boss_hp < boss_hp_min
+			{
+				println("boss_hp = ", boss_hp);
+				boss_hp_min = boss_hp;
+			}
+
+			player_hp     += spells_heal[i];
+			//player_armor  += spells_armor[i];
+			player_mana   += spells_mana[i];
+		}
+		if boss_hp <= 0
+		{
+			//println("player wins");
+			//mana_min = min(mana_min, spent_mana);
+			if spent_mana < mana_min
+			{
+				mana_min = spent_mana;
+				println("mana_min = ", mana_min);
+			}
+			continue;
+		}
+
+		//// TODO
+		//continue;
+
+		// Cast a new spell.  Push every possible choice to the queue
+		for i in [0: nspells]
+		{
+			// Cannot recast an active spell
+			if (spell_timers[i] > 0) continue;
+
+			// Check if we can afford it
+			if (player_mana < spells_cost[i]) continue;
+
+			//q[:, qe] = 0;
+			q[0: nspells, qe] = spell_timers;
+
+			q[i, qe] = spells_duration[i];
+
+			q[ nspells + 0, qe ] = boss_hp;
+			q[ nspells + 1, qe ] = player_hp;
+			q[ nspells + 2, qe ] = player_mana - spells_cost[i];
+			q[ nspells + 3, qe ] = spells_cost[i] + spent_mana;
+
+			qe += 1;
+			if qe >= QCAP
+			{
+				println("Error:  queue overflow!");
+				exit(-1);
+			}
+		}
+
+		//****************
+	}
+	sum_ = mana_min;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/22");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

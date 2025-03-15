@@ -1,0 +1,176 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let dummy_mat = read_i32_mat(filename);
+	//println("dummy_mat = ", dummy_mat);
+
+	let packages = dummy_mat[0,:];
+	let npackages = size(packages, 0);
+
+	//// Reverse (I did not have this in this version initially, anyway it
+	//// doesn't help without 6-fold symmetry reduction)
+	//packages = packages[npackages-1: -1: -1];
+
+	println("packages = ", packages);
+
+	let weight_sum = sum(packages);
+	println("weight_sum = ", weight_sum);
+
+	// I'll call these groups 0, 1, and 2 instead of 1, 2, and 3
+	let ngroups = 3;
+
+	let target = weight_sum / ngroups;
+	println("target = ", target);
+
+	// State stack stores:
+	//   - 0:3 : sum0, sum1, sum2 (weight sums per group)
+	//   - 3   : idx (package index to push) TODO next or previous?
+	//   - 4   : ngroup0 (number of packages in group 0)
+	//   - 5   : qent (quantum entaglement number: product of weights in group 0)
+	let NSTATE = 6;  // ngroups + 3
+
+	// TODO: I'm doing at least 6x more work than needed because there's a
+	// symmetry between groups that I'm not accounting for.  For example, for
+	// any valid packing, you could swap groups 1 and 2 and get another valid
+	// packing.  If you swap group 0 as well, there are 6 total valid symmetric
+	// packings, but I would also need to store that state of number of packages
+	// and entaglement numbers for groups 1 and 2.  Then whenever a valid
+	// packing is found, treat whichever group has the lowest number of packages
+	// (ties broken by entaglement number) as "group 0"
+
+	let ngroup0_min = 2_000_000_000;
+	let qent_min    = 2_000_000_000_000_000'i64;
+	let qent_mins = [qent_min; npackages];
+
+	// Stack
+	let SCAP = 1024 * 1024 * 32;
+	SCAP = 128;
+	let s = [0'i64; NSTATE, SCAP];
+	let sp = 0;
+
+	// Push initial package 0 to each possible group.  Should be done with a
+	// loop but hard-coded here for 3 groups
+	s[:, 0] = [packages[0], 0, 0,   0, 1, packages[0]];
+	s[:, 1] = [0, packages[0], 0,   0, 0, 1          ];
+	s[:, 2] = [0, 0, packages[0],   0, 0, 1          ];
+	sp += 3;
+
+	while sp > 0
+	{
+		// Pop
+		sp -= 1;
+		let sums = s[0:3, sp];
+		let idx  = s[3, sp];
+		let ng0  = s[4, sp];
+		let qent = s[5, sp];
+		//println("qent = ", qent);
+
+		//println("sums = ", sums);
+
+		//if (any(sums > target)) continue; // overweight
+
+		// ngroup0_min and qent_min conditions:  Only set when all groups
+		// filled, and reset qent_min to HUGE whenever ngroup0_min reduces
+
+
+		// Skip suboptimal packings
+		if (ng0 > ngroup0_min) continue;
+
+		//if (ng0 == ngroup0_min and qent > qent_min) continue;
+		//if (qent > qent_mins[ng0]) continue;
+		qent_mins[ng0] = min(qent_mins[ng0], qent);
+
+		if idx == npackages - 1
+		{
+			// We found a packing with the correct weight distribution.  Now
+			// update the other optimization conditions
+
+			//println("ng0, qent = ", [ng0, qent]);
+			if (ng0 == ngroup0_min)
+			{
+				//qent_min = min(qent_min, qent);
+				if (qent < qent_min)
+				{
+					qent_min = qent;
+					println("    qent_min = ", qent_min);
+				}
+			}
+			else if (ng0 < ngroup0_min)
+			{
+				ngroup0_min = ng0;
+				println("ngroup0_min = ", ngroup0_min);
+				qent_min = 2_000_000_000_000_000'i64;
+			}
+			continue;
+		}
+
+		// Push next package with weight `w` to each group
+
+		idx += 1;
+		let w = packages[idx];
+
+		if sp > SCAP - 4
+		{
+			println("Error: stack overflow!");
+			exit(-1);
+		}
+
+		// Should be done with a loop.  Also the overweight condition could
+		// probably be checked at top of loop, but this when does a little less
+		// churning on the stack
+
+		if (sums[0]+w <= target) { s[:, sp] = [sums[0]+w,  sums[1],  sums[2],  idx,  ng0+1,  qent*w];  sp += 1; }
+		if (sums[1]+w <= target) { s[:, sp] = [sums[0],  sums[1]+w,  sums[2],  idx,  ng0  ,  qent  ];  sp += 1; }
+		if (sums[2]+w <= target) { s[:, sp] = [sums[0],  sums[1],  sums[2]+w,  idx,  ng0  ,  qent  ];  sp += 1; }
+
+	}
+	sum_ = qent_min;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/24");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

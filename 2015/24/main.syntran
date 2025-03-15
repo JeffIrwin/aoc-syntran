@@ -1,0 +1,364 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+#include("../../random.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn shuffle_i32(a: &[i32; :], seed: i32)
+{
+	// Shuffle an i32 vector using the Fisher-Yates shuffle algorithm
+	//
+	// TODO: utils or other common file?  This depends on random.syntran
+	seed_mt19937(seed);
+	for i in [i32(size(a,0)) - 1: -1: 0]
+	{
+		let j = pmod(rand_i32_mt19937(), i+1);
+		//println("i, j = ", [i, j]);
+		a[[i,j]] = a[[j,i]];
+	}
+	return;
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let dummy_mat = read_i32_mat(filename);
+	//println("dummy_mat = ", dummy_mat);
+
+	let packages = dummy_mat[0,:];
+	let npackages = size(packages, 0);
+
+	// Reverse.  I can't prove that it's optimal because it doesn't finish
+	// running any faster, but this let me converge to the right answer
+	// instantaneously
+	packages = packages[npackages-1: -1: -1];
+
+	println("packages = ", packages);
+
+	let weight_sum = sum(packages);
+	println("weight_sum = ", weight_sum);
+
+	// I'll call these groups 0, 1, and 2 instead of 1, 2, and 3
+	let ngroups = 3;
+
+	let target = weight_sum / ngroups;
+	println("target = ", target);
+
+	// State stack stores:
+	//   - 0:3 : sum0, sum1, sum2 (weight sums per group)
+	//   - 3:6 : ngroup0 (number of packages in each group)
+	//   - 6:9 : qent (quantum entaglement number for each group: product of weights in group)
+	//   - 9   : idx (last package index pushed)
+	let NSTATE = 10;  // 3 * ngroups + 1
+
+	let ngroup0_min = 2_000_000_000;
+	let qent_min    = 2_000_000_000_000_000'i64;
+	let qent_mins = [qent_min; npackages];
+
+	// Stack
+	let SCAP = 1024 * 1024 * 32;
+	SCAP = 128;
+	let s = [0'i64; NSTATE, SCAP];
+	let sp = 0;
+
+	// Push initial package 0 to each possible group.  Should be done with a
+	// loop but hard-coded here for 3 groups
+	s[:, 0] = [packages[0], 0, 0,    1, 0, 0,    packages[0], 1, 1,    0];
+	s[:, 1] = [0, packages[0], 0,    0, 1, 0,    1, packages[0], 1,    0];
+	s[:, 2] = [0, 0, packages[0],    0, 0, 1,    1, 1, packages[0],    0];
+	sp += 3;
+
+	while sp > 0
+	{
+		// Pop
+		sp -= 1;
+		let sums = s[0:3, sp];
+		let ngs  = s[3:6, sp];
+		let qens = s[6:9, sp];
+		let idx  = s[  9, sp];
+
+		//let ng0  = s[3, sp];
+		//let qent = s[4, sp];
+		//let idx  = s[5, sp];
+
+		//println("qent = ", qent);
+
+		//println("sums = ", sums);
+
+		//if (any(sums > target)) continue; // overweight
+
+		// ngroup0_min and qent_min conditions:  Only set when all groups
+		// filled, and reset qent_min to HUGE whenever ngroup0_min reduces
+
+
+		// Skip suboptimal packings
+		let ngmin = min(ngs[0], ngs[1], ngs[2]);
+		if (ngmin > ngroup0_min) continue;
+		//if (ng0 > ngroup0_min) continue;
+
+		if (ngmin == ngroup0_min and min(qens[0], qens[1], qens[2]) >= qent_min) continue;
+
+		//if (ng0 == ngroup0_min and qent > qent_min) continue;
+		//if (qent > qent_mins[ng0]) continue;
+		//qent_mins[ng0] = min(qent_mins[ng0], qent);
+
+		if idx == npackages - 1
+		{
+			// We found a packing with the correct weight distribution.  Now
+			// update the other optimization conditions
+			let qent = 2_000_000_000_000_000'i64;
+			for i in [0: ngroups]
+			{
+				if ngs[i] == ngmin
+					qent = min(qent, qens[i]);
+			}
+
+			//println("ngmin, qent = ", [ngmin, qent]);
+			if (ngmin == ngroup0_min)
+			{
+				//qent_min = min(qent_min, qent);
+				if (qent < qent_min)
+				{
+					qent_min = qent;
+					println("    qent_min = ", qent_min);
+				}
+			}
+			else if (ngmin < ngroup0_min)
+			{
+				ngroup0_min = ngmin;
+				println("ngroup0_min = ", ngroup0_min);
+				qent_min = 2_000_000_000_000_000'i64;
+			}
+			continue;
+		}
+
+		// Push next package with weight `w` to each group
+
+		idx += 1;
+		let w = packages[idx];
+
+		if sp > SCAP - 4
+		{
+			println("Error: stack overflow!");
+			exit(-1);
+		}
+
+		// Should be done with a loop.  Also the overweight condition could
+		// probably be checked at top of loop, but this when does a little less
+		// churning on the stack
+
+		let s0 = sums[0];
+		let s1 = sums[1];
+		let s2 = sums[2];
+		let n0 = ngs[0];
+		let n1 = ngs[1];
+		let n2 = ngs[2];
+		let q0 = qens[0];
+		let q1 = qens[1];
+		let q2 = qens[2];
+
+		if (s0+w <= target) { s[:, sp] = [s0+w, s1  , s2  ,  n0+1, n1  , n2  ,  q0*w, q1  , q2  ,  idx];  sp += 1; }
+		if (s1+w <= target) { s[:, sp] = [s0  , s1+w, s2  ,  n0  , n1+1, n2  ,  q0  , q1*w, q2  ,  idx];  sp += 1; }
+		if (s2+w <= target) { s[:, sp] = [s0  , s1  , s2+w,  n0  , n1  , n2+1,  q0  , q1  , q2*w,  idx];  sp += 1; }
+
+	}
+	sum_ = qent_min;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let dummy_mat = read_i32_mat(filename);
+	//println("dummy_mat = ", dummy_mat);
+
+	let packages = dummy_mat[0,:];
+	let npackages = size(packages, 0);
+
+	// Reverse.  I can't prove that it's optimal because it doesn't finish
+	// running any faster, but this let me converge to the right answer
+	// instantaneously
+	packages = packages[npackages-1: -1: -1];
+
+	//// In the few minutes that I decided to try random shuffling, the
+	//// "reverse" strategy finally got the right answer on its second
+	//// "qent_min" printout
+	//shuffle_i32(&packages, 0);
+
+	println("packages = ", packages);
+
+	let weight_sum = sum(packages);
+	println("weight_sum = ", weight_sum);
+
+	// I'll call these groups 0, 1, and 2 instead of 1, 2, and 3
+	let ngroups = 4;
+
+	let target = weight_sum / ngroups;
+	println("target = ", target);
+
+	// State stack stores:
+	//   - 0: 4 : sum0, sum1, sum2 (weight sums per group)
+	//   - 4: 8 : ngroup0 (number of packages in each group)
+	//   - 8:12 : qent (quantum entaglement number for each group: product of weights in group)
+	//   - 12   : idx (last package index pushed)
+
+	//let NSTATE = 10;  // 3 * ngroups + 1
+	let NSTATE = 3 * ngroups + 1;
+	println("NSTATE = ", NSTATE);
+
+	let ngroup0_min = 2_000_000_000;
+	let qent_min    = 2_000_000_000_000_000'i64;
+	let qent_mins = [qent_min; npackages];
+
+	// Stack
+	let SCAP = 512;
+	let s = [0'i64; NSTATE, SCAP];
+	let sp = 0;
+
+	// Push initial package 0 to each possible group.  Should be done with a
+	// loop but hard-coded here for 4 groups (ugh)
+	s[:, 0] = [packages[0], 0, 0, 0,    1, 0, 0, 0,    packages[0], 1, 1, 1,    0];
+	s[:, 1] = [0, packages[0], 0, 0,    0, 1, 0, 0,    1, packages[0], 1, 1,    0];
+	s[:, 2] = [0, 0, packages[0], 0,    0, 0, 1, 0,    1, 1, packages[0], 1,    0];
+	s[:, 3] = [0, 0, 0, packages[0],    0, 0, 0, 1,    1, 1, 1, packages[0],    0];
+	sp += 4;
+
+	while sp > 0
+	{
+		// Pop
+		sp -= 1;
+		let sums = s[0: 4, sp];
+		let ngs  = s[4: 8, sp];
+		let qens = s[8:12, sp];
+		let idx  = s[ 12 , sp];
+
+		//println("qent = ", qent);
+		//println("sums = ", sums);
+		//if (any(sums > target)) continue; // overweight (checked in stack recursion tail)
+
+		// ngroup0_min and qent_min conditions:  Only set when all groups
+		// filled, and reset qent_min to HUGE whenever ngroup0_min reduces
+
+		// Skip suboptimal packings
+		let ngmin = min(ngs[0], ngs[1], ngs[2], ngs[3]);
+		if (ngmin > ngroup0_min) continue;
+
+		//if (ngmin == ngroup0_min and min(qens[0], qens[1], qens[2]) >= qent_min) continue;
+
+		if idx == npackages - 1
+		{
+			// We found a packing with the correct weight distribution.  Now
+			// update the other optimization conditions
+			let qent = 2_000_000_000_000_000'i64;
+			for i in [0: ngroups]
+			{
+				if ngs[i] == ngmin
+					qent = min(qent, qens[i]);
+			}
+
+			if (ngmin == ngroup0_min)
+			{
+				if (qent < qent_min)
+				{
+					qent_min = qent;
+					println("    qent_min = ", qent_min);
+				}
+			}
+			else if (ngmin < ngroup0_min)
+			{
+				ngroup0_min = ngmin;
+				println("ngroup0_min = ", ngroup0_min);
+				qent_min = 2_000_000_000_000_000'i64;
+			}
+			continue;
+		}
+
+		// Push next package with weight `w` to each group
+
+		idx += 1;
+		let w = packages[idx];
+
+		if sp > SCAP - 4
+		{
+			println("Error: stack overflow!");
+			exit(-1);
+		}
+
+		// Should be done with a loop.  Also the overweight condition could
+		// probably be checked at top of loop, but this when does a little less
+		// churning on the stack
+
+		let s0 = sums[0];
+		let s1 = sums[1];
+		let s2 = sums[2];
+		let s3 = sums[3];
+		let n0 = ngs[0];
+		let n1 = ngs[1];
+		let n2 = ngs[2];
+		let n3 = ngs[3];
+		let q0 = qens[0];
+		let q1 = qens[1];
+		let q2 = qens[2];
+		let q3 = qens[3];
+
+		if (s0+w <= target) { s[:, sp] = [s0+w, s1  , s2  , s3  ,  n0+1, n1  , n2  , n3  ,  q0*w, q1  , q2  , q3  ,  idx];  sp += 1; }
+		if (s1+w <= target) { s[:, sp] = [s0  , s1+w, s2  , s3  ,  n0  , n1+1, n2  , n3  ,  q0  , q1*w, q2  , q3  ,  idx];  sp += 1; }
+		if (s2+w <= target) { s[:, sp] = [s0  , s1  , s2+w, s3  ,  n0  , n1  , n2+1, n3  ,  q0  , q1  , q2*w, q3  ,  idx];  sp += 1; }
+		if (s3+w <= target) { s[:, sp] = [s0  , s1  , s2  , s3+w,  n0  , n1  , n2  , n3+1,  q0  , q1  , q2  , q3*w,  idx];  sp += 1; }
+
+	}
+	sum_ = qent_min;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/24");
+
+	let p1 = ""; let p2 = "";
+
+	// I don't know how long these take to run.  A very long time for sure
+	//
+	// Part 1 prints the answer instantaneously (but keeps running)
+	//
+	// Part 2 logs the answer after about 8 minutes.  It also logs another
+	// number first before converging to the correct solution
+
+	p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

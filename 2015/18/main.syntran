@@ -1,0 +1,164 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+	//println("nx, ny = ", [nx, ny]);
+
+	for it in [0: 100]
+	{
+		let g0 = g;
+		for x in [0: nx]
+		for y in [0: ny]
+		{
+			let xl = max(x-1, 0);
+			let xh = min(x+1, nx-1) + 1;
+			let yl = max(y-1, 0);
+			let yh = min(y+1, ny-1) + 1;
+
+			let subgrid = g0[xl:xh, yl:yh];
+
+			// Count includes self (if on)
+			let count_ = count(g0[xl:xh, yl:yh] == "#");
+
+			//println("x, y, count_ = ", [x, y, i32(count_)]);
+			//print_char_mat(&subgrid);
+
+			if g0[x,y] == "#"
+			{
+				//if not (count_ == 2 or count_ == 3)
+				//	g[x,y] = ".";
+				if count_ == 3 or count_ == 4
+				{
+				}
+				else
+					g[x,y] = ".";
+			}
+			else
+			{
+				if count_ == 3
+					g[x,y] = "#";
+			}
+		}
+		//print_char_mat(&g);
+	}
+	sum_ = count(g == "#");
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+	//println("nx, ny = ", [nx, ny]);
+
+	// Part 2
+	g[0,0] = "#";
+	g[nx-1, 0] = "#";
+	g[0, ny-1] = "#";
+	g[nx-1, ny-1] = "#";
+
+	for it in [0: 100]
+	{
+		let g0 = g;
+		for x in [0: nx]
+		for y in [0: ny]
+		{
+			let xl = max(x-1, 0);
+			let xh = min(x+1, nx-1) + 1;
+			let yl = max(y-1, 0);
+			let yh = min(y+1, ny-1) + 1;
+
+			let subgrid = g0[xl:xh, yl:yh];
+
+			// Count includes self (if on)
+			let count_ = count(g0[xl:xh, yl:yh] == "#");
+
+			//println("x, y, count_ = ", [x, y, i32(count_)]);
+			//print_char_mat(&subgrid);
+
+			if g0[x,y] == "#"
+			{
+				if count_ == 3 or count_ == 4
+				{
+				}
+				else
+					g[x,y] = ".";
+			}
+			else
+			{
+				if count_ == 3
+					g[x,y] = "#";
+			}
+		}
+
+		// Part 2
+		g[0,0] = "#";
+		g[nx-1, 0] = "#";
+		g[0, ny-1] = "#";
+		g[nx-1, ny-1] = "#";
+
+		//print_char_mat(&g);
+		//if it == 5
+		//	exit(0);
+	}
+	sum_ = count(g == "#");
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/18");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

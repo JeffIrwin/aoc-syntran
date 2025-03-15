@@ -1,0 +1,99 @@
+
+ [95msyntran 0.0.59[0m
+ [95mhttps://github.com/JeffIrwin/syntran[0m
+
+ Interpreting file "main.syntran"
+
+Starting AOC syntran main 2015/22
+boss_hp0    = 71
+boss_damage = 10
+
+spells = [
+53, 1, 4, 0, 0, 0, 
+73, 1, 2, 2, 0, 0, 
+113, 6, 0, 0, 7, 0, 
+173, 6, 3, 0, 0, 0, 
+229, 5, 0, 0, 0, 101
+]
+spell_timers = [0, 0, 0, 0, 0]
+q = [
+1, 0, 0, 0, 0, 71, 50, 447, 53, 
+0, 1, 0, 0, 0, 71, 50, 427, 73, 
+0, 0, 6, 0, 0, 71, 50, 387, 113, 
+0, 0, 0, 6, 0, 71, 50, 327, 173, 
+0, 0, 0, 0, 5, 71, 50, 271, 229
+]
+boss_hp = 67
+boss_hp = 65
+boss_hp = 63
+boss_hp = 61
+boss_hp = 58
+boss_hp = 55
+boss_hp = 54
+boss_hp = 51
+boss_hp = 48
+boss_hp = 45
+boss_hp = 44
+boss_hp = 41
+boss_hp = 39
+boss_hp = 37
+boss_hp = 36
+boss_hp = 35
+boss_hp = 34
+boss_hp = 33
+boss_hp = 31
+boss_hp = 28
+boss_hp = 27
+boss_hp = 26
+boss_hp = 23
+boss_hp = 21
+boss_hp = 19
+boss_hp = 18
+boss_hp = 15
+boss_hp = 12
+boss_hp = 9
+boss_hp = 8
+boss_hp = 5
+boss_hp = 4
+boss_hp = 1
+boss_hp = 0
+mana_min = 1824
+boss_hp = -3
+boss_hp = -6
+part 1 = 1824
+boss_hp = 67
+boss_hp = 65
+boss_hp = 63
+boss_hp = 61
+boss_hp = 58
+boss_hp = 55
+boss_hp = 54
+boss_hp = 51
+boss_hp = 48
+boss_hp = 45
+boss_hp = 44
+boss_hp = 41
+boss_hp = 39
+boss_hp = 37
+boss_hp = 36
+boss_hp = 33
+boss_hp = 30
+boss_hp = 27
+boss_hp = 26
+boss_hp = 23
+boss_hp = 22
+boss_hp = 19
+boss_hp = 18
+boss_hp = 15
+boss_hp = 12
+boss_hp = 11
+boss_hp = 8
+boss_hp = 7
+boss_hp = 5
+boss_hp = 3
+boss_hp = 0
+mana_min = 1937
+part 2 = 1937
+Ending AOC syntran main
+
+     1824:1937

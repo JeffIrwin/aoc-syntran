@@ -1,0 +1,175 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let nin = parse_i32(str_);
+	let n = nin / 10;
+	println("n = ", n);
+
+	// This runs in 2 s but it requires knowing (or guessing) a lower and upper
+	// bound of the answer
+
+	let NCAP = n;
+	NCAP = n / 4;
+
+	// Assume answer is between nmin and NCAP.  TODO: can we iteratively start
+	// with a high nmin and then iteratively lower it if no answer is found?
+	// Not sure it would work, I think it would just find an answer but the
+	// wrong one in many cases
+
+	let nmin = 800_000;
+
+	if ifile == 0
+	{
+		// Test data
+		NCAP = n;
+		nmin = 5;
+	}
+
+	let vlen = NCAP - nmin;
+	let v = [0; vlen];
+
+	let vmaxmax = 0;
+	for i in [1: NCAP]
+	{
+		if i % 10_000 == 0
+		{
+			let vmax = 0;
+			//println("getting max ...");
+			for vi in v
+				vmax = max(vmax, vi);
+			println("i, vmax = ", [i, vmax]);
+		}
+		//println("i = ", i);
+
+		// imin is the smallest multiple of i >= nmin
+		let imin = (nmin / i) * i;
+		if (imin < nmin) imin += i;
+
+		// TODO: step slicing has a bug that overflows upper bound sometimes
+		//v[imin - nmin: i: NCAP - nmin] += i;
+		for j in [imin - nmin: i: NCAP - nmin]
+			v[j] += i;
+
+	}
+	//println("done main loop");
+	////println("v = ", v);
+
+	sum_ = 0;
+	while v[sum_] < n
+	{
+		sum_ += 1;
+		if sum_ >= NCAP - nmin
+		{
+			println("Error: answer not found");
+			exit(-1);
+		}
+	}
+	sum_ += nmin;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println();
+	println("starting part2()");
+	println("str_ = ", str_);
+	close(f);
+
+	let nin = parse_i32(str_);
+	let n = nin;
+	println("n = ", n);
+
+	let NCAP = n;
+	NCAP = n / 4;
+	NCAP = 300_000 * 50;
+	NCAP = 2_000_000;  // this should work as long as the answer is smaller than it
+
+	if ifile == 0
+	{
+		// Test data
+		NCAP = n;
+	}
+
+	let v = [0; NCAP];
+	let vmaxmax = 0;
+	for i in [1: NCAP]
+	{
+		if i % 100_000 == 0
+		{
+			println("i = ", i);
+		}
+
+		let imax = min(50 * i + 1, NCAP);
+
+		//// TODO: step subs have a perf bug.  This should be at least as fast,
+		//// not slower than explicit loop
+		//v[i: i: imax] += 11 * i;
+		//v[[i: i: imax]] += 11 * i;
+		for j in [i: i: imax]
+			v[j] += 11 * i;
+	}
+	//println("v = ", v);
+	sum_ = 0;
+	while v[sum_] < n
+		sum_ += 1;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2015/20");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
