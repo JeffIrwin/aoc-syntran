@@ -20,7 +20,7 @@ fn part1(): i64
 {
 	let lights = [false; 1000, 1000];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{
@@ -56,7 +56,7 @@ fn part2(): i64
 {
 	let lights = [0; 1000, 1000];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{

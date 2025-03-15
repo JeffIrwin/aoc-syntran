@@ -27,7 +27,7 @@ fn part1(): str
 	let n = countln_(filename);
 	let jugs = [0; n];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	for i in [0: n]
 	{
 		jugs[i] = parse_i32(readln(f));
@@ -62,7 +62,7 @@ fn part2(): str
 	let n = countln_(filename);
 	let jugs = [0; n];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	for i in [0: n]
 	{
 		jugs[i] = parse_i32(readln(f));

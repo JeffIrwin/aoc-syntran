@@ -18,7 +18,7 @@ let filename = filenames[ifile];
 
 fn part1(): str
 {
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	//println("str_ = ", str_);
 	close(f);
@@ -144,7 +144,7 @@ fn part1(): str
 
 fn part2(): str
 {
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	//println("str_ = ", str_);
 	close(f);

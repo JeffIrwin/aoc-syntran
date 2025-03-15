@@ -176,7 +176,7 @@ fn part1_tarjan(): i32
 
 	// First pass: save list of unique names
 	println("Loading names ...");
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{
@@ -199,7 +199,7 @@ fn part1_tarjan(): i32
 	let gdir = [-1; NADJ_CAP, nn];
 	let nadjdir = [0; nn];
 	close(f);
-	f = open(filename);
+	f = open(filename, "r");
 	str_ = readln(f);
 	while not eof(f)
 	{
@@ -424,7 +424,7 @@ fn part1(): i32
 
 	// First pass: save list of unique names
 	println("Loading names ...");
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{
@@ -447,7 +447,7 @@ fn part1(): i32
 	let gdir = [-1; NADJ_CAP, nn];
 	let nadjdir = [0; nn];
 	close(f);
-	f = open(filename);
+	f = open(filename, "r");
 	str_ = readln(f);
 	println("Looking up names ...");
 	while not eof(f)

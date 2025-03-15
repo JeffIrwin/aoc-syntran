@@ -27,7 +27,7 @@ fn part1(): i64
 
 	let const_num = [-1'i64; nwire];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	for iw in [0: nwire]
 	{
 		let str_ = readln(f);
@@ -204,7 +204,7 @@ fn part2(): i64
 
 	let const_num = [-1'i64; nwire];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	for iw in [0: nwire]
 	{
 		let str_ = readln(f);

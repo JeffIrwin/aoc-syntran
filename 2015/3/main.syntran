@@ -24,7 +24,7 @@ fn part1(): i64
 
 	let loc = [0; 2];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	//println("str_ = ", str_);
 	close(f);
@@ -66,7 +66,7 @@ fn part2(): i64
 	let loc = [0; 2]; // santa location
 	let rloc = loc;   // robo-santa location
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	//println("str_ = ", str_);
 	close(f);

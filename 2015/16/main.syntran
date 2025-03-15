@@ -31,7 +31,7 @@ fn part1(): str
 	let cars = 2;
 	let perfumes = 1;
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	let i = 1;
 	while not eof(f)
@@ -103,7 +103,7 @@ fn part2(): str
 	let cars = 2;
 	let perfumes = 1;
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	let i = 1;
 	while not eof(f)

@@ -26,7 +26,7 @@ fn part1(): str
 
 	//println("race_time = ", race_time);
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{
@@ -74,7 +74,7 @@ fn part2(): str
 	let fly_time  = [0; n];
 	let rest_time = [0; n];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	let i = 0;
 	while not eof(f)

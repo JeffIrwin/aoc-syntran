@@ -254,7 +254,7 @@ fn part1(): i32
 {
 	let ny = countln_(filename);
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 
 	let nx = len(str_);

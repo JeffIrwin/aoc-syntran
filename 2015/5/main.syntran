@@ -21,7 +21,7 @@ fn part1(): i64
 	let sum_ = 0'i64;
 	let ny = countln_(filename);
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	//while not eof(f)
 	for y in [0: ny]
 	{
@@ -69,7 +69,7 @@ fn part2(): i64
 	let sum_ = 0'i64;
 	let ny = countln_(filename);
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	for y in [0: ny]
 	{
 		let str_ = readln(f);

@@ -23,7 +23,7 @@ fn part1(): str
 	let names = new_dict_i64();
 	let gains = new_dict_i64();
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{
@@ -103,7 +103,7 @@ fn part2(): str
 	let names = new_dict_i64();
 	let gains = new_dict_i64();
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{

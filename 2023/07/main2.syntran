@@ -256,7 +256,7 @@ fn part2(): i32
 	let hands = [""; n];
 	let bids  = [0 ; n];
 
-	let f = open(filename);
+	let f = open(filename, "r");
 	for i in [0: n]
 	{
 		let str_ = readln(f);
