@@ -1,5 +1,5 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
@@ -90,7 +90,7 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 	//let det = v0[0] * (-v1[1]) - v0[1] * (-v1[0]);
 	let det = a * d - b * c;
 
-	let ans = 0;
+	let ans = i64(0);
 
 	//println("det = ", det);
 	if det == 0
@@ -199,7 +199,7 @@ fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
 	//println("v10 = ", v10);
 
 	//println();
-	let return_val = ans;
+	return ans;
 }
 
 //==============================================================================
@@ -265,26 +265,29 @@ fn part1(): i32
 	}
 
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i64
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/24");
 
-	part1();
-	//part2();
+	let sum_ = i64(0);
+
+	sum_ += part1();
+	//sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

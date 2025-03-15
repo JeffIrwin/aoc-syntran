@@ -1,5 +1,5 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
@@ -30,7 +30,7 @@ fn qsort(v: [i32; :]): [i32; :]
 	//println("v = ", v);
 
 	let l = 0;
-	let h = size(v,0) - 1;
+	let h = i32(size(v,0)) - 1;
 
 	let ix = [l: h + 1];
 
@@ -112,7 +112,7 @@ fn qsort(v: [i32; :]): [i32; :]
 	}
 	//println("v = ", v);
 	//let ans = v;
-	let ans = ix;
+	return ix;
 }
 
 //==============================================================================
@@ -145,6 +145,7 @@ fn push_name(name_: str)
 		names[nn] = name_;
 		nn += 1;
 	}
+	return;
 }
 
 //==============================================================================
@@ -161,7 +162,7 @@ fn lookup_name(name_: str): i32
 	}
 	if found
 		i -= 1;
-	let ans = i;
+	return i;
 }
 
 //==============================================================================
@@ -175,7 +176,7 @@ fn part1_tarjan(): i32
 	let sum_ = 0;
 
 	// First pass: save list of unique names
-	println("Loading names ...");
+	//println("Loading names ...");
 	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
@@ -190,9 +191,9 @@ fn part1_tarjan(): i32
 	}
 
 	//println("names = ");
-	for i in [0: nn]
-		println(names[i]);
-	println("Number of nodes = ", nn);
+	//for i in [0: nn]
+	//	println(names[i]);
+	//println("Number of nodes = ", nn);
 
 	// Second pass: save one-way directed connections as graph gdir
 	let NADJ_CAP = 16;
@@ -267,7 +268,7 @@ fn part1_tarjan(): i32
 	// Iterate through unique pairs of directed edges
 	for i1r in [0: nn]
 	{
-	println("removing ", i1r);
+	//println("removing ", i1r);
 	for j1r in [0: nadjdir[i1r]]
 	//for i2r in [0: min(i1r + 1, nn)]
 	for i2r in [0: i1r + 1]
@@ -392,8 +393,8 @@ fn part1_tarjan(): i32
 						//println();
 						//println("****************");
 
-						println("Found bridge = ", [v, to], " = ", [names[v], names[to]]);
-						println();
+						//println("Found bridge = ", [v, to], " = ", [names[v], names[to]]);
+						//println();
 						//exit(0); // TODO
 					}
 				}
@@ -410,7 +411,7 @@ fn part1_tarjan(): i32
 
 	// TODO: backup g, nadj, gdir, and nadjdir before removing edges
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
@@ -423,7 +424,7 @@ fn part1(): i32
 	// bridges
 
 	// First pass: save list of unique names
-	println("Loading names ...");
+	//println("Loading names ...");
 	let f = open(filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
@@ -440,7 +441,7 @@ fn part1(): i32
 	//println("names = ");
 	//for i in [0: nn]
 	//	println(names[i]);
-	println("Number of nodes = ", nn);
+	//println("Number of nodes = ", nn);
 
 	// Second pass: save one-way directed connections as graph gdir
 	let NADJ_CAP = 16;
@@ -449,7 +450,7 @@ fn part1(): i32
 	close(f);
 	f = open(filename, "r");
 	str_ = readln(f);
-	println("Looking up names ...");
+	//println("Looking up names ...");
 	while not eof(f)
 	{
 		//println("str_ = ", str_);
@@ -556,7 +557,7 @@ fn part1(): i32
 	//println("dsts = ", dsts);
 
 	// Iterate through all srcs
-	println("Searching for bridges ...");
+	//println("Searching for bridges ...");
 	for isrc in [0: size(srcs, 0)]
 	{
 		let src = srcs[isrc];
@@ -621,7 +622,7 @@ fn part1(): i32
 	//println("histe = ", histe);
 
 	// Don't sort the edge histogram!  Just select the top 3 in 3 passes
-	println("Sorting histogram ...");
+	//println("Sorting histogram ...");
 	let neb = 3; // # edge bridges
 	let eb = [-1; 2, neb];
 
@@ -664,12 +665,12 @@ fn part1(): i32
 		}
 	}
 	//println("eb = ", eb);
-	println();
+	//println();
 
-	println("Bridge edges = ");
-	for i in [0: neb]
-		println("between ", names[eb[0,i]], " and ", names[eb[1,i]]);
-	println();
+	//println("Bridge edges = ");
+	//for i in [0: neb]
+	//	println("between ", names[eb[0,i]], " and ", names[eb[1,i]]);
+	//println();
 
 	// Remove bridge edges
 
@@ -737,30 +738,33 @@ fn part1(): i32
 			ncomp += 1;
 		}
 	}
-	println("sizes_ = ", sizes_);
+	//println("sizes_ = ", sizes_);
 
 	let sum_ = sizes_[0] * sizes_[1];
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i64
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/25");
 
-	//part1_tarjan();
-	part1();
+	let sum_ = i64(0);
+
+	sum_ += part1();
+	//sum_ += part2(); // no part2 on day 25
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

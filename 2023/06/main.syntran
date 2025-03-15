@@ -1,5 +1,5 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
@@ -20,12 +20,14 @@ fn floor_(x: f32): i32
 {
 	let i = i32(x);
 	if (i > x) i -= 1;
+	return i;
 }
 
 fn ceil_(x: f32): i32
 {
 	let i = i32(x);
 	if (i < x) i += 1;
+	return i;
 }
 
 // TODO: utils, consistent naming
@@ -34,6 +36,7 @@ fn minf32(a: f32, b: f32): f32
 	let ans = a;
 	if b < a
 		ans = b;
+	return ans;
 }
 
 fn maxf32(a: f32, b: f32): f32
@@ -41,6 +44,7 @@ fn maxf32(a: f32, b: f32): f32
 	let ans = a;
 	if b > a
 		ans = b;
+	return ans;
 }
 
 //==============================================================================
@@ -84,12 +88,12 @@ fn part1(): i32
 		//
 		//   a = -1;  b = race_time;  c = -rec_dist;
 
-		let a = -1.0;
-		let b =  1.0 * race_time;
-		let c = -1.0 * rec_dist;
+		let a = -1.0f;
+		let b =  1.0f * race_time;
+		let c = -1.0f * rec_dist;
 
-		let j1 = (-b + (b ** 2 - 4 * a * c) ** 0.5) / (2 * a);
-		let j2 = (-b - (b ** 2 - 4 * a * c) ** 0.5) / (2 * a);
+		let j1 = (-b + (b ** 2 - 4 * a * c) ** 0.5f) / (2 * a);
+		let j2 = (-b - (b ** 2 - 4 * a * c) ** 0.5f) / (2 * a);
 
 		//println(" j1,  j2 = ", j1, ", ", j2);
 		//println("fj1, fj2 = ", floor_(j1), ", ", floor_(j2));
@@ -107,12 +111,12 @@ fn part1(): i32
 	close(f);
 
 	println("part 1 = ", prod_);
-	prod_;
+	return prod_;
 }
 
 //==============================================================================
 
-fn part2(): i32
+fn part2(): i64
 {
 	let prod_ = i64(1);
 
@@ -144,19 +148,76 @@ fn part2(): i32
 
 	//println("calculating distances ...");
 
-	let nwin = i64(0);
-	for j in [1: race_time]
-	{
-		// Acceleration is 1 mm/ms/ms
-		let speed = j * 1;
+	//// Brute force :(
+	//let nwin = i64(0);
+	//let first = false;
+	//let jlast = 0;
+	//for j in [1: race_time]
+	//{
+	//	// Acceleration is 1 mm/ms/ms
+	//	let speed = j * 1;
 
+	//	let duration = race_time - j;
+	//	let dist = i64(speed) * duration;
+	//	//println("dist = ", dist);
+
+	//	if dist > rec_dist
+	//	{
+	//		if (not first) println("j first = ", j);
+	//		first = true;
+	//		jlast = j;
+	//		nwin += 1;
+	//	}
+	//
+	//}
+	////println();
+	//println("j last  = ", jlast);
+
+	// Bisection search for minimum button press duration.  From calculus (or
+	// just thinking about a parabolic trajectory), optimal amount of distance
+	// can be covered by holding button for half of race_time
+	let jlo = 0;
+	let jhi = race_time / 2;
+	while jlo < jhi - 1
+	{
+		//println("jlo, jhi = ", [jlo, jhi]);
+		let j = (jlo + jhi) / 2;
+
+		let speed = j * 1;
 		let duration = race_time - j;
 		let dist = i64(speed) * duration;
 		//println("dist = ", dist);
 
-		if (dist > rec_dist) nwin += i64(1);
+		if dist > rec_dist
+			jhi = j;
+		else
+			jlo = j;
 	}
-	//println();
+	let jmin = jhi;
+	//println("jmin = ", jmin);
+
+	// Bisection search for maximum button press duration
+	jlo = race_time / 2;
+	jhi = race_time;
+	while jlo < jhi - 1
+	{
+		//println("jlo, jhi = ", [jlo, jhi]);
+		let j = (jlo + jhi) / 2;
+
+		let speed = j * 1;
+		let duration = race_time - j;
+		let dist = i64(speed) * duration;
+		//println("dist = ", dist);
+
+		if dist > rec_dist
+			jlo = j;
+		else
+			jhi = j;
+	}
+	let jmax = jlo;
+	//println("jmax = ", jmax);
+
+	let nwin = jmax - jmin + 1;
 
 	//println("nwin = ", nwin);
 
@@ -165,26 +226,29 @@ fn part2(): i32
 	close(f);
 
 	println("part 2 = ", prod_);
-	prod_;
+	return prod_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i64
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/06");
 
-	part1();
-	part2();
+	let sum_ = i64(0);
+
+	sum_ += part1();
+	sum_ += part2(); // works but needs perf optimization for unit testing
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

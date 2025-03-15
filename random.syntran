@@ -1,0 +1,128 @@
+
+// This script contains functions for random number generation with Mersenne
+// twister
+//
+// Beware that Mersenne twister is *not* cryptographically secure!
+//
+// See also:  https://github.com/JeffIrwin/rfng/blob/main/rfng.f90
+
+//==============================================================================
+
+let N32_MT19937 = 624;
+
+// TODO: consider encapsulating state in a struct for allowing multiple RNGs
+// concurrently
+let STATE_MT19937 = [0; N32_MT19937];
+let STATE_INDEX_MT19937 = N32_MT19937 + 1;
+
+fn seed_mt19937(seed_: i32)
+{
+	let w = 32;
+	let f = 1_812_433_253;
+
+	STATE_INDEX_MT19937 = N32_MT19937;
+	STATE_MT19937[0] = seed_;
+
+	for i in [1: N32_MT19937]
+		STATE_MT19937[i] =
+			f * (STATE_MT19937[i-1] ^ (STATE_MT19937[i-1] >> w-2)) + i;
+	//println("STATE_MT19937 = ", STATE_MT19937);
+
+	return;
+}
+
+fn twist_mt19937()
+{
+	let a = 0x9908_b0df;
+	let m = 397;
+	let r =  31;
+
+	let lower_mask = (1 << r) - 1;
+	let upper_mask = !lower_mask;
+
+	for i in [0: N32_MT19937]
+	{
+		let x =
+			(STATE_MT19937[ i                 ] & upper_mask) |
+			(STATE_MT19937[(i+1) % N32_MT19937] & lower_mask);
+		let xa = x >> 1;
+		if (x % 2 != 0) xa = xa ^ a;
+		STATE_MT19937[i] = STATE_MT19937[(i+m) % N32_MT19937] ^ xa;
+	}
+	STATE_INDEX_MT19937 = 0;
+
+	return;
+}
+
+fn rand_i32_mt19937(): i32
+{
+	let b = 0x9d2c_5680;
+	let c = 0xefc6_0000;
+	let d = 0xffff_ffff;
+	let l = 18;
+	let s =  7;
+	let t = 15;
+	let u = 11;
+
+	if (STATE_INDEX_MT19937 >= N32_MT19937)
+	{
+		if (STATE_INDEX_MT19937 > N32_MT19937) seed_mt19937(5489);
+		twist_mt19937();
+	}
+	let y = STATE_MT19937[STATE_INDEX_MT19937];
+	y ^= ((y >> u) & d);
+	y ^= ((y << s) & b);
+	y ^= ((y << t) & c);
+	y ^= ( y >> l);
+	STATE_INDEX_MT19937 += 1;
+
+	//println("y = ", y);
+	return y;
+}
+
+//==============================================================================
+
+fn assert_eq(a: i32, b: i32): i32
+{
+	if (a != b) return 1;
+	return 0;
+}
+
+//fn main(): i32
+//{
+//	println("starting random.syntran");
+//
+//	let status = 0;
+//
+//	seed_mt19937(0);
+//	seed_mt19937(1);
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//	println("rand = ", rand_i32_mt19937());
+//
+//	seed_mt19937(0);
+//	status += assert_eq(rand_i32_mt19937(), -1937831252);
+//	status += assert_eq(rand_i32_mt19937(), -1748719057);
+//	status += assert_eq(rand_i32_mt19937(), -1223252363);
+//	status += assert_eq(rand_i32_mt19937(), -668873536);
+//	status += assert_eq(rand_i32_mt19937(), -1706118333);
+//
+//	if (status != 0)
+//	{
+//		println();
+//		println("Error: random test failure!");
+//		println();
+//		return 1;
+//	}
+//
+//	println("ending random.syntran");
+//	return 0;
+//}
+//exit(main());
+

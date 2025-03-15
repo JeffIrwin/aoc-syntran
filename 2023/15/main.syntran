@@ -1,5 +1,5 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
@@ -52,7 +52,7 @@ fn part1(): i32
 	}
 
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
@@ -164,26 +164,29 @@ fn part2(): i32
 	}
 
 	println("part 2 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i32
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/15");
 
-	part1();
-	part2();
+	let sum_ = 0;
+
+	sum_ += part1();
+	sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

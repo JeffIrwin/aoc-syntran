@@ -1,9 +1,11 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
-let ifile = 1;
+// Real input works but it takes too long.  Use test input just for syntran unit
+// testing
+let ifile = 0;
 
 let filenames =
 [
@@ -69,7 +71,8 @@ let queue_end0 = 0;
 fn sort_queue()
 {
 	// Quick sort
-	println("starting qsort()");
+
+	//println("starting qsort()");
 	////println("queue = ", queue);
 
 	let l = queue_beg;
@@ -150,6 +153,7 @@ fn sort_queue()
 	// After sorting, new unsorted elements will be pushed onto the queue after
 	// this position
 	queue_end0 = queue_end;
+	return;
 }
 
 //****************
@@ -179,6 +183,7 @@ fn push_(v: [i32; :])
 	if push_count % 3000 == 0
 		sort_queue();
 	push_count += 1;
+	return;
 }
 
 //****************
@@ -220,7 +225,7 @@ fn pop_(): [i32; :]
 	while queue[0, queue_beg] < 0 and queue_beg < queue_end
 		queue_beg += 1;
 
-	let ans = x;
+	return x;
 }
 
 //==============================================================================
@@ -229,12 +234,12 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len_
 {
 	// Directly adapted from:  https://github.com/hyper-neutrino/advent-of-code/blob/main/2023/day17p2.py
 
-	println();
-	println("starting dijkstra()");
-	println("xbeg = ", xbeg);
-	println("xend = ", xend);
-	println("len_min = ", len_min);
-	println("len_max = ", len_max);
+	//println();
+	//println("starting dijkstra()");
+	//println("xbeg = ", xbeg);
+	//println("xend = ", xend);
+	//println("len_min = ", len_min);
+	//println("len_max = ", len_max);
 
 	queue_beg  = 0;
 	queue_end  = 0;
@@ -244,7 +249,7 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len_
 	let nx = size(map, 0);
 	let ny = size(map, 1);
 
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	// initialize distance to practical infinity.  using a negative with extra
 	// logic might be more robust
@@ -278,14 +283,14 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len_
 		if dist0 > dist_progress
 		{
 			dist_progress = dist0;
-			println("u = ", u);
+			//println("u = ", u);
 		}
 
 		if x0 == xend[0] and y0 == xend[1] and len0 >= len_min
 		{
 			found = true;
 			dist_end = dist0;
-			println("dist_end = ", dist_end);
+			//println("dist_end = ", dist_end);
 		}
 		
 		let continue_ = false;
@@ -336,7 +341,7 @@ fn dijkstra(map: [i32; :, :], xbeg: [i32; :], xend: [i32; :], len_min: i32, len_
 						}
 					}
 	}
-	let ans = dist_end;
+	return dist_end;
 }
 
 //==============================================================================
@@ -348,9 +353,9 @@ fn part1(): i32
 	let f = open(filename, "r");
 	let str_ = readln(f);
 
-	let nx = len(str_);
+	let nx = i32(len(str_));
 
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	let grid = [-1; nx, ny];
 
@@ -365,7 +370,7 @@ fn part1(): i32
 	}
 	close(f);
 
-	println("grid = ", grid);
+	//println("grid = ", grid);
 
 	// Start at northwest corner, end at southeast
 	let xbeg = [0, 0];
@@ -374,7 +379,7 @@ fn part1(): i32
 	let sum_ = dijkstra(grid, xbeg, xend, 0, 4);
 
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
@@ -386,9 +391,9 @@ fn part2(): i32
 	let f = open(filename, "r");
 	let str_ = readln(f);
 
-	let nx = len(str_);
+	let nx = i32(len(str_));
 
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	let grid = [-1; nx, ny];
 
@@ -412,26 +417,29 @@ fn part2(): i32
 	let sum_ = dijkstra(grid, xbeg, xend, 4, 11);
 
 	println("part 2 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i32
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/17");
 
-	part1();  // takes ~30 minutes to run
-	part2();  // takes ~3 hours to run
+	let sum_ = 0;
+
+	sum_ += part1();
+	sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

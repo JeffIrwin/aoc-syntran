@@ -1,9 +1,10 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
-let ifile = 1;
+// real inputs work but are too slow
+let ifile = 0;
 
 let filenames =
 [
@@ -111,7 +112,7 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 			//dist_end = dist0;
 			//dist_end = min(dist_end, dist0);
 			dist_max = max(dist_max, dist0);
-			println("dist_max = ", dist_max);
+			//println("dist_max = ", dist_max);
 		}
 
 		let continue_ = false;
@@ -170,7 +171,7 @@ fn dfs_longest(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 				}
 			}
 	}
-	let ans = dist_max;
+	return dist_max;
 }
 
 //==============================================================================
@@ -180,10 +181,10 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	// Get max distance by walking *all* paths from xbeg to xend.  This is a bit
 	// slow, but it converges to the right answer in about 10 minutes for me
 
-	println();
-	println("starting get_max_dist()");
-	println("xbeg = ", xbeg);
-	println("xend = ", xend);
+	//println();
+	//println("starting get_max_dist()");
+	//println("xbeg = ", xbeg);
+	//println("xend = ", xend);
 
 	let stack_end  = 0;
 	let stack = [0; NSTATE, STACK_CAP];
@@ -237,13 +238,13 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 	nadj[ nn] = 1; // assume
 	nn += 1;
 
-	println("number of junctions = ", nn);
-	println("xn = ");
-	for i in [0: nn]
-		println([xn[0, i], xn[1, i]]);
-	println("nadj = ");
-	for i in [0: nn]
-		println(nadj[i]);
+	//println("number of junctions = ", nn);
+	//println("xn = ");
+	//for i in [0: nn]
+	//	println([xn[0, i], xn[1, i]]);
+	//println("nadj = ");
+	//for i in [0: nn]
+	//	println(nadj[i]);
 
 	// Reset
 	nadj = [0; NN_CAP];
@@ -303,7 +304,7 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 					if is_node
 					{
 						j -= 1;
-						println("nadj[i] = ", nadj[i]);
+						//println("nadj[i] = ", nadj[i]);
 						g[nadj[i], i] = j;
 						w[nadj[i], i] = d0;
 
@@ -334,9 +335,9 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 				}
 		}
 	}
-	println("nadj = ", nadj);
-	println("g = ", g);
-	println("w = ", w);
+	//println("nadj = ", nadj);
+	//println("g = ", g);
+	//println("w = ", w);
 	
 	let dist_max = 0;
 
@@ -348,7 +349,7 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 	let last_path = false;
 	let nwalked = 0;
-	println("Walking paths ...");
+	//println("Walking paths ...");
 	while not last_path
 	{
 		//println("path = ", path);
@@ -393,7 +394,7 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 					if dist > dist_max
 					{
 						dist_max = dist;
-						println("dist_max = ", dist_max);
+						//println("dist_max = ", dist_max);
 					}
 
 					// Optimize.  This could be DRY'd up
@@ -427,10 +428,10 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 
 		//println("path = ", path);
 	}
-	println("nwalked = ", nwalked);
+	//println("nwalked = ", nwalked);
 
-	println("dist_max = ", dist_max);
-	let ans = dist_max;
+	//println("dist_max = ", dist_max);
+	return dist_max;
 }
 
 //==============================================================================
@@ -438,11 +439,12 @@ fn get_max_dist(map: [str; :, :], xbeg: [i32; :], xend: [i32; :]): i32
 fn part1(): i32
 {
 	let ny = countln_(filename);
+	//println("ny = ", ny);
 
 	let f = open(filename, "r");
 	let str_ = readln(f);
 
-	let nx = len(str_);
+	let nx = i32(len(str_));
 
 	//println("nx, ny = ", [nx, ny]);
 
@@ -463,9 +465,9 @@ fn part1(): i32
 			grid[x, y] = str_[x];
 
 		if y == ybeg
-			xbeg = scan(str_, ".");
+			xbeg = i32(scan(str_, "."));
 		else if y == yend
-			xend = scan(str_, ".");
+			xend = i32(scan(str_, "."));
 
 		str_ = readln(f);
 	}
@@ -477,7 +479,7 @@ fn part1(): i32
 	let sum_ = dfs_longest(grid, [xbeg, ybeg], [xend, yend]);
 
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
@@ -489,7 +491,7 @@ fn part2(): i32
 	let f = open(filename, "r");
 	let str_ = readln(f);
 
-	let nx = len(str_);
+	let nx = i32(len(str_));
 
 	//println("nx, ny = ", [nx, ny]);
 
@@ -510,9 +512,9 @@ fn part2(): i32
 			grid[x, y] = str_[x];
 
 		if y == ybeg
-			xbeg = scan(str_, ".");
+			xbeg = i32(scan(str_, "."));
 		else if y == yend
-			xend = scan(str_, ".");
+			xend = i32(scan(str_, "."));
 
 		str_ = readln(f);
 	}
@@ -524,30 +526,32 @@ fn part2(): i32
 	let sum_ = get_max_dist(grid, [xbeg, ybeg], [xend, yend]);
 
 	println("part 2 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i64
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/23");
+
+	let sum_ = i64(0);
 
 	//// TODO: this is probably broken now after my changes for part2.  The
 	//// easiest thing to do is probably copy part2() to part1() and modify for
 	//// direction constraints
-	//part1();  
-
-	part2();
+	sum_ += part1();
+	sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

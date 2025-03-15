@@ -1,5 +1,5 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
@@ -13,7 +13,7 @@ let filenames =
 ];
 let filename = filenames[ifile];
 
-println("filename = ", filename);
+//println("filename = ", filename);
 
 // Pulse type enum
 let LO = 1;
@@ -66,6 +66,7 @@ fn push_(pulse_type: i32, dst: i32, src: i32)
 	pulse_queue[2, queue_end] = src;
 
 	queue_end += 1;
+	return;
 }
 
 fn pop_(): [i32; :]
@@ -78,7 +79,7 @@ fn pop_(): [i32; :]
 		];
 	queue_beg += 1;
 
-	let ans = vec;
+	return vec;
 }
 
 //==============================================================================
@@ -136,7 +137,7 @@ fn part1(): i32
 		// RHS of "->"
 		let r = rhs[i];
 		let outs = split_(r, ", ");
-		max_out = max(max_out, size(outs, 0));
+		max_out = max(max_out, i32(size(outs, 0)));
 
 		//println();
 	}
@@ -199,10 +200,6 @@ fn part1(): i32
 	while name_[broadcaster] != "broadcaster"
 		broadcaster += 1;
 	//println("broadcaster = ", broadcaster);
-
-	//for ... // TODO: this crashes the interpretter :(
-	//.234;
-	//1.234e5;
 
 	// Invert the output table to get the input table
 	inp = [0; max_inp, nmod];
@@ -313,7 +310,7 @@ fn part1(): i32
 
 	let sum_ = nlo * nhi;
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
@@ -371,7 +368,7 @@ fn part2(): i32
 		// RHS of "->"
 		let r = rhs[i];
 		let outs = split_(r, ", ");
-		max_out = max(max_out, size(outs, 0));
+		max_out = max(max_out, i32(size(outs, 0)));
 
 		//println();
 	}
@@ -588,26 +585,29 @@ fn part2(): i32
 
 	let sum_ = npresses;
 	println("part 2 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i64
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/20");
 
-	part1(); // TODO
-	//part2();
+	let sum_ = i64(0);
+
+	sum_ += part1();
+	//sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

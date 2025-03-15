@@ -1,11 +1,11 @@
 
-#include("../../utils.syntran");
+#include("../../utils-2024.syntran");
 
 //==============================================================================
 
 // The brute force approach will eat up at least 16 GB just for the initial
 // seeds array on the real input!
-let ifile = 0;
+let ifile = 1;
 
 let filenames =
 [
@@ -19,43 +19,44 @@ let filename = filenames[ifile];
 fn map_fn(seeds: [i64; :], dst_range: [i64; :], src_range: [i64; :],
 		  len_range: [i64; :]): [i64; :]
 {
-		println("mapping seeds     = ", seeds);
-		//println("dst_range = ", dst_range);
-		//println("src_range = ", src_range);
-		//println("len_range = ", len_range);
+	//println("starting map_fn()");
 
-		// outputs
-		//let vec_ = [i64(0); size(seeds, 0)];
-		let vec_ = seeds;
+	//println("mapping seeds     = ", seeds);
+	//println("dst_range = ", dst_range);
+	//println("src_range = ", src_range);
+	//println("len_range = ", len_range);
 
-		for i in [0: size(seeds, 0)]
+	// outputs
+	//let vec_ = [i64(0); size(seeds, 0)];
+	let vec_ = seeds;
+
+	for i in [0: size(seeds, 0)]
+	{
+		let seed = seeds[i];
+		//println("seed = ", seed);
+
+		//for j in [0: size(dst_range, 0)]
+		let j = 0;
+		let found = false;
+		while not found and j < size(dst_range, 0)
 		{
-			let seed = seeds[i];
-			//println("seed = ", seed);
-
-			//for j in [0: size(dst_range, 0)]
-			let j = 0;
-			let found = false;
-			while not found and j < size(dst_range, 0)
+			let offset = seed - src_range[j];
+			if 0 <= offset and offset < len_range[j]
 			{
-				let offset = seed - src_range[j];
-				if 0 <= offset and offset < len_range[j]
-				{
-					found = true;
-					//vec_[i] = dst_range[j] + seed - src_range[j];
-					//vec_[i] = seed - src_range[j] + dst_range[j] - src_range[j];
-					//vec_[i] = seed - dst_range[j] + src_range[j];
-					vec_[i] = seed + (dst_range[j] - src_range[j]);
-					//println("diff = ", dst_range[j], " - ", src_range[j], " = ", (dst_range[j] - src_range[j]));
-					//println("mapped ", vec_[i]);
-				}
-				j += 1;
+				found = true;
+				//vec_[i] = dst_range[j] + seed - src_range[j];
+				//vec_[i] = seed - src_range[j] + dst_range[j] - src_range[j];
+				//vec_[i] = seed - dst_range[j] + src_range[j];
+				vec_[i] = seed + (dst_range[j] - src_range[j]);
+				//println("diff = ", dst_range[j], " - ", src_range[j], " = ", (dst_range[j] - src_range[j]));
+				//println("mapped ", vec_[i]);
 			}
-			//println();
+			j += 1;
 		}
+		//println();
+	}
 
-		// return
-		let ans = vec_;
+	return vec_;
 }
 
 //==============================================================================
@@ -66,11 +67,12 @@ fn min64_(a: i64, b: i64): i64
 	let ans = a;
 	if b < a
 		ans = b;
+	return ans;
 }
 
 //==============================================================================
 
-fn part1(): i32
+fn part1(): i64
 {
 	let sum_ = i64(0);
 
@@ -81,26 +83,26 @@ fn part1(): i32
 	//let nums_str = split_(strs[1], " ");
 	//println("nums_str = ", nums_str);
 	let seeds = parse_i64_delim(strs[1], " ");
-	println("seeds = ", seeds);
+	//println("seeds = ", seeds);
 
 	str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let nln = 0;
 
 		str_ = readln(f);
 		let mapname = str_;
-		println("mapname = ", mapname);
+		//println("mapname = ", mapname);
 		while not (str_ == "")
 		{
 			str_ = readln(f);
-			println("str_ = ", str_);
+			//println("str_ = ", str_);
 			nln += 1;
 		}
 		nln -= 1;
-		println("nln = ", nln);
+		//println("nln = ", nln);
 
 		// Rewind and read until the mapname that we left off at
 		close(f);
@@ -128,11 +130,14 @@ fn part1(): i32
 			len_range[i] = ints[2];
 		}
 
-		println("dst_range = ", dst_range);
-		println("src_range = ", src_range);
-		println("len_range = ", len_range);
+		//println("dst_range = ", dst_range);
+		//println("src_range = ", src_range);
+		//println("len_range = ", len_range);
+
+		//println("calling map_fn() ...");
 
 		seeds = map_fn(seeds, dst_range, src_range, len_range);
+
 		//println("seeds = ", seeds);
 
 
@@ -145,12 +150,12 @@ fn part1(): i32
 		sum_ = min64_(sum_, seeds[i]);
 
 	println("part 1 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn part2(): i32
+fn part2(): i64
 {
 	let sum_ = i64(0);
 
@@ -267,26 +272,29 @@ fn part2(): i32
 		sum_ = min64_(sum_, seeds[i]);
 
 	println("part 2 = ", sum_);
-	sum_;
+	return sum_;
 }
 
 //==============================================================================
 
-fn main()
+fn main(): i64
 {
 	println();
-	println("Starting AOC syntran main");
+	println("Starting AOC syntran main 2023/05");
 
-	part1();
-	part2();
+	let sum_ = i64(0);
+
+	sum_ += part1();
+	//sum_ += part2();
 
 	println("Ending AOC syntran main");
 	println();
+	return sum_;
 }
 
 //==============================================================================
 
-main();
+return main();
 
 //==============================================================================
 

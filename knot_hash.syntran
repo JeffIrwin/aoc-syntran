@@ -1,0 +1,69 @@
+
+fn knot_hash(str_: str): [i32; :]
+{
+	// Return the knot hash as an array of 16 numbers (they're each only really
+	// 8 bits but i32)
+
+	// Get input str as array of ASCII codes
+	let v = [0; len(str_)];
+	for i in [0: len(str_)]
+		v[i] = i32(str_[i]);
+
+	v = [v, [17, 31, 73, 47, 23]];
+	//println("v = ", v);
+
+	let n = 256;
+	//println("n = ", n);
+
+	let list = [0: n];
+	//println("list = ", list);
+
+	// Allegedly this is called the "knot hash"
+	let i = 0;
+	let skip_size = 0;
+	for round in [0: 64]
+	for len_ in v
+	{
+		// Optimized without the temp `slice` array
+		list[ (i + [0: len_]) % n ] = list[ (i + [len_-1: -1: -1]) % n ];
+
+		i += len_ + skip_size;
+		skip_size += 1;
+		i %= n;
+	}
+	//println("list = ", list);
+
+	// xor each block of 16 numbers in the list together
+	let dense = [0; 16];
+	for i in [0: 16]
+	{
+		dense[i] = list[16 * i];
+		for j in [16 * i + 1: 16 * (i+1)]
+			dense[i] ^= list[j];
+	}
+	//println("dense = ", dense);
+
+	return dense;
+}
+
+fn knot_hash_hex(str_: str): str
+{
+	// Return the knot hash as a 32 character lowercase hex string
+	let dense = knot_hash(str_);
+
+	// Convert to one big 32-char hex str.  c.f. md5.syntran
+	let hex_digest = repeat(" ", 32);
+
+	let HEX_CHARS_KNOT = "0123456789abcdef";
+	let j = 0;
+	for d in dense
+		for i in [0: 1]  // `dense` is an array of 1-byte numbers
+		{
+			hex_digest[j+0] = HEX_CHARS_KNOT[(d >> (4 * (2*i + 1))) & 0xf];
+			hex_digest[j+1] = HEX_CHARS_KNOT[(d >> (4 * (2*i + 0))) & 0xf];
+			j += 2;
+		}
+	//println("hex_digest = ", hex_digest);
+	return hex_digest;
+}
+
