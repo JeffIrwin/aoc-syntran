@@ -41,7 +41,7 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2016/xx");
+	println("Starting AOC syntran main 2017/xx");
 
 	let p1 = ""; let p2 = "";
 

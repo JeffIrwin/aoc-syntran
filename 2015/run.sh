@@ -17,6 +17,8 @@ for dir in ${dirs[@]} ; do
 	# Part 1 is manageable but part 2 took like 20 minutes to run
 	[[ "$dir" == "4" ]] && continue
 
+	[[ "$dir" == "24" ]] && continue
+
 	pushd "$dir" >/dev/null
 
 	main=main.syntran

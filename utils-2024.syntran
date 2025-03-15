@@ -11,6 +11,7 @@
 
 let digit_chars = "0123456789";
 let hex_chars = digit_chars + "abcdef";
+let NEWLINE_ = char(10);
 
 //==============================================================================
 
@@ -1032,6 +1033,104 @@ fn sort_inplace(v: [i32; :]): [i32; :]
 
 //==============================================================================
 
+fn sort_inplace_i64(v: &[i64; :])
+{
+	// Quick sort algorithm.  Return the input array but sorted (no index
+	// array)
+
+	//println("starting sort_inplace()");
+	//println("v = ", v);
+
+	let l = 0;
+	let h = size(v,0) - 1;
+
+	if l < h
+	{
+		let stack = [0; h - l + 1];
+
+		let top = -1;
+
+		top += 1;
+		stack[top] = l;
+
+		top += 1;
+		stack[top] = h;
+
+		while top >= 0
+		{
+			//println("h = ", h);
+			h = stack[top];
+			top -= 1;
+
+			l = stack[top];
+			top -= 1;
+
+			//// inlined
+			//let p = partition(v, l, h);
+
+			//let x = v[h];
+
+			// Median-of-three pivot.  40x faster for AOC!
+			let m = (l + h) / 2;
+			if v[m] < v[l]
+			{
+				let tmp = v[m];
+				v[m]    = v[l];
+				v[l]    = tmp;
+			}
+			if v[h] < v[l]
+			{
+				let tmp = v[h];
+				v[h]    = v[l];
+				v[l]    = tmp;
+			}
+			if v[m] < v[h]
+			{
+				let tmp = v[m];
+				v[m]    = v[h];
+				v[h]    = tmp;
+			}
+			let x = v[h];
+
+			let i = (l - 1);
+			for j in [l: h]
+				if v[j] <= x
+				{
+					i += 1;
+					let tmp = v[i];
+					v[i]  = v[j];
+					v[j]  = tmp;
+				}
+			let tmp = v[i+1];
+			v[i+1] = v[h];
+			v[h] = tmp;
+			let p = i + 1;
+
+			if p - 1 > l
+			{
+				top += 1;
+				stack[top] = l;
+
+				top += 1;
+				stack[top] = p - 1;
+			}
+
+			if p + 1 < h
+			{
+				top += 1;
+				stack[top] = p + 1;
+
+				top += 1;
+				stack[top] = h;
+			}
+		}
+	}
+	//println("v = ", v);
+	return;
+}
+
+//==============================================================================
+
 fn uniq(v_in: [i32; :]): [i32; :]
 {
 	// TODO: pass by ref
@@ -1124,9 +1223,15 @@ fn read_char_mat(filename: str): [str; :,:]
 fn read_i32_mat(filename: str): [i32; :,:]
 {
 	// Read a matrix of comma-delimited i32 integers from a file
-	//
-	// TODO: should we take the delimiter(s) as an arg?
-	let delims = ",";
+	let delims = ", ";
+	return read_i32_mat_delim(filename, delims);
+}
+
+//==============================================================================
+
+fn read_i32_mat_delim(filename: str, delims: str): [i32; :,:]
+{
+	// Read a matrix of i32 integers from a file with custom delimiters
 	let ny = countln_(filename);
 	let f = open(filename);
 	let str_ = readln(f);
@@ -1212,4 +1317,33 @@ fn next_perm(array: &[i32; :]): bool
 }
 
 //==============================================================================
+
+fn factorial(n: i32): i32
+{
+	// Might want an i64 version too
+	return product([1: n+1]);
+}
+
+//==============================================================================
+
+fn split_str_mat(s: str, delims: str): [str; :,:]
+{
+	// Split a str by delimiters into a matrix of chars
+	let rows = split_(s, delims);
+	//println("rows = ", rows);
+
+	let nx = len(rows[0]);
+	let ny = size(rows, 0);
+	//println("nx, ny = ", [nx, ny]);
+
+	let ans = [""; nx, ny];
+	for y in [0: ny]
+	{
+		let row = rows[y];
+		for x in [0: nx]
+			ans[x, y] = row[x];
+	}
+	return ans;
+	//return ["x"; 3, 4];
+}
 
