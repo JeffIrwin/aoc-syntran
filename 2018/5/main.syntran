@@ -1,0 +1,257 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let s_mat = read_char_mat(filename);
+	let s = s_mat[:, 0];
+
+	//println("s = ", s[0: 10], "...", s[size(s,0)-10: size(s,0)]);
+
+	//s = ["d", "a", "b", "A", "c", "C", "a", "C", "B", "A", "c", "C", "c", "a", "D", "A"];
+
+	// Stack of char indices that haven't been removed
+	let stack = [-1; size(s, 0)];
+	let sptr = 0;
+
+	// Could use a linked list.  But, we don't need to actually remove, just
+	// count the removals
+	//
+	// idk why this is still pretty slow.  Counting removals instead of
+	// cat-modifying `s` helps, but the stack doesn't help at all
+
+	let removed = [false; size(s,0)];
+	let i0 = 0;
+	let i1 = 1;
+	while i1 < size(s, 0)
+	{
+		//println("i0, i1 = ", [i0, i1]);
+		if s[i0] != s[i1] and (s[i0] == to_lower(s[i1]) or s[i0] == to_upper(s[i1]))
+		{
+			removed[i0] = true;
+			removed[i1] = true;
+			i1 += 1;
+
+			if (sptr > 0)
+			{
+				// Pop
+				sptr -= 1;
+				i0 = stack[sptr];
+			}
+			else
+			{
+				i0 = i1;
+				i1 += 1;
+			}
+
+			//while removed[i0]
+			//{
+			//	// TODO: use a stack of un-removed chars to do this faster
+			//	if (i0 == 0) break;
+			//	i0 -= 1;
+			//}
+			//if i0 == 0 and removed[i0]
+			//{
+			//	i0 = i1;
+			//	i1 += 1;
+			//}
+		}
+		else
+		{
+			// Push
+			stack[sptr] = i0;
+			sptr += 1;
+
+			i0 = i1;
+			i1 += 1;
+		}
+	}
+	sum_ = count(not removed);
+
+	//let sremain = "";
+	//for i in [0: size(s,0)]
+	//	if not removed[i]
+	//		sremain = sremain + s[i];
+	//println("sremain = ", sremain);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let s_mat = read_char_mat(filename);
+	let s = s_mat[:, 0];
+
+	//println("s = ", s[0: 10], "...", s[size(s,0)-10: size(s,0)]);
+
+	//s = ["d", "a", "b", "A", "c", "C", "a", "C", "B", "A", "c", "C", "c", "a", "D", "A"];
+
+	// Filter the original string first so that we have a shorter string to work
+	// with
+
+	// Stack of char indices that haven't been removed
+	let stack = [-1; size(s, 0)];
+	let sptr = 0;
+
+	// Could use a linked list.  But, we don't need to actually remove, just
+	// count the removals
+
+	let removed = [false; size(s,0)];
+	let i0 = 0;
+	let i1 = 1;
+	while i1 < size(s, 0)
+	{
+		//println("i0, i1 = ", [i0, i1]);
+		if s[i0] != s[i1] and (s[i0] == to_lower(s[i1]) or s[i0] == to_upper(s[i1]))
+		{
+			removed[i0] = true;
+			removed[i1] = true;
+			i1 += 1;
+
+			if (sptr > 0)
+			{
+				// Pop
+				sptr -= 1;
+				i0 = stack[sptr];
+			}
+			else
+			{
+				i0 = i1;
+				i1 += 1;
+			}
+		}
+		else
+		{
+			// Push
+			stack[sptr] = i0;
+			sptr += 1;
+
+			i0 = i1;
+			i1 += 1;
+		}
+	}
+	sum_ = count(not removed);
+
+	let sremain = "";
+	for i in [0: size(s,0)]
+		if not removed[i]
+			sremain = sremain + s[i];
+	//println("sremain = ", sremain);
+
+	let s0 = vec_str(sremain);
+	//println("s0 = ", s0);
+
+	// Now re-filter the initially shortened list s0 by removing `ca` and
+	// to_upper(ca)
+	for ia in [i32("a"): i32("z") + 1]
+	{
+		let ca = char(ia);
+		//println("ca = ", ca);
+
+		let s = s0;
+		let j = 0;
+		for i in [0: size(s0, 0)]
+		{
+			if to_lower(s0[i]) != ca
+			{
+				s[j] = s0[i];
+				j += 1;
+			}
+		}
+		s = s[0: j];  // trim
+		//println("s = ", s);
+
+		// Stack of char indices that haven't been removed
+		let stack = [-1; size(s, 0)];
+		let sptr = 0;
+	
+		// Could use a linked list.  But, we don't need to actually remove, just
+		// count the removals
+	
+		let removed = [false; size(s,0)];
+		let i0 = 0;
+		let i1 = 1;
+		while i1 < size(s, 0)
+		{
+			//println("i0, i1 = ", [i0, i1]);
+			if s[i0] != s[i1] and (s[i0] == to_lower(s[i1]) or s[i0] == to_upper(s[i1]))
+			{
+				removed[i0] = true;
+				removed[i1] = true;
+				i1 += 1;
+	
+				if (sptr > 0)
+				{
+					// Pop
+					sptr -= 1;
+					i0 = stack[sptr];
+				}
+				else
+				{
+					i0 = i1;
+					i1 += 1;
+				}
+			}
+			else
+			{
+				// Push
+				stack[sptr] = i0;
+				sptr += 1;
+	
+				i0 = i1;
+				i1 += 1;
+			}
+		}
+		sum_ = min(sum_, count(not removed));
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/5");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 9078:5698
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
