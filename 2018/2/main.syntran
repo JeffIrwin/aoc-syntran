@@ -1,0 +1,119 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let chars = read_char_mat(filename);
+	//print_char_mat(&chars);
+
+	let nx = size(chars, 0);
+	let ny = size(chars, 1);
+	//println("nx, ny = ", [nx, ny]);
+
+	let n2 = 0;
+	let n3 = 0;
+	for iy in [0: ny]
+	{
+		let has2 = false;
+		let has3 = false;
+
+		for ix in [0: nx]
+		{
+			let char_ = chars[ix, iy];
+			let count_ = count(chars[:, iy] == char_);
+			//println("char_, count = ", char_, count_);
+
+			has2 = has2 or count_ == 2;
+			has3 = has3 or count_ == 3;
+		}
+
+		if (has2) n2 += 1;
+		if (has3) n3 += 1;
+	}
+	sum_ = n2 * n3;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+
+fn part2(): str
+{
+	let chars = read_char_mat(filename);
+	//print_char_mat(&chars);
+
+	let nx = size(chars, 0);
+	let ny = size(chars, 1);
+	//println("nx, ny = ", [nx, ny]);
+
+	let str_ = "";
+
+	let n2 = 0;
+	let n3 = 0;
+	for i0 in [1: ny]
+	{
+	for i1 in [0: i0]
+	{
+		let ndiff = count(chars[:, i0] != chars[:, i1]);
+		if (ndiff == 1)
+		{
+			//println("word i0 = ", chars[:, i0]);
+			//println("word i1 = ", chars[:, i1]);
+
+			// Iterate and build a string except for the differing letter
+			for ix in [0: nx]
+				if chars[ix, i0] == chars[ix, i1]
+					str_ += chars[ix, i0];
+			break;
+		}
+	}
+	if (str_ != "") break;
+	}
+
+	println("part 2 = ", str_);
+	return str_;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/2");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 7134:kbqwtcvzhmhpoelrnaxydifyb
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
