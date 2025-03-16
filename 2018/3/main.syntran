@@ -1,0 +1,174 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	// Capacity of total area
+	let nx = 1024;
+	let ny = 1024;
+
+	// Number of claims at each grid point
+	let nclaims = [0; nx, ny];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		// Unpack
+		let x0 = nums[1];
+		let y0 = nums[2];
+		let dx = nums[3];
+		let dy = nums[4];
+
+		nclaims[x0: x0+dx, y0: y0+dy] += 1;
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	sum_ = count(nclaims >= 2);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	// Capacity of total area
+	let nx = 1024;
+	let ny = 1024;
+
+	// Number of claims and last-claimed-ID at each grid point
+	let nclaims = [0; nx, ny];
+	let ids = [-1; nx, ny];
+
+	// Area of each claim ID
+	let areas = [0; 2048];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		// Unpack
+		let id = nums[0];
+		let x0 = nums[1];
+		let y0 = nums[2];
+		let dx = nums[3];
+		let dy = nums[4];
+
+		nclaims[x0: x0+dx, y0: y0+dy] += 1;
+		ids    [x0: x0+dx, y0: y0+dy] = id;
+
+		areas[id] = dx * dy;
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	////sum_ = count(nclaims >= 2);
+	//for y in [0: ny]
+	//for x in [0: nx]
+	//{
+	//	if nclaims[x, y] == 1
+	//		sum_ = ids[x, y];
+	//}
+
+	// I initially mis-read part2 and now i don't feel like implementing an
+	// efficient method for it
+
+	//for id in [0: 1340]
+	//{
+	//	println("id = ", id);
+	//	let area = 0;
+	//	for y in [0: ny]
+	//	for x in [0: nx]
+	//	{
+	//		if nclaims[x, y] == 1 and ids[x, y] == id
+	//			area += 1;
+	//	}
+	//	if area == areas[id] and area > 0
+	//	{
+	//		sum_ = id;
+	//		println("******** sum_ = ", sum_);
+	//	}
+	//}
+
+	// Nevermind, this is the fast way
+	let areas_unique = [0; 2048];
+	//println("id = ", id);
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if nclaims[x, y] == 1 //and ids[x, y] == id
+		{
+			areas_unique[ ids[x,y] ] += 1;
+		}
+	}
+
+	for id in [0: size(areas, 0)]
+	{
+		if areas[id] > 0 and areas[id] == areas_unique[id]
+			sum_ = id;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/3");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 111326:1019
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

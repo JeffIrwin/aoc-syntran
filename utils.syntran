@@ -366,11 +366,37 @@ fn is_digit(char_: str): bool
 	return scan(char_, digit_chars) >= 0;
 }
 
+fn is_lower(char_: str): bool
+{
+	return i32("a") <= i32(char_) and i32(char_) <= i32("z");
+}
+
+fn is_upper(char_: str): bool
+{
+	return i32("A") <= i32(char_) and i32(char_) <= i32("Z");
+}
+
 fn is_alpha(char_: str): bool
 {
-	return
-		(i32("a") <= i32(char_) and i32(char_) <= i32("z")) or
-		(i32("A") <= i32(char_) and i32(char_) <= i32("Z"));
+	return is_lower(char_) or is_upper(char_);
+}
+
+//********
+
+let CASE_DIFF__ = i32("A") - i32("a");
+
+fn to_lower(char_: str): str
+{
+	if not is_upper(char_)
+		return char_;
+	return char(i32(char_) - CASE_DIFF__);
+}
+
+fn to_upper(char_: str): str
+{
+	if not is_lower(char_)
+		return char_;
+	return char(i32(char_) + CASE_DIFF__);
 }
 
 //==============================================================================
@@ -1186,6 +1212,15 @@ fn cat_strs(str_vec: [str; :]): str
 	for i in [0: size(str_vec, 0)]
 		str_ += str_vec[i];
 	return str_;
+}
+
+fn vec_str(s: str): [str; :]
+{
+	// Divide a string into a vector of chars
+	let v = [""; len(s)];
+	for i in [0: len(s)]
+		v[i] = s[i];
+	return v;
 }
 
 //==============================================================================
