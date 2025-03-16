@@ -1,0 +1,433 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let CAP = 2048;
+	let times = [ 0; CAP];
+	let strs  = [""; CAP];
+	let lines = [""; CAP];
+
+	let GUARD_CAP = 1024 * 4;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		lines[i] = str_;
+
+		// Unpack
+		let month  = nums[1];
+		let day    = nums[2];
+		let hour   = nums[3];
+		let minute = nums[4];
+
+		// Convert time/date to minutes since midnight on Jan 1.  All years are
+		// 1518 so we can ignore year.  Assume all months have 31 days, that
+		// will be good enough to sort the times
+		let time = minute + 60 * (hour + 24 * (day + 31 * month));
+
+		times[i] = time;
+
+		let parts = split_(str_, "]");
+		strs[i] = parts[1];
+
+		//println();
+
+		i += 1;
+		str_ = readln(f);
+	}
+	let n = i;
+	close(f);
+
+	// Trim
+	lines = lines[0: n];
+	times = times[0: n];
+	strs = strs[0: n];
+
+	//println("times, strs = ");
+	//for i in [0: n]
+	//	println(times[i], " """, strs[i], """");
+
+	let idx = sort_index(times);
+	lines = lines[idx];
+	times = times[idx];
+	strs  = strs [idx];
+
+	//println("lines = ");
+	//for i in [0: n]
+	//	println(lines[i]);
+
+	// This day is super annoying with how many times i have to make passes over
+	// the same data with similar logic
+
+	// Find the guard that has the most minutes asleep
+	let minutes_asleep = [0; GUARD_CAP];
+	let guard = -1;
+	let start_sleep_time = -1;
+	let end_sleep_time = -1;
+	for i in [0: n]
+	{
+		let str_ = lines[i];
+
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		// Unpack
+		let month  = nums[1];
+		let day    = nums[2];
+		let hour   = nums[3];
+		let minute = nums[4];
+
+		// Convert time/date to minutes since midnight on Jan 1.  All years are
+		// 1518 so we can ignore year.  Assume all months have 31 days, that
+		// will be good enough to sort the times
+		let time = minute + 60 * (hour + 24 * (day + 31 * month));
+
+		//let parts = split_(str_, "]");
+		if index_(str_, "Guard") > 0
+		{
+			// Guard #x begins shift
+			guard = nums[5];
+			//println("guard = ", guard);
+		}
+		else if index_(str_, "falls") > 0
+		{
+			// falls asleep
+			start_sleep_time = time;
+		}
+		else if index_(str_, "wakes") > 0
+		{
+			// wakes up
+			end_sleep_time = time;
+
+			minutes_asleep[guard] += end_sleep_time - start_sleep_time;
+		}
+
+		//println();
+	}
+
+	//println("non-zero minutes_asleep = ");
+	let max_minutes_asleep = -1;
+	let imax = -1;
+	for i in [0: GUARD_CAP]
+	{
+		if minutes_asleep[i] > max_minutes_asleep
+		{
+			max_minutes_asleep = minutes_asleep[i];
+			imax = i;
+		}
+		//if minutes_asleep[i] > 0
+		//	println(minutes_asleep[i]);
+	}
+	//println("max_minutes_asleep, imax = ", [max_minutes_asleep, imax]);
+
+	// Because all asleep/awake times are during the midnight hour (00:00 -
+	// 00:59), only the minute portion (00 - 59) is relevant for those events
+	let times_asleep = [0; 60];
+	let start_minute = -1;
+	let end_minute = -1;
+	for i in [0: n]
+	{
+		let str_ = lines[i];
+		let nums = read_i32s(str_);
+
+		// Unpack
+		let month  = nums[1];
+		let day    = nums[2];
+		let hour   = nums[3];
+		let minute = nums[4];
+
+		// Convert time/date to minutes since midnight on Jan 1.  All years are
+		// 1518 so we can ignore year.  Assume all months have 31 days, that
+		// will be good enough to sort the times
+		let time = minute + 60 * (hour + 24 * (day + 31 * month));
+
+		//let parts = split_(str_, "]");
+		if index_(str_, "Guard") > 0
+		{
+			// Guard #x begins shift
+			guard = nums[5];
+			//println("guard = ", guard);
+		}
+		else if index_(str_, "falls") > 0
+		{
+			// falls asleep
+			start_sleep_time = time;
+			start_minute = minute;
+		}
+		else if index_(str_, "wakes") > 0
+		{
+			// wakes up
+			end_sleep_time = time;
+			end_minute = minute;
+
+			if (guard == imax)
+			{
+				times_asleep[start_minute: end_minute] += 1;
+			}
+			//minutes_asleep[guard] += end_sleep_time - start_sleep_time;
+		}
+		//println();
+	}
+	//println("times_asleep = ", times_asleep);
+
+	let max_times = -1;
+	let max_minute = -1;
+	for i in [0: size(times_asleep, 0)]
+	{
+		if times_asleep[i] > max_times
+		{
+			max_times = times_asleep[i];
+			max_minute = i;
+		}
+	}
+	//println("max_times = ", max_times);
+	//println("imax, max_minute = ", [imax, max_minute]);
+
+	sum_ = imax * max_minute;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let CAP = 2048;
+	let times = [ 0; CAP];
+	let strs  = [""; CAP];
+	let lines = [""; CAP];
+
+	let GUARD_CAP = 1024 * 4;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		lines[i] = str_;
+
+		// Unpack
+		let month  = nums[1];
+		let day    = nums[2];
+		let hour   = nums[3];
+		let minute = nums[4];
+
+		// Convert time/date to minutes since midnight on Jan 1.  All years are
+		// 1518 so we can ignore year.  Assume all months have 31 days, that
+		// will be good enough to sort the times
+		let time = minute + 60 * (hour + 24 * (day + 31 * month));
+
+		times[i] = time;
+
+		let parts = split_(str_, "]");
+		strs[i] = parts[1];
+
+		//println();
+
+		i += 1;
+		str_ = readln(f);
+	}
+	let n = i;
+	close(f);
+
+	// Trim
+	lines = lines[0: n];
+	times = times[0: n];
+	strs = strs[0: n];
+
+	//println("times, strs = ");
+	//for i in [0: n]
+	//	println(times[i], " """, strs[i], """");
+
+	let idx = sort_index(times);
+	lines = lines[idx];
+	times = times[idx];
+	strs  = strs [idx];
+
+	//println("lines = ");
+	//for i in [0: n]
+	//	println(lines[i]);
+
+	// Find the guard that has the most minutes asleep
+	let minutes_asleep = [0; GUARD_CAP];
+	let guard = -1;
+	let start_sleep_time = -1;
+	let end_sleep_time = -1;
+	for i in [0: n]
+	{
+		let str_ = lines[i];
+
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		// Unpack
+		let month  = nums[1];
+		let day    = nums[2];
+		let hour   = nums[3];
+		let minute = nums[4];
+
+		// Convert time/date to minutes since midnight on Jan 1.  All years are
+		// 1518 so we can ignore year.  Assume all months have 31 days, that
+		// will be good enough to sort the times
+		let time = minute + 60 * (hour + 24 * (day + 31 * month));
+
+		//let parts = split_(str_, "]");
+		if index_(str_, "Guard") > 0
+		{
+			// Guard #x begins shift
+			guard = nums[5];
+			//println("guard = ", guard);
+		}
+		else if index_(str_, "falls") > 0
+		{
+			// falls asleep
+			start_sleep_time = time;
+		}
+		else if index_(str_, "wakes") > 0
+		{
+			// wakes up
+			end_sleep_time = time;
+
+			minutes_asleep[guard] += end_sleep_time - start_sleep_time;
+		}
+
+		//println();
+	}
+
+	//println("non-zero minutes_asleep = ");
+	let max_minutes_asleep = -1;
+	let imax = -1;
+	for i in [0: GUARD_CAP]
+	{
+		if minutes_asleep[i] > max_minutes_asleep
+		{
+			max_minutes_asleep = minutes_asleep[i];
+			imax = i;
+		}
+		//if minutes_asleep[i] > 0
+		//	println(minutes_asleep[i]);
+	}
+	//println("max_minutes_asleep, imax = ", [max_minutes_asleep, imax]);
+
+	// Because all asleep/awake times are during the midnight hour (00:00 -
+	// 00:59), only the minute portion (00 - 59) is relevant for those events
+	let times_asleep = [0; 60, GUARD_CAP];
+	let start_minute = -1;
+	let end_minute = -1;
+	for i in [0: n]
+	{
+		let str_ = lines[i];
+		let nums = read_i32s(str_);
+
+		// Unpack
+		let month  = nums[1];
+		let day    = nums[2];
+		let hour   = nums[3];
+		let minute = nums[4];
+
+		// Convert time/date to minutes since midnight on Jan 1.  All years are
+		// 1518 so we can ignore year.  Assume all months have 31 days, that
+		// will be good enough to sort the times
+		let time = minute + 60 * (hour + 24 * (day + 31 * month));
+
+		//let parts = split_(str_, "]");
+		if index_(str_, "Guard") > 0
+		{
+			// Guard #x begins shift
+			guard = nums[5];
+			//println("guard = ", guard);
+		}
+		else if index_(str_, "falls") > 0
+		{
+			// falls asleep
+			start_sleep_time = time;
+			start_minute = minute;
+		}
+		else if index_(str_, "wakes") > 0
+		{
+			// wakes up
+			end_sleep_time = time;
+			end_minute = minute;
+
+			times_asleep[start_minute: end_minute, guard] += 1;
+			//if (guard == imax)
+			//{
+			//	times_asleep[start_minute: end_minute] += 1;
+			//}
+		}
+		//println();
+	}
+	//println("times_asleep = ", times_asleep);
+
+	let max_times_asleep = maxval(times_asleep);
+	//println("max times_asleep = ", max_times_asleep);
+	for ig in [0: size(times_asleep, 1)]
+	for im in [0: size(times_asleep, 0)]
+	{
+		if times_asleep[im, ig] == max_times_asleep
+		{
+			sum_ = im * ig;
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/4");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 77941:35289
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
