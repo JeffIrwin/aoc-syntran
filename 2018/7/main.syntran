@@ -1,0 +1,380 @@
+
+#include("../../utils.syntran");
+#include("../../dict_str.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let set        = new_dict_str();
+	let children   = new_dict_str();
+	let parents    = new_dict_str();
+	let has_parent = new_dict_str();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		let parent = words[1];
+		let child  = words[7];
+		//println("parent, child = ", [parent, child]);
+
+		set_dict_str(&set, parent, ".");
+		set_dict_str(&set, child , ".");
+
+		set_dict_str(&has_parent, child, ".");
+
+		let these_children = get_dict_str(&children, parent);
+		if index_(these_children, child) < 0
+		{
+			// Only add children to the list if it's not already in the list
+			these_children += child;
+			set_dict_str(&children, parent, these_children);
+		}
+
+		let these_parents = get_dict_str(&parents, child);
+		if index_(these_parents, parent) < 0
+		{
+			these_parents += parent;
+			set_dict_str(&parents, child, these_parents);
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let nodes = keys_dict_str(&set);
+	//println("nodes = ", nodes);
+
+	//println("parents, children = ");
+	//for parent in keys_dict_str(&children)
+	//	println([parent, get_dict_str(&children, parent)]);
+	//println("children, parents = ");
+	//for child in keys_dict_str(&parents)
+	//	println([child, get_dict_str(&parents, child)]);
+
+	// Find the roots.  There can be more than 1!  They don't have parents
+
+	let nnodes = size(nodes, 0);
+	//println("nnodes = ", nnodes);
+	//let has_children = [false; nnodes];
+	//let has_parent = [false; nnodes];
+
+	let roots = "";
+	for node in nodes
+		if get_dict_str(&has_parent, node) != "."
+			roots += node;
+	//println("roots = ", roots);
+
+	// Now build the steps in order.  I believe this is toposort, but I'm
+	// winging it without looking at my previous implementions of it
+	let steps = "";
+	let next = roots;
+	//let node = root;
+	let node = "";
+	while true
+	{
+		// From the next list, advance alphabetically
+		node = next[0];
+		for child in next
+			if i32(child) < i32(node)
+				node = child;
+
+		// Remove from next list
+		next = rm_char(next, node);
+		//println("node = ", node);
+		//println("next = ", next);
+		//println();
+
+		//break;
+		steps += node;
+
+		// Append the node's children to the list of next possible nodes, if
+		// they're not already in the `next` list and all of their parents are
+		// complete
+		for child in get_dict_str(&children, node)
+		{
+			//println(child);
+			if index_(next, child) < 0 and index_(steps, child) < 0
+			{
+				let ready = true;
+				for parent in get_dict_str(&parents, child)
+					ready = ready and index_(steps, parent) >= 0;
+
+				if ready
+					next += child;
+			}
+		}
+		//println("next = ", next);
+
+		if (next == "") break;
+	}
+
+	//// Now build the steps in order.  I believe this is toposort, but I'm
+	//// winging it without looking at my previous implementions of it
+	//let steps = "";
+	//let next = "";
+	//let node = root;
+	//while true
+	//{
+	//	steps += node;
+
+	//	// Append the node's children to the list of next possible nodes, if
+	//	// they're not already in the `next` list
+	//	for child in get_dict_str(&children, node)
+	//	{
+	//		//println(child);
+	//		if index_(next, child) < 0 and index_(steps, child) < 0
+	//			next += child;
+	//	}
+	//	println("next = ", next);
+
+	//	if (next == "") break;
+
+	//	// From the next list, advance alphabetically
+	//	node = next[0];
+	//	for child in next
+	//		if i32(child) < i32(node)
+	//			node = child;
+
+	//	// Remove from next list
+	//	next = rm_char(next, node);
+	//	println("node = ", node);
+	//	println("next = ", next);
+	//	println();
+
+	//	//break;
+	//}
+
+	println("part 1 = ", steps);
+	return steps;
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let set        = new_dict_str();
+	let children   = new_dict_str();
+	let parents    = new_dict_str();
+	let has_parent = new_dict_str();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		let parent = words[1];
+		let child  = words[7];
+		//println("parent, child = ", [parent, child]);
+
+		set_dict_str(&set, parent, ".");
+		set_dict_str(&set, child , ".");
+
+		set_dict_str(&has_parent, child, ".");
+
+		let these_children = get_dict_str(&children, parent);
+		if index_(these_children, child) < 0
+		{
+			// Only add children to the list if it's not already in the list
+			these_children += child;
+			set_dict_str(&children, parent, these_children);
+		}
+
+		let these_parents = get_dict_str(&parents, child);
+		if index_(these_parents, parent) < 0
+		{
+			these_parents += parent;
+			set_dict_str(&parents, child, these_parents);
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let nodes = keys_dict_str(&set);
+	//println("nodes = ", nodes);
+
+	//println("parents, children = ");
+	//for parent in keys_dict_str(&children)
+	//	println([parent, get_dict_str(&children, parent)]);
+	//println("children, parents = ");
+	//for child in keys_dict_str(&parents)
+	//	println([child, get_dict_str(&parents, child)]);
+
+	// Find the roots.  There can be more than 1!  They don't have parents
+
+	let nnodes = size(nodes, 0);
+	//println("nnodes = ", nnodes);
+	//let has_children = [false; nnodes];
+	//let has_parent = [false; nnodes];
+
+	let roots = "";
+	for node in nodes
+		if get_dict_str(&has_parent, node) != "."
+			roots += node;
+	//println("roots = ", roots);
+
+	let nworkers = 5;
+	let time_add = 60;
+	if ifile == 0
+	{
+		nworkers = 2;
+		time_add = 0;
+	}
+	//println("nworkers = ", nworkers);
+	//println("time_add = ", time_add);
+
+	// Time remaining and the node that each worker is busy with
+	let time_left = [time_add; 26];
+
+	//let work_node = [-1; 26];  // <0 for idle
+	let work_node = [-1; nworkers];  // <0 for idle
+
+	//let time_left = [-1; nworkers];
+	//let work_node = [""; nworkers];
+
+	// Time left depends on the letter
+	for i in [0: 26]
+		time_left[i] += i + 1;
+	//println("time_left = ", time_left);
+	//println("nnodes = ", nnodes);
+
+	// Now build the steps in order.  I believe this is toposort, but I'm
+	// winging it without looking at my previous implementions of it
+	let steps = "";
+	let next = roots;
+	//let node = root;
+	let node = "";
+	let t = 0;  // time
+	while true
+	{
+		// First pass:  do work and build completed steps
+
+		//println("steps = """, steps, """");
+		for i in [0: nworkers]
+		{
+			let idle = false;
+			if work_node[i] >= 0
+			{
+				// Do work
+				time_left[work_node[i]] -= 1;
+
+				//if time_left[work_node[i]] <= 0
+				if time_left[work_node[i]] == 0  // `==` is important here
+				{
+					// Work is finished.  Alphabetical order doesn't matter
+					// here, because we don't care what order the steps are
+					// completed in, just how long it takes
+					node = char(work_node[i] + i32("A"));
+					steps += node;
+					idle = true;
+
+					// Append the node's children to the list of next possible nodes, if
+					// they're not already in the `next` list and all of their parents are
+					// complete
+					for child in get_dict_str(&children, node)
+					{
+						//println(child);
+						if index_(next, child) < 0 and index_(steps, child) < 0
+						{
+							let ready = true;
+							for parent in get_dict_str(&parents, child)
+								ready = ready and index_(steps, parent) >= 0;
+
+							if ready
+								next += child;
+						}
+					}
+				}
+			}
+			else
+				idle = true;
+		}
+
+		// Second pass:  assign new tasks to idle workers.  I guess it's
+		// important to do this in two passes, at least I couldn't figure out
+		// how to do it in one pass
+
+		for i in [0: nworkers]
+		{
+			let idle = false;
+			if work_node[i] >= 0
+			{
+				if time_left[work_node[i]] <= 0  // `<=` is important here, i struggled for a few minutes on this
+					idle = true;
+			}
+			else
+				idle = true;
+
+			if idle and len(next) > 0
+			{
+				// Start working on the next node
+
+				// From the next list, advance alphabetically
+				node = next[0];
+				for child in next
+					if i32(child) < i32(node)
+						node = child;
+
+				// Remove from next list
+				next = rm_char(next, node);
+
+				work_node[i] = i32(node) - i32("A");
+			}
+		}
+
+		if (len(steps) == nnodes) break;
+		t += 1;
+	}
+	//println("steps  = ", steps);
+
+	println("part 2 = ", t);
+	return str(t);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/7");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect JDEKPFABTUHOQSXVYMLZCNIGRW:1048
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

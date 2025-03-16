@@ -1,0 +1,175 @@
+
+#include("../../utils.syntran");
+#include("../../dict_str.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let set        = new_dict_str();
+	let children   = new_dict_str();
+	let has_parent = new_dict_str();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		let parent = words[1];
+		let child  = words[7];
+		//println("parent, child = ", [parent, child]);
+
+		set_dict_str(&set, parent, ".");
+		set_dict_str(&set, child , ".");
+
+		set_dict_str(&has_parent, child, ".");
+
+		let these_children = get_dict_str(&children, parent);
+		if index_(these_children, child) < 0
+		{
+			// Only add children to the list if it's not already in the list
+			these_children += child;
+			set_dict_str(&children, parent, these_children);
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let nodes = keys_dict_str(&set);
+	println("nodes = ", nodes);
+
+	println("parents, children = ");
+	for parent in keys_dict_str(&children)
+		println([parent, get_dict_str(&children, parent)]);
+
+	// Find the roots.  There can be more than 1!  They don't have parents
+
+	let nnodes = size(nodes, 0);
+	println("nnodes = ", nnodes);
+	//let has_children = [false; nnodes];
+	//let has_parent = [false; nnodes];
+
+	let roots = "";
+	for node in nodes
+		if get_dict_str(&has_parent, node) != "."
+			roots += node;
+	println("roots = ", roots);
+
+	// Now build the steps in order.  I believe this is toposort, but I'm
+	// winging it without looking at my previous implementions of it
+	let steps = "";
+	let next = roots;
+	//let node = root;
+	let node = "";
+	while true
+	{
+		// From the next list, advance alphabetically
+		node = next[0];
+		for child in next
+			if i32(child) < i32(node)
+				node = child;
+
+		// Remove from next list
+		next = rm_char(next, node);
+		println("node = ", node);
+		println("next = ", next);
+		println();
+
+		//break;
+		steps += node;
+
+		// Append the node's children to the list of next possible nodes, if
+		// they're not already in the `next` list
+		for child in get_dict_str(&children, node)
+		{
+			//println(child);
+			if index_(next, child) < 0 and index_(steps, child) < 0
+				next += child;
+		}
+		println("next = ", next);
+
+		if (next == "") break;
+	}
+
+	//// Now build the steps in order.  I believe this is toposort, but I'm
+	//// winging it without looking at my previous implementions of it
+	//let steps = "";
+	//let next = "";
+	//let node = root;
+	//while true
+	//{
+	//	steps += node;
+
+	//	// Append the node's children to the list of next possible nodes, if
+	//	// they're not already in the `next` list
+	//	for child in get_dict_str(&children, node)
+	//	{
+	//		//println(child);
+	//		if index_(next, child) < 0 and index_(steps, child) < 0
+	//			next += child;
+	//	}
+	//	println("next = ", next);
+
+	//	if (next == "") break;
+
+	//	// From the next list, advance alphabetically
+	//	node = next[0];
+	//	for child in next
+	//		if i32(child) < i32(node)
+	//			node = child;
+
+	//	// Remove from next list
+	//	next = rm_char(next, node);
+	//	println("node = ", node);
+	//	println("next = ", next);
+	//	println();
+
+	//	//break;
+	//}
+
+	println("part 1 = ", steps);
+	return steps;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/7");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -1,0 +1,168 @@
+
+ syntran 0.0.63
+ https://github.com/JeffIrwin/syntran
+
+ Interpreting file "main.syntran"
+
+Starting AOC syntran main 2017/7
+nodes = [L, M, N, O, P, A, Q, B, R, C, S, D, T, E, U, F, V, G, W, H, X, I, Y, J, Z, K]
+parents, children = 
+[L, WGCRI]
+[M, LNCI]
+[N, IW]
+[O, SVQYCNL]
+[P, ZIHFLCO]
+[A, RGOY]
+[Q, YC]
+[B, IRO]
+[R, W]
+[C, GW]
+[S, IG]
+[D, ANZ]
+[T, NGRZWM]
+[E, RMNC]
+[U, WHG]
+[F, OAYBUCW]
+[V, WZYG]
+[G, RW]
+[H, CYOZWLN]
+[X, GVCW]
+[I, GW]
+[Y, WRM]
+[J, EIRADTYH]
+[Z, CRNI]
+[K, MIRPF]
+children, parents = 
+[L, MPHO]
+[M, KEYT]
+[N, TZMEDOH]
+[O, FHAPB]
+[P, K]
+[A, DFJ]
+[Q, O]
+[B, F]
+[R, AEGZYTKJBL]
+[C, HZLQMOPXFE]
+[S, O]
+[D, J]
+[T, J]
+[E, J]
+[U, F]
+[F, PK]
+[V, OX]
+[G, XICLTASVU]
+[W, UVYLRGCTHIFXN]
+[H, PUJ]
+[I, BSNPKJMZL]
+[Y, QHVOAFJ]
+[Z, PVTHD]
+nnodes = 26
+roots = XJK
+node = J
+next = XK
+
+next = XKEDT
+node = D
+next = XKET
+
+next = XKET
+node = E
+next = XKT
+
+next = XKT
+node = K
+next = XT
+
+next = XTP
+node = P
+next = XT
+
+next = XTF
+node = F
+next = XT
+
+next = XTABU
+node = A
+next = XTBU
+
+next = XTBU
+node = B
+next = XTU
+
+next = XTU
+node = T
+next = XU
+
+next = XU
+node = U
+next = X
+
+next = XH
+node = H
+next = X
+
+next = XO
+node = O
+next = X
+
+next = XSQ
+node = Q
+next = XS
+
+next = XS
+node = S
+next = X
+
+next = X
+node = X
+next = 
+
+next = V
+node = V
+next = 
+
+next = ZY
+node = Y
+next = Z
+
+next = ZM
+node = M
+next = Z
+
+next = ZL
+node = L
+next = Z
+
+next = Z
+node = Z
+next = 
+
+next = CN
+node = C
+next = N
+
+next = N
+node = N
+next = 
+
+next = I
+node = I
+next = 
+
+next = G
+node = G
+next = 
+
+next = R
+node = R
+next = 
+
+next = W
+node = W
+next = 
+
+next = 
+part 1 = JDEKPFABTUHOQSXVYMLZCNIGRW
+Ending AOC syntran main
+
+     JDEKPFABTUHOQSXVYMLZCNIGRW:
