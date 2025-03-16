@@ -1,0 +1,151 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let ps = read_i32_mat(filename);
+	let np = size(ps, 1);
+	//println("np = ", np);
+	//println("ps = ", ps);
+
+	let xmin = minval(ps[0,:]);
+	let ymin = minval(ps[1,:]);
+	let xmax = maxval(ps[0,:]);
+	let ymax = maxval(ps[1,:]);
+
+	//println("min = ", [xmin, ymin]);
+	//println("max = ", [xmax, ymax]);
+
+	let PAD = 1;
+
+	xmin -= PAD;
+	ymin -= PAD;
+	xmax += PAD;
+	ymax += PAD;
+
+	let areas = [0; np];
+
+	for y in [ymin: ymax+1]
+	for x in [xmin: xmax+1]
+	{
+		let dists = [0; np];
+		for ip in [0: np]
+			dists[ip] = sum(abs([x, y] - ps[:,ip]));
+		//println("dists = ", dists);
+
+		let min_dist = minval(dists);
+		if (count(dists == min_dist) == 1)
+		{
+			// Not a tie
+			//println("unique min_dist = ", min_dist);
+
+			for ip in [0: np]
+			{
+				if (dists[ip] == min_dist)
+				{
+					// Points with an area on the boundary have infinite area.
+					// Flag them with a negative and then skip incrementing
+					// later
+					if (x == xmin or x == xmax or y == ymin or y == ymax)
+						areas[ip] = -1;
+					if (areas[ip] < 0) break;
+
+					areas[ip] += 1;
+					break;
+				}
+			}
+		}
+	}
+	//println("areas = ", areas);
+
+	sum_ = maxval(areas);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let ps = read_i32_mat(filename);
+	let np = size(ps, 1);
+	//println("np = ", np);
+	//println("ps = ", ps);
+
+	let xmin = minval(ps[0,:]);
+	let ymin = minval(ps[1,:]);
+	let xmax = maxval(ps[0,:]);
+	let ymax = maxval(ps[1,:]);
+
+	//println("min = ", [xmin, ymin]);
+	//println("max = ", [xmax, ymax]);
+
+	let PAD = 1;
+
+	xmin -= PAD;
+	ymin -= PAD;
+	xmax += PAD;
+	ymax += PAD;
+
+	let areas = [0; np];
+
+	for y in [ymin: ymax+1]
+	for x in [xmin: xmax+1]
+	{
+		let dists = [0; np];
+		for ip in [0: np]
+			dists[ip] = sum(abs([x, y] - ps[:,ip]));
+
+		if (sum(dists) < 10_000)
+			sum_ += 1;
+	}
+	//println("areas = ", areas);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/6");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 3890:40284
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
