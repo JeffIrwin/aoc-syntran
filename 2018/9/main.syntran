@@ -25,27 +25,26 @@ fn part1(): str
 	close(f);
 
 	let nums = read_i32s(str_);
-	println("nums = ", nums);
+	//println("nums = ", nums);
 
 	let nplayers   = nums[0];
 	let max_points = nums[1];
 
 	//nplayers = 9 ; max_points = 25 ;
 
-	let scores = [0'i64; nplayers];
+	let scores = [0; nplayers];
 
 	// Circular double linked list `v` with indices of right/next/clockwise `ir`
 	// and left/prev/ccw `il`
-	let v  = [0'i64; max_points + 1];
-	let il = [0'i64; max_points + 1];
-	let ir = [0'i64; max_points + 1];
-	let iv = 0'i64;  // current value index
-	let n  = 1'i64;  // number of values in list (start with just 0, next to itself)
+	let v  = [0; max_points + 1];
+	let il = [0; max_points + 1];
+	let ir = [0; max_points + 1];
+	let iv = 0;  // current value index
+	let n  = 1;  // number of values in list (start with just 0, next to itself)
 
 	// Iterate over turns and adding marbles `im`
-	let im = 0'i64;  // marble
-	let it = 0'i64;  // turn
-	//for im in [1: max_points + 1]
+	let im = 0;  // marble
+	let it = 0;  // turn
 	while im < max_points
 	{
 		im += 1;
@@ -70,10 +69,7 @@ fn part1(): str
 			il[r] = l;
 			ir[l] = r;
 
-			iv = l; //r;
-
-			// skip an extra marble
-			//im += 1;
+			iv = l;
 		}
 		else
 		{
@@ -112,7 +108,7 @@ fn part2(): str
 	close(f);
 
 	let nums = read_i32s(str_);
-	println("nums = ", nums);
+	//println("nums = ", nums);
 
 	let nplayers   = i64(nums[0]);
 	let max_points = i64(100 * nums[1]);
@@ -132,7 +128,6 @@ fn part2(): str
 	// Iterate over turns and adding marbles `im`
 	let im = 0;  // marble
 	let it = 0;  // turn
-	//for im in [1: max_points + 1]
 	while im < max_points
 	{
 		im += 1;
@@ -141,7 +136,7 @@ fn part2(): str
 
 		if im % 23 == 0
 		{
-			// Advance by 7 left
+			// Advance by "7" left but I guess my deletion is off by one
 			for dummy in [0: 6]
 				iv = il[iv];
 
@@ -157,10 +152,7 @@ fn part2(): str
 			il[r] = l;
 			ir[l] = r;
 
-			iv = l; //r;
-
-			// skip an extra marble
-			//im += 1;
+			iv = l;
 		}
 		else
 		{
@@ -193,7 +185,6 @@ fn part2(): str
 		//	vv = ir[vv];
 		//}
 		//println("list_str = ", list_str);
-
 	}
 	//println("scores = ", scores);
 	sum_ = maxval(scores);
