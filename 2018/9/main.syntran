@@ -1,0 +1,230 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	close(f);
+
+	let nums = read_i32s(str_);
+	println("nums = ", nums);
+
+	let nplayers   = nums[0];
+	let max_points = nums[1];
+
+	//nplayers = 9 ; max_points = 25 ;
+
+	let scores = [0'i64; nplayers];
+
+	// Circular double linked list `v` with indices of right/next/clockwise `ir`
+	// and left/prev/ccw `il`
+	let v  = [0'i64; max_points + 1];
+	let il = [0'i64; max_points + 1];
+	let ir = [0'i64; max_points + 1];
+	let iv = 0'i64;  // current value index
+	let n  = 1'i64;  // number of values in list (start with just 0, next to itself)
+
+	// Iterate over turns and adding marbles `im`
+	let im = 0'i64;  // marble
+	let it = 0'i64;  // turn
+	//for im in [1: max_points + 1]
+	while im < max_points
+	{
+		im += 1;
+		it += 1;
+		//println("marble = ", v[iv]);
+
+		if im % 23 == 0
+		{
+			// Advance by 7 left
+			for dummy in [0: 6]
+				iv = il[iv];
+
+			// Remove iv, then the one to the right becomes the current marble
+			n -= 1;
+
+			scores[it % nplayers] += im;
+			scores[it % nplayers] += v[iv];
+
+			let l = il[iv];
+			let r = ir[iv];
+
+			il[r] = l;
+			ir[l] = r;
+
+			iv = l; //r;
+
+			// skip an extra marble
+			//im += 1;
+		}
+		else
+		{
+			// Advance by 2 clockwise/right
+			iv = ir[iv];
+			iv = ir[iv];
+
+			// Insert value `im` at the current position, shift the one to the right
+			// further right
+			n += 1;
+
+			v[it] = im;
+			let l = iv;
+			let r = ir[iv];
+
+			il[r] = it;
+			ir[l] = it;
+
+			il[it] = l;
+			ir[it] = r;
+		}
+	}
+	//println("scores = ", scores);
+	sum_ = maxval(scores);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	close(f);
+
+	let nums = read_i32s(str_);
+	println("nums = ", nums);
+
+	let nplayers   = i64(nums[0]);
+	let max_points = i64(100 * nums[1]);
+
+	//nplayers = 9 ; max_points = 25 ;
+
+	let scores = [0'i64; nplayers];
+
+	// Circular double linked list `v` with indices of right/next/clockwise `ir`
+	// and left/prev/ccw `il`
+	let v  = [0; max_points + 1];
+	let il = [0; max_points + 1];
+	let ir = [0; max_points + 1];
+	let iv = 0;  // current value index
+	let n  = 1;  // number of values in list (start with just 0, next to itself)
+
+	// Iterate over turns and adding marbles `im`
+	let im = 0;  // marble
+	let it = 0;  // turn
+	//for im in [1: max_points + 1]
+	while im < max_points
+	{
+		im += 1;
+		it += 1;
+		//println("marble = ", v[iv]);
+
+		if im % 23 == 0
+		{
+			// Advance by 7 left
+			for dummy in [0: 6]
+				iv = il[iv];
+
+			// Remove iv, then the one to the right becomes the current marble
+			n -= 1;
+
+			scores[it % nplayers] += im;
+			scores[it % nplayers] += v[iv];
+
+			let l = il[iv];
+			let r = ir[iv];
+
+			il[r] = l;
+			ir[l] = r;
+
+			iv = l; //r;
+
+			// skip an extra marble
+			//im += 1;
+		}
+		else
+		{
+			// Advance by 2 clockwise/right
+			iv = ir[iv];
+			iv = ir[iv];
+
+			// Insert value `im` at the current position, shift the one to the right
+			// further right
+			n += 1;
+
+			v[it] = im;
+			let l = iv;
+			let r = ir[iv];
+
+			il[r] = it;
+			ir[l] = it;
+
+			il[it] = l;
+			ir[it] = r;
+		}
+
+		//// Print list for debugging
+		//let list_str = "";
+		//let vv = 0;
+		////for ii in [0: it + 1]
+		//for ii in [0: n]
+		//{
+		//	list_str += str(v[vv]) + " ";
+		//	vv = ir[vv];
+		//}
+		//println("list_str = ", list_str);
+
+	}
+	//println("scores = ", scores);
+	sum_ = maxval(scores);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/9");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 367634:3020072891
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
