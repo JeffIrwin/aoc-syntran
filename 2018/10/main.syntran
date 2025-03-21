@@ -1,0 +1,194 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let np = countln_(filename);
+	let ps = [0; 2, np];
+	let vs = [0; 2, np];
+
+	let f = open(filename, "r");
+	for i in [0: np]
+	{
+		let str_ = readln(f);
+		//println("str_ = ", str_);
+
+		let nums = read_mi32s(str_);
+		//println("nums = ", nums);
+
+		ps[:,i] = nums[0: 2];
+		vs[:,i] = nums[2: 4];
+	}
+	close(f);
+	//println("ps = ", ps);
+	//println("vs = ", vs);
+
+	let it_xmin = -1;
+	let it_ymin = -1;
+	let dxmin = 2_000_000_000;
+	let dymin = 2_000_000_000;
+
+	let pm = [0; 1, 1];
+
+	let ntmax = 20_000;
+	for it in [0: ntmax]
+	{
+		let xmin = minval(ps[0,:]);
+		let ymin = minval(ps[1,:]);
+		let xmax = maxval(ps[0,:]);
+		let ymax = maxval(ps[1,:]);
+
+		let dx = xmax - xmin;
+		let dy = ymax - ymin;
+		//println("it, dx, dy = ", [it, dx, dy]);
+
+		if dx < dxmin
+		{
+			pm = ps;
+			dxmin = dx;
+			it_xmin = it;
+		}
+
+		if dy < dymin
+		{
+			// Redundant, but a good sanity check that this method is valid
+			dymin = dy;
+			it_ymin = it;
+		}
+
+		ps += vs;
+	}
+	//println("it_xmin, it_ymin = ", [it_xmin, it_ymin]);
+
+	// Render the message image from saved positions `pm`
+
+	ps = pm;
+
+	let xmin = minval(ps[0,:]);
+	let ymin = minval(ps[1,:]);
+	let xmax = maxval(ps[0,:]);
+	let ymax = maxval(ps[1,:]);
+
+	let dx = xmax - xmin;
+	let dy = ymax - ymin;
+	let img = ["."; dx+1, dy+1];
+	for i in [0: np]
+		img[ ps[0,i] - xmin , ps[1,i] - ymin ] = "#";
+
+	print_char_mat(&img);
+	//for y in [ymin: ymax+1]
+	//for x in [xmin: xmax+1]
+	//{
+	//}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let np = countln_(filename);
+	let ps = [0; 2, np];
+	let vs = [0; 2, np];
+
+	let f = open(filename, "r");
+	for i in [0: np]
+	{
+		let str_ = readln(f);
+		//println("str_ = ", str_);
+
+		let nums = read_mi32s(str_);
+		//println("nums = ", nums);
+
+		ps[:,i] = nums[0: 2];
+		vs[:,i] = nums[2: 4];
+	}
+	close(f);
+	//println("ps = ", ps);
+	//println("vs = ", vs);
+
+	let it_xmin = -1;
+	let it_ymin = -1;
+	let dxmin = 2_000_000_000;
+	let dymin = 2_000_000_000;
+
+	let pm = [0; 1, 1];
+
+	let ntmax = 20_000;
+	for it in [0: ntmax]
+	{
+		let xmin = minval(ps[0,:]);
+		let ymin = minval(ps[1,:]);
+		let xmax = maxval(ps[0,:]);
+		let ymax = maxval(ps[1,:]);
+
+		let dx = xmax - xmin;
+		let dy = ymax - ymin;
+		//println("it, dx, dy = ", [it, dx, dy]);
+
+		if dx < dxmin
+		{
+			pm = ps;
+			dxmin = dx;
+			it_xmin = it;
+		}
+
+		if dy < dymin
+		{
+			// Redundant, but a good sanity check that this method is valid
+			dymin = dy;
+			it_ymin = it;
+		}
+
+		ps += vs;
+	}
+	//println("it_xmin, it_ymin = ", [it_xmin, it_ymin]);
+
+	println("part 2 = ", it_xmin);
+	return str(it_xmin);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/10");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect HKJFAKAF:10888, but it's one of those days where part one is
+	// rendered in a bitmap font which i'm not going to automate parsing
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
