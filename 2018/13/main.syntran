@@ -1,0 +1,423 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let NDIRS = 4;
+let DIRS =
+[
+	 1,  0,
+	 0, -1,
+	-1,  0,
+	 0,  1
+	;
+	2, NDIRS
+];
+let RIGHT = 0;
+let UP = 1;
+let LEFT = 2;
+let DOWN = 3;
+
+//==============================================================================
+
+fn part1(): str
+{
+	let g = read_char_mat(filename);
+	print_char_mat(&g);
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	println("nx, ny = ", [nx, ny]);
+
+	// Count carts
+	let nc = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if any(g[x,y] == ["^", "v", "<", ">"])
+			nc += 1;
+	}
+	println("nc = ", nc);
+
+	// Get positions and directions of carts, and replace them in `g` with their
+	// underlying straight-line tracks
+	let pcs = [-1; 2, nc];  // positions
+	let dcs = [-1; nc];     // directions
+	let tcs = [ 0; nc];     // turn counts, cycling throught left/straight/right
+	let ic = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		let gc = g[x,y];
+		let d = -1;
+		if gc == "^"
+		{
+			g[x,y] = "|";
+			d = UP;
+		}
+		else if gc == "v"
+		{
+			g[x,y] = "|";
+			d = DOWN;
+		}
+		else if gc == "<"
+		{
+			g[x,y] = "-";
+			d = LEFT;
+		}
+		else if gc == ">"
+		{
+			g[x,y] = "-";
+			d = RIGHT;
+		}
+
+		if d >= 0
+		{
+			dcs[ic] = d;
+			pcs[:, ic] = [x, y];
+			ic += 1;
+		}
+	}
+	print_char_mat(&g);
+	println("dcs = ", dcs);
+	println("pcs = ", pcs);
+
+	let occupied = [false; nx, ny];
+	for ic in [0: nc]
+		occupied[ pcs[0,ic], pcs[1,ic] ] = true;
+
+	let ans_ = "";
+	let it = 0;  // time/tick counter
+	while true
+	{
+		let occupied0 = occupied;
+
+		// Advance each cart
+		for ic in [0: nc]
+		{
+			pcs[:,ic] += DIRS[:, dcs[ic]];
+			let gc = g[ pcs[0,ic], pcs[1,ic] ];
+
+			// Turn at curves
+			if dcs[ic] == RIGHT and gc == "\" // "
+				dcs[ic] = DOWN;
+			else if dcs[ic] == UP and gc == "\" // "
+				dcs[ic] = LEFT;
+			else if dcs[ic] == LEFT and gc == "\" // "
+				dcs[ic] = UP;
+			else if dcs[ic] == DOWN and gc == "\" // "
+				dcs[ic] = RIGHT;
+			else if dcs[ic] == LEFT and gc == "/"
+				dcs[ic] = DOWN;
+			else if dcs[ic] == UP and gc == "/"
+				dcs[ic] = RIGHT;
+			else if dcs[ic] == RIGHT and gc == "/"
+				dcs[ic] = UP;
+			else if dcs[ic] == DOWN and gc == "/"
+				dcs[ic] = LEFT;
+
+			// Cycle turns at intersections
+			if gc == "+"
+			{
+				if tcs[ic] % 3 == 0
+				{
+					// Left
+					dcs[ic] += 1;
+					dcs[ic] %= NDIRS;
+				}
+				else if tcs[ic] % 3 == 1
+				{
+					// Straight (do nothing)
+				}
+				else if tcs[ic] % 3 == 2
+				{
+					// Right
+					dcs[ic] -= 1;
+					if (dcs[ic] == -1) dcs[ic] = NDIRS - 1;
+				}
+				tcs[ic] += 1;
+			}
+		}
+
+		// Crash location
+		let xc = -1;
+		let yc = -1;
+
+		let collision = false;
+		occupied = [false; nx, ny];
+		for ic in [0: nc]
+		{
+			let x = pcs[0,ic];
+			let y = pcs[1,ic];
+
+			// There are two different ways for collisions to occur.  In the
+			// first way, as shown in the very small example with straight
+			// tracks only, carts would have swapped positions if there wasn't a
+			// collision, when occupied0 is true.  In this case, the crash
+			// position is at the rightmost or downmost of the two positions
+			//
+			// In the second way, as in the "longer" small example with curved
+			// tracks, both carts end up in the same position
+
+			if occupied0[x,y]
+			{
+				xc = max(xc, x);
+				yc = max(yc, y);
+				println("collision 0 at ", [x, y]);
+				collision = true;
+				//break;
+			}
+			if occupied[x,y]
+			{
+				xc = max(xc, x);
+				yc = max(yc, y);
+				println("collision at ", [x, y]);
+				collision = true;
+				//break;
+			}
+			occupied[x,y] = true;
+		}
+		if collision
+		{
+			ans_ = str(xc, ",", yc);
+			break;
+		}
+
+		//let gp = g;
+		//for ic in [0: nc]
+		//	gp[ pcs[0,ic], pcs[1,ic] ] = "#";
+		//print_char_mat(&gp);
+
+		//if (it > 40) break;
+		it += 1;
+	}
+	println("part 1 = ", ans_);
+	return str(ans_);
+}
+
+fn part2(): str
+{
+	let g = read_char_mat(filename);
+	print_char_mat(&g);
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	println("nx, ny = ", [nx, ny]);
+
+	// Count carts
+	let nc = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if any(g[x,y] == ["^", "v", "<", ">"])
+			nc += 1;
+	}
+	println("nc = ", nc);
+
+	// Get positions and directions of carts, and replace them in `g` with their
+	// underlying straight-line tracks
+	let pcs = [-1; 2, nc];  // positions
+	let dcs = [-1; nc];     // directions
+	let tcs = [ 0; nc];     // turn counts, cycling throught left/straight/right
+	let ic = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		let gc = g[x,y];
+		let d = -1;
+		if gc == "^"
+		{
+			g[x,y] = "|";
+			d = UP;
+		}
+		else if gc == "v"
+		{
+			g[x,y] = "|";
+			d = DOWN;
+		}
+		else if gc == "<"
+		{
+			g[x,y] = "-";
+			d = LEFT;
+		}
+		else if gc == ">"
+		{
+			g[x,y] = "-";
+			d = RIGHT;
+		}
+
+		if d >= 0
+		{
+			dcs[ic] = d;
+			pcs[:, ic] = [x, y];
+			ic += 1;
+		}
+	}
+	print_char_mat(&g);
+	println("dcs = ", dcs);
+	println("pcs = ", pcs);
+
+	// Track index of occupying cart at each position, to cancel them out at
+	// collisions
+	let occupied = [-1; nx, ny];
+	for ic in [0: nc]
+		occupied[ pcs[0,ic], pcs[1,ic] ] = ic;
+	let active = [true; nc];
+
+	let ans_ = "";
+	let it = 0;  // time/tick counter
+	while true
+	{
+		//let pcs0 = pcs;
+
+		occupied = [-1; nx, ny];
+		for ic in [0: nc]
+		{
+			if (not active[ic]) continue;
+			occupied[ pcs[0,ic], pcs[1,ic] ] = ic;
+		}
+
+		// Lexicographic pigeonhole sort 
+		let idx = [0; nc];
+		//let idx = [-1; nc];
+		let ic = 0;
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			if occupied[x,y] >= 0
+			{
+				idx[ic] = occupied[x,y];
+				ic += 1;
+			}
+		}
+		//println("idx = ", idx);
+
+		pcs = pcs[:,idx];
+		dcs = dcs[idx];
+		tcs = tcs[idx];
+		active = active[idx];
+
+		// Permute occupied by idx simply by recomputing
+		occupied = [-1; nx, ny];
+		for ic in [0: nc]
+		{
+			if (not active[ic]) continue;
+			occupied[ pcs[0,ic], pcs[1,ic] ] = ic;
+		}
+
+		// Advance each cart
+		for ic in [0: nc]
+		{
+			if (not active[ic]) continue;
+
+			occupied[ pcs[0,ic], pcs[1,ic] ] = -1; // free previous position
+
+			pcs[:,ic] += DIRS[:, dcs[ic]];
+			let gc = g[ pcs[0,ic], pcs[1,ic] ];
+
+			// Turn at curves.  This logic could be encoded in a table
+			if dcs[ic] == RIGHT and gc == "\" // "
+				dcs[ic] = DOWN;
+			else if dcs[ic] == UP and gc == "\" // "
+				dcs[ic] = LEFT;
+			else if dcs[ic] == LEFT and gc == "\" // "
+				dcs[ic] = UP;
+			else if dcs[ic] == DOWN and gc == "\" // "
+				dcs[ic] = RIGHT;
+			else if dcs[ic] == LEFT and gc == "/"
+				dcs[ic] = DOWN;
+			else if dcs[ic] == UP and gc == "/"
+				dcs[ic] = RIGHT;
+			else if dcs[ic] == RIGHT and gc == "/"
+				dcs[ic] = UP;
+			else if dcs[ic] == DOWN and gc == "/"
+				dcs[ic] = LEFT;
+
+			// Cycle turns at intersections
+			if gc == "+"
+			{
+				if tcs[ic] % 3 == 0
+				{
+					// Left
+					dcs[ic] += 1;
+					dcs[ic] %= NDIRS;
+				}
+				else if tcs[ic] % 3 == 1
+				{
+					// Straight (do nothing)
+				}
+				else if tcs[ic] % 3 == 2
+				{
+					// Right
+					dcs[ic] -= 1;
+					if (dcs[ic] == -1) dcs[ic] = NDIRS - 1;
+				}
+				tcs[ic] += 1;
+			}
+
+			if occupied[ pcs[0,ic], pcs[1,ic] ] >= 0
+			{
+				//println("collision");
+				active[ic] = false;
+				active[ occupied[ pcs[0,ic], pcs[1,ic] ] ] = false;
+				occupied[ pcs[0,ic], pcs[1,ic] ] = -1; // free
+			}
+			else
+				occupied[ pcs[0,ic], pcs[1,ic] ] = ic;
+		}
+
+		if count(active) == 1
+		{
+			for ic in [0: nc]
+			{
+				if (not active[ic]) continue;
+				let x = pcs[0,ic];
+				let y = pcs[1,ic];
+				ans_ = str(x, ",", y);
+				println("ans_ = ", ans_);
+			}
+			break;
+		}
+		//if (it >= 10) break;
+		it += 1;
+	}
+	println("part 2 = ", ans_);
+	return str(ans_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/13");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
