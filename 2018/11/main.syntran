@@ -1,0 +1,212 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let f = open(filename, "r");
+	let serial = parse_i32(readln(f));
+	close(f);
+
+	//println("serial = ", serial);
+
+	let nx = 300;
+	let ny = 300;
+	let mat = [0; nx, ny];
+
+	// Save "power levels" in mat
+	for y in [1: ny + 1]
+	for x in [1: nx + 1]
+	{
+		let rack = x + 10;
+		let pow = rack * y;
+		pow += serial;
+		pow *= rack;
+
+		//println("pow = ", pow);
+		pow = (pow % 1000) / 100;  // get hundreds digit
+		//println("pow = ", pow);
+		//println();
+
+		pow -= 5;
+
+		mat[x-1, y-1] = pow;
+	}
+
+	// Kernel size
+	let nxk = 3;
+	let nyk = 3;
+
+	// Convolute and sum kernel over grid.  Find location of max
+	let max_sum = -2_000_000_000;
+	let ixmax = -1;
+	let iymax = -1;
+	for y in [0: ny - nyk]
+	for x in [0: nx - nxk]
+	{
+		let sum_ = sum(mat[x: x + nxk, y: y + nyk]);
+		if sum_ > max_sum
+		{
+			max_sum = sum_;
+			ixmax = x;
+			iymax = y;
+		}
+	}
+	let ans_ = str(ixmax+1, ",", iymax+1);
+
+	println("part 1 = ", ans_);
+	return str(ans_);
+}
+
+fn part2(): str
+{
+	let f = open(filename, "r");
+	let serial = parse_i32(readln(f));
+	close(f);
+
+	//println("serial = ", serial);
+
+	let nx = 300;
+	let ny = 300;
+	let mat   = [0; nx, ny];
+	let sums_ = [0; nx, ny];
+	let sums0 = [0; nx, ny];
+	let sumsx = [0; nx, ny];
+	let sumsy = [0; nx, ny];
+	let sumsx0 = [0; nx, ny];
+	let sumsy0 = [0; nx, ny];
+
+	// Save "power levels" in mat
+	for y in [1: ny + 1]
+	for x in [1: nx + 1]
+	{
+		let rack = x + 10;
+		let pow = rack * y;
+		pow += serial;
+		pow *= rack;
+
+		//println("pow = ", pow);
+		pow = (pow % 1000) / 100;  // get hundreds digit
+		//println("pow = ", pow);
+		//println();
+
+		pow -= 5;
+
+		mat[x-1, y-1] = pow;
+	}
+
+	let max_sum = -2_000_000_000;
+	let ixmax = -1;
+	let iymax = -1;
+	let nkmax = -1;
+
+	// Not sure how to optimize this.  I guess you could sum large kernels by
+	// recursively breaking them down into smaller kernals and memoizing the
+	// smaller sums
+	//
+	// Or don't even recurse.  Just use the sum from the last `nk` iteration at
+	// the same upper-left location, then add the final row and col (and 1x1
+	// diag).  And that's what i ended up doing
+	//
+	// This runs in 45 s.  You could also cache the row/col sums, but that will
+	// only solve an O(n) problem, not an O(n**2) problem
+	//
+	// At that point, just introducing helper vars x1 and y1 to avoid repeated
+	// index calculations gets us from 30 s to 20 s
+
+	for nk in [1: nx]
+	{
+		//println("nk = ", nk);
+
+		sums0 = sums_;
+		sumsx0 = sumsx;
+		sumsy0 = sumsy;
+
+		// Kernel size
+		let nxk = nk;
+		let nyk = nk;
+
+		for y in [0: ny - nyk]
+		{
+		let y1 = y + nyk - 1;
+		for x in [0: nx - nxk]
+		{
+			//let sum_ = sum(mat[x: x + nxk, y: y + nyk]);
+
+			let x1 = x + nxk - 1;
+
+			//let sum_ = sums0[x, y]
+			//	+ sum(mat[x: x+nxk, y+nyk-1])  // without x1/y1 helpers
+			//	+ sum(mat[x+nxk-1, y: y+nyk])
+			//	- mat[x+nxk-1, y+nyk-1];
+			//let sum_ = sums0[x, y]
+			//	+ sum(mat[x: x+nxk, y1])
+			//	+ sum(mat[x1, y: y+nyk])
+			//	- mat[x1, y1];
+
+			// Caching row and col sums brings runtime from 45 s to 30 s
+			sumsx[x, y1] = sumsx0[x, y1] + mat[x1, y1];
+			sumsy[x1, y] = sumsy0[x1, y] + mat[x1, y1];
+
+			let sum_ = sums0[x, y]
+				+ sumsx[x , y1]
+				+ sumsy[x1, y ]
+				- mat  [x1, y1];
+
+			sums_[x, y] = sum_;
+			if sum_ > max_sum
+			{
+				max_sum = sum_;
+				ixmax = x;
+				iymax = y;
+				nkmax = nk;
+			}
+		}
+		}
+	}
+	let ans_ = str(ixmax+1, ",", iymax+1, ",", nkmax);
+
+	println("part 2 = ", ans_);
+	return str(ans_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/11");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 20,37:90,169,15
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
