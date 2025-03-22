@@ -34,11 +34,11 @@ let DOWN = 3;
 fn part1(): str
 {
 	let g = read_char_mat(filename);
-	print_char_mat(&g);
+	//print_char_mat(&g);
 
 	let nx = size(g, 0);
 	let ny = size(g, 1);
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	// Count carts
 	let nc = 0;
@@ -48,7 +48,7 @@ fn part1(): str
 		if any(g[x,y] == ["^", "v", "<", ">"])
 			nc += 1;
 	}
-	println("nc = ", nc);
+	//println("nc = ", nc);
 
 	// Get positions and directions of carts, and replace them in `g` with their
 	// underlying straight-line tracks
@@ -89,9 +89,9 @@ fn part1(): str
 			ic += 1;
 		}
 	}
-	print_char_mat(&g);
-	println("dcs = ", dcs);
-	println("pcs = ", pcs);
+	//print_char_mat(&g);
+	//println("dcs = ", dcs);
+	//println("pcs = ", pcs);
 
 	let occupied = [false; nx, ny];
 	for ic in [0: nc]
@@ -174,7 +174,7 @@ fn part1(): str
 			{
 				xc = max(xc, x);
 				yc = max(yc, y);
-				println("collision 0 at ", [x, y]);
+				//println("collision 0 at ", [x, y]);
 				collision = true;
 				//break;
 			}
@@ -182,7 +182,7 @@ fn part1(): str
 			{
 				xc = max(xc, x);
 				yc = max(yc, y);
-				println("collision at ", [x, y]);
+				//println("collision at ", [x, y]);
 				collision = true;
 				//break;
 			}
@@ -209,11 +209,11 @@ fn part1(): str
 fn part2(): str
 {
 	let g = read_char_mat(filename);
-	print_char_mat(&g);
+	//print_char_mat(&g);
 
 	let nx = size(g, 0);
 	let ny = size(g, 1);
-	println("nx, ny = ", [nx, ny]);
+	//println("nx, ny = ", [nx, ny]);
 
 	// Count carts
 	let nc = 0;
@@ -223,7 +223,7 @@ fn part2(): str
 		if any(g[x,y] == ["^", "v", "<", ">"])
 			nc += 1;
 	}
-	println("nc = ", nc);
+	//println("nc = ", nc);
 
 	// Get positions and directions of carts, and replace them in `g` with their
 	// underlying straight-line tracks
@@ -264,9 +264,9 @@ fn part2(): str
 			ic += 1;
 		}
 	}
-	print_char_mat(&g);
-	println("dcs = ", dcs);
-	println("pcs = ", pcs);
+	//print_char_mat(&g);
+	//println("dcs = ", dcs);
+	//println("pcs = ", pcs);
 
 	// Track index of occupying cart at each position, to cancel them out at
 	// collisions
@@ -279,7 +279,10 @@ fn part2(): str
 	let it = 0;  // time/tick counter
 	while true
 	{
-		//let pcs0 = pcs;
+		// This is slow.  Sorting could be optimized, as well as re-computation
+		// of `occupied`, and pruning inactive carts.  I initially thought that
+		// the lexicographic ordering wasn't important (and it mostly isn't for
+		// part 1), but part 2 is tricky
 
 		occupied = [-1; nx, ny];
 		for ic in [0: nc]
@@ -385,7 +388,7 @@ fn part2(): str
 				let x = pcs[0,ic];
 				let y = pcs[1,ic];
 				ans_ = str(x, ",", y);
-				println("ans_ = ", ans_);
+				//println("ans_ = ", ans_);
 			}
 			break;
 		}

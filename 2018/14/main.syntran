@@ -1,0 +1,205 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let f = open(filename, "r");
+	let nrecipes = parse_i32(readln(f));
+	close(f);
+
+	//nrecipes = 9; // TODO
+
+	println("nrecipes = ", nrecipes);
+
+	let CAP = nrecipes + 20;
+
+	let v = [0; CAP];
+	let nv = 2;         // initial size
+	v[0: nv] = [3, 7];  // seed array
+
+	// Elf positions
+	let i0 = 0;
+	let i1 = 1;
+
+	let it = 0;
+	while true
+	{
+		//println("v = ", v[0: nv]);
+		let sum_ = v[i0] + v[i1];
+		if sum_ < 10
+		{
+			// 1 digit
+			v[nv] = sum_;
+			nv += 1;
+		}
+		else
+		{
+			// 2 digits
+			v[nv] = 1;
+			v[nv+1] = sum_ % 10;
+			nv += 2;
+		}
+
+		// Step forward
+		i0 = (i0 + v[i0] + 1) % nv;
+		i1 = (i1 + v[i1] + 1) % nv;
+
+		if (nv >= nrecipes + 10) break;
+
+		//if (it > 10) break;
+		it += 1;
+	}
+	//println("v final = ", v[0: nv]);
+
+	let ans_ = "";
+	for i in [nv - 10: nv]
+		ans_ += str(v[i]);
+
+	println("part 1 = ", ans_);
+	return ans_;
+}
+
+fn part2(): str
+{
+	let f = open(filename, "r");
+	let in_str = readln(f);
+	close(f);
+
+	//in_str = "51589"; // TODO
+	//in_str = "59414";
+
+	println("in_str = ", in_str);
+
+	let nin = len(in_str);
+	//let in_vec = [0; nin];
+	//for i in [0: nin]
+	//	in_vec[i] = parse_i32(in_str[i]);
+	//println("in_vec = ", in_vec);
+
+	//let CAP = nrecipes + 20;
+	//let CAP = 1024 * 1024 * 1023 * 2;
+	let CAP = 1024 * 1024 * 30;
+	//let CAP = 1024 * 1024 * 600;
+	//let CAP = 1024 * 1024;
+	//let CAP = 1024'i64 * 1024;// * 512;
+
+	//let v = [0; CAP];
+	//let nv = 2;         // initial size
+	//v[0: nv] = [3, 7];  // seed array
+	let v = repeat(" ", CAP);
+	let nv = 2;
+	//v[0: nv] = "37";
+	v[0] = "3";
+	v[1] = "7";
+
+	// Elf positions
+	let i0 = 0;
+	let i1 = 1;
+
+	let it = 0;
+	while true
+	{
+		if (it % 1_000_000 == 0) println("it = ", it);
+
+		if nv >= CAP - 1
+		{
+			println("Error: CAP overflow!");
+			exit(-1);
+		}
+
+		//println("v = ", v[0: nv]);
+		//let sum_ = v[i0] + v[i1];
+		//let sum_ = parse_i32(v[i0]) + parse_i32(v[i1]);
+
+		let v0 = parse_i32(v[i0]);
+		let v1 = parse_i32(v[i1]);
+		let sum_ = v0 + v1;
+
+		if sum_ < 10
+		{
+			// 1 digit
+			v[nv] = str(sum_);
+			nv += 1;
+		}
+		else
+		{
+			// 2 digits
+			v[nv] = "1";
+			v[nv+1] = str(sum_ % 10);
+			nv += 2;
+		}
+
+		// Step forward
+		i0 = (i0 + v0 + 1) % nv;
+		i1 = (i1 + v1 + 1) % nv;
+
+		//if (nv >= nrecipes + 10) break;
+		if nv >= nin
+		{
+			//if all(in_vec == v[nv - nin: nv])
+			if in_str == v[nv - nin: nv]
+				break;
+		}
+		if nv >= nin + 1
+		{
+			// I straight up had to cheat by looking at the subreddit without
+			// realizing that this was a possibility
+
+			//if all(in_vec == v[nv - nin: nv])
+			if in_str == v[nv - nin - 1: nv - 1]
+			{
+				nv -= 1;
+				break;
+			}
+		}
+
+		//if (it > 10) break;
+		it += 1;
+	}
+	//println("v final = ", v[0: nv]);
+	let ans_ = nv - nin;
+
+	println("part 2 = ", ans_);
+	return str(ans_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/14");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
