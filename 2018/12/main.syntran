@@ -1,0 +1,237 @@
+
+#include("../../utils.syntran");
+#include("../../dict_str.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+
+	let words = split_(str_, " ");
+	let state = words[2];
+	//println("state = ", state);
+
+	// skip blank
+	str_ = readln(f);
+
+	// Could convert to binary and use an array instead of a hashmap
+	let map = new_dict_str();
+
+	str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " =>");
+
+		set_dict_str(&map, words[0], words[1]);
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("keys = ", keys_dict_str(&map));
+	//println("vals = ", vals_dict_str(&map));
+
+	// Shift by half capacity so position "0" is in the middle and we can grow
+	// in both directions
+	let HCAP = 256;
+	let CAP = 2 * HCAP;
+
+	let tmp = state;
+	state = repeat(".", CAP);
+	for i in [0: len(tmp)]
+		state[i + HCAP] = tmp[i];
+	//println("state = ", state);
+
+	let ngenerations = 20;
+	for ig in [0: ngenerations]
+	{
+		let state0 = state;
+
+		// TODO: could optimize by keeping track of first/last "#" positions and
+		// only iterating over those positions +3 extra chars
+		for x in [2: CAP - 2]
+		{
+			let new = get_dict_str(&map, state0[x-2: x+3]);
+			if (new == "") new = ".";
+			state[x] = new;
+		}
+		//println("state = ", state);
+	}
+
+	sum_ = 0;
+	for x in [0: CAP]
+		if state[x] == "#"
+			sum_ += x - HCAP;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+
+	let words = split_(str_, " ");
+	let state = words[2];
+	//println("state = ", state);
+
+	// skip blank
+	str_ = readln(f);
+
+	// Could convert to binary and use an array instead of a hashmap
+	let map = new_dict_str();
+
+	str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " =>");
+
+		set_dict_str(&map, words[0], words[1]);
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("keys = ", keys_dict_str(&map));
+	//println("vals = ", vals_dict_str(&map));
+
+	// Shift by half capacity so position "0" is in the middle and we can grow
+	// in both directions
+	let HCAP = 1024;
+	let CAP = 2 * HCAP;
+
+	let tmp = state;
+	state = repeat(".", CAP);
+	for i in [0: len(tmp)]
+		state[i + HCAP] = tmp[i];
+	//println("state = ", state);
+
+	//let visited = new_dict_str();
+
+	let NGEN = 50_000_000_000;
+
+	//let ngenerations = 250;
+	//let sums = [0'i64; ngenerations];
+	//let fo = open("sums.csv", "w");
+	//writeln(fo, "# index, sum");
+
+	let sum0  = 0'i64;
+	let sum00 = 0'i64;
+
+	// Do at least ngenmin iterations before checking for patterns, but not more
+	// than ngenmax
+	let ngenmin = 128;
+	let ngenmax = 1024;
+
+	for ig in [0: NGEN]
+	{
+		let state0 = state;
+
+		// optimize by keeping track of first/last "#" positions and
+		// only iterating over those positions +3 extra chars
+
+		let first = scan    (state, "#");
+		let last  = scanback(state, "#");
+
+		//for x in [2: CAP - 2]
+		for x in [first - 4: last + 4]
+		{
+			let new = get_dict_str(&map, state0[x-2: x+3]);
+			if (new == "") new = ".";
+			state[x] = new;
+		}
+		//println("state = ", state);
+
+		//let state_trim = state[first: last+1];
+		//println("state_trim = ", state_trim);
+		//let seen = get_dict_str(&visited, state_trim);
+		//if seen == "y"
+		//{
+		//	println("seen generation ", ig);
+		//}
+		//set_dict_str(&visited, state_trim, "y");
+
+		sum00 = sum0;
+		sum0  = sum_;
+
+		sum_ = 0;
+		for x in [0: CAP]
+			if state[x] == "#"
+				sum_ += x - HCAP;
+
+		if ig > ngenmin
+		{
+			if sum_ - sum0 == sum0 - sum00
+			{
+				let ans = sum_ + (sum_ - sum0) * (NGEN - ig - 1);
+				sum_ = ans;
+				break;
+			}
+		}
+
+		if ig > ngenmax
+		{
+			println("Error: could not find a pattern!");
+			exit(-1);
+		}
+
+		//println("ig, sum_ = ", [i64(ig), sum_]);
+		//sums[ig] = sum_;
+		//writeln(fo, ig, ", ", sum_);
+	}
+	//println("state = ", state);
+	//close(fo);
+
+	//println("sums = ", sums);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/12");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 3793:4300000002414
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

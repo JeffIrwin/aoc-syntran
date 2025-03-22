@@ -1,0 +1,31 @@
+
+ syntran 0.0.63
+ https://github.com/JeffIrwin/syntran
+
+ Interpreting file "main.syntran"
+Error: variable `ngenerations` has not been declared in this scope
+    --> main.syntran:147:16
+     | 
+ 147 |  for ig in [0: ngenerations]
+     |                ^^^^^^^^^^^^ variable undeclared
+
+Error: bound `0: ngenerations` of array range is not a numeric type
+    --> main.syntran:147:13
+     | 
+ 147 |  for ig in [0: ngenerations]
+     |             ^^^^^^^^^^^^^^^ non-numeric range
+
+Error: bound `ngenerations` of array range is not an i32 integer
+    --> main.syntran:147:16
+     | 
+ 147 |  for ig in [0: ngenerations]
+     |                ^^^^^^^^^^^^ non-i32 range
+
+Error: binary operator `>` is not defined for types unknown and i32_type
+    --> main.syntran:181:9
+     | 
+ 181 |   if ig > ngenmin
+     |         ^ wrong types for this binary operator
+
+ [[ 2 more errors omitted ]]
+     
