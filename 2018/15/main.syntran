@@ -1,0 +1,549 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+// Directions are in reverse reading order
+let NDIRS = 4;
+let DIRS =
+[
+	 0, -1,
+	-1,  0,
+	 1,  0,
+	 0,  1
+	;
+	2, NDIRS
+];
+//let RIGHT = 0;
+//let UP = 1;
+//let LEFT = 2;
+//let DOWN = 3;
+
+//==============================================================================
+
+fn is_elf_or_goblin(char_: str): bool
+{
+	return char_ == "E" or char_ == "G";
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	// Grid size
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+	//println("nx, ny = ", [nx, ny]);
+
+	// Count "units" (elfs and goblins)
+	let nu = count(g == "E") + count(g == "G");
+	//println("nu = ", nu);
+
+	// Positions, types, and hit points remaining of units.  TODO: unused?
+	let pus = [-1; 2, nu];
+	let tus = ["."; nu];  // "E" elf or "G" goblin
+	let hus = [200; nu];
+
+	let ghp = [-1; nx, ny];
+	let attack = 3;  // all units share same attack power
+
+	// Grid unit indices for reverse lookup
+	let gui = [-1; nx, ny];
+
+	// Get positions
+	let iu = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		let gc = g[x,y];
+		if is_elf_or_goblin(gc)
+		{
+			pus[:, iu] = [x, y];
+			tus[iu] = gc;
+			gui[x, y] = iu;
+			ghp[x, y] = 200;
+			iu += 1;
+		}
+	}
+	//println("pus = ", pus);
+	//println("tus = ", tus);
+	//println("gui = ", gui);
+	//println("ghp = ", ghp);
+	//exit(0);
+
+	// Time loop
+	let it = 0;
+	while true
+	{
+		//println("it = ", it);
+
+		let moved = [false; nx, ny];
+
+		// Iterate grid in reading order
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			let xn = x;  let yn = y;
+			if (moved[x,y]) continue;
+			let gc = g[x,y];
+			if (not is_elf_or_goblin(gc)) continue;
+			//println("unit ", gc, " at ", [x, y]);
+
+			// BFS to find nearest opposing unit position `o`
+			let o = [-1; 2];  let oc = "-";
+			let q = [-1; 2, nx*ny];  let qs = 0;  let qe = 0;
+			let visited = [false; nx, ny];
+			visited[x,y] = true;
+			q[:,qe] = [x,y];  qe += 1;
+			while qs < qe
+			{
+				let v = q[:,qs];  qs += 1;
+				let vx = v[0];  let vy = v[1];
+
+				// TODO: does dir ordering guarantee we find first vc in reading
+				// order, or do we need to push all reachable opposing units and
+				// then break ties afterwards?
+				let vc = g[vx, vy];
+				if is_elf_or_goblin(vc) and vc != gc
+				{
+					//println("found opposing unit ", vc, " at ", v);
+					o = v;  oc = vc;
+					break;
+				}
+				for dir in [0: NDIRS]
+				{
+					let w = v + DIRS[:,dir];
+					if not in_bounds([0,0], w, [nx,ny]) continue;
+					let wc = g[w[0], w[1]];
+					if (wc == "#") continue;
+					if (wc == gc) continue;
+					if (visited[w[0], w[1]]) continue;
+					visited[w[0], w[1]] = true;
+					q[:,qe] = w;  qe += 1;
+				}
+			}
+			if (oc == "-") continue;  // no reachable opposing units
+			//println("found opposing unit ", oc, " at ", o);
+
+			// Don't move if already directly adjacent
+			if (sum(abs([x,y] - o)) > 1)
+			{
+				// Reverse BFS from opposing unit back to [x,y] to figure out which
+				// neighboring point to move to
+				q = [-1; 2, nx*ny];  qs = 0;  qe = 0;
+				visited = [false; nx, ny];
+				visited[o[0], o[1]] = true;
+				let dists = [-2; nx, ny];
+				dists[o[0], o[1]] = 0;
+				q[:,qe] = [o[0], o[1]];  qe += 1;
+				while qs < qe
+				{
+					let v = q[:,qs];  qs += 1;
+					let vx = v[0];  let vy = v[1];
+
+					let vc = g[vx, vy];
+					if all(v == [x,y])
+					{
+						//println("found original unit ", vc, " at ", v);
+						break;
+					}
+					for dir in [0: NDIRS]
+					{
+						let w = v + DIRS[:,dir];
+						if not in_bounds([0,0], w, [nx,ny]) continue;
+						let wc = g[w[0], w[1]];
+						if (wc == "#") continue;
+						if (wc == oc) continue;
+						if (wc == gc and not all(w == [x,y])) continue;
+						if (visited[w[0], w[1]]) continue;
+						visited[w[0], w[1]] = true;
+						dists[w[0], w[1]] = dists[v[0], v[1]] + 1;
+						q[:,qe] = w;  qe += 1;
+					}
+				}
+				//println("found opposing unit   at ", o);
+				//println("dists = ", dists);
+				let dist = dists[x, y];
+				//println("dist = ", dist);
+
+				let dist_next = dist - 1;
+				let next = [-1; 2];
+				for dir in [0: NDIRS]
+				{
+					let w = [x,y] + DIRS[:,dir];
+					if dists[w[0], w[1]] == dist_next
+					{
+						next = w;
+						break;
+					}
+				}
+				xn = next[0];  yn = next[1];
+				//println("next = ", next);
+
+				// Move
+				moved[next[0], next[1]] = true;
+
+				ghp[next[0], next[1]] = ghp[x,y];
+				g[next[0], next[1]] = g[x,y];
+
+				g[x,y] = ".";  // free previous position
+				ghp[x,y] = -1;
+
+				//print_char_mat(&g);
+
+				//println();
+			}
+
+			// Find the neighbor with lowest hit points
+			//
+			// TODO: don't use [x,y] if just moved
+			let hp_min = 2_000_000_000;
+			o = [-1; 2];
+			for dir in [0: NDIRS]
+			{
+				let w = [xn,yn] + DIRS[:,dir];
+				let wc = g[w[0], w[1]];
+				if is_elf_or_goblin(wc) and wc != gc
+				{
+					let hp = ghp[w[0], w[1]];
+					if hp < hp_min
+					{
+						o = w;
+						hp_min = hp;
+					}
+				}
+			}
+			if (hp_min >= 2_000_000_000) continue;
+
+			// Attack
+			ghp[o[0], o[1]] -= attack;
+
+			// Death
+			if ghp[o[0], o[1]] <= 0
+				g[o[0], o[1]] = ".";
+
+		}
+
+		//print_char_mat(&g);
+		//println("ghp = ", ghp);
+
+		if (count(g == "G") == 0) break;
+		if (count(g == "E") == 0) break;
+
+		//if (it >= 1) break;
+		//if (it >= 50) break;
+		it += 1;
+	}
+
+	let hp_sum = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+		if ghp[x,y] >= 0
+			hp_sum += ghp[x,y];
+
+	sum_ = (it+1) * hp_sum;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	// Iterate over elf attack powers `ea`
+	let ea = 3;
+	while true
+	{
+
+	//println("ea = ", ea);
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	// Grid size
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+	//println("nx, ny = ", [nx, ny]);
+
+	// Count "units" (elfs and goblins)
+	let nu = count(g == "E") + count(g == "G");
+	//println("nu = ", nu);
+
+	// Positions, types, and hit points remaining of units.  TODO: unused?
+	let pus = [-1; 2, nu];
+	let tus = ["."; nu];  // "E" elf or "G" goblin
+	let hus = [200; nu];
+
+	let ghp = [-1; nx, ny];
+	let goblin_attack = 3;
+	let elf_attack = ea;
+
+	// Grid unit indices for reverse lookup
+	let gui = [-1; nx, ny];
+
+	// Get positions
+	let iu = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		let gc = g[x,y];
+		if is_elf_or_goblin(gc)
+		{
+			pus[:, iu] = [x, y];
+			tus[iu] = gc;
+			gui[x, y] = iu;
+			ghp[x, y] = 200;
+			iu += 1;
+		}
+	}
+	//println("pus = ", pus);
+	//println("tus = ", tus);
+	//println("gui = ", gui);
+	//println("ghp = ", ghp);
+	//exit(0);
+
+	let any_elf_died = false;
+
+	// Time loop
+	let it = 0;
+	while true
+	{
+		//println("it = ", it);
+
+		let moved = [false; nx, ny];
+
+		// Iterate grid in reading order
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			let xn = x;  let yn = y;
+			if (moved[x,y]) continue;
+			let gc = g[x,y];
+			if (not is_elf_or_goblin(gc)) continue;
+			//println("unit ", gc, " at ", [x, y]);
+
+			// BFS to find nearest opposing unit position `o`
+			let o = [-1; 2];  let oc = "-";
+			let q = [-1; 2, nx*ny];  let qs = 0;  let qe = 0;
+			let visited = [false; nx, ny];
+			visited[x,y] = true;
+			q[:,qe] = [x,y];  qe += 1;
+			while qs < qe
+			{
+				let v = q[:,qs];  qs += 1;
+				let vx = v[0];  let vy = v[1];
+
+				// TODO: does dir ordering guarantee we find first vc in reading
+				// order, or do we need to push all reachable opposing units and
+				// then break ties afterwards?
+				let vc = g[vx, vy];
+				if is_elf_or_goblin(vc) and vc != gc
+				{
+					//println("found opposing unit ", vc, " at ", v);
+					o = v;  oc = vc;
+					break;
+				}
+				for dir in [0: NDIRS]
+				{
+					let w = v + DIRS[:,dir];
+					if not in_bounds([0,0], w, [nx,ny]) continue;
+					let wc = g[w[0], w[1]];
+					if (wc == "#") continue;
+					if (wc == gc) continue;
+					if (visited[w[0], w[1]]) continue;
+					visited[w[0], w[1]] = true;
+					q[:,qe] = w;  qe += 1;
+				}
+			}
+			if (oc == "-") continue;  // no reachable opposing units
+			//println("found opposing unit ", oc, " at ", o);
+
+			// Don't move if already directly adjacent
+			if (sum(abs([x,y] - o)) > 1)
+			{
+				// Reverse BFS from opposing unit back to [x,y] to figure out which
+				// neighboring point to move to
+				q = [-1; 2, nx*ny];  qs = 0;  qe = 0;
+				visited = [false; nx, ny];
+				visited[o[0], o[1]] = true;
+				let dists = [-2; nx, ny];
+				dists[o[0], o[1]] = 0;
+				q[:,qe] = [o[0], o[1]];  qe += 1;
+				while qs < qe
+				{
+					let v = q[:,qs];  qs += 1;
+					let vx = v[0];  let vy = v[1];
+
+					let vc = g[vx, vy];
+					if all(v == [x,y])
+					{
+						//println("found original unit ", vc, " at ", v);
+						break;
+					}
+					for dir in [0: NDIRS]
+					{
+						let w = v + DIRS[:,dir];
+						if not in_bounds([0,0], w, [nx,ny]) continue;
+						let wc = g[w[0], w[1]];
+						if (wc == "#") continue;
+						if (wc == oc) continue;
+						if (wc == gc and not all(w == [x,y])) continue;
+						if (visited[w[0], w[1]]) continue;
+						visited[w[0], w[1]] = true;
+						dists[w[0], w[1]] = dists[v[0], v[1]] + 1;
+						q[:,qe] = w;  qe += 1;
+					}
+				}
+				//println("found opposing unit   at ", o);
+				//println("dists = ", dists);
+				let dist = dists[x, y];
+				//println("dist = ", dist);
+
+				let dist_next = dist - 1;
+				let next = [-1; 2];
+				for dir in [0: NDIRS]
+				{
+					let w = [x,y] + DIRS[:,dir];
+					if dists[w[0], w[1]] == dist_next
+					{
+						next = w;
+						break;
+					}
+				}
+				xn = next[0];  yn = next[1];
+				//println("next = ", next);
+
+				// Move
+				moved[next[0], next[1]] = true;
+
+				ghp[next[0], next[1]] = ghp[x,y];
+				g[next[0], next[1]] = g[x,y];
+
+				g[x,y] = ".";  // free previous position
+				ghp[x,y] = -1;
+
+				//print_char_mat(&g);
+
+				//println();
+			}
+
+			// Find the neighbor with lowest hit points
+			//
+			// TODO: don't use [x,y] if just moved
+			let hp_min = 2_000_000_000;
+			o = [-1; 2];
+			for dir in [0: NDIRS]
+			{
+				let w = [xn,yn] + DIRS[:,dir];
+				let wc = g[w[0], w[1]];
+				if is_elf_or_goblin(wc) and wc != gc
+				{
+					let hp = ghp[w[0], w[1]];
+					if hp < hp_min
+					{
+						o = w;
+						hp_min = hp;
+					}
+				}
+			}
+			if (hp_min >= 2_000_000_000) continue;
+
+			// Attack
+			//ghp[o[0], o[1]] -= attack;
+			if gc == "E"
+				ghp[o[0], o[1]] -= elf_attack;
+			else
+				ghp[o[0], o[1]] -= goblin_attack;
+
+			// Death
+			if ghp[o[0], o[1]] <= 0
+			{
+				any_elf_died = any_elf_died or gc == "G";
+				g[o[0], o[1]] = ".";
+			}
+			if (any_elf_died) break;
+
+		}
+
+		//print_char_mat(&g);
+		//println("ghp = ", ghp);
+
+		if (any_elf_died) break;
+		if (count(g == "G") == 0) break;
+		if (count(g == "E") == 0) break;
+
+		//if (it >= 1) break;
+		//if (it >= 50) break;
+		it += 1;
+	}
+
+	//println("it = ", it);
+	//println();
+
+	if (any_elf_died)
+	{
+		sum_ = -1;
+	}
+	else
+	{
+		let hp_sum = 0;
+		for y in [0: ny]
+		for x in [0: nx]
+			if ghp[x,y] >= 0
+				hp_sum += ghp[x,y];
+
+		//println("hp_sum = ", hp_sum);
+
+		// This is off-by-one from part 1 just to fuck with me
+		sum_ = it * hp_sum;
+	}
+
+	if (sum_ >= 0) break;
+	ea += 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/15");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 246176:58128
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
