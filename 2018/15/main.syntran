@@ -14,7 +14,7 @@ let filenames =
 ];
 let filename = filenames[ifile];
 
-// Directions are in reverse reading order
+// Directions are in reverse reading order to break ties without further logic
 let NDIRS = 4;
 let DIRS =
 [
@@ -25,10 +25,6 @@ let DIRS =
 	;
 	2, NDIRS
 ];
-//let RIGHT = 0;
-//let UP = 1;
-//let LEFT = 2;
-//let DOWN = 3;
 
 //==============================================================================
 
@@ -113,10 +109,6 @@ fn part1(): str
 			{
 				let v = q[:,qs];  qs += 1;
 				let vx = v[0];  let vy = v[1];
-
-				// TODO: does dir ordering guarantee we find first vc in reading
-				// order, or do we need to push all reachable opposing units and
-				// then break ties afterwards?
 				let vc = g[vx, vy];
 				if is_elf_or_goblin(vc) and vc != gc
 				{
@@ -204,13 +196,10 @@ fn part1(): str
 				ghp[x,y] = -1;
 
 				//print_char_mat(&g);
-
 				//println();
 			}
 
 			// Find the neighbor with lowest hit points
-			//
-			// TODO: don't use [x,y] if just moved
 			let hp_min = 2_000_000_000;
 			o = [-1; 2];
 			for dir in [0: NDIRS]
@@ -237,15 +226,12 @@ fn part1(): str
 				g[o[0], o[1]] = ".";
 
 		}
-
 		//print_char_mat(&g);
 		//println("ghp = ", ghp);
 
 		if (count(g == "G") == 0) break;
 		if (count(g == "E") == 0) break;
 
-		//if (it >= 1) break;
-		//if (it >= 50) break;
 		it += 1;
 	}
 
@@ -347,10 +333,6 @@ fn part2(): str
 			{
 				let v = q[:,qs];  qs += 1;
 				let vx = v[0];  let vy = v[1];
-
-				// TODO: does dir ordering guarantee we find first vc in reading
-				// order, or do we need to push all reachable opposing units and
-				// then break ties afterwards?
 				let vc = g[vx, vy];
 				if is_elf_or_goblin(vc) and vc != gc
 				{
@@ -438,13 +420,10 @@ fn part2(): str
 				ghp[x,y] = -1;
 
 				//print_char_mat(&g);
-
 				//println();
 			}
 
 			// Find the neighbor with lowest hit points
-			//
-			// TODO: don't use [x,y] if just moved
 			let hp_min = 2_000_000_000;
 			o = [-1; 2];
 			for dir in [0: NDIRS]
@@ -464,7 +443,6 @@ fn part2(): str
 			if (hp_min >= 2_000_000_000) continue;
 
 			// Attack
-			//ghp[o[0], o[1]] -= attack;
 			if gc == "E"
 				ghp[o[0], o[1]] -= elf_attack;
 			else
@@ -473,13 +451,12 @@ fn part2(): str
 			// Death
 			if ghp[o[0], o[1]] <= 0
 			{
+				// If attacker is goblin, an elf died
 				any_elf_died = any_elf_died or gc == "G";
 				g[o[0], o[1]] = ".";
 			}
 			if (any_elf_died) break;
-
 		}
-
 		//print_char_mat(&g);
 		//println("ghp = ", ghp);
 
@@ -487,13 +464,9 @@ fn part2(): str
 		if (count(g == "G") == 0) break;
 		if (count(g == "E") == 0) break;
 
-		//if (it >= 1) break;
-		//if (it >= 50) break;
 		it += 1;
 	}
-
 	//println("it = ", it);
-	//println();
 
 	if (any_elf_died)
 	{
@@ -506,7 +479,6 @@ fn part2(): str
 		for x in [0: nx]
 			if ghp[x,y] >= 0
 				hp_sum += ghp[x,y];
-
 		//println("hp_sum = ", hp_sum);
 
 		// This is off-by-one from part 1 just to fuck with me

@@ -1,0 +1,585 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let OPS =
+[
+	"addr",
+	"addi",
+	"mulr",
+	"muli",
+	"banr",
+	"bani",
+	"borr",
+	"bori",
+	"setr",
+	"seti",
+	"gtir",
+	"gtri",
+	"gtrr",
+	"eqir",
+	"eqri",
+	"eqrr"
+];
+let NOPS = size(OPS, 0);
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	//println("OPS = ", OPS);
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let before_str = str_;
+		let instr_str = readln(f);
+		let after_str = readln(f);
+		if not starts_with_(before_str, "Before:") break;
+
+		//println("before_str = ", before_str);
+		//println("instr_str  = ", instr_str);
+		//println("after_str  = ", after_str);
+		//println();
+
+		let blank = readln(f);
+
+		let vbef  = read_i32s(before_str);
+		let instr = read_i32s(instr_str);
+		let vaft  = read_i32s(after_str);
+		//println("vbef  = ", vbef);
+		//println("instr = ", instr);
+		//println("vaft  = ", vaft);
+
+		let nvalid = 0;
+		for i in [0: NOPS]
+		{
+			let regs = vbef;
+			let opcode = instr[0];
+			let a = instr[1];
+			let b = instr[2];
+			let c = instr[3];
+
+			let op = OPS[i];
+
+			if op == "addr"
+				regs[c] = regs[a] + regs[b];
+			else if op == "addi"
+				regs[c] = regs[a] + b;
+			else if op == "mulr"
+				regs[c] = regs[a] * regs[b];
+			else if op == "muli"
+				regs[c] = regs[a] * b;
+			else if op == "banr"
+				regs[c] = regs[a] & regs[b];
+			else if op == "bani"
+				regs[c] = regs[a] & b;
+			else if op == "borr"
+				regs[c] = regs[a] | regs[b];
+			else if op == "bori"
+				regs[c] = regs[a] | b;
+			else if op == "setr"
+				regs[c] = regs[a];
+			else if op == "seti"
+				regs[c] = a;
+			else if op == "gtir"
+			{
+				if (a > regs[b])  regs[c] = 1;
+				else              regs[c] = 0;
+			}
+			else if op == "gtri"
+			{
+				if (regs[a] > b)  regs[c] = 1;
+				else              regs[c] = 0;
+			}
+			else if op == "gtrr"
+			{
+				if (regs[a] > regs[b])  regs[c] = 1;
+				else                    regs[c] = 0;
+			}
+			else if op == "eqir"
+			{
+				if (a == regs[b])  regs[c] = 1;
+				else               regs[c] = 0;
+			}
+			else if op == "eqri"
+			{
+				if (regs[a] == b)  regs[c] = 1;
+				else               regs[c] = 0;
+			}
+			else if op == "eqrr"
+			{
+				if (regs[a] == regs[b])  regs[c] = 1;
+				else                     regs[c] = 0;
+			}
+			else
+			{
+				println("Error: bad op """, op, """");
+				exit(-1);
+			}
+
+			if all(regs == vaft)
+			{
+				//println("op ", op, " is valid");
+				nvalid += 1;
+				if (nvalid >= 3) break;
+			}
+		}
+		if (nvalid >= 3) sum_ += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	//println("OPS = ", OPS);
+
+	//let perm = [0: NOPS];
+	let perm = [-1; NOPS];
+
+	let poss = [-1; NOPS, NOPS];
+	let nposs = [0; NOPS];
+
+	for iop in [0: NOPS]
+	{
+		println("finding op ", iop);
+
+		while true
+		{
+			perm[iop] += 1;
+			println("perm = ", perm);
+			if perm[iop] >= NOPS
+			{
+				println("Error: could not find op");
+				exit(-1);
+			}
+
+			let found_op = false;
+			let f = open(filename, "r");
+			let str_ = readln(f);
+			while not eof(f)
+			{
+				//println("str_ = ", str_);
+	
+				let before_str = str_;
+				let instr_str = readln(f);
+				let after_str = readln(f);
+				if not starts_with_(before_str, "Before:")
+				{
+					found_op = true;
+					break;
+				}
+	
+				let blank = readln(f);
+	
+				let vbef  = read_i32s(before_str);
+				let instr = read_i32s(instr_str);
+				let vaft  = read_i32s(after_str);
+	
+				let regs = vbef;
+				let opcode = instr[0];
+				//println("opcode = ", opcode);
+				if (opcode != iop)
+				{
+					str_ = readln(f);
+					continue;
+				}
+				//if (opcode != perm[iop]) continue;
+
+				let a = instr[1];
+				let b = instr[2];
+				let c = instr[3];
+	
+				let op = OPS[perm[opcode]];
+				//let op = OPS[i];
+				//println("op = ", op);
+	
+				if op == "addr"
+					regs[c] = regs[a] + regs[b];
+				else if op == "addi"
+					regs[c] = regs[a] + b;
+				else if op == "mulr"
+					regs[c] = regs[a] * regs[b];
+				else if op == "muli"
+					regs[c] = regs[a] * b;
+				else if op == "banr"
+					regs[c] = regs[a] & regs[b];
+				else if op == "bani"
+					regs[c] = regs[a] & b;
+				else if op == "borr"
+					regs[c] = regs[a] | regs[b];
+				else if op == "bori"
+					regs[c] = regs[a] | b;
+				else if op == "setr"
+					regs[c] = regs[a];
+				else if op == "seti"
+					regs[c] = a;
+				else if op == "gtir"
+				{
+					if (a > regs[b])  regs[c] = 1;
+					else              regs[c] = 0;
+				}
+				else if op == "gtri"
+				{
+					if (regs[a] > b)  regs[c] = 1;
+					else              regs[c] = 0;
+				}
+				else if op == "gtrr"
+				{
+					if (regs[a] > regs[b])  regs[c] = 1;
+					else                    regs[c] = 0;
+				}
+				else if op == "eqir"
+				{
+					if (a == regs[b])  regs[c] = 1;
+					else               regs[c] = 0;
+				}
+				else if op == "eqri"
+				{
+					if (regs[a] == b)  regs[c] = 1;
+					else               regs[c] = 0;
+				}
+				else if op == "eqrr"
+				{
+					if (regs[a] == regs[b])  regs[c] = 1;
+					else                     regs[c] = 0;
+				}
+				else
+				{
+					println("Error: bad op """, op, """");
+					exit(-1);
+				}
+	
+				if not all(regs == vaft)
+				{
+					//println("breaking");
+					break;
+				}
+				//if all(regs == vaft)
+				//{
+				//	//println("op ", op, " is valid");
+				//	nvalid += 1;
+				//	if (nvalid >= 3) break;
+				//}
+				str_ = readln(f);
+			}
+			close(f);
+
+			if found_op
+			{
+				println("possible op ", iop, " = ", perm[iop]);
+
+				poss[nposs[iop], iop] = perm[iop];
+				nposs[iop] += 1;
+				//break;
+			}
+			if (perm[iop] >= NOPS-1) break;
+
+		}
+	}
+	println("perm = ", perm);
+	println("poss = ", poss);
+	println("nposs = ", nposs);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn part2post(): str
+{
+	// Output from part2(): the set of all possible valid operations for each
+	// opcode
+	let poss = [
+		3, 4, 5, 7, 8, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1,
+		4, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		4, 5, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1,
+		10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		8, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		0, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 14, -1, -1, -1, -1,
+		13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		4, 5, 9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1,
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1, -1, -1,
+		14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		14, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, -1, -1, -1, -1, -1,
+		11, 12, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		2, 4, 5, 9, 10, 11, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1,
+		11, 13, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+		;
+		16, 16
+	];
+
+	// I had to solve this manually (kinda like sudoku) before figuring out this
+	// algorithm.  I think a more efficient and general backtracking algorithm
+	// exists.  This will only work if at least one operations is already
+	// uniquely determined.  From that uniquely determined opcode, remove it
+	// from the possibilities for other rows of the table.  Iterate on that
+	// until each row only contains one opcode (and `-1` sentinels)
+
+	let locked = [false; NOPS];
+	while true
+	{
+		for i in [0: NOPS]
+		{
+			if (locked[i]) continue;
+
+			for j in [0: NOPS]
+				if count(poss[:,j] == -1) == NOPS-1 and any(poss[:,j] == i) locked[i] = true;
+
+			if locked[i]
+				for j in [0: NOPS]
+					if count(poss[:,j] == -1) != NOPS-1
+						for k in [0: NOPS]
+							if poss[k,j] == i
+								poss[k,j] = -1;
+
+		}
+		if (count(poss == -1) == NOPS * (NOPS-1)) break;
+	}
+	println("poss = ", poss);
+
+	// Opcodes are scattered in various cols of `poss` table.  Extract them to a
+	// single vector `perm`
+	let perm = [-1; NOPS];
+	for i in [0: NOPS]
+		for j in [0: NOPS]
+			if poss[j,i] != -1
+				perm[i] = poss[j,i];
+	println("perm = ", perm);
+	//let nposs = [7, 12, 7, 8, 6, 2, 12, 3, 9, 13, 2, 1, 11, 4, 8, 3];
+	//let ii = [0; NOPS];
+
+	// Re-check the first part for sanity
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let before_str = str_;
+		if not starts_with_(before_str, "Before:")
+		{
+			break;
+		}
+		let instr_str = readln(f);
+		let after_str = readln(f);
+
+		let blank = readln(f);
+
+		let vbef  = read_i32s(before_str);
+		let instr = read_i32s(instr_str);
+		let vaft  = read_i32s(after_str);
+
+		let regs = vbef;
+		let opcode = instr[0];
+
+		let a = instr[1];
+		let b = instr[2];
+		let c = instr[3];
+
+		let op = OPS[perm[opcode]];
+		//let op = OPS[i];
+		//println("op = ", op);
+
+		if op == "addr"
+			regs[c] = regs[a] + regs[b];
+		else if op == "addi"
+			regs[c] = regs[a] + b;
+		else if op == "mulr"
+			regs[c] = regs[a] * regs[b];
+		else if op == "muli"
+			regs[c] = regs[a] * b;
+		else if op == "banr"
+			regs[c] = regs[a] & regs[b];
+		else if op == "bani"
+			regs[c] = regs[a] & b;
+		else if op == "borr"
+			regs[c] = regs[a] | regs[b];
+		else if op == "bori"
+			regs[c] = regs[a] | b;
+		else if op == "setr"
+			regs[c] = regs[a];
+		else if op == "seti"
+			regs[c] = a;
+		else if op == "gtir"
+		{
+			if (a > regs[b])  regs[c] = 1;
+			else              regs[c] = 0;
+		}
+		else if op == "gtri"
+		{
+			if (regs[a] > b)  regs[c] = 1;
+			else              regs[c] = 0;
+		}
+		else if op == "gtrr"
+		{
+			if (regs[a] > regs[b])  regs[c] = 1;
+			else                    regs[c] = 0;
+		}
+		else if op == "eqir"
+		{
+			if (a == regs[b])  regs[c] = 1;
+			else               regs[c] = 0;
+		}
+		else if op == "eqri"
+		{
+			if (regs[a] == b)  regs[c] = 1;
+			else               regs[c] = 0;
+		}
+		else if op == "eqrr"
+		{
+			if (regs[a] == regs[b])  regs[c] = 1;
+			else                     regs[c] = 0;
+		}
+		else
+		{
+			println("Error: bad op """, op, """");
+			exit(-1);
+		}
+
+		if not all(regs == vaft)
+		{
+			println("Error: bad permutation!");
+			exit(-1);
+		}
+		str_ = readln(f);
+	}
+	//println("str_ = ", str_);
+
+	// TODO: actual part 2
+	while str_ == ""
+		str_ = readln(f);
+
+	let regs = [0; 4];
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let instr = read_i32s(str_);
+
+		let opcode = instr[0];
+
+		let a = instr[1];
+		let b = instr[2];
+		let c = instr[3];
+
+		let op = OPS[perm[opcode]];
+		//let op = OPS[i];
+		//println("op = ", op);
+
+		if op == "addr"
+			regs[c] = regs[a] + regs[b];
+		else if op == "addi"
+			regs[c] = regs[a] + b;
+		else if op == "mulr"
+			regs[c] = regs[a] * regs[b];
+		else if op == "muli"
+			regs[c] = regs[a] * b;
+		else if op == "banr"
+			regs[c] = regs[a] & regs[b];
+		else if op == "bani"
+			regs[c] = regs[a] & b;
+		else if op == "borr"
+			regs[c] = regs[a] | regs[b];
+		else if op == "bori"
+			regs[c] = regs[a] | b;
+		else if op == "setr"
+			regs[c] = regs[a];
+		else if op == "seti"
+			regs[c] = a;
+		else if op == "gtir"
+		{
+			if (a > regs[b])  regs[c] = 1;
+			else              regs[c] = 0;
+		}
+		else if op == "gtri"
+		{
+			if (regs[a] > b)  regs[c] = 1;
+			else              regs[c] = 0;
+		}
+		else if op == "gtrr"
+		{
+			if (regs[a] > regs[b])  regs[c] = 1;
+			else                    regs[c] = 0;
+		}
+		else if op == "eqir"
+		{
+			if (a == regs[b])  regs[c] = 1;
+			else               regs[c] = 0;
+		}
+		else if op == "eqri"
+		{
+			if (regs[a] == b)  regs[c] = 1;
+			else               regs[c] = 0;
+		}
+		else if op == "eqrr"
+		{
+			if (regs[a] == regs[b])  regs[c] = 1;
+			else                     regs[c] = 0;
+		}
+		else
+		{
+			println("Error: bad op """, op, """");
+			exit(-1);
+		}
+
+
+		str_ = readln(f);
+	}
+	close(f);
+	println("regs = ", regs);
+
+	return str(regs[0]);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/16");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+	p2 = part2post();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
