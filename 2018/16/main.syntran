@@ -152,7 +152,8 @@ fn part1(): str
 	return str(sum_);
 }
 
-fn part2(): str
+//fn part2pre(): str
+fn part2pre(): [i32; :, :]
 {
 	let sum_ = 0'i64;
 
@@ -166,12 +167,12 @@ fn part2(): str
 
 	for iop in [0: NOPS]
 	{
-		println("finding op ", iop);
+		//println("finding op ", iop);
 
 		while true
 		{
 			perm[iop] += 1;
-			println("perm = ", perm);
+			//println("perm = ", perm);
 			if perm[iop] >= NOPS
 			{
 				println("Error: could not find op");
@@ -291,7 +292,7 @@ fn part2(): str
 
 			if found_op
 			{
-				println("possible op ", iop, " = ", perm[iop]);
+				//println("possible op ", iop, " = ", perm[iop]);
 
 				poss[nposs[iop], iop] = perm[iop];
 				nposs[iop] += 1;
@@ -301,38 +302,50 @@ fn part2(): str
 
 		}
 	}
-	println("perm = ", perm);
-	println("poss = ", poss);
-	println("nposs = ", nposs);
+	//println("perm = ", perm);
+	//println("poss = ", poss);
+	//println("nposs = ", nposs);
 
-	println("part 2 = ", sum_);
-	return str(sum_);
+	//println("part 2 = ", sum_);
+	//return str(sum_);
+	return poss;
 }
 
-fn part2post(): str
+fn part2(): str
 {
-	// Output from part2(): the set of all possible valid operations for each
-	// opcode
-	let poss = [
-		3, 4, 5, 7, 8, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1,
-		4, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		4, 5, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1,
-		10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		8, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		0, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 14, -1, -1, -1, -1,
-		13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		4, 5, 9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1,
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1, -1, -1,
-		14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		14, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, -1, -1, -1, -1, -1,
-		11, 12, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		2, 4, 5, 9, 10, 11, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1,
-		11, 13, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-		;
-		16, 16
-	];
+	let possibilities = part2pre();
+	return part2post(possibilities);
+}
+
+fn part2post(poss: [i32; :, :]): str
+{
+	//// Output from part2pre(): the set of all possible valid operations for each
+	//// opcode
+	////
+	//// part2pre() takes a minute to run, so I don't want to re-run that part once
+	//// the possibilities are fixed
+	//let poss = [
+	//	3, 4, 5, 7, 8, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1,
+	//	4, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	4, 5, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	8, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	0, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 14, -1, -1, -1, -1,
+	//	13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	4, 5, 9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1,
+	//	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1, -1, -1,
+	//	14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	14, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, -1, -1, -1, -1, -1,
+	//	11, 12, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	2, 4, 5, 9, 10, 11, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1,
+	//	11, 13, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+	//	;
+	//	16, 16
+	//];
+
+	//********
 
 	// I had to solve this manually (kinda like sudoku) before figuring out this
 	// algorithm.  I think a more efficient and general backtracking algorithm
@@ -346,22 +359,29 @@ fn part2post(): str
 	{
 		for i in [0: NOPS]
 		{
-			if (locked[i]) continue;
+			if (locked[i]) continue;  // opcode `i` is already determined
 
+			// If any row only contains `i`, we can lock it now
 			for j in [0: NOPS]
-				if count(poss[:,j] == -1) == NOPS-1 and any(poss[:,j] == i) locked[i] = true;
+				if count(poss[:,j] == -1) == NOPS-1 and any(poss[:,j] == i)
+					locked[i] = true;
 
-			if locked[i]
-				for j in [0: NOPS]
-					if count(poss[:,j] == -1) != NOPS-1
-						for k in [0: NOPS]
-							if poss[k,j] == i
-								poss[k,j] = -1;
+			if (not locked[i]) continue;
 
+			// Replace `i` with `-1` in all other rows, except the row that only
+			// contains `i`
+			for j in [0: NOPS]
+				if count(poss[:,j] == -1) != NOPS-1
+					for k in [0: NOPS]
+						if poss[k,j] == i
+							poss[k,j] = -1;
 		}
-		if (count(poss == -1) == NOPS * (NOPS-1)) break;
+
+		//// We're done after the table is all `-1`s except for a column's worth
+		//if (count(poss == -1) == NOPS * (NOPS-1)) break;
+		if all(locked) break;
 	}
-	println("poss = ", poss);
+	//println("poss = ", poss);
 
 	// Opcodes are scattered in various cols of `poss` table.  Extract them to a
 	// single vector `perm`
@@ -370,7 +390,7 @@ fn part2post(): str
 		for j in [0: NOPS]
 			if poss[j,i] != -1
 				perm[i] = poss[j,i];
-	println("perm = ", perm);
+	//println("perm = ", perm);
 	//let nposs = [7, 12, 7, 8, 6, 2, 12, 3, 9, 13, 2, 1, 11, 4, 8, 3];
 	//let ii = [0; NOPS];
 
@@ -471,7 +491,8 @@ fn part2post(): str
 	}
 	//println("str_ = ", str_);
 
-	// TODO: actual part 2
+	// And finally, the actual part 2
+
 	while str_ == ""
 		str_ = readln(f);
 
@@ -552,8 +573,9 @@ fn part2post(): str
 		str_ = readln(f);
 	}
 	close(f);
-	println("regs = ", regs);
+	//println("regs = ", regs);
 
+	println("part 2 = ", str(regs[0]));
 	return str(regs[0]);
 }
 
@@ -568,9 +590,9 @@ fn main(): str
 
 	let p1 = ""; let p2 = "";
 
+	// Expect 651:706
 	p1 = part1();
-	//p2 = part2();
-	p2 = part2post();
+	p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();
