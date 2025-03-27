@@ -141,8 +141,7 @@ fn dfs(x: i32, y: i32, g: &[str; :, :], char_: str)
 {
 	// This recursion was a nightmare
 
-	if (g[x,y] == "#") return;
-	if (g[x,y] == "~") return;
+	if (any(g[x,y] == ["#", "~"])) return;
 
 	let nx = i32(size(g,0));
 	let ny = i32(size(g,1));
@@ -178,12 +177,12 @@ fn dfs(x: i32, y: i32, g: &[str; :, :], char_: str)
 	let xl = x - 1;
 	while true
 	{
-		if (g[xl, y+1] == "." or g[xl, y+1] == "|") break;  // found an outlet below this level
-		if (g[xl, y  ] == "#" or g[xl, y  ] == "~") break;  // blocked on this level
+		if (any(g[xl, y+1] == [".", "|"])) break;  // found an outlet below this level
+		if (any(g[xl, y  ] == ["#", "~"])) break;  // blocked on this level
 		g[xl, y] = MOVING;
 		xl -= 1;
 	}
-	if (g[xl, y] != "#" and g[xl, y] != "~")
+	if (all(g[xl, y] != ["#", "~"]))
 	{
 		// Found an outlet.  Has it already been explored?
 		if g[xl, y+1] != MOVING
@@ -197,12 +196,12 @@ fn dfs(x: i32, y: i32, g: &[str; :, :], char_: str)
 	let xr = x + 1;
 	while true
 	{
-		if (g[xr, y+1] == "." or g[xr, y+1] == "|") break;
-		if (g[xr, y  ] == "#" or g[xr, y  ] == "~") break;
+		if (any(g[xr, y+1] == [".", "|"])) break;
+		if (any(g[xr, y  ] == ["#", "~"])) break;
 		g[xr, y] = MOVING;
 		xr += 1;
 	}
-	if (g[xr, y] != "#" and g[xr, y] != "~")
+	if (all(g[xr, y] != ["#", "~"]))
 	{
 		if g[xr, y+1] != MOVING
 		{
