@@ -143,9 +143,8 @@ fn dfs(x: i32, y: i32, g: &[str; :, :], char_: str)
 
 	if (any(g[x,y] == ["#", "~"])) return;
 
-	let nx = i32(size(g,0));
-	let ny = i32(size(g,1));
-	if not in_bounds([0,0], [x,y], [nx,ny]) return;
+	let ny = size(g,1);
+	if (y >= ny) return;
 
 	println("x, y = ", [x, y]);
 
