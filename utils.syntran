@@ -1386,3 +1386,19 @@ fn split_str_mat(s: str, delims: str): [str; :,:]
 	//return ["x"; 3, 4];
 }
 
+//==============================================================================
+
+fn readlns_(filename: str): [str; :]
+{
+	// Load a whole file as an array of strings
+	let n = countln_(filename);
+	let strs = [""; n];
+	let f = open(filename, "r");
+	for i in [0: n]
+		strs[i] = readln(f);
+	close(f);
+	return strs;
+}
+
+//==============================================================================
+
