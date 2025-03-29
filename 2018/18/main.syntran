@@ -1,0 +1,190 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	//println("nx, ny = ", [nx, ny]);
+	//print_char_mat(&g);
+
+	let nminutes = 10;
+	for im in [0: nminutes]
+	{
+		let g0 = g;
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			let tmp = g0[x, y];
+			g0[x, y] = "-";
+
+			let xmin = max(x-1, 0);
+			let xmax = min(x+1, nx-1) + 1;
+			let ymin = max(y-1, 0);
+			let ymax = min(y+1, ny-1) + 1;
+
+			let no = count(g0[xmin:xmax, ymin:ymax] == ".");
+			let nw = count(g0[xmin:xmax, ymin:ymax] == "|");
+			let nl = count(g0[xmin:xmax, ymin:ymax] == "#");
+
+			g0[x, y] = tmp;
+
+			if tmp == "."
+			{
+				if nw >= 3
+					g[x, y] = "|";
+			}
+			else if tmp == "|"
+			{
+				if nl >= 3
+					g[x, y] = "#";
+			}
+			else if tmp == "#"
+			{
+				if nw >= 1 and nl >= 1
+					g[x, y] = "#";
+				else
+					g[x, y] = ".";
+			}
+		}
+		//print_char_mat(&g);
+	}
+
+	sum_ = count(g == "|") * count(g == "#");
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	//println("nx, ny = ", [nx, ny]);
+	//print_char_mat(&g);
+
+	let seen_minute = new_dict_i64();
+	//let seen_score  = new_dict_i64();
+
+	let period = -1;
+
+	let nminutes = 1_000_000_000;
+	for im in [0: nminutes]
+	{
+		//if (im % 1_000 == 0) println("im = ", im);
+
+		let g0 = g;
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			let tmp = g0[x, y];
+			g0[x, y] = "-";
+
+			let xmin = max(x-1, 0);
+			let xmax = min(x+1, nx-1) + 1;
+			let ymin = max(y-1, 0);
+			let ymax = min(y+1, ny-1) + 1;
+
+			let no = count(g0[xmin:xmax, ymin:ymax] == ".");
+			let nw = count(g0[xmin:xmax, ymin:ymax] == "|");
+			let nl = count(g0[xmin:xmax, ymin:ymax] == "#");
+
+			g0[x, y] = tmp;
+
+			if tmp == "."
+			{
+				if nw >= 3
+					g[x, y] = "|";
+			}
+			else if tmp == "|"
+			{
+				if nl >= 3
+					g[x, y] = "#";
+			}
+			else if tmp == "#"
+			{
+				if nw >= 1 and nl >= 1
+					g[x, y] = "#";
+				else
+					g[x, y] = ".";
+			}
+		}
+		//print_char_mat(&g);
+
+		//sum_ = count(g == "|") * count(g == "#");
+		//println("minute, sum_ = ", im, " ", sum_);
+
+		if period < 0
+		{
+			if (im < 500) continue;
+			let key = str(g);
+			let minute = get_dict_i64(&seen_minute, key);
+			if minute >= 0
+			{
+				//println("saw state from minute ", minute, " again at ", im);
+				period = im - minute;
+			}
+			set_dict_i64(&seen_minute, key, i64(im));
+		}
+		else if (nminutes - im - 1) % period == 0
+		{
+			break;
+		}
+
+	}
+
+	sum_ = count(g == "|") * count(g == "#");
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2018/18");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 606416:210796
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
