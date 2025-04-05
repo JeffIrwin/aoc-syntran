@@ -1,0 +1,353 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let n = countln_(filename);
+	let pos = [0; 3, n];
+	let range = [0; n];
+
+	let f = open(filename, "r");
+	for i in [0: n]
+	{
+		let nums = read_mi32s(readln(f));
+		pos[:,i] = nums[0: 3];
+		range[i] = nums[3];
+	}
+	close(f);
+
+	let rmax = -1;
+	let imax = -1;
+	for i in [0: n]
+		if range[i] > rmax
+		{
+			rmax = range[i];
+			imax = i;
+		}
+	println("imax, rmax = ", [imax, rmax]);
+
+	let pmax = pos[:, imax];
+	let sum_ = 0'i64;
+	for i in [0: n]
+	{
+		if sum(abs(pos[:,i] - pmax)) <= rmax
+			sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+// 6 cardinal directions in 3d
+let NDIRS = 6;
+let DIRS =
+[
+	-1,  0,  0,
+	+1,  0,  0,
+	 0, -1,  0,
+	 0, +1,  0,
+	 0,  0, -1,
+	 0,  0, +1
+	;
+	3, NDIRS
+];
+
+fn count_particles(u: &[i32; :], pos: &[i32; :,:], range: &[i32; :]): i32
+{
+	// Count number of particles that are within range of position `u`
+	let nu = 0;
+	for i in [0: size(range, 0)]
+		if sum(abs(u - pos[:,i])) <= range[i]
+			nu += 1;
+	return nu;
+}
+
+fn drange(low: i32, high: i32, p: i32): i32
+{
+	if low <= p and p <= high
+	//if low <= p and p < high
+		return 0;
+	else if p < low
+		return low - p;
+	else
+		return p - high;
+}
+
+fn part2(): str
+{
+	let n = countln_(filename);
+	let pos = [0; 3, n];
+	let range = [0; n];
+
+	let f = open(filename, "r");
+	for i in [0: n]
+	{
+		let nums = read_mi32s(readln(f));
+		pos[:,i] = nums[0: 3];
+		range[i] = nums[3];
+	}
+	close(f);
+
+	let xmin = minval(pos[0,:]);
+	let ymin = minval(pos[1,:]);
+	let zmin = minval(pos[2,:]);
+	let xmax = maxval(pos[0,:]) + 1;
+	let ymax = maxval(pos[1,:]) + 1;
+	let zmax = maxval(pos[2,:]) + 1;
+	println("x in ", [xmin, xmax]);
+	println("y in ", [ymin, ymax]);
+	println("z in ", [zmin, zmax]);
+	//println("DIRS = ", DIRS);
+
+	let nx = xmax - xmin;
+	let ny = ymax - ymin;
+	let nz = zmax - zmin;
+	println("nx, ny, nz = ", [nx, ny, nz]);
+
+	let dmax = max(nx, ny, nz);
+	println("dmax = ", dmax);
+
+	// Get smallest power of 2 > dmax
+	let dmax2 = 1;
+	while dmax2 <= dmax
+		dmax2 *= 2;
+	println("dmax2 = ", dmax2);
+
+	//let SUBCAP = 16;
+	let SUBCAP = 2;
+
+	let d = dmax2;
+	let x0 = [xmin; SUBCAP];
+	let y0 = [ymin; SUBCAP];
+	let z0 = [zmin; SUBCAP];
+	let nsub = 1;
+
+	//for iouter in [0: 25]
+	while true
+	{
+		let nimax = -1;
+		d /= 2;
+		let nsub0 = nsub;
+		nsub = 0;
+
+		let x00 = x0;
+		let y00 = y0;
+		let z00 = z0;
+
+		//let set = new_dict_i64();
+		for isub in [0: nsub0]
+		for iz in [0: 3]
+		for iy in [0: 3]
+		for ix in [0: 3]
+		{
+			let xl = x00[isub] + (ix) * d;
+			let yl = y00[isub] + (iy) * d;
+			let zl = z00[isub] + (iz) * d;
+
+			//let key = str([xl, yl, zl]);
+			//let in_set = get_dict_i64(&set, key);
+			//if (in_set == 1)
+			//{
+			//	//// There are a few hits but not much perf boost
+			//	//println("cache hit"); 
+			//	continue;
+			//}
+			//set_dict_i64(&set, key, 1'i64);
+
+			let xh = x00[isub] + (ix+1) * d - 0;
+			let yh = y00[isub] + (iy+1) * d - 0;
+			let zh = z00[isub] + (iz+1) * d - 0;
+
+			//println("x in ", [xl, xh]);
+			//println("y in ", [yl, yh]);
+			//println("z in ", [zl, zh]);
+
+			// Count particles in range of box
+			let ni = 0;
+			for i in [0: n]
+			{
+				let dx = drange(xl, xh, pos[0,i]);
+				let dy = drange(yl, yh, pos[1,i]);
+				let dz = drange(zl, zh, pos[2,i]);
+
+				//if sum(abs([dx, dy, dz])) <= range[i]
+				//if abs(dx) + abs(dy) + abs(dz) <= range[i]
+				//if dx + dy + dz <= range[i]
+				if dx + dy + dz < range[i]
+				{
+					ni += 1;
+				}
+			}
+			//println("ni = ", ni);
+
+			if ni > nimax and ni > 0
+			{
+				nsub = 1;
+				nimax = ni;
+				x0[0] = xl;
+				y0[0] = yl;
+				z0[0] = zl;
+			}
+			else if ni == nimax
+			if (nsub < SUBCAP)
+			{
+				x0[nsub] = xl;
+				y0[nsub] = yl;
+				z0[nsub] = zl;
+				nsub += 1;
+				//if nsub >= SUBCAP
+				//{
+				//	println("Error:  SUBCAP overflow!");
+				//	exit(-5);
+				//}
+			}
+			//println();
+		}
+		println("d = ", d);
+		println("nimax = ", nimax);
+		println("nsub  = ", nsub);
+		println();
+
+		if (d == 1) break;
+	}
+	println("done subdividing");
+	println("xyz0 = ", [x0[0], y0[0], z0[0]]);
+	println();
+
+	let nmax = 0;
+	let sum_ = 2_000_000_000;
+	let dd = 0;
+	for z in [z0[0] - dd: z0[0] + dd + 2]
+	for y in [y0[0] - dd: y0[0] + dd + 2]
+	for x in [x0[0] - dd: x0[0] + dd + 2]
+	{
+		let p = [x, y, z];
+		let ni = count_particles(&p, &pos, &range);
+		if ni > nmax
+		{
+			nmax = ni;
+			sum_ = sum(abs(p));
+		}
+		else if ni == nmax
+		{
+			sum_ = min(sum_, sum(abs(p)));
+		}
+	}
+	println("nmax = ", nmax);
+	println("sum_ = ", sum_);
+	exit(0);
+
+	let QCAP = 1024 ;//* 1024;
+	let q = [-1; 4, QCAP];
+	let qs = 0;  let qe = 0;
+
+	let p0 = [x0[0], y0[0], z0[0]];
+	let n0 = count_particles(&p0, &pos, &range);
+
+	// Push
+	q[:, qe] = [p0, [n0]];  qe += 1;
+
+	let visited = new_dict_i64();
+	sum_ = 2_000_000_000;
+
+	// Uphill BFS towards points in range of more particles
+	nmax = -1;
+	let nvmax = -1;
+	while qs != qe
+	{
+		// Pop
+		let qu = q[:, qs];  qs = (qs+1) % QCAP;
+
+		// Unpack
+		let u = qu[0: 3];
+		let nu = qu[3];
+
+		let key = str(u);
+		let seen = get_dict_i64(&visited, key);
+		if (seen == 1) continue;
+		set_dict_i64(&visited, key, 1'i64);
+
+		if (nu < nvmax) continue;
+
+		let s = sum(abs(u));
+
+		//println("u = ", u);
+		if (nu > nmax)
+		{
+			//println("s = ", s);
+			println("nu = ", nu);
+			sum_ = s;
+		}
+		//nmax = nu;
+		nmax = max(nmax, nu);
+		sum_ = min(sum_, s);
+
+		println("u, nu = ", [u, [nu]]);
+
+		//let nvmax = nmax;
+		nvmax = max(nvmax, nmax);
+
+		//if (nu >= 912) break;
+
+		for d in [0: NDIRS]
+		{
+			let v = u + DIRS[:,d];
+			let nv = count_particles(&v, &pos, &range);
+			nvmax = max(nvmax, nv);
+			if (nv < nvmax) continue;
+
+			// Push
+			q[:, qe] = [v, [nv]];  qe = (qe+1) % QCAP;
+			if qe == qs
+			{
+				println("Error:  queue overflow!");
+				exit(-3);
+			}
+		}
+	}
+	println("nvmax, nmax = ", [nvmax, nmax]);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2018/23");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

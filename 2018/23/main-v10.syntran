@@ -1,0 +1,232 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let n = countln_(filename);
+	let pos = [0; 3, n];
+	let range = [0; n];
+
+	let f = open(filename, "r");
+	for i in [0: n]
+	{
+		let nums = read_mi32s(readln(f));
+		pos[:,i] = nums[0: 3];
+		range[i] = nums[3];
+	}
+	close(f);
+
+	let rmax = -1;
+	let imax = -1;
+	for i in [0: n]
+		if range[i] > rmax
+		{
+			rmax = range[i];
+			imax = i;
+		}
+	println("imax, rmax = ", [imax, rmax]);
+
+	let pmax = pos[:, imax];
+	let sum_ = 0'i64;
+	for i in [0: n]
+	{
+		if sum(abs(pos[:,i] - pmax)) <= rmax
+			sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+// 6 cardinal directions in 3d
+let NDIRS = 6;
+let DIRS =
+[
+	-1,  0,  0,
+	+1,  0,  0,
+	 0, -1,  0,
+	 0, +1,  0,
+	 0,  0, -1,
+	 0,  0, +1
+	;
+	3, NDIRS
+];
+
+fn count_particles(u: &[i32; :], pos: &[i32; :,:], range: &[i32; :]): i32
+{
+	// Count number of particles that are within range of position `u`
+	let nu = 0;
+	for i in [0: size(range, 0)]
+		if sum(abs(u - pos[:,i])) <= range[i]
+			nu += 1;
+	return nu;
+}
+
+fn part2(): str
+{
+	let n = countln_(filename);
+	let pos = [0; 3, n];
+	let range = [0; n];
+
+	let f = open(filename, "r");
+	for i in [0: n]
+	{
+		let nums = read_mi32s(readln(f));
+		pos[:,i] = nums[0: 3];
+		range[i] = nums[3];
+	}
+	close(f);
+
+	let xmin = minval(pos[0,:]);
+	let ymin = minval(pos[1,:]);
+	let zmin = minval(pos[2,:]);
+	let xmax = maxval(pos[0,:]) + 1;
+	let ymax = maxval(pos[1,:]) + 1;
+	let zmax = maxval(pos[2,:]) + 1;
+	println("x in ", [xmin, xmax]);
+	println("y in ", [ymin, ymax]);
+	println("z in ", [zmin, zmax]);
+	//println("DIRS = ", DIRS);
+
+	let nx = xmax - xmin;
+	let ny = ymax - ymin;
+	let nz = zmax - zmin;
+	println("nx, ny, nz = ", [nx, ny, nz]);
+
+	let dmax = max(nx, ny, nz);
+	println("dmax = ", dmax);
+
+	// Get smallest power of 2 > dmax
+	let dmax2 = 1;
+	while dmax2 <= dmax
+		dmax2 *= 2;
+	println("dmax2 = ", dmax2);
+
+	let d = dmax2;
+	let x0 = xmin;
+	let y0 = ymin;
+	let z0 = zmin;
+
+	//for iouter in [0: 5]
+	while true
+	{
+		let nimax = 0;
+		let tie_min = 0;
+		d /= 2;
+		for iz in [0: 2]
+		for iy in [0: 2]
+		for ix in [0: 2]
+		{
+			let xl = x0 + (ix) * d;
+			let xh = x0 + (ix+1) * d - 0;
+
+			let yl = y0 + (iy) * d;
+			let yh = y0 + (iy+1) * d - 0;
+
+			let zl = z0 + (iz) * d;
+			let zh = z0 + (iz+1) * d - 0;
+
+			println("x in ", [xl, xh]);
+			println("y in ", [yl, yh]);
+			println("z in ", [zl, zh]);
+
+			// Count particles in range of box
+			let ni = 0;
+			let tie = 0;
+			for i in [0: n]
+			{
+				let dx = drange(xl, xh, pos[0,i]);
+				let dy = drange(yl, yh, pos[1,i]);
+				let dz = drange(zl, zh, pos[2,i]);
+
+				if dx + dy + dz <= range[i]
+				//if dx + dy + dz < range[i]
+				{
+					ni += 1;
+					tie += dx + dy + dz;
+				}
+			}
+			println("ni = ", ni);
+
+			if ni > nimax
+			{
+				tie_min = tie;
+				nimax = ni;
+				x0 = xl;
+				y0 = yl;
+				z0 = zl;
+			}
+			else if ni == nimax
+			{
+				if tie < tie_min
+				{
+					tie_min = tie;
+					x0 = xl;
+					y0 = yl;
+					z0 = zl;
+				}
+			}
+
+			println();
+		}
+		println("nimax = ", nimax);
+
+		if (d == 1) break;
+	}
+
+	let sum_ = 0'i64;
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn drange(low: i32, high: i32, p: i32): i32
+{
+	if low <= p and p <= high
+	//if low <= p and p < high
+		return 0;
+	else if p < low
+		return low - p;
+	else
+		return p - high;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2018/23");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

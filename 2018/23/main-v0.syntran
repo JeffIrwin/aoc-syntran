@@ -1,0 +1,139 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let n = countln_(filename);
+	let pos = [0; 3, n];
+	let range = [0; n];
+
+	let f = open(filename, "r");
+	for i in [0: n]
+	{
+		let nums = read_mi32s(readln(f));
+		pos[:,i] = nums[0: 3];
+		range[i] = nums[3];
+	}
+	close(f);
+
+	let rmax = -1;
+	let imax = -1;
+	for i in [0: n]
+		if range[i] > rmax
+		{
+			rmax = range[i];
+			imax = i;
+		}
+	println("imax, rmax = ", [imax, rmax]);
+
+	let pmax = pos[:, imax];
+	let sum_ = 0'i64;
+	for i in [0: n]
+	{
+		if sum(abs(pos[:,i] - pmax)) <= rmax
+			sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let n = countln_(filename);
+	let pos = [0; 3, n];
+	let range = [0; n];
+
+	let f = open(filename, "r");
+	for i in [0: n]
+	{
+		let nums = read_mi32s(readln(f));
+		pos[:,i] = nums[0: 3];
+		range[i] = nums[3];
+	}
+	close(f);
+
+	let xmin = minval(pos[0,:]);
+	let ymin = minval(pos[1,:]);
+	let zmin = minval(pos[2,:]);
+	let xmax = maxval(pos[0,:]) + 1;
+	let ymax = maxval(pos[1,:]) + 1;
+	let zmax = maxval(pos[2,:]) + 1;
+	println("x in ", [xmin, xmax]);
+	println("y in ", [ymin, ymax]);
+	println("z in ", [zmin, zmax]);
+
+	let nx = xmax - xmin;
+	let ny = ymax - ymin;
+	let nz = zmax - zmin;
+
+	let sum_ = 0'i64;
+
+	// Number of particles `ns` within range of each point
+	let ns = [0; nx, ny, nz];
+
+	for z in [zmin: zmax]
+	for y in [ymin: ymax]
+	for x in [xmin: xmax]
+	{
+		for i in [0: n]
+			if sum(abs([x,y,z] - pos[:,i])) <= range[i]
+				ns[x-xmin, y-ymin, z-zmin] += 1;
+	}
+
+	let nmax = -1;
+	for z in [zmin: zmax]
+	for y in [ymin: ymax]
+	for x in [xmin: xmax]
+	{
+		if ns[x-xmin, y-ymin, z-zmin] > nmax
+		{
+			nmax = ns[x-xmin, y-ymin, z-zmin];
+			sum_ = sum(abs([x, y, z]));
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2018/23");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
