@@ -5,7 +5,7 @@
 //==============================================================================
 
 let ifile = 0;
-//ifile = 1;
+ifile = 1;
 
 let filenames =
 [
@@ -18,19 +18,35 @@ let filename = filenames[ifile];
 
 fn part1(): str
 {
-	let sum_ = 0'i64;
+	let mat = read_i32_mat(filename);
+	let v = mat[0,:];
+	//println("v = ", v);
 
-	let f = open(filename, "r");
-	let str_ = readln(f);
-	while not eof(f)
-	{
-		println("str_ = ", str_);
-
-		str_ = readln(f);
-	}
-	close(f);
+	let sum_ = sum(v / 3 - 2);
 
 	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let mat = read_i32_mat(filename);
+	let v = mat[0,:];
+	//println("v = ", v);
+
+	//let sum_ = sum(v / 3 - 2);
+
+	let sum_ = 0;
+	for vi in v
+	{
+		while vi > 0
+		{
+			vi = vi / 3 - 2;
+			sum_ += max(vi, 0);
+		}
+	}
+
+	println("part 2 = ", sum_);
 	return str(sum_);
 }
 
@@ -41,12 +57,13 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2019/xx");
+	println("Starting AOC syntran main 2019/1");
 
 	let p1 = ""; let p2 = "";
 
+	// Expect 3216744:4822249
 	p1 = part1();
-	//p2 = part2();
+	p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();
