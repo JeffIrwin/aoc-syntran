@@ -1,0 +1,289 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let nums = read_i32s(readln(f));
+	let depth = nums[0];
+	let target = read_i32s(readln(f));
+	close(f);
+
+	//println("depth = ", depth);
+	//println("target = ", target);
+
+	let nx = target[0] + 1;
+	let ny = target[1] + 1;
+	let tx = target[0];
+	let ty = target[1];
+
+	// Geologic indices and erosion levels
+	let g = [0'i64; nx, ny];
+	let e = [0'i64; nx, ny];
+
+	e[0, 0] = depth % 20183;
+
+	// The region at the coordinates of the target has a geologic index of 0.
+	g[tx, ty] = 0;
+	e[tx, ty] = depth % 20183;
+
+	// If the region's Y coordinate is 0, the geologic index is its X coordinate * 16807.
+	for x in [0: nx]
+	{
+		g[x, 0] = x * 16807;
+		e[x, 0] = (g[x, 0] + depth) % 20183;
+	}
+
+	// If the region's X coordinate is 0, the geologic index is its Y coordinate * 48271.
+	for y in [0: ny]
+	{
+		g[0, y] = y * 48271;
+		e[0, y] = (g[0, y] + depth) % 20183;
+	}
+
+	// Otherwise, the region's geologic index is the result of multiplying the erosion levels of the regions at X-1,Y and X,Y-1.
+	for y in [1: ny]
+	for x in [1: nx]
+	{
+		if (x == tx and y == ty) continue;
+		g[x, y] = e[x-1, y] * e[x, y-1];
+		e[x, y] = (g[x, y] + depth) % 20183;
+	}
+
+	//println("g = ", g);
+	//println("e = ", e);
+
+	sum_ = sum(e % 3);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+let NDIRS = 4;
+let DIRS =
+[
+	 1,  0,  // east
+	 0, -1,  // north
+	-1,  0,  // west
+	 0,  1   // south
+	;
+	2, NDIRS
+];
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let nums = read_i32s(readln(f));
+	let depth = nums[0];
+	let target = read_i32s(readln(f));
+	close(f);
+
+	//println("depth = ", depth);
+	//println("target = ", target);
+
+	// Optimal capacity buffer multiplier?  You can search past the target in x
+	// and y, just not negatives
+
+	//let nx = 2 * target[0] + 50;
+	//let ny = 2 * target[1] + 50;
+	//let nx = i32(1.5 * target[0]) + 20;
+	//let ny = i32(1.5 * target[1]) + 20;
+	let nx = i32(1.2 * target[0]) + 30;
+	let ny = i32(1.2 * target[1]) + 30;
+
+	let tx = target[0];
+	let ty = target[1];
+
+	// Geologic indices and erosion levels
+	let g = [0'i64; nx, ny];
+	let e = [0'i64; nx, ny];
+
+	e[0, 0] = depth % 20183;
+
+	// The region at the coordinates of the target has a geologic index of 0.
+	g[tx, ty] = 0;
+	e[tx, ty] = depth % 20183;
+
+	// If the region's Y coordinate is 0, the geologic index is its X coordinate * 16807.
+	for x in [0: nx]
+	{
+		g[x, 0] = x * 16807;
+		e[x, 0] = (g[x, 0] + depth) % 20183;
+	}
+
+	// If the region's X coordinate is 0, the geologic index is its Y coordinate * 48271.
+	for y in [0: ny]
+	{
+		g[0, y] = y * 48271;
+		e[0, y] = (g[0, y] + depth) % 20183;
+	}
+
+	// Otherwise, the region's geologic index is the result of multiplying the erosion levels of the regions at X-1,Y and X,Y-1.
+	for y in [1: ny]
+	for x in [1: nx]
+	{
+		if (x == tx and y == ty) continue;
+		g[x, y] = e[x-1, y] * e[x, y-1];
+		e[x, y] = (g[x, y] + depth) % 20183;
+	}
+
+	//println("g = ", g);
+	//println("e = ", e);
+
+	let NT = 3;
+	let type_ = e % NT;
+	//println("type_ = ", type_);
+
+	// Types
+	let ROCKY  = 0;
+	let WET    = 1;
+	let NARROW = 2;
+
+	// In rocky regions, you can use the climbing gear or the torch. You cannot
+	// use neither (you'll likely slip and fall).
+	//
+	// In wet regions, you can use the climbing gear or neither tool. You cannot
+	// use the torch (if it gets wet, you won't have a light source).
+	//
+	// In narrow regions, you can use the torch or neither tool. You cannot use
+	// the climbing gear (it's too bulky to fit).
+
+	// Tools.  Tool enums match the corresponding type enum in which it *cannot*
+	// be used
+	let NEITHER = 0;
+	let TORCH   = 1;
+	let CLIMB   = 2;
+
+	// BFS over space * tool combinations
+
+	//let times = [-1; nx, ny, NT];
+	let times = [2_000_000_000; nx, ny, NT];
+
+	let QCAP = 1024 * 64;
+	let q = [-1; 3, QCAP];  // 2 spatial dimensions plus tool
+	let qs = 0;  let qe = 0;
+
+	// You start at 0,0 (the mouth of the cave) with the torch equipped
+	times[0, 0, TORCH] = 0;
+
+	// Push
+	q[:, qe] = [0, 0, TORCH];  qe += 1;
+
+	while qs != qe
+	{
+		// Pop
+		let u = q[:, qs];  qs = (qs+1) % QCAP;
+		//println("u = ", u);
+
+		// Unpack
+		let x = u[0];  let y = u[1];  let tool0 = u[2];
+		let time0 = times[x, y, tool0];
+
+		// Reached target destination?  Can't break early, we might find a
+		// shorter route after more search iterations
+		//if all([x, y, tool0] == [tx, ty, TORCH]) break;
+
+		//if all([x, y, tool0] == [tx, ty, TORCH]) println("time0 = ", time0);
+
+		// Search neighbors
+		for d in [0: NDIRS]
+		{
+			let v = [x,y] + DIRS[:,d];
+			if (not in_bounds([0,0], v, [nx,ny])) continue;
+
+			//if (tool0 == type_[x,y]) continue;
+			if (tool0 == type_[v[0], v[1]]) continue;
+
+			let time = time0 + 1;
+			if (time >= times[v[0], v[1], tool0]) continue;
+			times[v[0], v[1], tool0] = time;
+
+			//println("v = ", v);
+
+			// Push
+			q[:, qe] = [v[0], v[1], tool0];  qe = (qe+1) % QCAP;
+			if qe == qs
+			{
+				println("Error:  queue overflow!");
+				exit(-3);
+			}
+		}
+
+		// Search tool change
+		for tool in [0: NT]
+		{
+			if (tool == type_[x,y]) continue;
+			//println("dtool = ", dtool);
+			//let tool = (tool0 + dtool) % NT;
+
+			let time = time0 + 7;
+			if (time >= times[x, y, tool]) continue;
+			times[x, y, tool] = time;
+
+			q[:, qe] = [x, y, tool];  qe = (qe+1) % QCAP;
+			if qe == qs
+			{
+				println("Error:  queue overflow!");
+				exit(-3);
+			}
+		}
+		//println();
+	}
+	sum_ = times[tx, ty, TORCH];
+
+	//// Debug only
+	//for t in [0: NT]
+	//for y in [0: ny]
+	//for x in [0: nx]
+	//	if (times[x,y,t] >= 2_000_000_000) times[x,y,t] = -1;
+	////println("times = ", times);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2018/22");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 6208:1039
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
