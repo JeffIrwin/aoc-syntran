@@ -1,0 +1,132 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let words = split_(str_, "-");
+	let min_ = parse_i32(words[0]);
+	let max_ = parse_i32(words[1]);
+	println("min_, max_ = ", [min_, max_]);
+
+	// Not clear on whether max_ of range is inclusive or not, but mine doesn't
+	// match the rules so it doesn't matter
+	for x in [min_: max_+1]
+	{
+		let increasing = true;
+		let has_double = false;
+		let sx = str(x);
+		for id in [1: len(sx)]
+		{
+			let d0 = parse_i32(sx[id-1]);
+			let d  = parse_i32(sx[id]);
+			increasing = d0 <= d;
+			if (not increasing) break;
+			has_double = has_double or d0 == d;
+		}
+		if increasing and has_double
+			sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let words = split_(str_, "-");
+	let min_ = parse_i32(words[0]);
+	let max_ = parse_i32(words[1]);
+	println("min_, max_ = ", [min_, max_]);
+
+	// Not clear on whether max_ of range is inclusive or not, but mine doesn't
+	// match the rules so it doesn't matter
+	for x in [min_: max_+1]
+	{
+		let increasing = true;
+		let has_double = false;
+		let sx = str(x);
+		let nd = len(sx);
+		for id in [1: nd]
+		{
+			let d0 = parse_i32(sx[id-1]);
+			let d  = parse_i32(sx[id]);
+			increasing = d0 <= d;
+			if (not increasing) break;
+
+			//has_double = has_double or d0 == d;
+			let this_double = d0 == d;
+			if this_double and id >= 2
+			{
+				let d00 = parse_i32(sx[id-2]);
+				this_double = d00 != d0;
+			}
+			if this_double and id < nd - 1
+			{
+				let d1 = parse_i32(sx[id+1]);
+				this_double = d0 != d1;
+			}
+			has_double = has_double or this_double;
+		}
+		if increasing and has_double
+			sum_ += 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2019/4");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 544:334
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
