@@ -1,0 +1,536 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+// Max total groups of both armies
+let NGROUP_CAP = 32;
+
+// Attack types
+let NATTACK_TYPE = 5;
+let FIRE_ATTACK_TYPE        = 0;
+let BLUDGEONING_ATTACK_TYPE = 1;
+let SLASHING_ATTACK_TYPE    = 2;
+let COLD_ATTACK_TYPE        = 3;
+let RADIATION_ATTACK_TYPE   = 4;
+
+// Two armies
+let IMMUNE_SYSTEM_ARMY = 0;
+let INFECTION_ARMY = 1;
+
+//****************
+
+fn get_attack_type(str_: str): i32
+{
+	//println("attack_type_str = ", str_);
+	if str_ == "fire"
+		return FIRE_ATTACK_TYPE;
+	else if str_ == "bludgeoning"
+		return BLUDGEONING_ATTACK_TYPE;
+	else if str_ == "slashing"
+		return SLASHING_ATTACK_TYPE;
+	else if str_ == "cold"
+		return COLD_ATTACK_TYPE;
+	else if str_ == "radiation"
+		return RADIATION_ATTACK_TYPE;
+
+	println("Error: bad attack type '", str_, "'");
+	exit(-1);
+	return -1;
+}
+
+fn groups_sort_idx(effective_pow: &[i32; :], initiative: &[i32; :]): [i32; :]
+{
+	// Sort by descending effective_pow, using higher initiative first as a
+	// tie-breaker
+	let n = i32(size(effective_pow, 0));
+	let idx = [0: n];
+	for k in [0: n]
+	for i in [0: n-1]
+	{
+		let swap = false;
+		if effective_pow[idx[i]] < effective_pow[idx[i+1]]
+			swap = true;
+		else if effective_pow[idx[i]] == effective_pow[idx[i+1]]
+			swap = initiative[idx[i]] < initiative[idx[i+1]];
+		if swap
+			idx[[i, i+1]] = idx[[i+1, i]];
+	}
+	return idx;
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let ig = 0;  // group id
+	let army = 0;
+
+	let nunit       = [0; NGROUP_CAP];
+	let hit_points  = [0; NGROUP_CAP];
+
+	let weak        = [false; NATTACK_TYPE, NGROUP_CAP];
+	let immune      = [false; NATTACK_TYPE, NGROUP_CAP];
+
+	let attack_dmg  = [0; NGROUP_CAP];
+	let attack_type = [0; NGROUP_CAP];
+	let initiative  = [0; NGROUP_CAP];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		if str_ == "Immune System:"
+			army = IMMUNE_SYSTEM_ARMY;
+		else if str_ == "Infection:"
+			army = INFECTION_ARMY;
+		else if str_ == ""
+		{
+			// Do nothing.  Separator
+		}
+		else
+		{
+			// Usual case:  group description
+			let words = split_(str_, " ");
+			let nw = size(words, 0);
+
+			// TODO: save `army` for each group
+
+			// Parse from beginning
+			nunit      [ig] = parse_i32(words[0]);
+			hit_points [ig] = parse_i32(words[4]);
+
+			// Parse back from end
+			attack_dmg [ig] = parse_i32(words[nw - 6]);
+			attack_type[ig] = get_attack_type(words[nw - 5]);
+			initiative [ig] = parse_i32(words[nw - 1]);
+
+			// Parse the middle weakness and immunity clauses
+			let clauses = split_(str_, "(;)");
+			let nclause = size(clauses, 0);
+			if nclause > 2
+			//for ic in [1: nclause - 1]
+			for clause in clauses[1: nclause - 1]
+			{
+				//println("clause = ", clause);
+				let words = split_(clause, ", ");  // shadowing
+				let nw = size(words, 0);
+				let flags = [false; NATTACK_TYPE];
+				for word in words[2: nw]
+					flags[get_attack_type(word)] = true;
+				//println("flags = ", flags);
+				if words[0] == "weak"
+					weak  [:,ig] = flags;
+				else if words[0] == "immune"
+					immune[:,ig] = flags;
+				else
+				{
+					println("Error: bad weakness/immunity clause '", clause, "'");
+					exit(-2);
+				}
+			}
+
+			ig += 1;
+		}
+		//println("army = ", army);
+		str_ = readln(f);
+	}
+	close(f);
+	let ngroup = ig;
+
+	// trim
+	nunit       = nunit      [0: ngroup];
+	hit_points  = hit_points [0: ngroup];
+	weak        = weak  [:,   0: ngroup];
+	immune      = immune[:,   0: ngroup];
+	attack_dmg  = attack_dmg [0: ngroup];
+	attack_type = attack_type[0: ngroup];
+	initiative  = initiative [0: ngroup];
+
+	//println("weak = ", weak);
+	//println("immune = ", immune);
+
+	//println("nunit       = ", nunit      );
+	//println("hit_points  = ", hit_points );
+	//println("attack_dmg  = ", attack_dmg );
+	//println("attack_type = ", attack_type);
+	//println("initiative  = ", initiative );
+
+	//****************
+	// Fight
+
+	//for iround in [0: 3]
+	while true
+	{
+
+	let effective_pow = nunit * attack_dmg;
+	//println("effective_pow = ", effective_pow);
+
+	let idx = groups_sort_idx(&effective_pow, &initiative);
+	//println("idx = ", idx);
+	//println("effective_pow (sorted) = ", effective_pow[idx]);
+
+	// Target selection phase
+
+	let dmgs = [0; ngroup, ngroup];
+	let attacks = [-1; ngroup];
+	let has_been_selected = [false; ngroup];
+	for ii in [0: ngroup]
+	{
+		let i = idx[ii];  // in descending pow order
+		if (nunit[i] == 0) continue;
+
+		let dmg_max = -1;
+		let pow_max = -1;
+		let ini_max = -1;
+		let jmax = -1;
+		for j in [0: ngroup]
+		{
+			// Group i potentially attacks group j
+			if ((i < ngroup/2) == (j < ngroup/2)) continue;  // opposing armies only
+
+			let dmg = attack_dmg[i] ;//* nunit[i];
+			if (weak  [ attack_type[i], j ]) dmg *= 2;
+			if (immune[ attack_type[i], j ]) dmg = 0;
+
+			// save dmg in a matrix [i,j] to re-use in next phase.  do it here
+			// before next continue's
+			dmgs[i,j] = dmg;
+
+			if (has_been_selected[j]) continue;
+			if (nunit[j] == 0) continue;
+
+			//println("dmg = ", dmg);
+			if (dmg * nunit[i] < dmg_max) continue;
+			if (dmg * nunit[i] == dmg_max and effective_pow[j] < pow_max) continue;
+			if (dmg * nunit[i] == dmg_max and effective_pow[j] == pow_max and initiative[j] < ini_max) continue;
+
+			if (dmg * nunit[i] > dmg_max) { pow_max = -1;  ini_max = -1; }
+			if (dmg * nunit[i] == dmg_max and effective_pow[j] > pow_max) ini_max = -1;
+
+			jmax = j;
+			dmg_max = dmg * nunit[i];
+			pow_max = effective_pow[j];
+			ini_max = initiative[j];
+
+		}
+		attacks[i] = jmax;  // unit i attacks unit jmax
+		if (jmax >= 0) has_been_selected[jmax] = true;
+	}
+	//println("attacks = ", attacks);
+	//println("dmgs = ", dmgs);
+
+	// Attack phase
+
+	// Attacking has a different order than selection
+	idx = sort_index(initiative);  // ascending
+	idx = idx[ngroup-1: -1: -1];   // reverse
+	//println("initiative (sorted) = ", initiative[idx]);
+
+	for ii in [0: ngroup]
+	{
+		let i = idx[ii];  // in descending pow order
+		if (nunit[i] == 0) continue;
+
+		let j = attacks[i];  // attacks[i] = jmax;  // unit i attacks unit jmax
+		if (j < 0) continue;
+
+		//println("hit_points = ", hit_points[j]);
+		//println("dmgs       = ", dmgs[i,j] * nunit[i]);
+		//println("j          = ", j);
+
+		let nkill = min(dmgs[i,j] * nunit[i] / hit_points[j], nunit[j]);
+		//println("nkill = ", nkill);
+		//println();
+
+		nunit[j] -= nkill;
+		//nunit[j] = max(nunit[j], 0);
+	}
+
+	// Has any army lost all its units?
+	if all(nunit[0: ngroup/2] == 0) break;
+	if all(nunit[ngroup/2: ngroup] == 0) break;
+
+	}
+
+	//****************
+
+	sum_ = sum(nunit);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let boost = -1;
+	//let boost = 1570 - 1;
+
+	while true
+	{
+	let winner = "";
+	boost += 1;
+
+	//let boost = 24;  // draw
+
+	//let boost = 25;
+	//let boost = 33;
+
+	//let boost = 32;
+	//let boost = (32 + 34) / 2;
+
+	println("boost = ", boost);
+
+	let ig = 0;  // group id
+	let army = 0;
+
+	let nunit       = [0; NGROUP_CAP];
+	let hit_points  = [0; NGROUP_CAP];
+
+	let weak        = [false; NATTACK_TYPE, NGROUP_CAP];
+	let immune      = [false; NATTACK_TYPE, NGROUP_CAP];
+
+	let attack_dmg  = [0; NGROUP_CAP];
+	let attack_type = [0; NGROUP_CAP];
+	let initiative  = [0; NGROUP_CAP];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		if str_ == "Immune System:"
+			army = IMMUNE_SYSTEM_ARMY;
+		else if str_ == "Infection:"
+			army = INFECTION_ARMY;
+		else if str_ == ""
+		{
+			// Do nothing.  Separator
+		}
+		else
+		{
+			// Usual case:  group description
+			let words = split_(str_, " ");
+			let nw = size(words, 0);
+
+			// Parse from beginning
+			nunit      [ig] = parse_i32(words[0]);
+			hit_points [ig] = parse_i32(words[4]);
+
+			// Parse back from end
+			attack_dmg [ig] = parse_i32(words[nw - 6]);
+			attack_type[ig] = get_attack_type(words[nw - 5]);
+			initiative [ig] = parse_i32(words[nw - 1]);
+
+			// Parse the middle weakness and immunity clauses
+			let clauses = split_(str_, "(;)");
+			let nclause = size(clauses, 0);
+			if nclause > 2
+			//for ic in [1: nclause - 1]
+			for clause in clauses[1: nclause - 1]
+			{
+				//println("clause = ", clause);
+				let words = split_(clause, ", ");  // shadowing
+				let nw = size(words, 0);
+				let flags = [false; NATTACK_TYPE];
+				for word in words[2: nw]
+					flags[get_attack_type(word)] = true;
+				//println("flags = ", flags);
+				if words[0] == "weak"
+					weak  [:,ig] = flags;
+				else if words[0] == "immune"
+					immune[:,ig] = flags;
+				else
+				{
+					println("Error: bad weakness/immunity clause '", clause, "'");
+					exit(-2);
+				}
+			}
+
+			ig += 1;
+		}
+		//println("army = ", army);
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+	let ngroup = ig;
+
+	// trim
+	nunit       = nunit      [0: ngroup];
+	hit_points  = hit_points [0: ngroup];
+	weak        = weak  [:,   0: ngroup];
+	immune      = immune[:,   0: ngroup];
+	attack_dmg  = attack_dmg [0: ngroup];
+	attack_type = attack_type[0: ngroup];
+	initiative  = initiative [0: ngroup];
+
+	// Apply the boost to the immune system
+	attack_dmg[0: ngroup/2] += boost;
+
+	//println("weak = ", weak);
+	//println("immune = ", immune);
+
+	//println("nunit       = ", nunit      );
+	//println("hit_points  = ", hit_points );
+	//println("attack_dmg  = ", attack_dmg );
+	//println("attack_type = ", attack_type);
+	//println("initiative  = ", initiative );
+
+	//****************
+	// Fight
+
+	//for iround in [0: 3]
+	while true
+	{
+
+	let effective_pow = nunit * attack_dmg;
+	//println("effective_pow = ", effective_pow);
+
+	let idx = groups_sort_idx(&effective_pow, &initiative);
+	//println("idx = ", idx);
+	//println("effective_pow (sorted) = ", effective_pow[idx]);
+
+	// Target selection phase
+
+	let dmgs = [0; ngroup, ngroup];
+	let attacks = [-1; ngroup];
+	let has_been_selected = [false; ngroup];
+	for ii in [0: ngroup]
+	{
+		let i = idx[ii];  // in descending pow order
+		if (nunit[i] <= 0) continue;
+
+		let dmg_max = -1;
+		let pow_max = -1;
+		let ini_max = -1;
+		let jmax = -1;
+		for j in [0: ngroup]
+		{
+			// Group i potentially attacks group j
+			if ((i < ngroup/2) == (j < ngroup/2)) continue;  // opposing armies only
+
+			let dmg = attack_dmg[i] ;//* nunit[i];
+			if (weak  [ attack_type[i], j ]) dmg *= 2;
+			if (immune[ attack_type[i], j ]) dmg = 0;
+
+			// save dmg in a matrix [i,j] to re-use in next phase.  do it here
+			// before next continue's
+			dmgs[i,j] = dmg;
+
+			if (dmg == 0) continue;  // wow! this matters for part 2 but not part 1 :(
+			if (has_been_selected[j]) continue;
+			if (nunit[j] <= 0) continue;
+
+			//println("dmg = ", dmg);
+			if (dmg * nunit[i] < dmg_max) continue;
+			if (dmg * nunit[i] == dmg_max and effective_pow[j] < pow_max) continue;
+			if (dmg * nunit[i] == dmg_max and effective_pow[j] == pow_max and initiative[j] < ini_max) continue;
+
+			if (dmg * nunit[i] > dmg_max) { pow_max = -1;  ini_max = -1; }
+			if (dmg * nunit[i] == dmg_max and effective_pow[j] > pow_max) ini_max = -1;
+
+			jmax = j;
+			dmg_max = dmg * nunit[i];
+			pow_max = effective_pow[j];
+			ini_max = initiative[j];
+		}
+		attacks[i] = jmax;  // unit i attacks unit jmax
+		if (jmax >= 0) has_been_selected[jmax] = true;
+	}
+	//println("attacks = ", attacks);
+	//println("dmgs = ", dmgs);
+
+	// Attack phase
+
+	// Attacking has a different order than selection
+	idx = sort_index(initiative);  // ascending
+	idx = idx[ngroup-1: -1: -1];   // reverse
+	//println("initiative (sorted) = ", initiative[idx]);
+
+	let sum_kill = 0;
+	for ii in [0: ngroup]
+	{
+		let i = idx[ii];  // in descending pow order
+		if (nunit[i] <= 0) continue;
+
+		let j = attacks[i];
+		if (j < 0) continue;
+
+		let nkill = min(dmgs[i,j] * nunit[i] / hit_points[j], nunit[j]);
+		//println("nkill = ", nkill);
+		nunit[j] -= nkill;
+		sum_kill += nkill;
+	}
+
+	// Has any army lost all its units?
+	if all(nunit[0: ngroup/2] <= 0)      { println("infection wins"); break; }
+	if all(nunit[ngroup/2: ngroup] <= 0) { println("immune system wins"); winner = "immune"; break; }
+
+	if (sum_kill == 0) { println("DRAW!  Nobody can win"); println("dmgs = ", dmgs); break; }
+
+	}
+
+	sum_ = sum(nunit);
+	println("nunit = ", nunit);
+	println("sum_  = ", sum_);
+
+	//println("sum immune = ", sum(nunit([0: ngroup/2])));  // TODO: confusing err message. can it be improved?
+	println("sum immune = ", sum(nunit[0: ngroup/2]));
+
+	if (winner == "immune") break;
+
+	println();
+	}
+
+	//****************
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2018/24");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 18346:8698
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
