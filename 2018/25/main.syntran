@@ -1,0 +1,95 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let p = read_i32_mat(filename);
+	let np = i32(size(p, 1));
+	println("np = ", np);
+	println("p = ", p);
+
+	// Build adjacency table
+	let NADJ_CAP = 32;
+	let adj = [-1; NADJ_CAP, np];
+	let nadj = [0; np];
+
+	for i in [0: np]
+	for j in [0: np]
+		if sum(abs(p[:,i] - p[:,j])) <= 3
+		{
+			// points i and j are in the same constellation
+
+			adj[ nadj[i], i ] = j;
+			nadj[i] += 1;
+
+			// Does symmetry/directedness matter?
+			adj[ nadj[j], j ] = i;
+			nadj[j] += 1;
+		}
+
+	// DFS from each point to count constellations
+	let nconst = 0;
+	let visited = [false; np];
+	for i in [0: np]
+	{
+		if (visited[i]) continue;
+		nconst += 1;
+		dfs(i, &adj, &nadj, &visited);
+	}
+	sum_ = nconst;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn dfs(i: i32, adj: &[i32; :,:], nadj: &[i32; :], visited: &[bool; :])
+{
+	if (visited[i]) return;
+	visited[i] = true;
+	for j in adj[ 0: nadj[i], i ]
+		dfs(j, &adj, &nadj, &visited);
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2018/25");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 386:
+	p1 = part1();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

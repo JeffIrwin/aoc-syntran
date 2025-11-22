@@ -1,0 +1,177 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let np = countln_(filename);
+	let p = [0; 3, np];
+	let f = open(filename, "r");
+	for i in [0: np]
+	{
+		let str_ = readln(f);
+		//println("str_ = ", str_);
+		p[:,i] = read_mi32s(str_);
+	}
+	close(f);
+	//println("p = ", p);
+
+	let v = [0; 3, np];
+
+	let ntime = 1000;
+	for it in [0: ntime]
+	{
+		for i0 in [0: np]
+		for i1 in [0: np]
+		for id in [0: 3]
+		{
+			// Apply "gravity"
+			v[id, i0] += sign_( p[id, i1] - p[id, i0] );
+		}
+		//println("v = ", v);
+
+		// Update positions
+		p += v;
+
+		// "Energy"
+		let energy = 0;
+		for i in [0: np]
+			energy += sum(abs(p[:,i])) * sum(abs(v[:,i]));
+		//sum_ = sum(abs(p)) + sum(abs(v));
+		sum_ = energy;
+
+		//println("p = ", p);
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let np = countln_(filename);
+	let p = [0; 3, np];
+	let f = open(filename, "r");
+	for i in [0: np]
+	{
+		let str_ = readln(f);
+		//println("str_ = ", str_);
+		p[:,i] = read_mi32s(str_);
+	}
+	close(f);
+	//println("p = ", p);
+
+	// Backup initial state
+	let p0 = p;
+
+	// TODO: do we need offset of cycle too?
+	let cycles = [0'i64; 3];
+
+	for id_nonzero in [0: 3]
+	{
+		p = 0;
+		p[id_nonzero, :] = p0[id_nonzero, :];
+
+		//let idx = sort_index(p[id_nonzero, :]);
+		let idx = [0; np];
+
+		let pp = p;  // p "previous". i would use p0 but that's already used :(
+
+		let v = [0; 3, np];
+		let a = [0; 3, np];
+		let seen = new_dict_i64();
+		let it = 0;
+		while true
+		{
+			//println("it = ", it);
+			let key = str(p) + ":" + str(v);
+			let last_seen = get_dict_i64(&seen, key);
+			if last_seen >= 0
+			{
+				println("Seen state before at step ", last_seen);
+				cycles[id_nonzero] = it;
+				break;
+			}
+			set_dict_i64(&seen, key, i64(it));
+
+			let idx0 = idx;
+			idx = sort_index(p[id_nonzero, :]);
+			println("idx = ", idx);
+
+			if any(idx != idx0) or
+				any(p[id_nonzero, 0: np-1] == p[id_nonzero, 1: np]) or
+				any(pp[id_nonzero, 0: np-1] == pp[id_nonzero, 1: np])
+			{
+				a = 0;
+				for i0 in [0: np]
+				for i1 in [0: np]
+				for id in [0: 3]
+				{
+					// Apply "gravity"
+					//v[id, i0] += sign_( p[id, i1] - p[id, i0] );
+					a[id, i0] += sign_( p[id, i1] - p[id, i0] );
+				}
+			}
+			//println("v = ", v);
+
+			// Update velocities
+			v += a;
+
+			// Update positions
+			pp = p;
+			p += v;
+
+			//println("p = ", p);
+			it += 1;
+		}
+	}
+	println("cycles = ", cycles);
+	println("lcm64 = ", lcm64(lcm64(cycles[0], cycles[1]), cycles[2]));
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2019/12");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

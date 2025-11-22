@@ -1,0 +1,193 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): i64
+{
+	let sum_ = 0'i64;
+
+	let ninstrs = countln_(filename);
+
+	let instrs = [""; ninstrs];
+	let arg0s  = [""; ninstrs];
+	let arg1s  = [""; ninstrs];
+
+	// Part 2 takes 2 minutes to run.  I guess a dictionary was a bad choice
+	// although it simplifies getting/setting.  An array would have worked, or
+	// the usual if/else
+
+	let reg_keys = "abcd";
+	let regs = [0; 4];
+	//let regs = new_dict_i64();
+	//set_dict_i64(&regs, "a", 0'i64);
+	//set_dict_i64(&regs, "b", 0'i64);
+	//set_dict_i64(&regs, "c", 1'i64);
+	//set_dict_i64(&regs, "d", 0'i64);
+
+	// reg a starts at 7
+	regs[0] = 7;
+	//regs[0] = 12; // part 2
+
+	// By watching the logs of the register printouts, I figured out that there
+	// were two parts of the program.  The first part calculates the factorial
+	// of the input (7), which is 5040
+	//
+	// The second part of the program adds 7533 to the first part of the
+	// program, i.e. 5040 + 7533 == 12573
+	//
+	// So the solution to part2 is factorial(12) + 7533 == 479009133
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		instrs[i] = words[0];
+		arg0s [i] = words[1];
+		if size(words, 0) >= 3
+			arg1s [i] = words[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("arg1s = ", arg1s);
+
+	let iptr = 0;
+	while iptr < ninstrs
+	{
+		//println("iptr = ", iptr);
+		//println("arg0 = ", arg0s[iptr]);
+
+		//println("regs = ", regs);
+
+		let arg0 = 0'i64;
+		let ireg = scan(reg_keys, arg0s[iptr]);
+		//if scan("abcd", arg0s[iptr]) >= 0
+		if ireg >= 0
+			//arg0 = get_dict_i64(&regs, arg0s[iptr]);
+			arg0 = regs[ireg];
+		else
+			arg0 = parse_i64(arg0s[iptr]);
+		//println("arg0 = ", arg0);
+
+		let instr = instrs[iptr];
+		if instr == "cpy"
+		{
+			//set_dict_i64(&regs, arg1s[iptr], arg0);
+			ireg = scan(reg_keys, arg1s[iptr]);
+			regs[ireg] = arg0;
+		}
+		else if instr == "inc"
+		{
+			if (ireg >= 0) regs[ireg] += 1;
+			//arg0 += 1;
+			//set_dict_i64(&regs, arg0s[iptr], arg0);
+		}
+		else if instr == "dec"
+		{
+			if (ireg >= 0) regs[ireg] -= 1;
+			//arg0 -= 1;
+			//set_dict_i64(&regs, arg0s[iptr], arg0);
+		}
+		else if instr == "jnz"
+		{
+			if arg0 != 0
+			{
+				//let arg1 = parse_i64(arg1s[iptr]);
+				let arg1 = 0'i64;
+				let ireg = scan(reg_keys, arg1s[iptr]);
+				if ireg >= 0
+					arg1 = regs[ireg];
+				//if scan("abcd", arg1s[iptr]) >= 0
+				//	arg1 = get_dict_i64(&regs, arg1s[iptr]);
+				else
+					arg1 = parse_i64(arg1s[iptr]);
+				iptr += arg1;
+				continue;
+			}
+		}
+		else if instr == "tgl"
+		{
+			//println("tgl");
+			let itgl = iptr + arg0;
+			if itgl < 0 or itgl >= ninstrs
+			{
+				iptr += 1;
+				continue;
+			}
+
+			let tgl_instr = instrs[itgl];
+			if     tgl_instr  == "inc"
+				instrs[itgl]   = "dec";
+			else if tgl_instr == "dec"
+				instrs[itgl]   = "inc";
+			else if tgl_instr == "cpy"
+				instrs[itgl]   = "jnz";
+			else if tgl_instr == "jnz"
+				instrs[itgl]   = "cpy";
+			else if tgl_instr == "tgl"
+				instrs[itgl]   = "inc";
+		}
+		iptr += 1;
+	}
+	//sum_ = get_dict_i64(&regs, "a");
+	sum_ = regs[0];
+
+	println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): i64
+{
+	let p1 = part1();
+	let p2 = p1 - factorial(7) + factorial(12);
+	println("part 2 = ", p2);
+	return p2;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/23");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = str(part1());
+	p2 = str(part2());
+
+	//p2 = part2(); // TODO: at least print the answer:  `product([1: 12+1]) + 7533;`
+	//                 TODO: get the magic number as part1() - factorial(7)
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -1,0 +1,12 @@
+
+ syntran 0.0.62
+ https://github.com/JeffIrwin/syntran
+
+ Interpreting file "main.syntran"
+
+Starting AOC syntran main 2017/23
+part 1 = 6241
+part 2 = 909
+Ending AOC syntran main
+
+     6241:909

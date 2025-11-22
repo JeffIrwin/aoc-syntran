@@ -1,0 +1,196 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS = [
+	 1,  0,  // right
+	 0, -1,  // up
+	-1,  0,  // left
+	 0,  1   // down
+	 ;
+	 2, NDIRS
+];
+let RIGHT = 0;  // order matters to guard against going backwards
+let UP    = 1;
+let LEFT  = 2;
+let DOWN  = 3;
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g0 = read_char_mat(filename);
+	print_char_mat(&g0);
+
+	let nx0 = size(g0, 0);
+	let ny0 = size(g0, 1);
+	//println("nx0, ny0 = ", [nx0, ny0]);
+
+	let HCAP = 256;
+	//HCAP = 32;
+
+	let CAP = 2 * HCAP + 1;
+
+	let g = ["x"; CAP, CAP];
+
+	//g[HCAP - nx0/2 - 1: HCAP + nx0/2, HCAP - ny0/2 - 1: HCAP + ny0/2] = g0;
+	g[HCAP - nx0/2: HCAP + nx0/2 + 1, HCAP - ny0/2: HCAP + ny0/2 + 1] = g0;
+
+	//print_char_mat(&g);
+
+	let x = HCAP;
+	let y = HCAP;
+	let dir = UP;
+
+	for k in [0: 10_000]
+	{
+		let c = g[x, y];
+		if c == "#"
+		{
+			dir = pmod(dir - 1, NDIRS);
+			g[x, y] = ".";
+		}
+		else
+		{
+			dir = pmod(dir + 1, NDIRS);
+			g[x, y] = "#";
+			sum_ += 1;
+		}
+		x += DIRS[0, dir];
+		y += DIRS[1, dir];
+
+		if not in_bounds([0,0], [x,y], [CAP, CAP])
+		{
+			println("Error: grid capacity overflow!");
+			exit(-1);
+		}
+
+		//println("k = ", k);
+		//println("dir = ", dir);
+		//println("x, y = ", [x, y]);
+		//print_char_mat(&g);
+
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g0 = read_char_mat(filename);
+	print_char_mat(&g0);
+
+	let nx0 = size(g0, 0);
+	let ny0 = size(g0, 1);
+	//println("nx0, ny0 = ", [nx0, ny0]);
+
+	let HCAP = 256;
+	//HCAP = 32;
+
+	let CAP = 2 * HCAP + 1;
+
+	let g = ["x"; CAP, CAP];
+
+	g[HCAP - nx0/2: HCAP + nx0/2 + 1, HCAP - ny0/2: HCAP + ny0/2 + 1] = g0;
+
+	//print_char_mat(&g);
+
+	let x = HCAP;
+	let y = HCAP;
+	let dir = UP;
+
+	//for k in [0: 100]
+	for k in [0: 10_000_000]
+	{
+		if (k % 100_000 == 0) println("k = ", k);
+
+		let c = g[x, y];
+		if c == "#"
+		{
+			// infected
+			dir = pmod(dir - 1, NDIRS);
+			g[x, y] = "f";
+		}
+		else if c == "w"
+		{
+			// weakened
+			// no dir change
+
+			sum_ += 1;
+			g[x, y] = "#";
+		}
+		else if c == "f"
+		{
+			// flagged
+			dir = pmod(dir + 2, NDIRS);
+			g[x, y] = ".";
+		}
+		else
+		{
+			// clean
+			dir = pmod(dir + 1, NDIRS);
+			g[x, y] = "w";
+		}
+		x += DIRS[0, dir];
+		y += DIRS[1, dir];
+
+		if not in_bounds([0,0], [x,y], [CAP, CAP])
+		{
+			println("Error: grid capacity overflow!");
+			exit(-1);
+		}
+
+		//println("k = ", k);
+		//println("dir = ", dir);
+		//println("x, y = ", [x, y]);
+		//print_char_mat(&g);
+
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/22");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

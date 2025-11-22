@@ -1,0 +1,97 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+#include("../../knot_hash.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let n = 256;
+if ifile == 0
+	n = 5;
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	//println("n = ", n);
+
+	let mat = read_i32_mat(filename);
+	let v = mat[:,0];
+	//println("v = ", v);
+
+	let list = [0: n];
+	//println("list = ", list);
+
+	let i = 0;
+	let skip_size = 0;
+	for len_ in v
+	{
+		let slice = list[ (i + [0: len_]) % n ];
+		//println("slice = ", slice);
+
+		slice = slice[size(slice,0) - 1: -1: -1];  // reverse
+		//println("slice = ", slice);
+
+		list[ (i + [0: len_]) % n ] = slice;
+		//println("list = ", list);
+		//println();
+
+		i += len_ + skip_size;
+		skip_size += 1;
+		i %= n;
+	}
+	sum_ = list[0] * list[1];
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	close(f);
+
+	let hex_digest = knot_hash_hex(str_);
+
+	println("part 2 = ", hex_digest);
+	return hex_digest;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/10");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

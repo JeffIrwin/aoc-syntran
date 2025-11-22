@@ -1,0 +1,161 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	 0, -1, // north
+	-1,  0, // west
+	 0,  1, // south
+	 1,  0  // east
+	 ;
+	 2, NDIRS
+];
+let NORTH = 0;
+let WEST  = 1;
+let SOUTH = 2;
+let EAST  = 3;
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let words = split_(str_, ", ");
+
+	let x   = 0;
+	let y   = 0;
+	let dir = NORTH;
+	for word in words
+	{
+		let blocks = read_i32(word);
+		//println("blocks = ", blocks);
+
+		if word[0] == "L"
+			dir += 1;
+		else
+			dir -= 1;
+		dir = pmod(dir, NDIRS);
+		//println("dir = ", dir);
+
+		x += blocks * DIRS[0, dir];
+		y += blocks * DIRS[1, dir];
+	}
+	sum_ = abs(sum([x, y]));
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = -1'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let words = split_(str_, ", ");
+
+	let SHIFT = 500;
+	let visited = new_dict_i64();
+	//let visited = [false; 2*SHIFT, 2*SHIFT];
+
+	let x   = 0;
+	let y   = 0;
+	let dir = NORTH;
+	for word in words
+	{
+		let blocks = read_i32(word);
+
+		//println();
+		//println("blocks = ", blocks);
+		//println("x, y = ", str([x, y]));
+
+		if word[0] == "L"
+			dir += 1;
+		else
+			dir -= 1;
+		dir = pmod(dir, NDIRS);
+		//println("dir = ", dir);
+
+		let x0 = x;
+		let y0 = y;
+
+		x += blocks * DIRS[0, dir];
+		y += blocks * DIRS[1, dir];
+
+		if (x != x0)
+		{
+			for i in [x0: DIRS[0,dir]: x]
+			{
+				if (get_dict_i64(&visited, str([i, y])) == 1) sum_ = abs(sum([i, y]));
+				if (sum_ >= 0) break;
+				set_dict_i64(&visited, str([i, y]), 1'i64);
+			}
+			if (sum_ >= 0) break;
+		}
+		else
+		{
+			for i in [y0: DIRS[1,dir]: y]
+			{
+				if (get_dict_i64(&visited, str([x, i])) == 1) sum_ = abs(sum([x, i]));
+				if (sum_ >= 0) break;
+				set_dict_i64(&visited, str([x, i]), 1'i64);
+			}
+			if (sum_ >= 0) break;
+		}
+		//if (get_dict_i64(&visited, str([x, y])) == 1) sum_ = abs(sum([x, y]));
+		//if (sum_ >= 0) break;
+		//set_dict_i64(&visited, str([x, y]), 1'i64);
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/1");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -1,0 +1,130 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let nx = 25;
+	let ny = 6;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	close(f);
+
+	let nz = len(str_) / (nx * ny);
+	println("nz = ", nz);
+
+	let p = [0; nx, ny, nz];
+	let k = 0;
+	for z in [0: nz]
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		p[x,y,z] = parse_i32(str_[k]);
+		k += 1;
+	}
+	//println("p = ", p);
+
+	let min_nzeros = 2_000_000_000;
+	for z in [0: nz]
+	{
+		let nzeros = count(p[:,:,z] == 0);
+		if nzeros < min_nzeros
+		{
+			sum_ = count(p[:,:,z] == 1) * count(p[:,:,z] == 2);
+			min_nzeros = nzeros;
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let nx = 25;
+	let ny = 6;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	close(f);
+
+	let nz = len(str_) / (nx * ny);
+	println("nz = ", nz);
+
+	let p = [0; nx, ny, nz];
+	let k = 0;
+	for z in [0: nz]
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		p[x,y,z] = parse_i32(str_[k]);
+		k += 1;
+	}
+	//println("p = ", p);
+
+	// 0 is black, 1 is white, and 2 is transparent.
+	let pc = [" "; nx, ny];
+	//let pc = [0; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+	for z in [0: nz]
+	{
+		if p[x,y,z] != 2
+		{
+			//pc[x,y] = p[x,y,z];
+			if p[x,y,z] == 1
+				pc[x,y] = "#";
+			break;  // break inner z loop (continue x and y loops)
+		}
+	}
+	//println("pc = ", pc);
+	print_char_mat(&pc);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2019/8");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

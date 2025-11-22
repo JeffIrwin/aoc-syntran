@@ -1,0 +1,96 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let v = parse_i32_delim(str_, " " + char(9));
+		//println("v = ", v);
+		//println("min = ", minval(v));
+		//println("max = ", maxval(v));
+
+		sum_ += maxval(v) - minval(v);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let v = parse_i32_delim(str_, " " + char(9));
+
+		//sum_ += maxval(v) - minval(v);
+		for v0 in v
+		for v1 in v
+		{
+			if v0 != v1 and v0 % v1 == 0
+				sum_ += v0 / v1;
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/2");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

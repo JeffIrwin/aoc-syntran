@@ -1,0 +1,230 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = -1'i64;
+
+	let NCAP = 256;
+
+	//let processed = [false; NCAP]; // unused
+
+	let vals = [-1; 2, NCAP];
+	let nvals = [0; NCAP];
+
+	let los = [-1; NCAP];
+	let his = [-1; NCAP];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		if starts_with_(str_, "value")
+		{
+			let val = nums[0];
+			let bot = nums[1];
+
+			vals[ nvals[bot], bot ] = val;
+			nvals[bot] += 1;
+		}
+		if starts_with_(str_, "bot")
+		{
+			let bot = nums[0];
+			let lo  = nums[1];
+			let hi  = nums[2];
+
+			let words = split_(str_, " ");
+			if (words[ 5] == "output") lo = -lo; // Mark outputs with a negative dest
+			if (words[10] == "output") hi = -hi;
+
+			los[bot] = lo;
+			his[bot] = hi;
+		}
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+	//println("los = ", los);
+	//println("his = ", his);
+
+	while true
+	{
+		for i in [0: NCAP]
+		{
+			//println("i = ", i);
+			//if (nvals[i] == 2) exit(0);
+
+			if (nvals[i] != 2) continue;
+			nvals[i] = 0;
+
+			let lo = min(vals[0,i], vals[1,i]);
+			let hi = max(vals[0,i], vals[1,i]);
+
+			if lo == 17 and hi == 61
+			{
+				sum_ = i;
+				break;
+			}
+			if los[i] >= 0
+			{
+				//vals[ nvals[bot], bot ] = val;
+				//nvals[bot] += 1;
+				vals[ nvals[los[i]], los[i] ] = lo;
+				nvals[los[i]] += 1;
+			}
+			if his[i] >= 0
+			{
+				vals[ nvals[his[i]], his[i] ] = hi;
+				nvals[his[i]] += 1;
+			}
+		}
+		if (sum_ >= 0) break;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = -1'i64;
+
+	let NCAP = 256;
+
+	let vals = [-1; 2, NCAP];
+	let nvals = [0; NCAP];
+
+	let los  = [-1; NCAP];
+	let his  = [-1; NCAP];
+	let outs = [-1; NCAP];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		if starts_with_(str_, "value")
+		{
+			let val = nums[0];
+			let bot = nums[1];
+
+			vals[ nvals[bot], bot ] = val;
+			nvals[bot] += 1;
+		}
+		if starts_with_(str_, "bot")
+		{
+			let bot = nums[0];
+			let lo  = nums[1];
+			let hi  = nums[2];
+
+			let words = split_(str_, " ");
+			if (words[ 5] == "output") lo += NCAP; // Mark outputs with a large dest
+			if (words[10] == "output") hi += NCAP;
+
+			//// Can't use negatives bc bot 0 and output 0 are both valid
+			//if (words[ 5] == "output") lo = -lo; // Mark outputs with a negative dest
+			//if (words[10] == "output") hi = -hi;
+
+			los[bot] = lo;
+			his[bot] = hi;
+		}
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+	//println("los = ", los);
+	//println("his = ", his);
+
+	while true
+	{
+		for i in [0: NCAP]
+		{
+			//println("i = ", i);
+			//if (nvals[i] == 2) exit(0);
+
+			if (nvals[i] != 2) continue;
+			nvals[i] = 0;
+
+			let lo = min(vals[0,i], vals[1,i]);
+			let hi = max(vals[0,i], vals[1,i]);
+
+			if los[i] < NCAP
+			{
+				vals[ nvals[los[i]], los[i] ] = lo;
+				nvals[los[i]] += 1;
+			}
+			else
+			{
+				outs[ los[i]-NCAP ] = lo;
+			}
+
+			if his[i] < NCAP
+			{
+				vals[ nvals[his[i]], his[i] ] = hi;
+				nvals[his[i]] += 1;
+			}
+			else
+			{
+				outs[ his[i]-NCAP ] = hi;
+			}
+		}
+		if all(outs[0:3] >= 0)
+		{
+			sum_ = product(outs[0:3]);
+			break;
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/10");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

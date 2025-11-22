@@ -1,0 +1,253 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let n = parse_i32(readln(f));
+	//println("n = ", n);
+	close(f);
+
+	// Doubly-linked list (0-based indexing)
+	//let v = [0: n]; // 
+	let il = [[1: n], [0]];
+	let ir = [[n], [0: n-1]];
+	//println("il = ", il);
+	//println("ir = ", ir);
+
+	// 1-based prompt:
+	//
+	//      1
+	//    5   2
+	//     4 3
+	//    Elf 1 takes Elf 2's present.
+	//    Elf 2 has no presents and is skipped.
+	//    Elf 3 takes Elf 4's present.
+	//    Elf 4 has no presents and is also skipped.
+	//    Elf 5 takes Elf 1's two presents.
+	//    Neither Elf 1 nor Elf 2 have any presents, so both are skipped.
+	//    Elf 3 takes Elf 5's three presents.
+
+	let i = 0;
+	while true
+	{
+
+		// It's elf i's turn.  They take presents from elf at il[i]
+
+		// Remove il[i] from list
+
+		//let tmp = il[i];
+		//il[i] = il[tmp];
+		//ir[ il[tmp] ] = i;
+		il[i] = il[ il[i] ];
+		ir[ il[i] ] = i;
+
+		// Next step
+		i = il[i];
+
+		//println();
+		//println("il = ", il);
+		//println("ir = ", ir);
+		//exit(0);
+
+		if il[i] == i and ir[i] == i
+		{
+			sum_ = i + 1;  // convert 0 to 1-based index
+			break;
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let n = parse_i32(readln(f));
+	//println("n = ", n);
+	close(f);
+
+	// Doubly-linked list (0-based indexing)
+	let il = [[1: n], [0]];
+	let ir = [[n], [0: n-1]];
+	//println("il = ", il);
+	//println("ir = ", ir);
+
+	let i = 0;     // starting elf
+	let io = n/2;  // opposite from starting elf
+	while true
+	{
+		// It's elf i's turn.  They take presents from elf at io
+
+		// Remove io from list
+		il[ ir[io] ] = il[io];
+		ir[ il[io] ] = ir[io];
+
+		// Next step
+
+		// i advances left by 1
+		i = il[i]; 
+
+		// When there is an even number of elves, io advances left by 1.  When
+		// odd, it advance left by 2.  This is the key insight for part 2 that
+		// still allows us to find the opposite elf quickly in a linked list
+		// (without traversing half the length of the list)
+		io = il[io];
+		if (n % 2 == 1) io = il[io];
+
+		// Elf count decreases
+		n -= 1;
+
+		//println();
+		//println("il = ", il);
+		//println("ir = ", ir);
+		//exit(0);
+
+		// If `i` is to the left and right of itself, it's the only thing
+		// remaining in the list
+		if il[i] == i and ir[i] == i
+		{
+			sum_ = i + 1;  // convert 0 to 1-based index
+			break;
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn part2array(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let n = parse_i32(readln(f));
+	//n = 1000;
+	println("n = ", n);
+	close(f);
+
+	// Just use an array and shift everything, idfk
+	//
+	// I made several optimizations here:
+	// - shift the smaller part of the array: if the removed element is in the
+	//   first half, shift the beginning part right.  if it's in the last half,
+	//   shift the ending part left
+	// - wrap the list in the first step so that the removed element is 3/4 of
+	//   the way through it.  this avoids the worst-case when the removed
+	//   element is exactly at the midpoint until the array is smaller
+	// - i think i have some off-by-one errors in here
+	//
+	// Eventually I figured out how to do this with a linked list
+
+	//let v = [0: n];
+	//let i = 0;
+
+	//let v = [[n/2: n], [0: n/2]];
+	//let i = n/2 + 1;
+	let v = [[3*n/4: n], [0: 3*n/4]];
+	let i = 1*n/4 + 1;
+
+	let lbound = 0;
+	let k = 0;
+	let kperiod = 1_000;
+	while true
+	{
+		let do_log = k % kperiod == 0;
+
+		// It's elf i's turn.  They take presents from opposite elf `io`
+		//let io = (i + n/2) % n;
+		let io = i + (n - lbound) / 2;
+		if (io >= n) io -= (n - lbound);
+
+		//println("removing ", v[io]);
+
+		// Remove io from list, shift over everything after it
+		//if io > n/2
+		if (do_log) println("diffs = ", [(n - io), (io - lbound)]);
+		if (n - io) < (io - lbound)
+		{
+			// Shift right end to the left
+			v[io: n-1] = v[io+1: n];
+			n -= 1;
+
+			if (i < io) i += 1;
+		}
+		else
+		{
+			// Shift left end to the right
+			v[lbound+1: io+1] = v[lbound: io];
+			lbound += 1;
+
+			if (i < io) i += 2;
+			else        i += 1;
+		}
+
+		////println("v = ", v[0: n-1]);
+		//println("v = ", v[lbound: n]);
+		if (do_log) println("lb, ub, i = ", [lbound, n, i]);
+		//println();
+
+		//if (i < io) i += 1;
+		////i %= n;
+		////if (i >= n) i = lbound;
+		if (i >= n) i -= (n - lbound);
+
+		//if n == 1
+		if lbound + 1 == n
+		{
+			//sum_ = v[0] + 1;
+			sum_ = v[lbound] + 1;
+			break;
+		}
+		k += 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/19");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -1,0 +1,137 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let disk_len = 20;
+if ifile == 1
+{
+	disk_len = 272;
+}
+
+//==============================================================================
+
+fn not_str(in_: str): str
+{
+	// Character-wise complement 0 to 1 and vice-versa
+	let out_ = in_;
+	for i in [0: len(in_)]
+		if in_[i] == "0"
+			out_[i] = "1";
+		else
+			out_[i] = "0";
+	return out_;
+}
+
+fn part1(): str
+{
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	//println(reverse_str(str_));
+
+	// Apply dragon-curve
+	while len(str_) < disk_len
+		str_ = str_ + "0" + not_str(reverse_str(str_));
+	println("str_ = ", str_);
+
+	// Trim
+	str_ = str_[0: disk_len];
+	println("str_ = ", str_);
+
+	// Get checksum
+	let checksum = "";
+	while len(str_) % 2 == 0
+	{
+		checksum = str_;
+		for i in [0: 2: len(str_)]
+			if str_[i] == str_[i+1]
+				checksum[i/2] = "1";
+			else
+				checksum[i/2] = "0";
+		str_ = checksum[0: len(str_) / 2];
+	}
+	checksum = str_;
+
+	println("part 1 = ", checksum);
+	return checksum;
+}
+
+fn part2(): str
+{
+	disk_len = 35_651_584;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	// Apply dragon-curve
+	while len(str_) < disk_len
+	{
+		println("len = ", len(str_));
+		str_ = str_ + "0" + not_str(reverse_str(str_));
+	}
+	//println("str_ = ", str_);
+
+	// Trim
+	str_ = str_[0: disk_len];
+	//println("str_ = ", str_);
+
+	// Get checksum
+	let checksum = "";
+	while len(str_) % 2 == 0
+	{
+		checksum = str_;
+		for i in [0: 2: len(str_)]
+			if str_[i] == str_[i+1]
+				checksum[i/2] = "1";
+			else
+				checksum[i/2] = "0";
+		str_ = checksum[0: len(str_) / 2];
+	}
+	checksum = str_;
+
+	println("part 2 = ", checksum);
+	return checksum;
+}
+
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/16");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

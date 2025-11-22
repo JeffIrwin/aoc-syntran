@@ -1,0 +1,343 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let elems = [
+	"strontium",
+	"plutonium",
+	"thulium",
+	"ruthenium",
+	"curium"
+];
+let elem_inits = "SPTRC";
+if ifile == 0
+{
+	elems = [
+		"hydrogen",
+		"lithium"
+	];
+	elem_inits = "HL";
+}
+
+//==============================================================================
+
+fn pretty_print(gens: [i32; :], mics: [i32; :], elev: i32, nfloors: i32)
+{
+	let nelems = size(elems, 0);
+
+	// Pretty-print state:
+	//
+	//   F4 .  .  .  .  .  
+	//   F3 .  .  .  LG .  
+	//   F2 .  HG .  .  .  
+	//   F1 E  .  HM .  LM
+	//
+	for i in [nfloors-1: -1: -1]
+	{
+		let line = "";
+		line += "F" + str(i) + " ";  // 0-based floor index
+
+		if (elev == i) line += "E  ";
+		else           line += ".  ";
+
+		for j in [0: nelems]
+		{
+			if (gens[j] == i) line += elem_inits[j] + "G ";
+			else              line += ".  ";
+
+			if (mics[j] == i) line += elem_inits[j] + "M ";
+			else              line += ".  ";
+		}
+
+		println(line);
+	}
+	println();
+	return;
+}
+
+let QCAP = 1024 * 1024 * 4;
+fn check_qcap(qe: i32)
+{
+	if qe >= QCAP
+	{
+		println("Error: queue overflow!");
+		exit(-1);
+	}
+	return;
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let nelems = size(elems, 0);
+	let nfloors = countln_(filename);
+
+	// Floor level of each microchip and generator (0-based)
+	let mics = [-1; nelems];
+	let gens = [-1; nelems];
+
+	println("elems = ", elems);
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let floor = 0;
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		for i in [0: nelems]
+		{
+			if index_(str_, elems[i] + " generator") >= 0
+				gens[i] = floor;
+			if index_(str_, elems[i] + "-compatible microchip") >= 0
+				mics[i] = floor;
+		}
+
+		floor += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("gens = ", gens);
+	println("mics = ", mics);
+
+	let dist = 0;  // search distance, aka number of steps
+	let elev = 0;  // elevator starts on first floor (0)
+
+	// State:
+	// - 0: nelems:  gens
+	// - nelems: 2*nelems: mics
+	// - 2*nelems:  dist
+	// - 2*nelems+1:  elev
+	let nstate = 2 * nelems + 2;
+
+	// Do a BFS using a queue
+	let q = [-1; nstate, QCAP];
+	let qs = 0;
+	let qe = 0;
+
+	// Push initial state
+	q[:, qe] = [gens, mics, [dist], [elev]];
+	qe += 1;
+	//println("q[:,0] = ", q[:,0]);
+
+	let visited = new_dict_i64();
+	let dist_max = -1;
+
+	while qs < qe
+	{
+		// Pop
+		let gens0 = q[0: nelems, qs];
+		let mics0 = q[nelems: 2*nelems, qs];
+		let dist0 = q[2*nelems, qs];
+		let elev0 = q[2*nelems+1, qs];
+		qs += 1;
+
+		// Use a dict to prevent revisiting loops.  Not strictly required but
+		// could be a major perf optimization
+		let key = str(gens0, mics0, elev0); // does not include dist0
+		if (get_dict_i64(&visited, key) == 1) continue;
+		set_dict_i64(&visited, key, 1'i64);
+
+		//println("gens0 = ", gens0);
+		//println("mics0 = ", mics0);
+		//println("dist0 = ", dist0);
+		//println("elev0 = ", elev0);
+		//println();
+		//pretty_print(gens0, mics0, elev0, nfloors);
+		if (dist0 > dist_max)
+		{
+			println("dist0 = ", dist0);
+			dist_max = dist0;
+		}
+
+		if all(gens0 == nfloors-1) and all(mics0 == nfloors-1)
+		{
+			sum_ = dist0;
+			break;
+		}
+
+		let fried = false;
+		for i in [0: nelems]
+		{
+			let mlev = mics0[i];
+			if (gens0[i] == mlev) continue; // safe since microchip is with its own generator
+			fried = any(gens0 == mlev);  // fried if any other gen is on same floor level
+			if (fried) break;
+		}
+		//println("fried = ", fried);
+		if (fried) continue;
+
+		let dist = dist0 + 1;
+
+		//****************
+		// Push every single gen on elev0 to stack
+		for i in [0: nelems]
+		{
+			if (gens0[i] != elev0) continue;
+			let gens = gens0;
+
+			gens[i] = gens0[i] + 1; // up one level
+			if elev0 + 1 < nfloors
+			{
+				// TODO: would it help at all to check visited here?
+				q[:, qe] = [gens, mics0, [dist], [elev0+1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+
+			gens[i] = gens0[i] - 1; // down one level
+			if elev0 - 1 >= 0
+			{
+				q[:, qe] = [gens, mics0, [dist], [elev0-1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+		}
+
+		//****************
+		// Push every single mic on elev0 to stack
+		for i in [0: nelems]
+		{
+			if (mics0[i] != elev0) continue;
+			let mics = mics0;
+
+			mics[i] = mics0[i] + 1; // up one level
+			if elev0 + 1 < nfloors
+			{
+				q[:, qe] = [gens0, mics, [dist], [elev0+1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+
+			mics[i] = mics0[i] - 1; // down one level
+			if elev0 - 1 >= 0
+			{
+				q[:, qe] = [gens0, mics, [dist], [elev0-1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+		}
+
+		//****************
+		// Push every pair of gens on elev0 to stack
+		for i0 in [0: nelems]
+		for i1 in [0: nelems]
+		{
+			if (gens0[i0] != elev0) continue;
+			if (gens0[i1] != elev0) continue;
+			if (i0 == i1) continue; // don't do this for mic/gen combos
+			let gens = gens0;
+
+			gens[i0] = gens0[i0] + 1; // up one level
+			gens[i1] = gens0[i1] + 1; // up one level
+			if elev0 + 1 < nfloors
+			{
+				q[:, qe] = [gens, mics0, [dist], [elev0+1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+
+			gens[i0] = gens0[i0] - 1; // down one level
+			gens[i1] = gens0[i1] - 1; // down one level
+			if elev0 - 1 >= 0
+			{
+				q[:, qe] = [gens, mics0, [dist], [elev0-1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+		}
+
+		//****************
+		// Push every pair of mics on elev0 to stack
+		for i0 in [0: nelems]
+		for i1 in [0: nelems]
+		{
+			if (mics0[i0] != elev0) continue;
+			if (mics0[i1] != elev0) continue;
+			if (i0 == i1) continue; // don't do this for mic/gen combos
+			let mics = mics0;
+
+			mics[i0] = mics0[i0] + 1; // up one level
+			mics[i1] = mics0[i1] + 1; // up one level
+			if elev0 + 1 < nfloors
+			{
+				q[:, qe] = [gens0, mics, [dist], [elev0+1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+
+			mics[i0] = mics0[i0] - 1; // down one level
+			mics[i1] = mics0[i1] - 1; // down one level
+			if elev0 - 1 >= 0
+			{
+				q[:, qe] = [gens0, mics, [dist], [elev0-1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+		}
+
+		//****************
+		// Push every combo of 1 gen and 1 mic on elev0 to stack
+		for ig in [0: nelems]
+		for im in [0: nelems]
+		{
+			if (gens0[ig] != elev0) continue;
+			if (mics0[im] != elev0) continue;
+			//if (i0 == i1) continue; // don't do this for mic/gen combos
+			let gens = gens0;
+			let mics = mics0;
+
+			gens[ig] = gens0[ig] + 1; // up one level
+			mics[im] = mics0[im] + 1; // up one level
+			if elev0 + 1 < nfloors
+			{
+				q[:, qe] = [gens, mics, [dist], [elev0+1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+
+			gens[ig] = gens0[ig] - 1; // up one level
+			mics[im] = mics0[im] - 1; // up one level
+			if elev0 - 1 >= 0
+			{
+				q[:, qe] = [gens, mics, [dist], [elev0-1]];  qe += 1;  // push
+				check_qcap(qe);
+			}
+		}
+		//****************
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/11");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

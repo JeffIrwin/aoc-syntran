@@ -1,0 +1,108 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+#include("../../md5.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let salt = readln(f);
+	close(f);
+	println("salt = ", salt);
+
+	let i = 0;
+	let nkey = 0;
+	while true
+	{
+		if (i % 1_000 == 0) println("i = ", i);
+		let hash = md5(salt + str(i));
+
+		let has_triple = false;
+		let char_ = "z";
+		for k in [0: len(hash) - 2]
+			if hash[k] == hash[k+1] and hash[k] == hash[k+2]
+			{
+				char_ = hash[k];
+				has_triple = true;
+				break;
+			}
+		//if (has_triple) println("hash = ", hash);
+
+		if has_triple
+		{
+			let needle = repeat(char_, 5);
+
+			// This is repeating a lot of work to recalculate hashes that we
+			// will get in the outer loop anyway.  Better to save everything in
+			// an array index mod 1000 (or 1001?) along with which chars are
+			// repeated in them
+			//
+			// Or just save everything in a huge array but risk overflow
+			//
+			// Could probably make this ~4x faster with either caching approach
+
+			for j in [i+1: i+1000]
+			{
+				let hash = md5(salt + str(j));
+				if index_(hash, needle) >= 0
+				{
+					//println("hash 5 = ", hash);
+					println("nkey = ", nkey);
+					nkey += 1;
+					break;
+				}
+			}
+			if nkey == 64
+			{
+				sum_ = i;
+				break;
+			}
+		}
+		i += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/14");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

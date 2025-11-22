@@ -1,0 +1,134 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		//println("words = ", words);
+
+		let has_duplicate = false;
+		let n = size(words, 0);
+		for j in [1: n]
+		for i in [0: j]
+		{
+			has_duplicate = has_duplicate or words[i] == words[j];
+			if (has_duplicate) break;  // beware nested loop
+		}
+		if (not has_duplicate) sum_ += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn bubblesort_chars(s: str): str
+{
+	// Sort the characters alphabetically in a str
+	let n = len(s);
+	for j in [0: n]
+	for i in [1: n-j]
+	{
+		let c0 = s[i-1];
+		let c1 = s[i];
+		if i32(c0) > i32(c1)
+		{
+			//s[[i, i-1]] = s[[i-1, i]];
+			//s[i-1: i+1] = s[i] + s[i-1];
+			//s[i-1: i+1] = s[i: -1: i-2];
+			let tmp = s[i];
+			s[i] = s[i-1];
+			s[i-1] = tmp;
+		}
+	}
+	return s;
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		//println("words = ", words);
+
+		let n = size(words, 0);
+		for i in [0: n]
+		{
+			words[i] = bubblesort_chars(words[i]);
+		}
+		//println("words = ", words);
+		//println();
+
+		let has_duplicate = false;
+		for j in [1: n]
+		for i in [0: j]
+		{
+			has_duplicate = has_duplicate or words[i] == words[j];
+			if (has_duplicate) break;  // beware nested loop
+		}
+		if (not has_duplicate) sum_ += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/4");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

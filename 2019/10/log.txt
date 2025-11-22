@@ -1,0 +1,12 @@
+
+ syntran 0.0.63
+ https://github.com/JeffIrwin/syntran
+
+ Interpreting file "main.syntran"
+
+Starting AOC syntran main 2019/10
+part 1 = 214
+part 2 = 502
+Ending AOC syntran main
+
+     214:502

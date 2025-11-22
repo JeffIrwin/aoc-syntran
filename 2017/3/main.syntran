@@ -1,0 +1,135 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS = [
+	 1,  0,  // right
+	 0, -1,  // up
+	-1,  0,  // left
+	 0,  1   // down
+	 ;
+	 2, NDIRS
+];
+let RIGHT = 0;  // order matters
+let UP    = 1;
+let LEFT  = 2;
+let DOWN  = 3;
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let n = parse_i32(readln(f));
+	close(f);
+
+	let CAP = i32(2.1 * sqrt(1.0 * n)) + 4;
+	//println("CAP = ", CAP);
+	let SHIFT = CAP / 2;
+
+	// I think you could do this without a visited array but it seems
+	// complicated
+	let visited = [false; CAP, CAP];
+
+	//n = 23;
+
+	let x = [0, 0] + SHIFT;  // location of 1
+	let d = RIGHT;
+	for i in [1: n]
+	{
+		visited[x[0], x[1]] = true;
+		//println("x = ", x - SHIFT, " at ", i);
+
+		x += DIRS[:, d];
+
+		// Turn left as soon as that position is not visited
+		let xn = x + DIRS[:, (d+1) % NDIRS];
+		if (not visited[xn[0], xn[1]]) d = (d+1) % NDIRS;
+	}
+	sum_ = abs(x[0] - SHIFT) + abs(x[1] - SHIFT);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let n = parse_i32(readln(f));
+	close(f);
+
+	let CAP = i32(2.1 * sqrt(1.0 * n)) + 4;
+	//println("CAP = ", CAP);
+	let SHIFT = CAP / 2;
+
+	let vals = [0; CAP, CAP];
+
+	let x = [0, 0] + SHIFT;  // location of 1
+	vals[x[0], x[1]] = 1;
+
+	let d = RIGHT;
+	let i = 0;
+	while true
+	{
+		i += 1;
+
+		x += DIRS[:, d];
+		vals[x[0], x[1]] = sum(vals[x[0]-1: x[0]+2, x[1]-1: x[1]+2]);
+		if (vals[x[0], x[1]] > n)
+		{
+			sum_ = vals[x[0], x[1]];
+			break;
+		}
+
+		// Turn left as soon as that position is not visited
+		let xn = x + DIRS[:, (d+1) % NDIRS];
+		if (vals[xn[0], xn[1]] == 0) d = (d+1) % NDIRS;
+	}
+	//println("vals slice = ", vals[SHIFT - 3: SHIFT + 4, SHIFT - 3: SHIFT + 4]);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/3");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

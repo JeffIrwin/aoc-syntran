@@ -1,0 +1,170 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn get_checksum(counts: [i32; :]): str
+{
+	// Checksum calculator based on special-purpose bubble sort
+	let n = i32(size(counts, 0));
+	let idx = [0: n];
+
+	//for i in [0: n]
+	//for j in [0: i-1]
+	//{
+	//	if (counts[idx[j]] < counts[idx[j+1]]) //or (counts[j] == counts[j+1] and 
+	//		idx[[j, j+1]] = idx[[j+1, j]];
+	//}
+
+	// Don't sort the whole counts array, just pick the top 5
+
+	//for j in [0: i-1]
+	//for j in [n-i-2: -1: -1]
+	for i in [0: 5]
+	for j in [n-2: -1: i-1]
+	{
+		if counts[idx[j]] < counts[idx[j+1]]
+			idx[[j, j+1]] = idx[[j+1, j]];
+	}
+
+	//println("counts[idx] = ", counts[idx[0:5]]);
+
+	let checksum = "";
+	for i in [0: 5]
+		checksum += char(idx[i]);
+
+	return checksum;
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let ilast_dash = indexback(str_, "-");
+		let cipher_name = rm_char(str_[0: ilast_dash+1], "-");
+		//println("cipher_name  = ", cipher_name);
+
+		let words = split_(str_, "-[]");
+		let nw = size(words, 0);
+		let section_id = parse_i32(words[nw-2]);
+		let checksum = words[nw-1];
+		//println("section_id   = ", section_id);
+		//println("checksum     = ", checksum);
+
+		let counts = [0; 256];
+		for i in [0: len(cipher_name)]
+		{
+			let char_ = cipher_name[i];
+			counts[i32(char_)] += 1;
+		}
+		//println("counts = ", counts);
+		//println("get_checksum = ", get_checksum(counts));
+
+		if get_checksum(counts) == checksum
+			sum_ += section_id;
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let ilast_dash = indexback(str_, "-");
+		//let cipher_name = rm_char(str_[0: ilast_dash+1], "-");
+		let cipher_name = str_[0: ilast_dash+1];
+		//println("cipher_name  = ", cipher_name);
+
+		let words = split_(str_, "-[]");
+		let nw = size(words, 0);
+		let section_id = parse_i32(words[nw-2]);
+		let checksum = words[nw-1];
+		//println("section_id   = ", section_id);
+		//println("checksum     = ", checksum);
+
+		let plaintext = cipher_name;
+		for i in [0: len(cipher_name)]
+		{
+			let c = cipher_name[i];
+			if not is_alpha(c)
+			{
+				plaintext[i] = " ";
+				continue;
+			}
+			let ic = i32(c) - i32("a");
+			plaintext[i] = char((ic + section_id) % 26 + i32("a"));
+		}
+		//println("plaintext = ", plaintext);
+
+		// Plain text will have trailing spaces
+		if starts_with_(plaintext, "northpole object storage")
+		{
+			sum_ = section_id;
+			break;
+		}
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/4");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

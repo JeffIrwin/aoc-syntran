@@ -1,0 +1,376 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+
+	let instrs = [""; n];
+	let arg0s  = [""; n];
+	let arg1s  = [""; n];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		instrs[i] = words[0];
+		arg0s [i] = words[1];
+		if (size(words, 0) >= 3) arg1s[i] = words[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("arg1s = ", arg1s);
+
+	let vals = [0'i64; 26];
+	let sound = 0'i64;
+
+	let iptr = 0;
+	while true
+	{
+		if (iptr < 0 or iptr >= n) break;
+		//println();
+
+		let val0 = 0'i64;
+		//println("arg0 = ", arg0s[iptr]);
+		if is_alpha(arg0s[iptr])
+			val0 = vals[i32(arg0s[iptr]) - i32("a")];
+		else
+			val0 = parse_i32(arg0s[iptr]);
+		//println("val0 = ", val0);
+
+		let val1 = 0'i64;
+		//println("arg1 = ", arg1s[iptr]);
+		let arg1 = arg1s[iptr];
+		if arg1 != ""
+		{
+			if is_alpha(arg1[0])
+				val1 = vals[i32(arg1) - i32("a")];
+			else
+				val1 = parse_i32(arg1);
+		}
+		//println("val1 = ", val1);
+
+		let instr = instrs[iptr];
+		if instr == "snd"
+		{
+			sound = val0;
+		}
+		else if instr == "set"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] = val1;
+		}
+		else if instr == "add"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] += val1;
+		}
+		else if instr == "mul"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] *= val1;
+		}
+		else if instr == "mod"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] %= val1;
+		}
+		else if instr == "rcv"
+		{
+			if val0 != 0
+			{
+				sum_ = sound;
+				break;
+			}
+		}
+		else if instr == "jgz"
+		{
+			if val0 > 0
+			{
+				iptr += val1;
+				continue;
+			}
+		}
+		else
+		{
+			println("Error: bad instr """, instr, """");
+			exit(-1);
+		}
+		iptr += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+
+	let instrs = [""; n];
+	let arg0s  = [""; n];
+	let arg1s  = [""; n];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		instrs[i] = words[0];
+		arg0s [i] = words[1];
+		if (size(words, 0) >= 3) arg1s[i] = words[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("arg1s = ", arg1s);
+
+	// Both program instances have they their own set of register values,
+	// instruction pointers, and incoming message queues
+	let vals0 = [0'i64; 26];
+	let vals1 = [0'i64; 26];
+	vals1[ i32("p") - i32("a") ] = 1;
+
+	//let sound = 0'i64;
+
+	let iptr0 = 0;
+	let iptr1 = 0;
+
+	let QCAP = 1024 * 8;
+
+	let q0 = [0'i64; QCAP];
+	let q1 = [0'i64; QCAP];
+	let qs0 = 0;
+	let qs1 = 0;
+	let qe0 = 0;
+	let qe1 = 0;
+
+	while true
+	{
+		// Is program locked while waiting to receive a message?
+		let locked0 = false;
+		let locked1 = false;
+
+		//if (iptr0 < 0 or iptr0 >= n) break;
+		//println();
+
+		//****************
+		// Program 0
+
+		let val0 = 0'i64;
+		//println("arg0 = ", arg0s[iptr0]);
+		if is_alpha(arg0s[iptr0])
+			val0 = vals0[i32(arg0s[iptr0]) - i32("a")];
+		else
+			val0 = parse_i32(arg0s[iptr0]);
+		//println("val0 = ", val0);
+
+		let val1 = 0'i64;
+		//println("arg1 = ", arg1s[iptr0]);
+		let arg1 = arg1s[iptr0];
+		if arg1 != ""
+		{
+			if is_alpha(arg1[0])
+				val1 = vals0[i32(arg1) - i32("a")];
+			else
+				val1 = parse_i32(arg1);
+		}
+		//println("val1 = ", val1);
+
+		let instr = instrs[iptr0];
+		if instr == "snd"
+		{
+			//sound = val0;
+
+			// Program 0 sends to program 1's queue
+			q1[qe1] = val0;
+			qe1 += 1;
+			if qe1 >= QCAP
+			{
+				println("Error: QCAP overflow!");
+				exit(-1);
+			}
+		}
+
+		else if instr == "set"
+			vals0[i32(arg0s[iptr0]) - i32("a")] = val1;
+
+		else if instr == "add"
+			vals0[i32(arg0s[iptr0]) - i32("a")] += val1;
+
+		else if instr == "mul"
+			vals0[i32(arg0s[iptr0]) - i32("a")] *= val1;
+
+		else if instr == "mod"
+			vals0[i32(arg0s[iptr0]) - i32("a")] %= val1;
+
+		else if instr == "rcv"
+		{
+			if qs0 >= qe0
+			{
+				// Receive queue is empty.  Repeat this instruction on the next
+				// round
+				iptr0 -= 1;  // incremented later
+				locked0 = true;
+			}
+			else
+			{
+				vals0[i32(arg0s[iptr0]) - i32("a")] = q0[qs0];
+				qs0 += 1;
+			}
+		}
+		else if instr == "jgz"
+		{
+			if val0 > 0
+			{
+				iptr0 += val1;
+				continue;
+			}
+		}
+		else
+		{
+			println("Error: bad instr """, instr, """");
+			exit(-1);
+		}
+		iptr0 += 1;
+
+		//****************
+		// Program 1
+
+		val0 = 0'i64;
+		//println("arg0 = ", arg0s[iptr1]);
+		if is_alpha(arg0s[iptr1])
+			val0 = vals1[i32(arg0s[iptr1]) - i32("a")];
+		else
+			val0 = parse_i32(arg0s[iptr1]);
+		//println("val0 = ", val0);
+
+		val1 = 0'i64;
+		//println("arg1 = ", arg1s[iptr1]);
+		arg1 = arg1s[iptr1];
+		if arg1 != ""
+		{
+			if is_alpha(arg1[0])
+				val1 = vals1[i32(arg1) - i32("a")];
+			else
+				val1 = parse_i32(arg1);
+		}
+		//println("val1 = ", val1);
+
+		instr = instrs[iptr1];
+		if instr == "snd"
+		{
+			sum_ += 1;
+
+			// Program 1 sends to program 0's queue
+			q0[qe0] = val0;
+			qe0 += 1;
+			if qe0 >= QCAP
+			{
+				println("Error: QCAP overflow!");
+				exit(-1);
+			}
+		}
+
+		else if instr == "set"
+			vals1[i32(arg0s[iptr1]) - i32("a")] = val1;
+
+		else if instr == "add"
+			vals1[i32(arg0s[iptr1]) - i32("a")] += val1;
+
+		else if instr == "mul"
+			vals1[i32(arg0s[iptr1]) - i32("a")] *= val1;
+
+		else if instr == "mod"
+			vals1[i32(arg0s[iptr1]) - i32("a")] %= val1;
+
+		else if instr == "rcv"
+		{
+			if qs1 >= qe1
+			{
+				// Receive queue is empty.  Repeat this instruction on the next
+				// round.  Nothing fancy, just go back and try again
+				iptr1 -= 1;  // incremented later
+				locked1 = true;
+			}
+			else
+			{
+				vals1[i32(arg0s[iptr1]) - i32("a")] = q1[qs1];
+				qs1 += 1;
+			}
+		}
+		else if instr == "jgz"
+		{
+			if val0 > 0
+			{
+				iptr1 += val1;
+				continue;
+			}
+		}
+		else
+		{
+			println("Error: bad instr """, instr, """");
+			exit(-1);
+		}
+		iptr1 += 1;
+
+		//****************
+
+		if locked0 and locked1
+			break;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/18");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

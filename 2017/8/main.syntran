@@ -1,0 +1,174 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let has_val = new_dict_i64();
+	let vals    = new_dict_i64();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let words = split_(str_, " ");
+		//println("words = ", words);
+
+		// Check the condition first
+
+		let key  = words[4];
+		let op   = words[5];
+		let comp = parse_i32(words[6]);
+		//println("key  = ", key );
+		//println("op   = ", op  );
+		//println("comp = ", comp);
+
+		let val = 0;
+		if (get_dict_i64(&has_val, key) == 1) val = get_dict_i64(&vals, key);
+		let condition = false;
+		if (op == "<" ) condition = val < comp;
+		if (op == ">" ) condition = val > comp;
+		if (op == "<=") condition = val <= comp;
+		if (op == ">=") condition = val >= comp;
+		if (op == "==") condition = val == comp;
+		if (op == "!=") condition = val != comp;
+
+		if condition
+		{
+			// Increment or decrement the first register
+			let key  = words[0];
+			let op   = words[1];
+			let diff = parse_i32(words[2]);
+			//println("    key  = ", key );
+			//println("    op   = ", op  );
+			//println("    diff = ", diff);
+
+			let val = 0'i64;
+			if (get_dict_i64(&has_val, key) == 1) val = get_dict_i64(&vals, key);
+
+			if (op == "inc") val += diff;
+			if (op == "dec") val -= diff;
+
+			set_dict_i64(&has_val, key, 1'i64);
+			set_dict_i64(&vals   , key, val);
+			//println("    val  = ", val );
+		}
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	sum_ = maxval(vals_dict_i64(&vals));
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let has_val = new_dict_i64();
+	let vals    = new_dict_i64();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let words = split_(str_, " ");
+		//println("words = ", words);
+
+		// Check the condition first
+
+		let key  = words[4];
+		let op   = words[5];
+		let comp = parse_i32(words[6]);
+		//println("key  = ", key );
+		//println("op   = ", op  );
+		//println("comp = ", comp);
+
+		let val = 0;
+		if (get_dict_i64(&has_val, key) == 1) val = get_dict_i64(&vals, key);
+		let condition = false;
+		if (op == "<" ) condition = val < comp;
+		if (op == ">" ) condition = val > comp;
+		if (op == "<=") condition = val <= comp;
+		if (op == ">=") condition = val >= comp;
+		if (op == "==") condition = val == comp;
+		if (op == "!=") condition = val != comp;
+
+		if condition
+		{
+			// Increment or decrement the first register
+			let key  = words[0];
+			let op   = words[1];
+			let diff = parse_i32(words[2]);
+			//println("    key  = ", key );
+			//println("    op   = ", op  );
+			//println("    diff = ", diff);
+
+			let val = 0'i64;
+			if (get_dict_i64(&has_val, key) == 1) val = get_dict_i64(&vals, key);
+
+			if (op == "inc") val += diff;
+			if (op == "dec") val -= diff;
+
+			set_dict_i64(&has_val, key, 1'i64);
+			set_dict_i64(&vals   , key, val);
+			sum_ = max(sum_, val);
+			//println("    val  = ", val );
+		}
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/8");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

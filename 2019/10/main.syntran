@@ -1,0 +1,334 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+// TODO: utils
+let PI_ATAN2 = 4.0 * atan(1.0);
+fn atan2_(y: f64, x: f64): f64
+{
+	if x > 0
+		return atan(y/x);
+	else if x < 0 and y >= 0
+		return atan(y/x) + PI_ATAN2;
+	else if x < 0 and y < 0
+		return atan(y/x) - PI_ATAN2;
+	else if x == 0.0 and y > 0
+		return PI_ATAN2 / 2;
+	else if x == 0.0 and y < 0
+		return -PI_ATAN2 / 2;
+	else
+		return 0.0 / 0.0;
+}
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	let nvisible = [0; nx, ny];
+	for ym in [0: ny]
+	for xm in [0: nx]
+	{
+		if (g[xm, ym] != "#") continue;
+		//println("xm, ym = ", [xm, ym]);
+
+		// Evaluate building a new monitoring station at [xm, ym]
+		let is_visible = [true; nx, ny];
+		is_visible[xm, ym] = false;  // asteroid cannot see itself
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			if (x == xm and y == ym) continue;
+			if g[x,y] != "#"
+			{
+				is_visible[x,y] = false;
+				continue;
+			}
+
+			// All integer multiples by `k` of [x,y] (relative to [xm,ym]) are
+			// blocked from view
+
+			let dx = x - xm;
+			let dy = y - ym;
+			let dx0 = dx;
+			let dy0 = dy;
+
+			// i was thinking i could do this without gcd, but i need it anyway.
+			// probably could've done it cleaner
+			let gcd_ = gcd32(dx, dy);
+
+			//println("dx, dy, gcd_ = ", [dx, dy, gcd_]);
+			dx = abs(dx / gcd_) * sign_(dx);
+			dy = abs(dy / gcd_) * sign_(dy);
+			let kmin = 0;
+			if (dx != 0) kmin = abs(dx0 / dx);
+			else         kmin = abs(dy0 / dy);
+			//println("dx, dy       = ", [dx, dy      ]);
+			//println("kmin = ", kmin);
+
+			let k = kmin; //1;
+			while true
+			{
+				k += 1;
+				let xa = xm + k * dx;
+				let ya = ym + k * dy;
+				if (not in_bounds([0,0], [xa,ya], [nx,ny])) break;
+				//if (k <= kmin) continue;
+				//if (xa == x and ya == y) continue;
+				is_visible[xa, ya] = false;
+			}
+		}
+		nvisible[xm, ym] = count(is_visible);
+		//println("is_visible = ", is_visible);
+		//println("nvisible = ", nvisible[xm, ym]);
+		//println();
+	}
+	//println("nvisible = ", nvisible);
+
+	sum_ = maxval(nvisible);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	// Part 1 pasted: find the monitoring station
+
+	let nvisible = [0; nx, ny];
+	for ym in [0: ny]
+	for xm in [0: nx]
+	{
+		if (g[xm, ym] != "#") continue;
+		//println("xm, ym = ", [xm, ym]);
+
+		// Evaluate building a new monitoring station at [xm, ym]
+		let is_visible = [true; nx, ny];
+		is_visible[xm, ym] = false;  // asteroid cannot see itself
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			if (x == xm and y == ym) continue;
+			if g[x,y] != "#"
+			{
+				is_visible[x,y] = false;
+				continue;
+			}
+
+			// All integer multiples by `k` of [x,y] (relative to [xm,ym]) are
+			// blocked from view
+
+			let dx = x - xm;
+			let dy = y - ym;
+			let dx0 = dx;
+			let dy0 = dy;
+
+			// i was thinking i could do this without gcd, but i need it anyway.
+			// probably could've done it cleaner
+			let gcd_ = gcd32(dx, dy);
+
+			//println("dx, dy, gcd_ = ", [dx, dy, gcd_]);
+			dx = abs(dx / gcd_) * sign_(dx);
+			dy = abs(dy / gcd_) * sign_(dy);
+			let kmin = 0;
+			if (dx != 0) kmin = abs(dx0 / dx);
+			else         kmin = abs(dy0 / dy);
+			//println("dx, dy       = ", [dx, dy      ]);
+			//println("kmin = ", kmin);
+
+			let k = kmin; //1;
+			while true
+			{
+				k += 1;
+				let xa = xm + k * dx;
+				let ya = ym + k * dy;
+				if (not in_bounds([0,0], [xa,ya], [nx,ny])) break;
+				//if (k <= kmin) continue;
+				//if (xa == x and ya == y) continue;
+				is_visible[xa, ya] = false;
+			}
+		}
+		nvisible[xm, ym] = count(is_visible);
+		//println("is_visible = ", is_visible);
+		//println("nvisible = ", nvisible[xm, ym]);
+		//println();
+	}
+	//println("nvisible = ", nvisible);
+
+	//sum_ = maxval(nvisible);
+
+	// Save the monitoring station's position
+	let xm = -1;
+	let ym = -1;
+	let nvisible_max = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if nvisible[x,y] > nvisible_max
+		{
+			xm = x;
+			ym = y;
+			nvisible_max = nvisible[x,y];
+		}
+	}
+	//println("xm, ym = ", [xm, ym]);
+
+	// Iterate until we vaporize 200 asteroids
+	let nvape_final = 200;
+	let nvape = 0;
+	while true
+	{
+		// Find visible asteroids
+		let is_visible = [true; nx, ny];
+		is_visible[xm, ym] = false;  // monitoring asteroid cannot see itself
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			if (x == xm and y == ym) continue;
+			if g[x,y] != "#"
+			{
+				is_visible[x,y] = false;
+				continue;
+			}
+
+			// All integer multiples by `k` of [x,y] (relative to [xm,ym]) are
+			// blocked from view
+
+			let dx = x - xm;
+			let dy = y - ym;
+			let dx0 = dx;
+			let dy0 = dy;
+
+			// i was thinking i could do this without gcd, but i need it anyway.
+			// probably could've done it cleaner
+			let gcd_ = gcd32(dx, dy);
+
+			//println("dx, dy, gcd_ = ", [dx, dy, gcd_]);
+			dx = abs(dx / gcd_) * sign_(dx);
+			dy = abs(dy / gcd_) * sign_(dy);
+			let kmin = 0;
+			if (dx != 0) kmin = abs(dx0 / dx);
+			else         kmin = abs(dy0 / dy);
+			//println("dx, dy       = ", [dx, dy      ]);
+			//println("kmin = ", kmin);
+
+			let k = kmin; //1;
+			while true
+			{
+				k += 1;
+				let xa = xm + k * dx;
+				let ya = ym + k * dy;
+				if (not in_bounds([0,0], [xa,ya], [nx,ny])) break;
+				//if (k <= kmin) continue;
+				//if (xa == x and ya == y) continue;
+				is_visible[xa, ya] = false;
+			}
+		}
+		//println("is_visible = ", is_visible);
+
+		// Save visible absolute positions `p` and angles `theta` relative to
+		// monitoring station
+		let nv = count(is_visible);
+		let p = [0; 2, nv];
+		let theta = [0.0; nv];
+		let i = 0;
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			if (not is_visible[x,y]) continue;
+			p[:,i] = [x, y];
+
+			let dx = x - xm;
+			let dy = y - ym;
+
+			theta[i] = atan2_(1.0 * dy, 1.0 * dx);
+
+			// Wrap between -90 and 269.999 because vaporizer starts pointing
+			// "up" (-90 degrees)
+			if (theta[i] < -PI_ATAN2/2) theta[i] += 2 * PI_ATAN2;
+			//if (theta[i] < -PI_ATAN2/2 - 0.001) theta[i] += 2 * PI_ATAN2;
+
+			i += 1;
+		}
+		//println("p = ", p);
+		//println("theta = ", theta);
+
+		// Sort by angle
+		let idx = sort_index_f64(theta);
+		//println("theta (sorted) = ", theta[idx]);
+		//println("p (sorted) = ", p[:, idx]);
+
+		// Vape 'em if you got 'em
+		for i in [0: nv]
+		{
+			let px = p[0,idx[i]];
+			let py = p[1,idx[i]];
+			g[px, py] = ".";
+			nvape += 1;
+			if (nvape == nvape_final)
+			{
+				//println("200th at ", [px, py]);
+				sum_ = 100 * px + py;
+			}
+		}
+		if (nvape >= nvape_final) break;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2019/10");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 214:502
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

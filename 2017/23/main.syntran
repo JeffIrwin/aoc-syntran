@@ -1,0 +1,327 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+
+	let instrs = [""; n];
+	let arg0s  = [""; n];
+	let arg1s  = [""; n];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		instrs[i] = words[0];
+		arg0s [i] = words[1];
+		if (size(words, 0) >= 3) arg1s[i] = words[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("arg1s = ", arg1s);
+
+	let vals = [0'i64; 26];
+
+	let iptr = 0;
+	while true
+	{
+		if (iptr < 0 or iptr >= n) break;
+		//println();
+
+		let val0 = 0'i64;
+		//println("arg0 = ", arg0s[iptr]);
+		if is_alpha(arg0s[iptr])
+			val0 = vals[i32(arg0s[iptr]) - i32("a")];
+		else
+			val0 = parse_i32(arg0s[iptr]);
+		//println("val0 = ", val0);
+
+		let val1 = 0'i64;
+		//println("arg1 = ", arg1s[iptr]);
+		let arg1 = arg1s[iptr];
+		if arg1 != ""
+		{
+			if is_alpha(arg1[0])
+				val1 = vals[i32(arg1) - i32("a")];
+			else
+				val1 = parse_i32(arg1);
+		}
+		//println("val1 = ", val1);
+
+		let instr = instrs[iptr];
+		if instr == "set"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] = val1;
+		}
+		else if instr == "sub"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] -= val1;
+		}
+		else if instr == "mul"
+		{
+			sum_ += 1;
+			vals[i32(arg0s[iptr]) - i32("a")] *= val1;
+		}
+		else if instr == "jnz"
+		{
+			if val0 != 0
+			{
+				iptr += val1;
+				continue;
+			}
+		}
+		else
+		{
+			println("Error: bad instr """, instr, """");
+			exit(-1);
+		}
+		iptr += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2idk(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+
+	let instrs = [""; n];
+	let arg0s  = [""; n];
+	let arg1s  = [""; n];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		instrs[i] = words[0];
+		arg0s [i] = words[1];
+		if (size(words, 0) >= 3) arg1s[i] = words[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("arg1s = ", arg1s);
+
+	let vals = [0'i64; 26];
+
+	//// TODO
+	vals[0] = 1;
+
+	let iptr = 0;
+	while true
+	{
+		if (iptr < 0 or iptr >= n) break;
+		//println();
+
+		let val0 = 0'i64;
+		//println("arg0 = ", arg0s[iptr]);
+		if is_alpha(arg0s[iptr])
+			val0 = vals[i32(arg0s[iptr]) - i32("a")];
+		else
+			val0 = parse_i32(arg0s[iptr]);
+		//println("val0 = ", val0);
+
+		let val1 = 0'i64;
+		//println("arg1 = ", arg1s[iptr]);
+		let arg1 = arg1s[iptr];
+		if arg1 != ""
+		{
+			if is_alpha(arg1[0])
+				val1 = vals[i32(arg1) - i32("a")];
+			else
+				val1 = parse_i32(arg1);
+		}
+		//println("val1 = ", val1);
+
+		let instr = instrs[iptr];
+		println("instr, iptr = ", instr, iptr);
+		println("vals = ", vals[0: 8]);
+		println();
+
+		if instr == "set"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] = val1;
+		}
+		else if instr == "sub"
+		{
+			vals[i32(arg0s[iptr]) - i32("a")] -= val1;
+		}
+		else if instr == "mul"
+		{
+			sum_ += 1;
+			vals[i32(arg0s[iptr]) - i32("a")] *= val1;
+		}
+		else if instr == "jnz"
+		{
+			if val0 != 0
+			{
+				iptr += val1;
+				continue;
+			}
+		}
+		else
+		{
+			println("Error: bad instr """, instr, """");
+			exit(-1);
+		}
+		iptr += 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	//h = 0
+	//for x in range(105700,122700 + 1,17):
+	//	for i in range(2,x):
+	//
+	//		if x % i == 0:
+	//			h += 1
+	//			break
+	//print(h)
+
+	//let h = 0'i64;
+	//for x in [105_700: 81: 122_700 + 1]
+	//{
+	//	for i in [2: x]
+	//	{
+	//		if x % i == 0
+	//		{
+	//			h += 1;
+	//			break;
+	//		}
+	//	}
+	//}
+	//println("part 2 = ", h);
+	//return str(h);
+
+	// ****************
+
+	// I have no idea what this is doing.  I had to cheat:
+	//
+	// Ref:  https://www.reddit.com/r/adventofcode/comments/7lms6p/comment/drngj9r/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+
+	let a = 1;
+	let b = let c = let d = let e = let f = let g = let h = 0;
+	b = 81;//57;
+	c = b;
+
+	if a != 0
+	{
+		b = b * 100 + 100_000;
+		c = b + 17_000;
+	}
+
+	while true
+	{
+		f = 1;
+		d = 2;
+		e = 2;
+		while true
+		{
+			if (d * d > b) break;
+
+			if b % d == 0
+			{
+				f = 0;
+				break;
+			}
+			d += 1;
+		}
+		if f == 0
+			h += 1;
+		g = b - c;
+		b += 17;
+
+		if (g == 0) break;
+	}
+	println("part 2 = ", h);
+	return str(h);
+
+	//int a=1,b=0,c=0,d=0,e=0,f=0,g=0,h=0;
+	//b= 57;
+	//c= b;
+	//if(a!=0){
+	//	b = b*100 + 100000;
+	//	c = b + 17000;
+	//}
+	//do{
+	//	f= 1;
+	//	d= 2;
+	//	e= 2;
+	//	for(d=2;d*d <= b; d++){ // check if b is a prime
+	//		// the assembly doesn't have a % operator,
+	//		// so it does 2 for loops with d and e and checks if d*e==b.
+	//		if( (b%d==0) ){
+	//			f=0;
+	//			break;
+	//		}
+	//	}
+	//	if(f==0) // not a prime
+	//		h++;
+	//	g = b-c;
+	//	b+= 17;
+	//} while (g!=0); //stop when b==c (1000 iterations)
+	//printf("%d\n",h);
+
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/23");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

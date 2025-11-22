@@ -1,0 +1,126 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+#include("../../md5.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let ans = "";
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let num_zeros = 5;
+	//num_zeros = 3;
+
+	let i = 0;
+	while true
+	{
+		if (i % 100_000 == 0) println("i = ", i);
+
+		let msg = str_ + str(i);
+		let hash = md5(msg);
+
+		if starts_with_(hash, repeat("0", num_zeros))
+		{
+			println("msg = ", msg);
+			println("hash = ", hash);
+			ans += hash[num_zeros];
+			println("ans = ", ans);
+
+			if (len(ans) == 8) break;
+		}
+		i += 1;
+	}
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(): str
+{
+	let ans = repeat(" ", 8);
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	let num_zeros = 5;
+	//num_zeros = 3;
+
+	let i = 0;
+	while true
+	{
+		if (i % 100_000 == 0) println("i = ", i);
+
+		let msg = str_ + str(i);
+		let hash = md5(msg);
+
+		if starts_with_(hash, repeat("0", num_zeros))
+		{
+			println("msg = ", msg);
+			println("hash = ", hash);
+
+			let pos = hash[num_zeros];
+			let cha = hash[num_zeros+1];
+			if i32("0") <= i32(pos) and i32(pos) <= i32("7")
+			{
+				let ipos = parse_i32(pos);
+				if (ans[ipos] == " ") ans[ipos] = cha;
+				if (scan(ans, " ") < 0) break;
+			}
+
+			println("ans = ", ans);
+			println();
+
+			//if (len(ans) == 8) break;
+		}
+		i += 1;
+	}
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/5");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

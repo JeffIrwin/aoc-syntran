@@ -1,0 +1,132 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let nsteps = parse_i32(readln(f));
+	println("nsteps = ", nsteps);
+	close(f);
+
+	let CAP = 2017 + 1;
+	let v = [-1; CAP];
+
+	// Initial state
+	let pos = 0;
+	v[pos] = 0;
+
+	for i in [1: CAP]
+	{
+		//pos = (pos + nsteps + 1) % i;
+		pos = (pos + nsteps) % i;
+
+		v[0: i + 1] = [v[0: pos + 1], [i], v[pos + 1: i]];
+		//println("v = ", v[0: i + 1]);
+
+		pos += 1;
+
+		//println("pos = ", pos);
+		//println();
+
+		//if (i == 9) break;
+	}
+	sum_ = v[pos + 1];
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	// Run time:  24m42.602s
+	//
+	// The linked list is much faster than shifting most of an array.  Not sure
+	// how to make it any faster
+
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let nsteps = parse_i32(readln(f));
+	println("nsteps = ", nsteps);
+	close(f);
+
+	//let CAP = 2017 + 1;
+	let CAP = 50_000_000 + 1;
+
+	//// The value array `v` isn't needed for part 2, since they are just [0:
+	//// CAP] in order, with the linked-list order determined entirely by `next`
+	//let v    = [-1; CAP];
+
+	let next = [-1; CAP];  // linked list pointers
+
+	// Initial state
+	let pos   = 0;
+	next[pos] = 0;
+
+	for i in [1: CAP]
+	{
+		if (i % 1_000_000 == 0) println("i = ", i);
+
+		for step in [0: nsteps]
+			pos = next[pos];
+
+		// Insert
+		next[i] = next[pos];
+		next[pos] = i;
+
+		pos = next[pos];
+
+		//println("next[0] = ", next[0]);
+		//println("pos = ", pos);
+		//println();
+		//if (i == 9) break;
+	}
+	// Get val after 0, not after last inserted val
+	sum_ = next[0];
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/17");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

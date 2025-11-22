@@ -1,0 +1,2 @@
+generator A uses 65
+generator B uses 8921

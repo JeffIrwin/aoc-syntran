@@ -1,0 +1,131 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+#include("../../knot_hash.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	for j in [0: 128]
+	{
+		let digest = knot_hash(str_ + "-" + str(j));
+		//println("digest = ", digest);
+
+		for d in digest
+		for i in [0: 8]
+		{
+			sum_ += (d >> i) & 1;
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let mat = ["."; 128, 128];
+
+	for j in [0: 128]
+	{
+		let digest = knot_hash(str_ + "-" + str(j));
+		//println("digest = ", digest);
+
+		for k in [0: 16]
+		{
+			let d = digest[k];
+			for i in [0: 8]
+			{
+				if (d >> (7-i)) & 1 == 1  // endianness matters for part 2
+					mat[8*k + i, j] = "#";
+			}
+		}
+	}
+
+	////print_char_mat(&mat);
+	//let slice = mat[0: 8, 0: 8];
+	//print_char_mat(&slice);
+
+	let visited = [false; 128, 128];
+	for j in [0: 128]
+	for i in [0: 128]
+	{
+		if (visited[i, j]) continue;
+		if (mat[i, j] != "#") continue;
+
+		sum_ += 1;
+		dfs(i, j, &visited, &mat);
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn dfs(i: i32, j: i32, visited: &[bool; :, :], mat: &[str; :, :])
+{
+	if not in_bounds([0,0], [i,j], [128,128]) return;
+	if (mat[i, j] != "#") return;
+
+	if (visited[i, j]) return;
+	visited[i, j] = true;
+
+	dfs(i-1, j, &visited, &mat);
+	dfs(i+1, j, &visited, &mat);
+	dfs(i, j-1, &visited, &mat);
+	dfs(i, j+1, &visited, &mat);
+
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/14");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

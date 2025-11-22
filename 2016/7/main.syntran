@@ -1,0 +1,181 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		// No need for fance bracket parsing.  Outside- and inside-brackets
+		// alternate: first word is outside, next is inside, ...
+		//
+		// A line never starts or ends with a bracket and never has unmatched
+		// brackets
+
+		let words = split_(str_, "[]");
+		//println("words = ", words);
+
+		let has_tls = false;
+		let inside = true;
+		for word in words
+		{
+			inside = not inside;
+
+			let has_abba = false;
+			for i in [0: len(word) - 3]
+			{
+				has_abba =
+					(word[i] == word[i+3] and word[i+1] == word[i+2]) and
+					word[i] != word[i+1];
+				if (has_abba) break;
+			}
+
+			if has_abba and inside
+			{
+				has_tls = false;
+				break;
+			}
+			if not inside
+				has_tls = has_tls or has_abba;
+		}
+
+		if (has_tls) sum_ += 1;
+
+		//println("has_tls = ", has_tls);
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		// No need for fance bracket parsing.  Outside- and inside-brackets
+		// alternate: first word is outside, next is inside, ...
+		//
+		// A line never starts or ends with a bracket and never has unmatched
+		// brackets
+
+		let words = split_(str_, "[]");
+		//println("words = ", words);
+
+		let NCAP = 64;
+		let aba = [""; NCAP];
+		let naba = 0;
+
+		// First pass: find all ABA's outside brackets
+		let inside = true;
+		for word in words
+		{
+			inside = not inside;
+			if (inside) continue;
+
+			let has_aba = false;
+			for i in [0: len(word) - 2]
+			{
+				has_aba = word[i] == word[i+2] and word[i] != word[i+1];
+
+				if has_aba
+				{
+					// Save the corresponding BAB to look for it later on second
+					// pass
+					aba[naba] = word[i+1] + word[i] + word[i+1];
+					naba += 1;
+					//println("aba = ", word[i:i+3]);
+					//println("bab = ", aba[naba-1]);
+				}
+			}
+		}
+		aba = aba[0: naba]; // trim
+		//println("aba = ", aba);
+
+		// Second pass: look for any matching BAB inside
+		let has_ssl = false;
+		inside = true;
+		for word in words
+		{
+			inside = not inside;
+			if (not inside) continue;
+
+			//println("word = ", word);
+			for i in [0: len(word) - 2]
+			{
+				//println("substr = ", word[i: i+3]);
+				has_ssl = any(aba == word[i: i+3]);
+				if (has_ssl) break;
+			}
+			if (has_ssl) break; // TODO: i need "break outer" or goto
+			//println();
+		}
+
+		if (has_ssl) sum_ += 1;
+
+		//println("has_ssl = ", has_ssl);
+		//println();
+
+		//if starts_with_(str_, "emzop") break;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/7");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

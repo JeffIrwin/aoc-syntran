@@ -1,0 +1,152 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let ndiscs = countln_(filename);
+	let depths  = [0; ndiscs];
+	let periods = [0; ndiscs];
+	let inits   = [0; ndiscs];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		depths [i] = nums[0];
+		periods[i] = nums[1];
+		// time=0 is nums[2]
+		inits  [i] = nums[3];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	let t0 = 0;
+	while true
+	{
+		// You should be able to re-arrange the lines of the input to put the
+		// big periods first and improve perf by breaking this loop as early as
+		// possible.  But it runs in 0.3 s so there's no point
+		let pass = true;
+		for i in [0: ndiscs]
+		{
+			pass = (inits[i] + depths[i] + t0) % periods[i] == 0;
+			if (not pass) break;
+		}
+		if pass
+		{
+			sum_ = t0;
+			break;
+		}
+		t0 += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let ndiscs = countln_(filename);
+	let depths  = [0; ndiscs];
+	let periods = [0; ndiscs];
+	let inits   = [0; ndiscs];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		depths [i] = nums[0];
+		periods[i] = nums[1];
+		// time=0 is nums[2]
+		inits  [i] = nums[3];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	ndiscs += 1;
+	depths  = [depths , [ndiscs]];
+	periods = [periods, [11]];
+	inits   = [inits  , [ 0]];
+
+	let t0 = 0;
+	while true
+	{
+		// You should be able to re-arrange the lines of the input to put the
+		// big periods first and improve perf by breaking this loop as early as
+		// possible.  But it runs in 0.3 s so there's no point
+		let pass = true;
+		for i in [0: ndiscs]
+		{
+			pass = (inits[i] + depths[i] + t0) % periods[i] == 0;
+			if (not pass) break;
+		}
+		if pass
+		{
+			sum_ = t0;
+			break;
+		}
+		t0 += 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/15");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

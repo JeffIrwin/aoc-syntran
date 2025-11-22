@@ -1,0 +1,123 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	// Hex grid:
+	//
+	// *-------*-------*-------*-------*
+	// ----*-------*-------*-------*----
+	// *-------*-------+-------*-------*
+	// ----*-------*-------*-------*----
+	// *-------*-------*-------*-------*
+	//
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let dirs = split_(str_, ",");
+	//println("dirs = ", dirs);
+
+	// Why do north and south have magnitude 2?  Because "ne" + "nw" == "n".
+	// You can pick these basis (not unit) vectors arbitrarily as long as it
+	// maintains this identity
+	let x = [0, 0];
+	for dir in dirs
+	{
+		if (dir == "n" ) x += [ 0,  2];
+		if (dir == "s" ) x += [ 0, -2];
+		if (dir == "ne") x += [ 1,  1];
+		if (dir == "se") x += [ 1, -1];
+		if (dir == "nw") x += [-1,  1];
+		if (dir == "sw") x += [-1, -1];
+	}
+	//println("x = ", x);
+
+	// It takes abs(x[0]) steps to get the x[0] coordinate right, but those
+	// steps can also take us up and down.  Then divide by 2 because those basis
+	// vectors have a magnitude of 2
+	x = abs(x);
+	sum_ = x[0] + max(x[1] - x[0], 0) / 2;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i32;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let dirs = split_(str_, ",");
+	//println("dirs = ", dirs);
+
+	let x = [0, 0];
+	for dir in dirs
+	{
+		if (dir == "n" ) x += [ 0,  2];
+		if (dir == "s" ) x += [ 0, -2];
+		if (dir == "ne") x += [ 1,  1];
+		if (dir == "se") x += [ 1, -1];
+		if (dir == "nw") x += [-1,  1];
+		if (dir == "sw") x += [-1, -1];
+
+		{
+			let x = abs(x);  // beware shadow
+			let dist = x[0] + max(x[1] - x[0], 0) / 2;
+			sum_ = max(sum_, dist);
+		}
+	}
+	//println("x = ", x);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/11");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

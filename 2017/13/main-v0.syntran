@@ -1,0 +1,150 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let mat = read_i32_mat_delim(filename, ":");
+	//println("mat = ", mat);
+
+	let depths = mat[0,:];
+	let ranges_sparse = mat[1,:];
+	println("depths = ", depths);
+	println("ranges_sparse = ", ranges_sparse);
+
+	let max_depth = maxval(depths);
+	let scanners = [-1; max_depth + 1];
+	let ranges   = [-1; max_depth + 1];
+	let dirs     = [ 1; max_depth + 1];
+	println("scanners = ", scanners);
+
+	// Start at 0
+	scanners[depths] = 0;
+	println("scanners = ", scanners);
+
+	ranges[depths] = ranges_sparse;
+	println("ranges = ", ranges);
+
+	for d in [0: max_depth + 1]
+	{
+		println("d = ", d);
+		if scanners[d] == 0
+		{
+			println("caught");
+			sum_ += d * ranges[d];
+		}
+
+		println("scanners = ", scanners);
+		for d in depths  // shadow
+		{
+			scanners[d] += dirs[d];
+			if (scanners[d] == 0 or scanners[d] == ranges[d]-1) dirs[d] *= -1;
+		}
+
+		println();
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let mat = read_i32_mat_delim(filename, ":");
+	//println("mat = ", mat);
+
+	let depths = mat[0,:];
+	let ranges_sparse = mat[1,:];
+	println("depths = ", depths);
+	println("ranges_sparse = ", ranges_sparse);
+
+	let max_depth = maxval(depths);
+
+	let t0 = 0;
+	while true
+	{
+		println("t0 = ", t0);
+		let sum_ = 0'i64;
+		let scanners = [-1; max_depth + 1];
+		let ranges   = [-1; max_depth + 1];
+		let dirs     = [ 1; max_depth + 1];
+		//println("scanners = ", scanners);
+
+		// Start at 0
+		scanners[depths] = 0;
+		//println("scanners = ", scanners);
+
+		ranges[depths] = ranges_sparse;
+		//println("ranges = ", ranges);
+
+		for d in [0: max_depth + t0 + 1]
+		{
+			//println("d = ", d);
+			if d >= t0
+			{
+				if scanners[d - t0] == 0
+				{
+					//println("caught");
+					sum_ += d * ranges[d - t0];
+					//break;
+				}
+			}
+
+			//println("scanners = ", scanners);
+			for d in depths  // shadow
+			{
+				scanners[d] += dirs[d];
+				if (scanners[d] == 0 or scanners[d] == ranges[d]-1) dirs[d] *= -1;
+			}
+
+			//println();
+		}
+		if (sum_ == 0) break;
+		t0 += 1;
+	}
+
+	println("part 2 = ", t0);
+	return str(t0);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/13");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

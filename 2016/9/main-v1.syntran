@@ -1,0 +1,160 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	// A(1x5)BC
+	let i = 0;
+	while i < len(str_)
+	{
+		if str_[i] != "("
+		{
+			i += 1;
+			sum_ += 1;
+			continue;
+		}
+
+		// str_[i] == "("
+		let i0 = i;
+		while (str_[i] != ")") i += 1;
+		i += 1; // advance past final ")"
+
+		println("marker = ", str_[i0:i]);
+
+		let nums = parse_i32_delim(str_[i0: i], "(x)");
+		println("nums = ", nums);
+		let mlen = nums[0];
+		let mrep = nums[1];
+
+		i += mlen;
+		sum_ += mlen * mrep;
+
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println();
+	println("str_ = ", str_);
+	close(f);
+
+	let n = len(str_);
+
+	// How many times is each char repeated?  Initially 1.  Anything inside a
+	// marker will be ignored and become zero.  Anything after a series of
+	// markers with be the product of its marker's repetitions
+	let reps = [1'i64; n];
+	println("reps = ", reps);
+
+	let i = 0;
+	while i < len(str_)
+	{
+		if str_[i] != "("
+		{
+			i += 1;
+			//sum_ += 1;
+			continue;
+		}
+		// X(8x2)(3x3)ABCY
+		//      |    ^---
+		//      ^--------
+
+		// (25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN
+		//      |    ^---    ^--    ^-----      |    ^---    ^-----
+		//      ^-------------------------      ^------------------
+
+		//let prod  1'i64; // TODO: crash (no `=`)
+		let prod = 1'i64;
+
+		let len = 0;
+		while str_[i] == "("
+		{
+			let i0 = i;
+			while (str_[i] != ")") i += 1;
+			i += 1; // advance past final ")"
+
+			println("marker = ", str_[i0:i]);
+
+			let nums = parse_i32_delim(str_[i0: i], "(x)");
+			println("nums = ", nums);
+			let mlen = nums[0];
+			let mrep = nums[1];
+
+			reps[i0: i] = 0;
+			reps[i: i+mlen] *= mrep;
+
+			//len = mlen;
+			//prod *= mrep;
+			////i += mlen;
+			////sum_ += mlen * mrep;
+		}
+		println("len = ", len);
+		println("prod = ", prod);
+		println();
+
+		//i += len; // TODO?
+
+		//sum_ += len * prod;
+
+	}
+	println("reps = ", reps);
+	sum_ = sum(reps);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/9");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

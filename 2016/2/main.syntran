@@ -1,0 +1,174 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	 0, -1, // up
+	-1,  0, // left
+	 0,  1, // down
+	 1,  0  // right
+	 ;
+	 2, NDIRS
+];
+let UP    = 0;
+let LEFT  = 1;
+let DOWN  = 2;
+let RIGHT = 3;
+let DIRS_STR = "ULDR";
+
+let NUMPAD = [
+	"1", "2", "3",
+	"4", "5", "6",
+	"7", "8", "9"
+	;
+	3, 3
+];
+
+let NUMPAD2 = [
+" ", " ", "1", " ", " ",
+" ", "2", "3", "4", " ",
+"5", "6", "7", "8", "9",
+" ", "A", "B", "C", " ",
+" ", " ", "D", " ", " "
+;
+5, 5
+];
+
+fn part1(): str
+{
+	let nx = i32(size(NUMPAD, 0));
+	let ny = i32(size(NUMPAD, 1));
+
+	// Start on "5"
+	let x = 1;
+	let y = 1;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let ans = "";
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		//for char_ in str_ // TODO: this should probably be allowed in syntran
+		for i in [0: len(str_)]
+		{
+			let char_ = str_[i];
+			//println(char_);
+
+			let dir = DIRS[:, scan(DIRS_STR, char_)];
+
+			let x0 = x;
+			let y0 = y;
+
+			x += dir[0];
+			y += dir[1];
+
+			if not in_bounds([0,0], [x,y], [nx,ny])
+			{
+				x = x0;
+				y = y0;
+			}
+		}
+		ans += NUMPAD[x,y];
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(): str
+{
+	let nx = i32(size(NUMPAD2, 0));
+	let ny = i32(size(NUMPAD2, 1));
+
+	// Start on "5"
+	let x = 0;
+	let y = 2;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let ans = "";
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		//for char_ in str_ // TODO: this should probably be allowed in syntran
+		for i in [0: len(str_)]
+		{
+			let char_ = str_[i];
+			//println(char_);
+
+			let dir = DIRS[:, scan(DIRS_STR, char_)];
+
+			let x0 = x;
+			let y0 = y;
+
+			x += dir[0];
+			y += dir[1];
+
+			if not in_bounds([0,0], [x,y], [nx,ny])
+			{
+				x = x0;
+				y = y0;
+			}
+			else if NUMPAD2[x,y] == " "
+			{
+				x = x0;
+				y = y0;
+			}
+		}
+		ans += NUMPAD2[x,y];
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", ans);
+	return ans;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/2");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

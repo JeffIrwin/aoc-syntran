@@ -1,0 +1,273 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+#include("../../dict_str.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let ans = "";
+
+	let towers = new_dict_i64();
+	let subtowers = new_dict_i64();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		set_dict_i64(&towers, words[0], 1'i64);
+
+		words = split_(str_, "->");
+		if size(words, 0) > 1
+		{
+			//println("subtowers = ", words[1]);
+			let subtower_names = split_(words[1], ", ");
+			//println("subtower_names = ", subtower_names);
+
+			for subtower in subtower_names
+				set_dict_i64(&subtowers, subtower, 1'i64);
+		}
+		//println();
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("towers = ", keys_dict_i64(&towers));
+	//println("subtowers = ", keys_dict_i64(&subtowers));
+
+	for tower in keys_dict_i64(&towers)
+	{
+		if get_dict_i64(&subtowers, tower) < 0
+		{
+			ans = tower;
+			break;
+		}
+	}
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(): str
+{
+	let sum_ = 2_000_000_000'i64;
+
+	let towers    = new_dict_i64();  // probably not needed in part 2
+	let subtowers = new_dict_str();  // a list of each tower's subtowers, as one string
+	let weights   = new_dict_i64();  // each tower's own weight (not including subs)
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		let tower = words[0];
+		let weight = read_i32(str_);
+		set_dict_i64(&towers , tower, 1'i64);
+		set_dict_i64(&weights, tower, i64(weight));
+
+		words = split_(str_, "->");
+		if size(words, 0) > 1
+		{
+			set_dict_str(&subtowers, tower, words[1]);
+
+			////println("subtowers = ", words[1]);
+			//let subtower_names = split_(words[1], ", ");
+			//println("subtower_names = ", subtower_names);
+
+			//for subtower in subtower_names
+			//	set_dict_i64(&subtowers, subtower, 1'i64);
+		}
+		//println();
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("towers = ", keys_dict_i64(&towers));
+
+	//println("subtowers = ", keys_dict_str(&subtowers));
+	//println("subtowers = ");
+	//for key in keys_dict_str(&subtowers)
+	//	println(key, " :: ", get_dict_str(&subtowers, key));
+
+	//println("weights = ");
+	//for key in keys_dict_i64(&weights)
+	//	println(key, " :: ", get_dict_i64(&weights, key));
+
+	let subweights   = new_dict_i64();  // each tower's sum of sub weights including itself
+
+	// Instead of topo sort, just make multiple passes
+	for pass in [0: len_dict_i64(&towers)]
+	{
+		//println("pass = ", pass);
+
+		for tower in keys_dict_i64(&towers)
+		{
+			if (get_dict_i64(&subweights, tower) >= 0) continue;  // already calculated
+
+			// This tower's weight
+			let this_weight = get_dict_i64(&weights, tower);
+
+			// All subtowers as one str
+			let subtowers_str = get_dict_str(&subtowers, tower);
+			//println("subtowers_str = ", subtowers_str);
+
+			if subtowers_str == ""
+			{
+				// No dependencies.  Subweights is just its own weight
+				set_dict_i64(&subweights, tower, this_weight);
+			}
+			else
+			{
+				let has_all_subs = true;
+				//let subtower_names = split_(words[1], ", ");
+				let subtower_names = split_(subtowers_str, ", ");
+				for subtower in subtower_names
+				{
+					let subweight = get_dict_i64(&subweights, subtower);
+					has_all_subs = subweight >= 0;
+					if (not has_all_subs) break;
+
+					this_weight += subweight;
+				}
+				if has_all_subs
+				{
+					set_dict_i64(&subweights, tower, this_weight);
+				}
+			}
+		}
+
+		//println("subweights = ");
+		//for key in keys_dict_i64(&subweights)
+		//	println(key, " :: ", get_dict_i64(&subweights, key));
+		//println();
+	}
+	//println();
+
+	// Now that all subweight sums are known, make one more pass to check
+	// balances
+	for tower in keys_dict_i64(&towers)
+	{
+		//if (get_dict_i64(&subweights, tower) >= 0) continue;  // already calculated
+
+		//// This tower's weight
+		//let this_weight = get_dict_i64(&weights, tower);
+
+		// All subtowers as one str
+		let subtowers_str = get_dict_str(&subtowers, tower);
+		//println("tower = ", tower);
+		//println("subtowers_str = ", subtowers_str);
+
+		if subtowers_str == ""
+		{
+			continue;
+			//// No dependencies.  Subweights is just its own weight
+			//set_dict_i64(&subweights, tower, this_weight);
+		}
+		//else
+		//{
+
+		//let subtower_names = split_(words[1], ", ");
+		let subtower_names = split_(subtowers_str, ", ");
+
+		let nw = size(subtower_names, 0);
+		let iw = -1;
+		let w = [0; nw];
+		for subtower in subtower_names
+		{
+			iw += 1;
+
+			let subweight = get_dict_i64(&subweights, subtower);
+			//println("subweight = ", subweight);
+			w[iw] = subweight;
+			//this_weight += subweight;
+		}
+		//println("w = ", w);
+		//println();
+
+		let is_balanced = all(w == w[0]);
+		if (is_balanced) continue;
+
+		//println("not balanced");
+		let bad_subweight = -1;
+		for i in [0: nw]
+		{
+			if (count(w == w[i]) == 1)
+			{
+				bad_subweight = w[i];
+				break;
+			}
+		}
+		//println("bad_subweight = ", bad_subweight);
+		let good_subweight = w[0];
+		if (good_subweight == bad_subweight) good_subweight = w[1];
+
+		for subtower in subtower_names
+		{
+			let subweight = get_dict_i64(&subweights, subtower);
+			//println("subweight = ", subweight);
+
+			if subweight == bad_subweight
+			{
+				let bad_weight = get_dict_i64(&weights, subtower);
+				//println("bad_weight = ", bad_weight);
+
+				// An imbalance high in the tree will cause other imbalances
+				// lower in the tree.  Take the min to find the root cause
+				sum_ = min(sum_, bad_weight + (good_subweight - bad_subweight));
+				//sum_ = bad_weight + (good_subweight - bad_subweight);
+				//println("sum_ = ", sum_);
+
+				break;
+			}
+		}
+		//break;  // I thought we could break here but there might be other imbalances lower in the tree that aren't the answer
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/7");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

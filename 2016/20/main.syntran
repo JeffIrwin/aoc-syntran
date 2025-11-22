@@ -1,0 +1,158 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 5_000_000_000'i64;
+
+	let n = countln_(filename);
+	let los = [0'i64; n];
+	let his = [0'i64; n];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = parse_i64_delim(str_, "-");
+		los[i] = nums[0];
+		his[i] = nums[1];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("los = ", los);
+	//println("his = ", his);
+
+	// O(n**2).  Sorting could get this to O(n log n)
+	let candidates = [[0'i64], his+1];
+	for candidate in candidates
+	{
+		let is_blocked = false;
+		for i in [0: n]
+		{
+			is_blocked = los[i] <= candidate and candidate <= his[i];
+			if (is_blocked) break;
+		}
+		if (not is_blocked) sum_ = min(sum_, candidate);
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 5_000_000_000'i64;
+
+	let n = countln_(filename);
+	let los = [0'i64; n];
+	let his = [0'i64; n];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = parse_i64_delim(str_, "-");
+		los[i] = nums[0];
+		his[i] = nums[1];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("los = ", los);
+	//println("his = ", his);
+
+	let na = 0;
+	let an = [0'i64; 3 * n];  // allowed range endpoints, should alternate after sorting
+
+	// O(n**2).  Sorting could get this to O(n log n)
+
+	let IMAX = 4_294_967_295'i64;
+
+	// Lower and upper bounds of allowed lists
+	let candidates = [[0'i64], his+1, los-1, [IMAX]];
+	//let candidates = [[0'i64], his+1];
+	for candidate in candidates
+	{
+		if (candidate < 0 or candidate > IMAX) continue;
+		let is_blocked = false;
+		for i in [0: n]
+		{
+			is_blocked = los[i] <= candidate and candidate <= his[i];
+			if (is_blocked) break;
+		}
+		//if (not is_blocked) sum_ = min(sum_, candidate);
+		if not is_blocked
+		{
+			an[na] = candidate;
+			na += 1;
+		}
+	}
+
+	an = an[0: na];  // trim
+	sort_inplace_i64(&an);
+	println("an = ", an);
+	println("na = ", na);
+
+	if na % 2 != 0
+	{
+		println("Error: unexpected even number `na` of allowed range bounds");
+		exit(-1);
+	}
+
+	sum_ = 0;
+	for i in [0: 2: na]
+	{
+		sum_ += an[i+1] - an[i] + 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/20");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -1,0 +1,144 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn rot(v: [bool; :], shift: i32): [bool; :]
+{
+	let n = size(v, 0);
+	return [v[n-shift: n], v[0: n-shift]];
+	//let ans = [false; n];
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let nx = 50;
+	let ny = 6;
+
+	let screen = [false; nx, ny];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		if starts_with_(str_, "rect")
+		{
+			screen[0: nums[0], 0: nums[1]] = true;
+		}
+		else if starts_with_(str_, "rotate row")
+		{
+			screen[:, nums[0]] = rot(screen[:, nums[0]], nums[1]);
+			//println("screen = ", screen);
+			//exit(0);
+		}
+		else if starts_with_(str_, "rotate col")
+		{
+			screen[nums[0], :] = rot(screen[nums[0], :], nums[1]);
+		}
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+	sum_ = count(screen);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let nx = 50;
+	let ny = 6;
+
+	let screen = [false; nx, ny];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		if starts_with_(str_, "rect")
+		{
+			screen[0: nums[0], 0: nums[1]] = true;
+		}
+		else if starts_with_(str_, "rotate row")
+		{
+			screen[:, nums[0]] = rot(screen[:, nums[0]], nums[1]);
+			//println("screen = ", screen);
+			//exit(0);
+		}
+		else if starts_with_(str_, "rotate col")
+		{
+			screen[nums[0], :] = rot(screen[nums[0], :], nums[1]);
+		}
+
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	let ans = char(10);
+	for y in [0: ny]
+	{
+		let row = repeat(" ", nx);
+		for x in [0: nx]
+			if screen[x, y]
+				row[x] = "#";
+		//println(row);
+		ans += row + char(10);
+	}
+
+	println("part 2 = ", ans);
+	return ans;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/8");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

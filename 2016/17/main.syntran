@@ -1,0 +1,206 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+#include("../../md5.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	 0, -1, // up
+	 0,  1, // down
+	-1,  0, // left
+	 1,  0  // right
+	 ;
+	 2, NDIRS
+];
+// up, down, left, and right
+//
+// Order is important today
+let DIR_STR = "UDLR";
+
+fn part1(): str
+{
+	let ans = "";
+
+	let f = open(filename, "r");
+	let passcode = readln(f);
+	//println("passcode = ", passcode);
+	close(f);
+
+	let nx = 4;
+	let ny = 4;
+
+	// End target destination
+	let xe = nx-1;
+	let ye = ny-1;
+
+	// Queues for [x,y] locations and path string
+	let QCAP = 256;
+	let xq = [-1; 2, QCAP];
+	let pq = [""; QCAP];
+	let qs = 0;
+	let qe = 0;
+
+	// Push
+	xq[:, qe] = [0, 0];
+	pq[qe] = "";
+	qe += 1;
+
+	while true
+	{
+		if qs >= qe
+		{
+			println("Error: queue is empty!");
+			exit(-1);
+		}
+
+		// Pop
+		let x0 = xq[0, qs];
+		let y0 = xq[1, qs];
+		let path0 = pq[qs];
+		qs += 1;
+		//println("path0 = ", path0);
+
+		if x0 == xe and y0 == ye
+		{
+			ans = path0;
+			break;
+		}
+
+		// No visited check.  Which doors are unlocked is path-dependent
+
+		let hash = md5(passcode + path0);
+
+		for id in [0: NDIRS]
+		{
+			if (scan("bcdef", hash[id]) < 0) continue; // door locked
+
+			let x = x0 + DIRS[0, id];
+			let y = y0 + DIRS[1, id];
+
+			if not in_bounds([0,0], [x,y], [nx,ny]) continue;
+
+			// Push
+			xq[:, qe] = [x, y];
+			pq[qe] = path0 + DIR_STR[id];
+			qe += 1;
+		}
+	}
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(): str
+{
+	let ans = 0;
+
+	let f = open(filename, "r");
+	let passcode = readln(f);
+	//println("passcode = ", passcode);
+	close(f);
+
+	let nx = 4;
+	let ny = 4;
+
+	// End target destination
+	let xe = nx-1;
+	let ye = ny-1;
+
+	// Queues for [x,y] locations and path string
+	let QCAP = 1024 * 64;
+	let xq = [-1; 2, QCAP];
+	let pq = [""; QCAP];
+	let qs = 0;
+	let qe = 0;
+
+	// Push
+	xq[:, qe] = [0, 0];
+	pq[qe] = "";
+	qe += 1;
+
+	while true
+	{
+		if qs >= qe
+		{
+			break;
+			//println("Error: queue is empty!");
+			//exit(-1);
+		}
+
+		// Pop
+		let x0 = xq[0, qs];
+		let y0 = xq[1, qs];
+		let path0 = pq[qs];
+		qs += 1;
+		//println("path0 = ", path0);
+
+		if x0 == xe and y0 == ye
+		{
+			ans = max(ans, i32(len(path0)));
+			continue;
+		}
+
+		// No visited check.  Which doors are unlocked is path-dependent
+
+		let hash = md5(passcode + path0);
+
+		for id in [0: NDIRS]
+		{
+			if (scan("bcdef", hash[id]) < 0) continue; // door locked
+
+			let x = x0 + DIRS[0, id];
+			let y = y0 + DIRS[1, id];
+
+			if not in_bounds([0,0], [x,y], [nx,ny]) continue;
+
+			// Push
+			xq[:, qe] = [x, y];
+			pq[qe] = path0 + DIR_STR[id];
+			qe += 1;
+		}
+	}
+
+	println("part 2 = ", ans);
+	return str(ans);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/17");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

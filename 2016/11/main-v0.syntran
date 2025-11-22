@@ -1,0 +1,198 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let elems = [
+	"strontium",
+	"plutonium",
+	"thulium",
+	"ruthenium",
+	"curium"
+];
+let elem_inits = "SPTRC";
+if ifile == 0
+{
+	elems = [
+		"hydrogen",
+		"lithium"
+	];
+	elem_inits = "HL";
+}
+
+//==============================================================================
+
+fn pretty_print(gens: [i32; :], mics: [i32; :], elev: i32, nfloors: i32)
+{
+	let nelems = size(elems, 0);
+
+	// Pretty-print state:
+	//
+	//   F4 .  .  .  .  .  
+	//   F3 .  .  .  LG .  
+	//   F2 .  HG .  .  .  
+	//   F1 E  .  HM .  LM
+	//
+	for i in [nfloors-1: -1: -1]
+	{
+		let line = "";
+		line += "F" + str(i) + " ";  // 0-based floor index
+
+		if (elev == i) line += "E  ";
+		else           line += ".  ";
+
+		for j in [0: nelems]
+		{
+			if (gens[j] == i) line += elem_inits[j] + "G ";
+			else              line += ".  ";
+
+			if (mics[j] == i) line += elem_inits[j] + "M ";
+			else              line += ".  ";
+		}
+
+		println(line);
+	}
+	println();
+	return;
+}
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let nelems = size(elems, 0);
+	let nfloors = countln_(filename);
+
+	// Floor level of each microchip and generator (0-based)
+	let mics = [-1; nelems];
+	let gens = [-1; nelems];
+
+	println("elems = ", elems);
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let floor = 0;
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		for i in [0: nelems]
+		{
+			if index_(str_, elems[i] + " generator") >= 0
+				gens[i] = floor;
+			if index_(str_, elems[i] + "-compatible microchip") >= 0
+				mics[i] = floor;
+		}
+
+		floor += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("gens = ", gens);
+	println("mics = ", mics);
+
+	let dist = 0;  // search distance, aka number of steps
+	let elev = 0;  // elevator starts on first floor (0)
+
+	// State:
+	// - 0: nelems:  gens
+	// - nelems: 2*nelems: mics
+	// - 2*nelems:  dist
+	// - 2*nelems+1:  elev
+	let nstate = 2 * nelems + 2;
+
+	// Do a BFS using a queue
+	let QCAP = 1024;
+	let q = [-1; nstate, QCAP];
+	let qs = 0;
+	let qe = 0;
+
+	// Push initial state
+	q[:, qe] = [gens, mics, [dist], [elev]];
+	qe += 1;
+	//println("q[:,0] = ", q[:,0]);
+
+	while qs < qe
+	{
+		// Pop
+		gens = q[0: nelems, qs];
+		mics = q[nelems: 2*nelems, qs];
+		dist = q[2*nelems, qs];
+		elev = q[2*nelems+1, qs];
+		qs += 1;
+
+		println("gens = ", gens);
+		println("mics = ", mics);
+		println("dist = ", dist);
+		println("elev = ", elev);
+		println();
+		pretty_print(gens, mics, elev, nfloors);
+
+		// TODO: create a dict to prevent revisiting loops.  Not strictly
+		// required but could be a major perf optimization
+
+		if all(gens == nfloors-1) and all(mics == nfloors-1)
+		{
+			sum_ = dist;
+			break;
+		}
+
+		let fried = false;
+		for im in [0: nelems]
+		{
+			let mlev = mics[im];
+			if (gens[im] == mlev) continue; // safe since microchip is with its own generator
+			fried = any(gens == mlev);  // fried if any other gen is on same floor level
+		}
+		println("fried = ", fried);
+		if (fried) continue;
+
+		// TODO: make a list of all gens and mics on floor elev (could be
+		// combined with next step(s))
+
+		// TODO: iterate on combos of 1 or 2 items on current floor
+
+		// TODO: push each combo to [elev+1, dist+1] and [elev-1, dist+1]
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/11");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

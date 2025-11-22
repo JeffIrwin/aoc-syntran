@@ -1,0 +1,114 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	// Pad with dots to avoid bounds-checking logic
+	let row = "." + str_ + ".";
+	let nx = len(row);  // includes pad
+
+	for i in [0: 40]
+	{
+		// Count here (but not end of loop)
+		for x in [1: nx-1]
+			if (row[x] == ".") sum_ += 1;
+		//println(row[1: nx-1]);
+
+		let row0 = row;
+		for x in [1: nx-1]
+		{
+			row[x] = ".";
+			if (row0[x-1:x+2] == "^^.") row[x] = "^";
+			if (row0[x-1:x+2] == ".^^") row[x] = "^";
+			if (row0[x-1:x+2] == "^..") row[x] = "^";
+			if (row0[x-1:x+2] == "..^") row[x] = "^";
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	// Pad with dots to avoid bounds-checking logic
+	let row = "." + str_ + ".";
+	let nx = len(row);  // includes pad
+
+	for i in [0: 400_000]
+	{
+		// Count here (but not end of loop)
+		for x in [1: nx-1]
+			if (row[x] == ".") sum_ += 1;
+		//println(row[1: nx-1]);
+
+		let row0 = row;
+		for x in [1: nx-1]
+		{
+			row[x] = ".";
+			if (row0[x-1:x+2] == "^^.") row[x] = "^";
+			if (row0[x-1:x+2] == ".^^") row[x] = "^";
+			if (row0[x-1:x+2] == "^..") row[x] = "^";
+			if (row0[x-1:x+2] == "..^") row[x] = "^";
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/18");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

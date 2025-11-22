@@ -1,0 +1,366 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	 0, -1, // up
+	 0,  1, // down
+	-1,  0, // left
+	 1,  0  // right
+	 ;
+	 2, NDIRS
+];
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	//print_char_mat(&g);
+
+	// Scan for locations of numeric chars (max 10)
+	let locs = [-1; 2, 10];
+	let nlocs = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if is_digit(g[x, y])
+		{
+			let id = parse_i32(g[x, y]);
+			locs[:, id] = [x, y];
+			nlocs += 1;
+		}
+	}
+	locs = locs[:, 0: nlocs];  // trim
+	//println("locs = ", locs);
+
+	// Graph adjacency array and weights (distances)
+	let NADJ_CAP = nlocs;
+	let adj  = [-1; NADJ_CAP, nlocs];
+	let nadj = [ 0; nlocs];
+	let w    = [-1; NADJ_CAP, nlocs];
+
+	// Do a BFS from each loc to find its distance to its ~~immediate~~ neighbors
+	for il in [0: nlocs]
+	{
+		let loc = locs[:, il];
+		//println();
+		//println("searching loc ", loc);
+
+		// Queue
+		let QCAP = 1024 * 64;
+		let q = [-1; 3, QCAP];
+		let qs = 0;
+		let qe = 0;
+
+		// Push
+		q[:, qe] = [loc, [0]];
+		qe += 1;
+
+		let visited = [false; nx, ny];
+		while true
+		{
+			if (qs >= qe) break;
+
+			// Pop
+			let xy0 = q[0:2, qs];
+			let dist0 = q[2, qs];
+			qs += 1;
+
+			if (visited[xy0[0], xy0[1]]) continue;
+			visited[xy0[0], xy0[1]] = true;
+
+			let char_ = g[xy0[0], xy0[1]];
+			if is_digit(char_) and not all(xy0 == loc)
+			{
+				//println("neighbor ", char_, " at ", xy0);
+
+				let id = parse_i32(char_);
+
+				adj[ nadj[il], il ] = id;
+				w[ nadj[il], il ] = dist0;
+				nadj[il] += 1;
+
+				//// Don't continue here.  Find all reachable points, not just
+				//// immediate neighbors for simplicity
+				//continue;
+			}
+
+			// Iterate over neighbors
+			for idir in [0: NDIRS]
+			{
+				let xy = xy0 + DIRS[:, idir];
+
+				// No need for bounds check.  Border is covered by walls
+				if (g[xy[0], xy[1]] == "#") continue;
+
+				// Push
+				q[:, qe] = [xy, [dist0 + 1]];
+				qe += 1;
+				if qe >= QCAP
+				{
+					println("Error:  queue overflow!");
+					exit(-1);
+				}
+			}
+		}
+	}
+	//println("adj = ", adj);
+	//println("w = ", w);
+
+	// Compressed weights is overkill.  Just make a matrix
+	let wmat = [0; nlocs, nlocs];
+	for i in [0: nlocs]
+	for iu in [0: nadj[i]]
+	{
+		let j =    adj[iu, i];
+		wmat[i, j] = w[iu, i];
+		wmat[j, i] = w[iu, i];
+	}
+	//println("wmat = ", wmat);
+
+	// Try traversing, starting at "0", based on every possible permutation
+	let perm = [1: nlocs];
+	sum_ = 2_000_000_000;
+	//println("perm = ", perm);
+	while true
+	{
+		//println("perm = ", perm);
+
+		// The `valid` check is not needed since I realized I had to include
+		// non-immediate neighbors
+		let dist = i64(wmat[0, perm[0]]);
+		let valid = dist > 0;
+		for i in [1: nlocs - 1]
+		{
+			let ddist = wmat[perm[i-1], perm[i]];
+			dist += ddist;
+			valid = valid and ddist > 0;
+		}
+
+		//println("dist = ", dist);
+		//println();
+		if (valid) sum_ = min(sum_, dist);
+
+		if (not next_perm(&perm)) break;
+	}
+
+	//// Starting at "0", search all paths on the compressed graph of numeric
+	//// locations to find the minimum spanning tree (terminology?)
+	////
+	//// I was going to do something B/DFS-based before I decided permutations
+	//// would be easier
+
+	//// Queue
+	//let QCAP = 1024;
+	//let q = [-1; 2, QCAP];
+	//let qs = 0;
+	//let qe = 0;
+
+	//// Push
+	//q[:, qe] = [0, 0];  // ID and dist
+	//qe += 1;
+
+	//// No visited struct -- we need to try *all* paths
+
+	//while true
+	//{
+	//	if (qs >= qe) break;
+
+	//	// Pop
+	//	let id0   = q[0, qs];
+	//	let dist0 = q[1, qs];
+	//	qs += 1;
+
+	//	// Iterate over numeric neighbors
+	//	for iu in [0: nadj[id0]]
+	//	//for u in adj[0: nadj[id0], id0]
+	//	{
+	//		let u = adj[iu, id0];
+	//		//println("u = ", u);
+
+	//		// Push
+	//		q[:, qe] = [u, dist0 + w[iu, id0]];
+	//		qe += 1;
+	//	}
+	//}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	//print_char_mat(&g);
+
+	// Scan for locations of numeric chars (max 10)
+	let locs = [-1; 2, 10];
+	let nlocs = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if is_digit(g[x, y])
+		{
+			let id = parse_i32(g[x, y]);
+			locs[:, id] = [x, y];
+			nlocs += 1;
+		}
+	}
+	locs = locs[:, 0: nlocs];  // trim
+	//println("locs = ", locs);
+
+	// Graph adjacency array and weights (distances)
+	let NADJ_CAP = nlocs;
+	let adj  = [-1; NADJ_CAP, nlocs];
+	let nadj = [ 0; nlocs];
+	let w    = [-1; NADJ_CAP, nlocs];
+
+	// Do a BFS from each loc to find its distance to its ~~immediate~~ neighbors
+	for il in [0: nlocs]
+	{
+		let loc = locs[:, il];
+		//println();
+		//println("searching loc ", loc);
+
+		// Queue
+		let QCAP = 1024 * 64;
+		let q = [-1; 3, QCAP];
+		let qs = 0;
+		let qe = 0;
+
+		// Push
+		q[:, qe] = [loc, [0]];
+		qe += 1;
+
+		let visited = [false; nx, ny];
+		while true
+		{
+			if (qs >= qe) break;
+
+			// Pop
+			let xy0 = q[0:2, qs];
+			let dist0 = q[2, qs];
+			qs += 1;
+
+			if (visited[xy0[0], xy0[1]]) continue;
+			visited[xy0[0], xy0[1]] = true;
+
+			let char_ = g[xy0[0], xy0[1]];
+			if is_digit(char_) and not all(xy0 == loc)
+			{
+				//println("neighbor ", char_, " at ", xy0);
+				let id = parse_i32(char_);
+
+				adj[ nadj[il], il ] = id;
+				w[ nadj[il], il ] = dist0;
+				nadj[il] += 1;
+			}
+
+			// Iterate over neighbors
+			for idir in [0: NDIRS]
+			{
+				let xy = xy0 + DIRS[:, idir];
+
+				// No need for bounds check.  Border is covered by walls
+				if (g[xy[0], xy[1]] == "#") continue;
+
+				// Push
+				q[:, qe] = [xy, [dist0 + 1]];
+				qe += 1;
+				if qe >= QCAP
+				{
+					println("Error:  queue overflow!");
+					exit(-1);
+				}
+			}
+		}
+	}
+	//println("adj = ", adj);
+	//println("w = ", w);
+
+	// Compressed weights is overkill.  Just make a matrix
+	let wmat = [0; nlocs, nlocs];
+	for i in [0: nlocs]
+	for iu in [0: nadj[i]]
+	{
+		let j =    adj[iu, i];
+		wmat[i, j] = w[iu, i];
+		wmat[j, i] = w[iu, i];
+	}
+	//println("wmat = ", wmat);
+
+	// Try traversing, starting at "0", based on every possible permutation
+	let perm = [1: nlocs];
+	sum_ = 2_000_000_000;
+	//println("perm = ", perm);
+	while true
+	{
+		//println("perm = ", perm);
+
+		let dist = i64(wmat[0, perm[0]]);
+		for i in [1: nlocs - 1]
+		{
+			let ddist = wmat[perm[i-1], perm[i]];
+			dist += ddist;
+		}
+		dist += wmat[perm[nlocs-2], 0];
+
+		//println("dist = ", dist);
+		//println();
+		sum_ = min(sum_, dist);
+
+		if (not next_perm(&perm)) break;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/24");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

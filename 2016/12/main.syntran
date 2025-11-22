@@ -1,0 +1,200 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let ninstrs = countln_(filename);
+
+	let instrs = [""; ninstrs];
+	let arg0s  = [""; ninstrs];
+	let arg1s  = [""; ninstrs];
+
+	let regs = new_dict_i64();
+	set_dict_i64(&regs, "a", 0'i64);
+	set_dict_i64(&regs, "b", 0'i64);
+	set_dict_i64(&regs, "c", 0'i64);
+	set_dict_i64(&regs, "d", 0'i64);
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		instrs[i] = words[0];
+		arg0s [i] = words[1];
+		if size(words, 0) >= 3
+			arg1s [i] = words[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("arg1s = ", arg1s);
+
+	let iptr = 0;
+	while iptr < ninstrs
+	{
+		let arg0 = 0'i64;
+		if scan("abcd", arg0s[iptr]) >= 0
+			arg0 = get_dict_i64(&regs, arg0s[iptr]);
+		else
+			arg0 = parse_i64(arg0s[iptr]);
+		//println("arg0 = ", arg0);
+
+		let instr = instrs[iptr];
+		if instr == "cpy"
+		{
+			set_dict_i64(&regs, arg1s[iptr], arg0);
+		}
+		else if instr == "inc"
+		{
+			arg0 += 1;
+			set_dict_i64(&regs, arg0s[iptr], arg0);
+		}
+		else if instr == "dec"
+		{
+			arg0 -= 1;
+			set_dict_i64(&regs, arg0s[iptr], arg0);
+		}
+		else if instr == "jnz"
+		{
+			if arg0 != 0
+			{
+				let arg1 = parse_i64(arg1s[iptr]);
+				iptr += arg1;
+				continue;
+			}
+		}
+		iptr += 1;
+	}
+	sum_ = get_dict_i64(&regs, "a");
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let ninstrs = countln_(filename);
+
+	let instrs = [""; ninstrs];
+	let arg0s  = [""; ninstrs];
+	let arg1s  = [""; ninstrs];
+
+	// Part 2 takes 2 minutes to run.  I guess a dictionary was a bad choice
+	// although it simplifies getting/setting.  An array would have worked, or
+	// the usual if/else
+	let regs = new_dict_i64();
+	set_dict_i64(&regs, "a", 0'i64);
+	set_dict_i64(&regs, "b", 0'i64);
+	set_dict_i64(&regs, "c", 1'i64);
+	set_dict_i64(&regs, "d", 0'i64);
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		instrs[i] = words[0];
+		arg0s [i] = words[1];
+		if size(words, 0) >= 3
+			arg1s [i] = words[2];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("arg1s = ", arg1s);
+
+	let iptr = 0;
+	while iptr < ninstrs
+	{
+		let arg0 = 0'i64;
+		if scan("abcd", arg0s[iptr]) >= 0
+			arg0 = get_dict_i64(&regs, arg0s[iptr]);
+		else
+			arg0 = parse_i64(arg0s[iptr]);
+		//println("arg0 = ", arg0);
+
+		let instr = instrs[iptr];
+		if instr == "cpy"
+		{
+			set_dict_i64(&regs, arg1s[iptr], arg0);
+		}
+		else if instr == "inc"
+		{
+			arg0 += 1;
+			set_dict_i64(&regs, arg0s[iptr], arg0);
+		}
+		else if instr == "dec"
+		{
+			arg0 -= 1;
+			set_dict_i64(&regs, arg0s[iptr], arg0);
+		}
+		else if instr == "jnz"
+		{
+			if arg0 != 0
+			{
+				let arg1 = parse_i64(arg1s[iptr]);
+				iptr += arg1;
+				continue;
+			}
+		}
+		iptr += 1;
+	}
+	sum_ = get_dict_i64(&regs, "a");
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/12");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

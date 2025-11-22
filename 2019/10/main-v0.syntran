@@ -1,0 +1,99 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	print_char_mat(&g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	let nvisible = [0; nx, ny];
+	for ym in [0: ny]
+	for xm in [0: nx]
+	{
+		if (g[xm, ym] != "#") continue;
+		println("xm, ym = ", [xm, ym]);
+
+		// Evaluate building a new monitoring station at [xm, ym]
+		let is_visible = [true; nx, ny];
+		is_visible[xm, ym] = false;  // asteroid cannot see itself
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			if (x == xm and y == ym) continue;
+			if g[x,y] != "#"
+			{
+				is_visible[x,y] = false;
+				continue;
+			}
+
+			// All integer multiples by `k` of [x,y] (relative to [xm,ym]) are
+			// blocked from view
+			let dx = x - xm;
+			let dy = y - ym;
+			let k = 1;
+			while true
+			{
+				k += 1;
+				let xa = xm + k * dx;
+				let ya = ym + k * dy;
+				//if (xa >= nx or ya >= ny) break;  // out of bounds
+				if (not in_bounds([0,0], [xa,ya], [nx,ny])) break;
+				is_visible[xa, ya] = false;
+			}
+		}
+		nvisible[xm, ym] = count(is_visible);
+		println("is_visible = ", is_visible);
+		println("nvisible = ", nvisible[xm, ym]);
+		println();
+	}
+	println("nvisible = ", nvisible);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2019/10");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

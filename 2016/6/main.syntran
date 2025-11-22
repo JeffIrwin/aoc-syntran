@@ -1,0 +1,117 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let f = open(filename, "r");
+	let str_ = readln(f);
+
+	let n = len(str_);
+	let counts = [0; n, 256];
+
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		for i in [0: n]
+			counts[ i, i32(str_[i]) ] += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let ans = "";
+	for j in [0: n]
+	{
+		let max_count = 0;
+		let imax = 0;
+		for i in [0: 256]
+			if counts[j, i] > max_count
+			{
+				max_count = counts[j, i];
+				imax = i;
+			}
+		ans += char(imax);
+	}
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(): str
+{
+	let f = open(filename, "r");
+	let str_ = readln(f);
+
+	let n = len(str_);
+	let counts = [0; n, 256];
+
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		for i in [0: n]
+			counts[ i, i32(str_[i]) ] += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let ans = "";
+	for j in [0: n]
+	{
+		let min_count = 2_000_000_000;
+		let imin = 0;
+		for i in [0: 256]
+			if counts[j, i] < min_count and counts[j, i] != 0
+			{
+				min_count = counts[j, i];
+				imin = i;
+			}
+		ans += char(imin);
+	}
+
+	println("part 2 = ", ans);
+	return ans;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/6");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

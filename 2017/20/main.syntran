@@ -1,0 +1,177 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let HUGE = 2_000_000_000;
+
+	// We don't actually need to simulate in time.  Distance from origin will be
+	// dominated "in the long term" purely by the acceleration.  If acceleration
+	// is tied, break by velocity, and then by position
+
+	let min_p_norm = HUGE;
+	let min_v_norm = HUGE;
+	let min_a_norm = HUGE;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	let imin = -1;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let nums = parse_i32_delim(str_, "<>,=pva ");
+		//println("nums = ", nums);
+
+		let p = nums[0:3];
+		let v = nums[3:6];
+		let a = nums[6:9];
+
+		//println("a = ", a);
+
+		let p_norm = sum(abs(p));
+		let v_norm = sum(abs(v));
+		let a_norm = sum(abs(a));
+
+		if a_norm < min_a_norm
+		{
+			min_a_norm = a_norm;
+			min_v_norm = HUGE;
+			min_p_norm = HUGE;
+			imin = i;
+		}
+		else if a_norm == min_a_norm
+		{
+			if v_norm < min_v_norm
+			{
+				min_v_norm = v_norm;
+				min_p_norm = HUGE;
+				imin = i;
+			}
+			else if v_norm == min_v_norm
+			{
+				if p_norm < min_p_norm
+				{
+					min_p_norm = p_norm;
+					imin = i;
+				}
+			}
+		}
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	sum_ = imin;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+
+	let p = [0; 3, n];
+	let v = [0; 3, n];
+	let a = [0; 3, n];
+
+	let f = open(filename, "r");
+	for i in [0: n]
+	{
+		let nums = parse_i32_delim(readln(f), "<>,=pva ");
+		p[:,i] = nums[0:3];
+		v[:,i] = nums[3:6];
+		a[:,i] = nums[6:9];
+	}
+	close(f);
+	//println("a = ", a);
+
+	let HUGE = 2_000_000_000;
+
+	// Are particles active or removed due to collisions?
+	let active = [true; n];
+
+	// Now we have to iterate over time for part 2
+	let it = 0;
+	while true
+	{
+		// Check collisions
+		let set = new_dict_i64();
+		for i in [0: n]
+		{
+			if (not active[i]) continue;
+
+			let key = str(p[:,i]);
+			let val = get_dict_i64(&set, key);
+			if val >= 0
+			{
+				active[i]   = false;  // deactivate this particle
+				active[val] = false;  // also deactivate the other colliding pair
+			}
+			set_dict_i64(&set, key, i64(i));
+		}
+
+		// Update
+		v += a;
+		p += v;
+
+		//println("it, count = ", [it, i32(count(active))]);
+		sum_ = count(active);
+
+		// Not sure how to do this elegantly and robustly.  My system hits
+		// steady state after 39 steps, so 512 is probably safe
+		if (it >= 512) break;
+
+		it += 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/20");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

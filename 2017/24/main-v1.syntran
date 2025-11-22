@@ -1,0 +1,162 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let pairs = read_i32_mat_delim(filename, "/");
+	println("pairs = ", pairs);
+
+	let npairs = size(pairs, 1);
+	println("npairs = ", npairs);
+
+	let match_num = 0;
+	let used = [false; npairs];
+
+	let max_ = 0;
+	dfs(&pairs, &used, match_num, &max_);
+	sum_ = max_;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+let max_len_glbl = 0;
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let pairs = read_i32_mat_delim(filename, "/");
+	println("pairs = ", pairs);
+
+	let npairs = size(pairs, 1);
+	println("npairs = ", npairs);
+
+	let match_num = 0;
+	let used = [false; npairs];
+
+	let max_ = 0;
+	let max_len = 0;
+	dfs2(&pairs, &used, match_num, &max_, &max_len);
+	sum_ = max_;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn dfs2(pairs: &[i32; :, :], used: &[bool; :], match_num: i32, max_: &i32, max_len: &i32)
+{
+	let npairs = size(pairs, 1);
+	let max_in = max_;
+	let max_len_in = max_len;
+	for i in [0: npairs]
+	{
+		if (used[i]) continue;
+
+		if pairs[0,i] == match_num
+		{
+			//println("pairs[:,i] = ", pairs[:,i]);
+			used[i] = true;
+			let maxl = max_in + sum(pairs[:, i]);
+			let max_lenl = max_len_in + 1;
+			dfs2(&pairs, &used, pairs[1,i], &maxl, &max_lenl);
+			used[i] = false;  // reset to allow re-using this pair in another branch
+			//max_ = max(max_, maxl);
+			if max_lenl >= max_len
+			{
+				max_len = max_lenl;
+				max_ = max(max_, maxl);
+			}
+		}
+		else if pairs[1,i] == match_num
+		{
+			//println("pairs[:,i] = ", pairs[:,i]);
+			used[i] = true;
+			let maxl = max_in + sum(pairs[:, i]);
+			let max_lenl = max_len_in + 1;
+			dfs2(&pairs, &used, pairs[0,i], &maxl, &max_lenl);
+			used[i] = false;
+			//max_ = max(max_, maxl);
+			if max_lenl >= max_len
+			{
+				max_len = max_lenl;
+				max_ = max(max_, maxl);
+			}
+		}
+	}
+	//println();
+	return;
+}
+
+fn dfs(pairs: &[i32; :, :], used: &[bool; :], match_num: i32, max_: &i32)
+{
+	let npairs = size(pairs, 1);
+	let max_in = max_;
+	for i in [0: npairs]
+	{
+		if (used[i]) continue;
+
+		if pairs[0,i] == match_num
+		{
+			//println("pairs[:,i] = ", pairs[:,i]);
+			used[i] = true;
+			let maxl = max_in + sum(pairs[:, i]);
+			dfs(&pairs, &used, pairs[1,i], &maxl);
+			used[i] = false;  // reset to allow re-using this pair in another branch
+			max_ = max(max_, maxl);
+		}
+		else if pairs[1,i] == match_num
+		{
+			//println("pairs[:,i] = ", pairs[:,i]);
+			used[i] = true;
+			let maxl = max_in + sum(pairs[:, i]);
+			dfs(&pairs, &used, pairs[0,i], &maxl);
+			used[i] = false;
+			max_ = max(max_, maxl);
+		}
+	}
+	//println();
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/24");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

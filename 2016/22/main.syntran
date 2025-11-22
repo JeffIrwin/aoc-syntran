@@ -1,0 +1,270 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS =
+[
+	 0, -1, // up
+	 0,  1, // down
+	-1,  0, // left
+	 1,  0  // right
+	 ;
+	 2, NDIRS
+];
+//let DIR_STR = "UDLR";
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+	let used = [0; n];
+	let avai = [0; n];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		used[i] = nums[3];
+		avai[i] = nums[4];
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	for src in [0: n]
+	for dst in [0: n]
+	{
+		if (src == dst) continue;
+		if (used[src] == 0) continue;
+
+		if (used[src] <= avai[dst]) sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn pretty_print(is_big: &[bool; :, :])
+{
+	let nx = i32(size(is_big, 0));
+	for y in [0: size(is_big, 1)]
+	{
+		let row = repeat(".", nx);
+		for x in [0: nx]
+			if (is_big[x, y]) row[x] = "#";
+		println(row);
+	}
+	return;
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let n = countln_(filename);
+
+	let xs   = [0; n];
+	let ys   = [0; n];
+	let used_vec = [0; n];
+	let avai_vec = [0; n];
+
+	let xmax = 0;
+	let ymax = 0;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	str_ = readln(f); // skip two lines
+	str_ = readln(f);
+	let i = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let nums = read_i32s(str_);
+		//println("nums = ", nums);
+
+		xs  [i] = nums[0];
+		ys  [i] = nums[1];
+		used_vec[i] = nums[3];
+		avai_vec[i] = nums[4];
+
+		xmax = max(xmax, xs[i]);
+		ymax = max(ymax, ys[i]);
+
+		i += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("xmax, ymax = ", [xmax, ymax]);
+
+	// Reshape input into a matrix
+	let nx = xmax + 1;
+	let ny = ymax + 1;
+	let used = [0; nx, ny];
+	let avai = [0; nx, ny];
+	for i in [0: n]
+	{
+		used[ xs[i], ys[i] ] = used_vec[i];
+		avai[ xs[i], ys[i] ] = avai_vec[i];
+	}
+	//println("used = ", used);
+	//println("avai = ", avai);
+
+	// Goal location in top-right
+	let xg = nx - 1;
+	let yg = 0;
+
+	// Destination location, i.e. the node we can access in top-left
+	let xd = 0;
+	let yd = 0;
+
+	// Scan for empty location, i.e. the node with 0 used data
+	let xe = 0;
+	let ye = 0;
+	for x in [0: nx]
+	for y in [0: ny]
+		if used[x, y] == 0
+		{
+			xe = x;
+			ye = y;
+		}
+	//println("xe, ye = ", [xe, ye]);
+
+	// Scan for big data locations ("the very large, very full node")
+	let is_big = [false; nx, ny];
+	for x in [0: nx]
+	for y in [0: ny]
+		is_big[x, y] = used[x, y] >= 100;
+
+	//pretty_print(&is_big);
+
+	// Do a BFS on motions of the empty location.  Don't move the "goal" data
+	// directly, just let it move as a consequence of whenever we move the empty
+	// space into it
+	//
+	// This takes about 4 minutes.  I think A* might be a better method
+
+	let QCAP = 1024 * 1024 * 8;
+	let qdist = [-1; QCAP];
+	let qempt = [-1; 2, QCAP];
+	let qgoal = [-1; 2, QCAP];
+	let qs = 0;
+	let qe = 0;
+
+	// Push
+	qdist[qe] = 0;
+	qempt[:, qe] = [xe, ye];
+	qgoal[:, qe] = [xg, yg];
+	qe += 1;
+
+	let visited = new_dict_i64();
+
+	let dist_max = -1;
+	while true
+	{
+		if qs >= qe
+		{
+			println("Error: queue is empty");
+			exit(-1);
+		}
+
+		// Pop
+		let dist0 = qdist[qs];
+		let xe0 = qempt[0, qs];
+		let ye0 = qempt[1, qs];
+		let xg0 = qgoal[0, qs];
+		let yg0 = qgoal[1, qs];
+		qs += 1;
+
+		if xg0 == xd and yg0 == yd
+		{
+			sum_ = dist0;
+			break;
+		}
+
+		let key = str([xe0, ye0, xg0, yg0]);
+		if (get_dict_i64(&visited, key) == 1) continue;
+		set_dict_i64(&visited, key, 1'i64);
+
+		//println("dist0 = ", dist0);
+		if dist0 > dist_max
+		{
+			dist_max = dist0;
+			println("dist_max = ", dist_max);
+		}
+
+		// Iterate over neighbors
+		for id in [0: NDIRS]
+		{
+			let x = xe0 + DIRS[0, id];
+			let y = ye0 + DIRS[1, id];
+
+			if not in_bounds([0,0], [x,y], [nx,ny]) continue;
+			if (is_big[x,y]) continue;
+
+			// Push
+			qdist[qe] = dist0 + 1;
+			qempt[:, qe] = [x, y];
+
+			qgoal[:, qe] = [xg0, yg0];
+			if (x == xg0 and y == yg0) qgoal[:, qe] = [xe0, ye0];
+
+			qe += 1;
+			if qe >= QCAP
+			{
+				println("Error: queue overflow!");
+				exit(-1);
+			}
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/22");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

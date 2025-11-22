@@ -1,0 +1,230 @@
+
+#include("../../utils.syntran");
+#include("../../dict_str.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn do_that_thang(nitr: i32): str
+{
+	let sum_ = 0'i64;
+
+	let nsearches = countln_(filename);
+	let searches = [""; nsearches];
+	let replaces = [""; nsearches];
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let k = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " =>");
+		searches[k] = words[0];
+		replaces[k] = words[1];
+
+		k += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	//println("searches = ", searches);
+	//println("replaces = ", replaces);
+
+	let gstr = ".#.
+..#
+###";
+
+	//println("gstr = ");
+	//println(gstr);
+
+	let g = split_str_mat(gstr, NEWLINE_);
+
+	//println("g = ");
+	//print_char_mat(&g);
+
+	let cache = new_dict_str();
+
+	for itr in [0: nitr]
+	{
+		let g0 = g;
+		let nx0 = size(g0, 0);
+		let ny0 = size(g0, 1);
+		//println("nx0, ny0 = ", [nx0, ny0]);
+
+		let d0 = -1;
+		let d  = -1;
+		if nx0 % 2 == 0
+		{
+			d0 = 2;
+			d  = 3;
+		}
+		else
+		{
+			d0 = 3;
+			d  = 4;
+		}
+		let nx = nx0 * d / d0;
+		let ny = ny0 * d / d0;
+		//println("nx, ny = ", [nx, ny]);
+
+		g = [""; nx, ny];  // resize
+
+		for y0 in [0: d0: ny0]
+		for x0 in [0: d0: nx0]
+		{
+			let x = x0 * d / d0;
+			let y = y0 * d / d0;
+
+			let subg0 = g0[x0: x0+d0, y0: y0+d0];
+			//println("subg0 = ");
+			//print_char_mat(&subg0);
+
+			// Memoize the search/replace function
+			let key = str(subg0);
+			let replace = get_dict_str(&cache, key);
+			if replace != ""
+			{
+				// Cache hit
+				g[x: x+d, y: y+d] = split_str_mat(replace, "/");
+				continue;
+			}
+
+			// Else, cache miss
+
+			for isearch in [0: nsearches]
+			{
+				let search_template = split_str_mat(searches[isearch], "/");
+				//println("search_template = ");
+				//print_char_mat(&search_template);
+
+				// TODO: flip lr, flip ud, transpose, in all permutations
+				let nxs = size(search_template, 0);
+				let nys = size(search_template, 1);
+
+				if (nxs != d0) continue;
+
+				let NPERM = 8;  // number of flip/transpose (rotation) permutations
+				let searches = [""; nxs, nys, NPERM];
+
+				searches[:, :, 0] = search_template;
+				searches[:, :, 1] = flip_lr_str  (search_template);
+				searches[:, :, 2] = flip_ud_str  (search_template);
+				searches[:, :, 3] = transpose_str(search_template);
+				searches[:, :, 4] = flip_lr_str(flip_ud_str(search_template));
+				searches[:, :, 5] = flip_ud_str(transpose_str(search_template));
+				searches[:, :, 6] = flip_lr_str(transpose_str(search_template));
+				searches[:, :, 7] = flip_lr_str(flip_ud_str(transpose_str(search_template)));
+
+				//println("searches = ", searches);
+
+				for iperm in [0: NPERM]
+				{
+					let search = searches[:, :, iperm];
+
+					if all(subg0 == search)
+					{
+						// Update cache
+						set_dict_str(&cache, key, replaces[isearch]);
+
+						//println("found");
+						//print_char_mat(&search);
+						//println("replaces = ", replaces[isearch]);
+
+						//let subg0 = g0[x0: x0+d0, y0: y0+d0];
+						//let search_template = split_str_mat(searches[isearch], "/");
+
+						//g[x: x+d, y: y+d] = replaces(isearch);
+						//println("subg = ", g[x: x+d, y: y+d]);
+						g[x: x+d, y: y+d] = split_str_mat(replaces[isearch], "/");
+						//println("subg = ", g[x: x+d, y: y+d]);
+
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	//println("g = ");
+	//print_char_mat(&g);
+
+	sum_ = count(g == "#");
+
+	if nitr < 10
+		println("part 1 = ", sum_);
+	else
+		println("part 2 = ", sum_);
+
+	return str(sum_);
+}
+
+fn flip_lr_str(s: [str; :, :]): [str; :, :]
+{
+	//let nx = size(s, 0);
+	//return s[nx-1: -1: -1, :];
+	let nx = size(s, 0);
+	let ny = size(s, 1);
+	let t = [""; nx, ny];
+	for x in [0: nx]
+		t[nx - x - 1, :] = s[x, :];
+	return t;
+}
+
+fn flip_ud_str(s: [str; :, :]): [str; :, :]
+{
+	let nx = size(s, 0);
+	let ny = size(s, 1);
+	let t = [""; nx, ny];
+	for y in [0: ny]
+		t[:, ny - y - 1] = s[:, y];
+	return t;
+}
+
+fn transpose_str(s: [str; :, :]): [str; :, :]
+{
+	let nx = size(s, 0);
+	let ny = size(s, 1);
+	let t = [""; ny, nx];
+	for x in [0: nx]
+		t[:, x] = s[x, :];
+	return t;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/21");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = do_that_thang(5);
+	p2 = do_that_thang(18);
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

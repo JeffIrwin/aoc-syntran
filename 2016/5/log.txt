@@ -1,0 +1,12 @@
+
+ [95msyntran 0.0.59[0m
+ [95mhttps://github.com/JeffIrwin/syntran[0m
+
+ Interpreting file "main.syntran"
+
+Starting AOC syntran main 2016/xx
+str_ = abc
+part 1 = 0
+Ending AOC syntran main
+
+     0:

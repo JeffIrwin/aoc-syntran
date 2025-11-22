@@ -1,0 +1,156 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let n = parse_i32(readln(f));
+	println("n = ", n);
+	close(f);
+
+	// Doubly-linked list (0-based indexing)
+	//let v = [0: n]; // 
+	let il = [[1: n], [0]];
+	let ir = [[n], [0: n-1]];
+	//println("il = ", il);
+	//println("ir = ", ir);
+
+	// 1-based prompt:
+	//
+	//      1
+	//    5   2
+	//     4 3
+	//    Elf 1 takes Elf 2's present.
+	//    Elf 2 has no presents and is skipped.
+	//    Elf 3 takes Elf 4's present.
+	//    Elf 4 has no presents and is also skipped.
+	//    Elf 5 takes Elf 1's two presents.
+	//    Neither Elf 1 nor Elf 2 have any presents, so both are skipped.
+	//    Elf 3 takes Elf 5's three presents.
+
+	let i = 0;
+	while true
+	{
+
+		// It's elf i's turn.  They take presents from elf at il[i]
+
+		// Remove il[i] from list
+
+		//let tmp = il[i];
+		//il[i] = il[tmp];
+		//ir[ il[tmp] ] = i;
+		il[i] = il[ il[i] ];
+		ir[ il[i] ] = i;
+
+		// Next step
+		i = il[i];
+
+		//println();
+		//println("il = ", il);
+		//println("ir = ", ir);
+		//exit(0);
+
+		if il[i] == i and ir[i] == i
+		{
+			sum_ = i + 1;  // convert 0 to 1-based index
+			break;
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let n = parse_i32(readln(f));
+	n = 1000;
+	println("n = ", n);
+	close(f);
+
+	// Just use an array and shift everything, idfk
+	let v = [0: n];
+
+	let i = 0;
+	while true
+	{
+		// It's elf i's turn.  They take presents from opposite elf `io`
+		let io = (i + n/2) % n;
+
+		// Remove io from list, shift over everything after it
+		v[io: n-1] = v[io+1: n];
+		//println("v = ", v[0: n-1]);
+		println("n, i = ", [n, i]);
+
+		if (i < io) i += 1;
+		n -= 1;
+		i %= n;
+		if n == 1
+		{
+			sum_ = v[0] + 1;
+			break;
+		}
+
+		//// Remove il[i] from list
+		//il[i] = il[ il[i] ];
+		//ir[ il[i] ] = i;
+
+		//// Next step
+		//i = il[i];
+
+		//if il[i] == i and ir[i] == i
+		//{
+		//	sum_ = i + 1;  // convert 0 to 1-based index
+		//	break;
+		//}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/19");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

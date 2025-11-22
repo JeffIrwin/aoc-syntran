@@ -1,0 +1,19 @@
+
+ syntran 0.0.62
+ https://github.com/JeffIrwin/syntran
+
+ Interpreting file "main.syntran"
+
+Starting AOC syntran main 2017/xx
+str_ = 0/2
+str_ = 2/2
+str_ = 2/3
+str_ = 3/4
+str_ = 3/5
+str_ = 0/1
+str_ = 10/1
+str_ = 9/10
+part 1 = 0
+Ending AOC syntran main
+
+     0:

@@ -1,0 +1,168 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let state = "A";
+	let nsteps = 12_459_852;
+
+	let HCAP = 1024 * 16;
+	let CAP = 2 * HCAP;
+
+	let pos = HCAP;
+	let vals = [0; CAP];
+
+	for step in [0: nsteps]
+	{
+		let val = vals[pos];
+
+		if state == "A"
+		{
+			if val == 0
+			{
+				vals[pos] = 1;
+				pos += 1;
+				state = "B";
+			}
+			else
+			{
+				vals[pos] = 1;
+				pos -= 1;
+				state = "E";
+			}
+		}
+		else if state == "B"
+		{
+			if val == 0
+			{
+				vals[pos] = 1;
+				pos += 1;
+				state = "C";
+			}
+			else
+			{
+				vals[pos] = 1;
+				pos += 1;
+				state = "F";
+			}
+		}
+		else if state == "C"
+		{
+			if val == 0
+			{
+				vals[pos] = 1;
+				pos -= 1;
+				state = "D";
+			}
+			else
+			{
+				vals[pos] = 0;
+				pos += 1;
+				state = "B";
+			}
+		}
+		else if state == "D"
+		{
+			if val == 0
+			{
+				vals[pos] = 1;
+				pos += 1;
+				state = "E";
+			}
+			else
+			{
+				vals[pos] = 0;
+				pos -= 1;
+				state = "C";
+			}
+		}
+		else if state == "E"
+		{
+			if val == 0
+			{
+				vals[pos] = 1;
+				pos -= 1;
+				state = "A";
+			}
+			else
+			{
+				vals[pos] = 0;
+				pos += 1;
+				state = "D";
+			}
+		}
+		else if state == "F"
+		{
+			if val == 0
+			{
+				vals[pos] = 1;
+				pos += 1;
+				state = "A";
+			}
+			else
+			{
+				vals[pos] = 1;
+				pos += 1;
+				state = "C";
+			}
+		}
+		else
+		{
+			println("Error: bad state '", state, "'");
+			exit(-1);
+		}
+
+		if pos < 0 or pos >= CAP
+		{
+			println("Error: CAP overflow!");
+			exit(-2);
+		}
+	}
+	sum_ = sum(vals);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/25");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	//p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

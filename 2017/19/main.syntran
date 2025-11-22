@@ -1,0 +1,199 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+let NDIRS = 4;
+let DIRS = [
+	 1,  0,  // right
+	 0, -1,  // up
+	-1,  0,  // left
+	 0,  1   // down
+	 ;
+	 2, NDIRS
+];
+let RIGHT = 0;  // order matters to guard against going backwards
+let UP    = 1;
+let LEFT  = 2;
+let DOWN  = 3;
+
+fn part1(): str
+{
+	let ans = "";
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	let x = 0;
+	let y = 0;
+
+	// Scan first row for starting position
+	for i in [0: nx]
+		if g[i,0] == "|"
+		{
+			x = i;
+			break;
+		}
+	//println("x = ", x);
+
+	let dir = DOWN;
+	while true
+	{
+		//println("xy = ", [x, y]);
+
+		let c = g[x,y];
+		if is_alpha(c) ans += c;
+
+		let x0 = x;
+		let y0 = y;
+
+		let turn = false;
+
+		x = x0 + DIRS[0,dir];
+		y = y0 + DIRS[1,dir];
+
+		if (in_bounds([0,0], [x,y], [nx,ny]))
+			c = g[x,y];
+		else
+			turn = true;
+
+		// Try to continue in the same direction, in a straight line
+		if ((not turn) and c != " ") continue;
+
+		// Turn in any valid dir except back the way we came
+		let end = true;
+		for d in [0: NDIRS]
+		{
+			if (d == (dir + 2) % NDIRS) continue;  // don't go backwards
+												   //
+			x = x0 + DIRS[0,d];
+			y = y0 + DIRS[1,d];
+			if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
+
+			c = g[x,y];
+			if c != " "
+			{
+				dir = d;
+				end = false;
+				break;
+			}
+		}
+		if (end) break;
+	}
+
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(): str
+{
+	let sum_ = 0;
+
+	let g = read_char_mat(filename);
+	//print_char_mat(&g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	let x = 0;
+	let y = 0;
+
+	// Scan first row for starting position
+	for i in [0: nx]
+		if g[i,0] == "|"
+		{
+			x = i;
+			break;
+		}
+	//println("x = ", x);
+
+	let dir = DOWN;
+	while true
+	{
+		//println("xy = ", [x, y]);
+
+		let c = g[x,y];
+		sum_ += 1;
+
+		let x0 = x;
+		let y0 = y;
+
+		let turn = false;
+
+		x = x0 + DIRS[0,dir];
+		y = y0 + DIRS[1,dir];
+
+		if (in_bounds([0,0], [x,y], [nx,ny]))
+			c = g[x,y];
+		else
+			turn = true;
+
+		// Try to continue in the same direction
+		if ((not turn) and c != " ") continue;
+
+		// Turn in any valid dir except back the way we came
+		let end = true;
+		for d in [0: NDIRS]
+		{
+			if (d == (dir + 2) % NDIRS) continue;  // don't go backwards
+												   //
+			x = x0 + DIRS[0,d];
+			y = y0 + DIRS[1,d];
+			if (not in_bounds([0,0], [x,y], [nx,ny])) continue;
+
+			c = g[x,y];
+			if c != " "
+			{
+				dir = d;
+				end = false;
+				break;
+			}
+		}
+		if (end) break;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2017/19");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

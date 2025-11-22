@@ -1,0 +1,286 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+let password_str = "abcdefgh";
+if ifile == 0
+	password_str = "abcde";
+
+//==============================================================================
+
+fn part1(): str
+{
+	println("password_str = ", password_str);
+
+	// Convert str to vector
+	let n = len(password_str);
+	let password = [""; n];
+	for i in [0: n]
+		password[i] = password_str[i];
+	println("password = ", password);
+	println();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+		let words = split_(str_, " ");
+
+		if starts_with_(str_, "swap position")
+		{
+			let x = parse_i32(words[2]);
+			let y = parse_i32(words[5]);
+			password[[x, y]] = password[[y, x]];
+		}
+		else if starts_with_(str_, "swap letter")
+		{
+			let x = index_(password_str, words[2]);
+			let y = index_(password_str, words[5]);
+			password[[x, y]] = password[[y, x]];
+		}
+		else if starts_with_(str_, "rotate left")
+		{
+			let lshift = parse_i32(words[2]);
+			println("lshift = ", lshift);
+			//password = password[[[lshift: n-lshift+1], [0: lshift]]];
+			lshift %= n;
+			println("lshift = ", lshift);
+			//password = [password[lshift: n-lshift+1], password[0: lshift]];
+			password = [password[lshift: n], password[0: lshift]];
+		}
+		else if starts_with_(str_, "rotate right")
+		{
+			let rshift = parse_i32(words[2]);
+			password = [password[n-rshift: n], password[0: n-rshift]];
+		}
+		else if starts_with_(str_, "rotate based")
+		{
+			let pos = index_(password_str, words[6]);
+			let rshift = 1 + pos;
+			if (pos >= 4) rshift += 1;
+			rshift %= n;
+			password = [password[n-rshift: n], password[0: n-rshift]];
+		}
+		else if starts_with_(str_, "reverse positions")
+		{
+			let x = parse_i32(words[2]);
+			let y = parse_i32(words[4]) + 1;
+			password[x: y] = password[y-1: -1: x-1];
+		}
+		else if starts_with_(str_, "move position")
+		{
+			let x = parse_i32(words[2]);
+			let y = parse_i32(words[5]);
+			if x < y
+			{
+				let pre = password[0: x];
+				let mid = password[x+1: y+1];
+				let aft = password[y+1: n];
+				password = [pre, mid, [password[x]], aft];
+			}
+			else
+			{
+				let pre = password[0: y];
+				let mid = password[y: x];
+				let aft = password[x+1: n];
+				password = [pre, [password[x]], mid, aft];
+			}
+		}
+		else
+		{
+			println("Error: bad instruction");
+			exit(-1);
+		}
+		password_str = cat_strs(password);
+
+		println("password = ", password);
+		println();
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", password_str);
+	return password_str;
+}
+
+fn part2(): str
+{
+	// Use part1 ans as test (expect abcdefgh after unscrambling)
+	//password_str = "bfheacgd";
+	//password_str = "decab";
+	//password_str = "abdec";
+	password_str = "fbgdceah";
+	println("password_str = ", password_str);
+
+	// Convert str to vector
+	let n = len(password_str);
+	let password = [""; n];
+	for i in [0: n]
+		password[i] = password_str[i];
+	println("password = ", password);
+	println();
+
+	let nlines = countln_(filename);
+	//for iline in [nlines-1: -1: -1]
+	for iline in [nlines: -1: 0]
+	{
+		println("iline = ", iline);
+		let f = open(filename, "r");
+		let str_ = "";
+		for j in [0: iline]
+			str_ = readln(f);
+		close(f);
+
+		println("str_ = ", str_);
+		let words = split_(str_, " ");
+
+		if starts_with_(str_, "swap position")
+		{
+			let x = parse_i32(words[2]);
+			let y = parse_i32(words[5]);
+			password[[x, y]] = password[[y, x]];
+		}
+		else if starts_with_(str_, "swap letter")
+		{
+			let x = index_(password_str, words[2]);
+			let y = index_(password_str, words[5]);
+			password[[x, y]] = password[[y, x]];
+		}
+		else if starts_with_(str_, "rotate left")
+		{
+			let rshift = parse_i32(words[2]);
+			password = [password[n-rshift: n], password[0: n-rshift]];
+		}
+		else if starts_with_(str_, "rotate right")
+		{
+			let lshift = parse_i32(words[2]);
+			//lshift %= n;
+			password = [password[lshift: n], password[0: lshift]];
+		}
+		else if starts_with_(str_, "rotate based")
+		{
+			//let pos = index_(password_str, words[6]);
+			//let rshift = 1 + pos;
+			//if (pos >= 4) rshift += 1;
+			//rshift %= n;
+			//password = [password[n-rshift: n], password[0: n-rshift]];
+
+			// Just try every shift until we find the one that works :(
+			let inv = password;
+			for lshift in [0: n]
+			{
+				inv = [password[lshift: n], password[0: lshift]];
+				let inv_str = cat_strs(inv);
+
+				let pos = index_(inv_str, words[6]);
+				let rshift = 1 + pos;
+				if (pos >= 4) rshift += 1;
+				rshift %= n;
+				let test = [inv[n-rshift: n], inv[0: n-rshift]];
+
+				if all(test == password) break;
+			}
+			password = inv;
+
+			//********
+
+			//// idfk this is hard and it's late
+
+			////let pos = index_(password_str, words[6]);
+			//let pos = n - index_(password_str, words[6]);
+
+			//let rshift = 1 + pos;
+
+			//if (pos >= 4) rshift += 1;
+			////if (pos - rshift >= 4) rshift += 1;
+			////if (pos - rshift >= 4 or pos - rshift < 0) rshift += 1;
+
+			//rshift %= n;
+			////password = [password[n-rshift: n], password[0: n-rshift]];
+			//let lshift = rshift;
+			//password = [password[lshift: n], password[0: lshift]];
+		}
+		else if starts_with_(str_, "reverse positions")
+		{
+			let x = parse_i32(words[2]);
+			let y = parse_i32(words[4]) + 1;
+			password[x: y] = password[y-1: -1: x-1];
+		}
+		else if starts_with_(str_, "move position")
+		{
+			//let x = parse_i32(words[2]);
+			//let y = parse_i32(words[5]);
+			let y = parse_i32(words[2]);
+			let x = parse_i32(words[5]);
+
+			if x < y
+			{
+				let pre = password[0: x];
+				let mid = password[x+1: y+1];
+				let aft = password[y+1: n];
+				password = [pre, mid, [password[x]], aft];
+			}
+			else
+			{
+				let pre = password[0: y];
+				let mid = password[y: x];
+				let aft = password[x+1: n];
+				password = [pre, [password[x]], mid, aft];
+			}
+		}
+		else
+		{
+			println("Error: bad instruction");
+			exit(-1);
+		}
+		password_str = cat_strs(password);
+
+		println("password = ", password);
+		println();
+
+		//str_ = readln(f);
+	}
+
+	println("part 1 = ", password_str);
+	return password_str;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2016/21");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

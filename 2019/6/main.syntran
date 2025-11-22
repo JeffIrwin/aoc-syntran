@@ -1,0 +1,203 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let lines = readlns_(filename);
+	//println("lines = ", lines);
+
+	// First pass: make a set of objects and assign integer IDs to each
+	let object_id = new_dict_i64();
+	let nobject = 0'i64;
+	for line in lines
+	{
+		for word in split_(line, ")")
+		{
+			//println("word = ", word);
+			let id = get_dict_i64(&object_id, word);
+			if (id >= 0) continue;
+			set_dict_i64(&object_id, word, nobject);
+			nobject += 1;
+		}
+	}
+	//println("object names = ", keys_dict_i64(&object_id));
+	//println("object ids   = ", vals_dict_i64(&object_id));
+
+	// Second pass: save orbits as object IDs in an adjacency table
+	let NADJ_CAP = 16;
+	let adj = [-1; NADJ_CAP, nobject];
+	let nadj = [0; nobject];
+	for line in lines
+	{
+		let words = split_(line, ")");
+		let planet    = get_dict_i64(&object_id, words[0]);
+		let satellite = get_dict_i64(&object_id, words[1]);
+		//println("planet, satellite = ", [planet, satellite]);
+
+		// Asymmetric relation (directed graph)
+		adj[ nadj[planet] , planet ] = satellite;
+		nadj[planet] += 1;
+	}
+	//println("adj = ", adj);
+
+	// Do a DFS and mark the "depth" of each object, i.e. its number of orbits
+	// from the center of mass (COM)
+	let com = i32(get_dict_i64(&object_id, "COM"));
+	let depth = 0;
+	let visited = [false; nobject];
+	let depths  = [0; nobject];
+	//println("com = ", com);
+	dfs(&depths, &visited, &adj, &nadj, com, depth);
+
+	sum_ = sum(depths);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let lines = readlns_(filename);
+	//println("lines = ", lines);
+
+	// First pass: make a set of objects and assign integer IDs to each
+	let object_id = new_dict_i64();
+	let nobject = 0'i64;
+	for line in lines
+	{
+		for word in split_(line, ")")
+		{
+			//println("word = ", word);
+			let id = get_dict_i64(&object_id, word);
+			if (id >= 0) continue;
+			set_dict_i64(&object_id, word, nobject);
+			nobject += 1;
+		}
+	}
+	//println("object names = ", keys_dict_i64(&object_id));
+	//println("object ids   = ", vals_dict_i64(&object_id));
+
+	let start_id = -1;
+	let end_id = -1;
+
+	// Second pass: save orbits as object IDs in an adjacency table
+	let NADJ_CAP = 16;
+	let adj = [-1; NADJ_CAP, nobject];
+	let nadj = [0; nobject];
+	for line in lines
+	{
+		let words = split_(line, ")");
+		let planet    = get_dict_i64(&object_id, words[0]);
+		let satellite = get_dict_i64(&object_id, words[1]);
+		//println("planet, satellite = ", [planet, satellite]);
+
+		if (words[1] == "YOU") start_id = planet;
+		if (words[1] == "SAN") end_id   = planet;
+
+		// Symmetric/bidirectional for part 2
+
+		adj[ nadj[planet] , planet ] = satellite;
+		nadj[planet] += 1;
+
+		adj[ nadj[satellite], satellite ] = planet;
+		nadj[satellite] += 1;
+	}
+	//println("adj = ", adj);
+	//println("start_id = ", start_id);
+	//println("end_id   = ", end_id);
+
+	let dists = [-1; nobject];
+	let visited = [false; nobject];
+
+	// Do a BFS from start to end
+	let QCAP = 1024 * 4;
+	let q = [0; QCAP];
+	let qs = 0;  let qe = 0;
+
+	// Push
+	dists[start_id] = 0;
+	q[qe] = start_id;
+	qe += 1;
+
+	while true
+	{
+		// Pop
+		let u = q[qs];
+		qs += 1;
+
+		if (u == end_id) break;
+
+		if (visited[u]) continue;
+		visited[u] = true;
+
+		for v in adj[ 0: nadj[u], u ]
+		{
+			// TODO: overflow checks, circular queue
+			dists[v] = dists[u] + 1;
+			q[qe] = v;
+			qe += 1;
+		}
+	}
+	sum_ = dists[end_id];
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn dfs(depths: &[i32; :], visited: &[bool; :], adj: &[i32; :,:], nadj: &[i32; :], u: i32, depth: i32)
+{
+	// `visited` is redundant. we could initialize depths to -1 and use it to
+	// track visitation
+	if (visited[u]) return;
+	visited[u] = true;
+	depths[u] = depth;
+	for v in adj[ 0: nadj[u], u ]
+		dfs(&depths, &visited, &adj, &nadj, v, depth + 1);
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2019/6");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 194721:316
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
