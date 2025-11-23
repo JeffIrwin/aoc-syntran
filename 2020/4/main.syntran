@@ -32,7 +32,7 @@ fn part1(): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		// Passport fields:
 		//
@@ -51,7 +51,7 @@ fn part1(): str
 			//if size(keys_dict_i64(&has_fields), 0) >= nfields
 				sum_ += 1;
 
-			println("resetting");
+			//println("resetting");
 			has_fields = false;
 			//has_fields = new_dict_i64();
 			str_ = readln(f);
@@ -60,10 +60,10 @@ fn part1(): str
 		}
 
 		let keyvals = split_(str_, " ");
-		println("keyvals = ", keyvals);
+		//println("keyvals = ", keyvals);
 		for keyval in keyvals
 		{
-			println("keyval = ", keyval);
+			//println("keyval = ", keyval);
 			let kv = split_(keyval, ":");
 			let key = kv[0];
 			if not any(key == FIELDS) continue;
@@ -89,8 +89,6 @@ fn part1(): str
 
 fn part2(): str
 {
-	// This returns 195 but the actual correct answer is 194. idfk :shrug:
-
 	let sum_ = 0'i64;
 
 	let FIELDS = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
@@ -104,7 +102,7 @@ fn part2(): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		// Passport fields:
 		//
@@ -118,13 +116,13 @@ fn part2(): str
 
 		if str_ == ""
 		{
-			println("is_valid = ", is_valid);
+			//println("is_valid = ", is_valid);
 			if all(has_fields) and is_valid
 			{
-				println("increminting sum");
+				//println("increminting sum");
 				sum_ += 1;
 			}
-			println();
+			//println();
 
 			has_fields = false;
 			is_valid = true;
@@ -134,10 +132,10 @@ fn part2(): str
 		}
 
 		let keyvals = split_(str_, " ");
-		println("keyvals = ", keyvals);
+		//println("keyvals = ", keyvals);
 		for keyval in keyvals
 		{
-			println("keyval = ", keyval);
+			//println("keyval = ", keyval);
 			let kv = split_(keyval, ":");
 			let key = kv[0];
 			let val = kv[1];
@@ -181,13 +179,14 @@ fn part2(): str
 
 				//let num = "";
 				let nv = len(val);
+				let unit = "";
 				for i in [0: nv]
 					if not is_digit(val[i])
 					{
-						let unit = val[i:nv];
+						unit = val[i:nv];
 						let num = val[0:i];
-						println("unit = ", unit);
-						println("num  = ", num);
+						//println("unit = ", unit);
+						//println("num  = ", num);
 						let inum = parse_i32(num);
 						if unit == "cm"
 						{
@@ -203,6 +202,8 @@ fn part2(): str
 							is_valid = false; // invalid unit type
 						break;
 					}
+				if unit == "" // unit not found. this is important!
+					is_valid = false;
 			}
 			else if key == "hcl"
 			{
@@ -224,6 +225,12 @@ fn part2(): str
 				for c in val
 					if (scan(digit_chars, c) < 0) is_valid = false;
 			}
+			else if key == "cid"
+			{
+				// do nothing
+			}
+			else
+				is_valid = false;
 		}
 
 		str_ = readln(f);
