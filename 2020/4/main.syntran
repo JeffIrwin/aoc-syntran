@@ -1,0 +1,261 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+//filename = "test2.txt";
+//filename = "test3.txt";
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let FIELDS = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
+	let nfields = size(FIELDS, 0);
+	let has_fields = [false; nfields];
+	//let has_fields = new_dict_i64();
+	//println("has_fields = ", has_fields);
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		// Passport fields:
+		//
+		// byr (Birth Year)
+		// iyr (Issue Year)
+		// eyr (Expiration Year)
+		// hgt (Height)
+		// hcl (Hair Color)
+		// ecl (Eye Color)
+		// pid (Passport ID)
+		// cid (Country ID) (** don't care about cid for part 1 or part 2 **)
+
+		if str_ == ""
+		{
+			if all(has_fields)
+			//if size(keys_dict_i64(&has_fields), 0) >= nfields
+				sum_ += 1;
+
+			println("resetting");
+			has_fields = false;
+			//has_fields = new_dict_i64();
+			str_ = readln(f);
+
+			continue;
+		}
+
+		let keyvals = split_(str_, " ");
+		println("keyvals = ", keyvals);
+		for keyval in keyvals
+		{
+			println("keyval = ", keyval);
+			let kv = split_(keyval, ":");
+			let key = kv[0];
+			if not any(key == FIELDS) continue;
+			//set_dict_i64(&has_fields, key, 1'i64);
+			for i in [0: nfields]
+				if FIELDS[i] == key
+					has_fields[i] = true;
+		}
+
+		//if all(has_fields)
+		////if size(keys_dict_i64(&has_fields), 0) >= nfields
+		//	sum_ += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn part2(): str
+{
+	// This returns 195 but the actual correct answer is 194. idfk :shrug:
+
+	let sum_ = 0'i64;
+
+	let FIELDS = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
+	let nfields = size(FIELDS, 0);
+	let has_fields = [false; nfields];
+	let is_valid = true;
+
+	// ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+	let EYE_COLORS = ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"];
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		// Passport fields:
+		//
+		// byr (Birth Year)
+		// iyr (Issue Year)
+		// eyr (Expiration Year)
+		// hgt (Height)
+		// hcl (Hair Color)
+		// ecl (Eye Color)
+		// pid (Passport ID)
+
+		if str_ == ""
+		{
+			println("is_valid = ", is_valid);
+			if all(has_fields) and is_valid
+			{
+				println("increminting sum");
+				sum_ += 1;
+			}
+			println();
+
+			has_fields = false;
+			is_valid = true;
+			str_ = readln(f);
+
+			continue;
+		}
+
+		let keyvals = split_(str_, " ");
+		println("keyvals = ", keyvals);
+		for keyval in keyvals
+		{
+			println("keyval = ", keyval);
+			let kv = split_(keyval, ":");
+			let key = kv[0];
+			let val = kv[1];
+			if not any(key == FIELDS) continue;
+			for i in [0: nfields]
+				if FIELDS[i] == key
+					has_fields[i] = true;
+
+			if key == "byr"
+			{
+				// byr (Birth Year) - four digits; at least 1920 and at most 2002.
+				let ival = parse_i32(val);
+				if (ival < 1920) is_valid = false;
+				if (ival > 2002) is_valid = false;
+				for c in val
+					if (scan(digit_chars, c) < 0) is_valid = false;
+			}
+			else if key == "iyr"
+			{
+				// iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+				let ival = parse_i32(val);
+				if (ival < 2010) is_valid = false;
+				if (ival > 2020) is_valid = false;
+				for c in val
+					if (scan(digit_chars, c) < 0) is_valid = false;
+			}
+			else if key == "eyr"
+			{
+				// eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+				let ival = parse_i32(val);
+				if (ival < 2020) is_valid = false;
+				if (ival > 2030) is_valid = false;
+				for c in val
+					if (scan(digit_chars, c) < 0) is_valid = false;
+			}
+			else if key == "hgt"
+			{
+				// hgt (Height) - a number followed by either cm or in:
+				// If cm, the number must be at least 150 and at most 193.
+				// If in, the number must be at least 59 and at most 76.
+
+				//let num = "";
+				let nv = len(val);
+				for i in [0: nv]
+					if not is_digit(val[i])
+					{
+						let unit = val[i:nv];
+						let num = val[0:i];
+						println("unit = ", unit);
+						println("num  = ", num);
+						let inum = parse_i32(num);
+						if unit == "cm"
+						{
+							if (inum < 150) is_valid = false;
+							if (inum > 193) is_valid = false;
+						}
+						else if unit == "in"
+						{
+							if (inum < 59) is_valid = false;
+							if (inum > 76) is_valid = false;
+						}
+						else
+							is_valid = false; // invalid unit type
+						break;
+					}
+			}
+			else if key == "hcl"
+			{
+				// hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+				if (val[0] != "#") is_valid = false;
+				if (len(val) != 7) {is_valid = false; continue;}
+				for c in val[1:7]
+					if (scan(hex_chars, c) < 0) is_valid = false;
+			}
+			else if key == "ecl"
+			{
+				// ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+				if not any(val == EYE_COLORS) is_valid = false;
+			}
+			else if key == "pid"
+			{
+				// pid (Passport ID) - a nine-digit number, including leading zeroes.
+				if (len(val) != 9) {is_valid = false; continue;}
+				for c in val
+					if (scan(digit_chars, c) < 0) is_valid = false;
+			}
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2019/4");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
