@@ -1,0 +1,128 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let pos = 50;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let dir = str_[0];
+		//println("dir = ", dir);
+		let num = parse_i32(str_[1: len(str_)]);
+		//println("num = ", num);
+
+		if dir == "L"
+			pos -= num;
+		else
+			pos += num;
+		pos = pmod(pos, 100);
+
+		//println("pos = ", pos);
+
+		if pos == 0
+			sum_ += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let pos = 50;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let dir = str_[0];
+		//println("dir = ", dir);
+		let num = parse_i32(str_[1: len(str_)]);
+		//println("num = ", num);
+
+		//if dir == "L"
+		//	pos -= num;
+		//else
+		//	pos += num;
+		//pos = pmod(pos, 100);
+		//println("pos = ", pos);
+		//if pos == 0
+		//	sum_ += 1;
+
+		let inc = 0;
+		if dir == "L"
+			inc = -1;
+		else
+			inc = +1;
+
+		for i in [0: num]
+		{
+			pos += inc;
+			pos = pmod(pos, 100);
+			if pos == 0
+				sum_ += 1;
+		}
+		//sum_ += num / 100;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/1");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
