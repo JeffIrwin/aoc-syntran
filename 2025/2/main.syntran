@@ -22,10 +22,10 @@ fn part1(): str
 
 	let f = open(filename, "r");
 	let str_ = readln(f);
-	println("str_ = ", str_);
+	//println("str_ = ", str_);
 
 	let ranges = split_(str_, ",");
-	println("ranges = ", ranges);
+	//println("ranges = ", ranges);
 	for range in ranges
 	{
 		//println("range = ", range);
@@ -37,7 +37,7 @@ fn part1(): str
 		let hi = parse_i64(hi_str);
 		let lo0 = lo;
 		let hi0 = hi;
-		println("lo, hi = ", [lo, hi]);
+		//println("lo, hi = ", [lo, hi]);
 
 		// Round odd-digit bounds up/down to an even digit number
 		let ndig_lo = len(lo_str);
@@ -48,7 +48,7 @@ fn part1(): str
 			lo = 10 ** (ndig_lo - 1);
 			lo_str = str(lo);
 		}
-		println("lo = ", lo);
+		//println("lo = ", lo);
 		//println("ndig_lo = ", ndig_lo);
 
 		let ndig_hi = len(hi_str);
@@ -58,15 +58,7 @@ fn part1(): str
 			hi = 10 ** (ndig_hi) - 1; // beware
 			hi_str = str(hi);
 		}
-		println("hi = ", hi);
-
-		//// Truncate the first half of the digits and repeat it to get invalid
-		//// IDs
-		//let lo_invalid = parse_i64(repeat(lo_str[0: ndig_lo/2], 2));
-		//println("lo_invalid = ", lo_invalid);
-
-		//let hi_invalid = parse_i64(repeat(hi_str[0: ndig_hi/2], 2));
-		//println("hi_invalid = ", hi_invalid);
+		//println("hi = ", hi);
 
 		let lo_half = parse_i64(lo_str[0: ndig_lo/2]);
 		let hi_half = parse_i64(hi_str[0: ndig_hi/2]);
@@ -74,16 +66,11 @@ fn part1(): str
 		{
 			// Repeat the string
 			let ii = parse_i64(repeat(str(i), 2));
-			println("ii = ", ii);
+			//println("ii = ", ii);
 			if (ii < lo0) continue;
 			if (ii > hi0) continue;
 			sum_ += ii;
 		}
-
-		//if (lo_invalid > hi_invalid) continue;
-		//sum_ += hi_invalid - lo_invalid + 1;
-
-		println();
 	}
 
 	close(f);
@@ -91,20 +78,6 @@ fn part1(): str
 	println("part 1 = ", sum_);
 	return str(sum_);
 }
-
-//fn is_invalid(a: i64): bool
-//{
-//	// Check if `a` is a doubly-repeated string
-//	let str_a = str(a);
-//	let ndig = len(str_a);
-//	if (ndig % 2 == 1) return false;
-//
-//	println("a = ", a);
-//	let half = str_a[0: ndig/2];
-//	println("half = ", half);
-//	println("scnd = ", str_a[ndig/2: ndig]);
-//	return half == str_a[ndig/2: ndig];
-//}
 
 fn is_invalid(a: i64): bool
 {
@@ -121,13 +94,6 @@ fn is_invalid(a: i64): bool
 			return true;
 	}
 	return false;
-
-	//if (ndig % 2 == 1) return false;
-	//println("a = ", a);
-	//let half = str_a[0: ndig/2];
-	//println("half = ", half);
-	//println("scnd = ", str_a[ndig/2: ndig]);
-	//return half == str_a[ndig/2: ndig];
 }
 
 fn part2(): str
@@ -136,10 +102,10 @@ fn part2(): str
 
 	let f = open(filename, "r");
 	let str_ = readln(f);
-	println("str_ = ", str_);
+	//println("str_ = ", str_);
 
 	let ranges = split_(str_, ",");
-	println("ranges = ", ranges);
+	//println("ranges = ", ranges);
 	for range in ranges
 	{
 		//println("range = ", range);
@@ -155,22 +121,7 @@ fn part2(): str
 			if is_invalid(i)
 				sum_ += i;
 		}
-
-		//let lo_half = parse_i64(lo_str[0: ndig_lo/2]);
-		//let hi_half = parse_i64(hi_str[0: ndig_hi/2]);
-		//for i in [lo_half: hi_half+1]
-		//{
-		//	// Repeat the string
-		//	let ii = parse_i64(repeat(str(i), 2));
-		//	println("ii = ", ii);
-		//	if (ii < lo0) continue;
-		//	if (ii > hi0) continue;
-		//	sum_ += ii;
-		//}
-
-		println();
 	}
-
 	close(f);
 
 	println("part 2 = ", sum_);
