@@ -1,0 +1,204 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+
+	let ranges = split_(str_, ",");
+	println("ranges = ", ranges);
+	for range in ranges
+	{
+		//println("range = ", range);
+
+		let bounds = split_(range, "-");
+		let lo_str = bounds[0];
+		let hi_str = bounds[1];
+		let lo = parse_i64(lo_str);
+		let hi = parse_i64(hi_str);
+		let lo0 = lo;
+		let hi0 = hi;
+		println("lo, hi = ", [lo, hi]);
+
+		// Round odd-digit bounds up/down to an even digit number
+		let ndig_lo = len(lo_str);
+		//println("ndig_lo = ", ndig_lo);
+		if ndig_lo % 2 == 1
+		{
+			ndig_lo += 1;
+			lo = 10 ** (ndig_lo - 1);
+			lo_str = str(lo);
+		}
+		println("lo = ", lo);
+		//println("ndig_lo = ", ndig_lo);
+
+		let ndig_hi = len(hi_str);
+		if ndig_hi % 2 == 1
+		{
+			ndig_hi -= 1;
+			hi = 10 ** (ndig_hi) - 1; // beware
+			hi_str = str(hi);
+		}
+		println("hi = ", hi);
+
+		//// Truncate the first half of the digits and repeat it to get invalid
+		//// IDs
+		//let lo_invalid = parse_i64(repeat(lo_str[0: ndig_lo/2], 2));
+		//println("lo_invalid = ", lo_invalid);
+
+		//let hi_invalid = parse_i64(repeat(hi_str[0: ndig_hi/2], 2));
+		//println("hi_invalid = ", hi_invalid);
+
+		let lo_half = parse_i64(lo_str[0: ndig_lo/2]);
+		let hi_half = parse_i64(hi_str[0: ndig_hi/2]);
+		for i in [lo_half: hi_half+1]
+		{
+			// Repeat the string
+			let ii = parse_i64(repeat(str(i), 2));
+			println("ii = ", ii);
+			if (ii < lo0) continue;
+			if (ii > hi0) continue;
+			sum_ += ii;
+		}
+
+		//if (lo_invalid > hi_invalid) continue;
+		//sum_ += hi_invalid - lo_invalid + 1;
+
+		println();
+	}
+
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//fn is_invalid(a: i64): bool
+//{
+//	// Check if `a` is a doubly-repeated string
+//	let str_a = str(a);
+//	let ndig = len(str_a);
+//	if (ndig % 2 == 1) return false;
+//
+//	println("a = ", a);
+//	let half = str_a[0: ndig/2];
+//	println("half = ", half);
+//	println("scnd = ", str_a[ndig/2: ndig]);
+//	return half == str_a[ndig/2: ndig];
+//}
+
+fn is_invalid(a: i64): bool
+{
+	// Check if `a` is a repeated string, of any number of repetitions
+	let str_a = str(a);
+	let ndig = i32(len(str_a));
+
+	for nrep in [2: ndig+1]
+	{
+		if (ndig % nrep != 0) continue;
+		let part = str_a[0: ndig/nrep];
+
+		if repeat(part, nrep) == str_a
+			return true;
+	}
+	return false;
+
+	//if (ndig % 2 == 1) return false;
+	//println("a = ", a);
+	//let half = str_a[0: ndig/2];
+	//println("half = ", half);
+	//println("scnd = ", str_a[ndig/2: ndig]);
+	//return half == str_a[ndig/2: ndig];
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+
+	let ranges = split_(str_, ",");
+	println("ranges = ", ranges);
+	for range in ranges
+	{
+		//println("range = ", range);
+
+		let bounds = split_(range, "-");
+		let lo_str = bounds[0];
+		let hi_str = bounds[1];
+		let lo = parse_i64(lo_str);
+		let hi = parse_i64(hi_str);
+
+		for i in [lo: hi+1]
+		{
+			if is_invalid(i)
+				sum_ += i;
+		}
+
+		//let lo_half = parse_i64(lo_str[0: ndig_lo/2]);
+		//let hi_half = parse_i64(hi_str[0: ndig_hi/2]);
+		//for i in [lo_half: hi_half+1]
+		//{
+		//	// Repeat the string
+		//	let ii = parse_i64(repeat(str(i), 2));
+		//	println("ii = ", ii);
+		//	if (ii < lo0) continue;
+		//	if (ii > hi0) continue;
+		//	sum_ += ii;
+		//}
+
+		println();
+	}
+
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/2");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
