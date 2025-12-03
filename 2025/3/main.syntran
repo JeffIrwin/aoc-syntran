@@ -1,0 +1,186 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let n = len(str_);
+		let v = [0; n];
+		for i in [0: n]
+			v[i] = parse_i32(str_[i]);
+		//println("v = ", v);
+
+		let max_ = -1;
+		for j in [0: n]
+		for i in [0: j]
+		{
+			max_ = max(max_, parse_i32(str(v[i], v[j])));
+		}
+		sum_ += max_;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let n = len(str_);
+		let v = [0; n];
+		for i in [0: n]
+			v[i] = parse_i32(str_[i]);
+		//println("v = ", v);
+
+		let ndig = 12;
+
+		let digs = [0; ndig];
+		let left = -1;
+		for idig in [0: ndig]
+		{
+			//digs[idig] = maxval(v[left
+			let maxdig = -1;
+			let imax = -1;
+			for i in [left+1: n - ndig + idig + 1]
+			{
+				if v[i] > maxdig
+				{
+					maxdig = v[i];
+					imax = i;
+				}
+				left = imax;
+				digs[idig] = maxdig;
+			}
+		}
+		//println("digs = ", digs);
+
+		sum_ += cat_i32s(digs);
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn cat_i32s(v: [i32; :]): i64
+{
+	let str_ = "";
+	for vv in v
+		str_ = str_ + str(vv);
+	return parse_i64(str_);
+}
+
+fn part2brute(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let n = len(str_);
+		let v = [0; n];
+		for i in [0: n]
+			v[i] = parse_i32(str_[i]);
+		println("v = ", v);
+
+		let max_ = -1'i64;
+		for i11 in [11: n]
+		for i10 in [10: i11]
+		for i09 in [ 9: i10]
+		for i08 in [ 8: i09]
+		for i07 in [ 7: i08]
+		for i06 in [ 6: i07]
+		for i05 in [ 5: i06]
+		for i04 in [ 4: i05]
+		for i03 in [ 3: i04]
+		for i02 in [ 2: i03]
+		for i01 in [ 1: i02]
+		for i00 in [ 0: i01]
+		{
+			max_ = max(max_, parse_i64(str(
+				v[i00],
+				v[i01],
+				v[i02],
+				v[i03],
+				v[i04],
+				v[i05],
+				v[i06],
+				v[i07],
+				v[i08],
+				v[i09],
+				v[i10],
+				v[i11]
+			)));
+		}
+		sum_ += max_;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/3");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
