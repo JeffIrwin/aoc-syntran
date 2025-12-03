@@ -110,14 +110,6 @@ fn part2(): str
 	return str(sum_);
 }
 
-fn cat_i32s(v: [i32; :]): i64
-{
-	let str_ = "";
-	for vv in v
-		str_ = str_ + str(vv);
-	return parse_i64(str_);
-}
-
 //==============================================================================
 
 fn main(): str

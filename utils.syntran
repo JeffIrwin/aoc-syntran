@@ -1296,6 +1296,15 @@ fn in_bounds(lo: [i32; :], x: [i32; :], hi: [i32; :]): bool
 
 //==============================================================================
 
+fn cat_i32s(v: [i32; :]): i64
+{
+	// Concatenate a vector of ints, as a string, into one big number
+	let str_ = "";
+	for vv in v
+		str_ = str_ + str(vv);
+	return parse_i64(str_);
+}
+
 fn cat_strs(str_vec: [str; :]): str
 {
 	// Concatenate a vector of strings (or chars) into one big str
