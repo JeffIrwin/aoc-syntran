@@ -1,0 +1,168 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = -1'i64;
+
+	let fi = open(filename, "r");
+	let str_ = readln(fi);
+	while not eof(fi)
+	{
+		println("str_ = ", str_);
+
+		// Initial left/right/front/back bounds
+		let l = 0;
+		let r = 8;
+		let f = 0;
+		let b = 128;
+
+		for c in str_
+		{
+			if c == "L"
+			{
+				println("L");
+				r = (l + r) / 2;
+				println("l, r = ", [l, r]);
+			}
+			else if c == "R"
+			{
+				println("R");
+				l = (l + r) / 2;
+				println("l, r = ", [l, r]);
+			}
+			else if c == "F"
+			{
+				println("F");
+				b = (f + b) / 2;
+				println("f, b = ", [f, b]);
+			}
+			else if c == "B"
+			{
+				println("B");
+				f = (f + b) / 2;
+				println("f, b = ", [f, b]);
+			}
+			println();
+
+			sum_ = max(sum_, 8'i64 * f + l);
+		}
+
+		str_ = readln(fi);
+	}
+	close(fi);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = -1'i64;
+
+	let grid = ["."; 8, 128];
+
+	let fi = open(filename, "r");
+	let str_ = readln(fi);
+	while not eof(fi)
+	{
+		println("str_ = ", str_);
+
+		// Initial left/right/front/back bounds
+		let l = 0;
+		let r = 8;
+		let f = 0;
+		let b = 128;
+
+		for c in str_
+		{
+			if c == "L"
+			{
+				println("L");
+				r = (l + r) / 2;
+				println("l, r = ", [l, r]);
+			}
+			else if c == "R"
+			{
+				println("R");
+				l = (l + r) / 2;
+				println("l, r = ", [l, r]);
+			}
+			else if c == "F"
+			{
+				println("F");
+				b = (f + b) / 2;
+				println("f, b = ", [f, b]);
+			}
+			else if c == "B"
+			{
+				println("B");
+				f = (f + b) / 2;
+				println("f, b = ", [f, b]);
+			}
+			println();
+
+			//grid[f, l] = "#";
+			grid[l, f] = "#";
+
+			sum_ = max(sum_, 8'i64 * f + l);
+		}
+
+		str_ = readln(fi);
+	}
+	close(fi);
+
+	println("grid = ", grid);
+
+	// Search for the missing grid point, ignoring the first and last few rows
+	for x in [0: 8]
+	for y in [14: 128 - 14]
+	{
+		if grid[x, y] == "."
+			sum_ = 8 * y + x;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2020/5");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
