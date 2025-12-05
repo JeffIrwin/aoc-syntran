@@ -1,0 +1,117 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	let gm = g; // modified grid
+	//println("g = ", g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if (g[x, y] != "@") continue;
+		let nneihgbors = 0;
+		for yn in [max(y-1, 0): min(y+2, ny)]
+		for xn in [max(x-1, 0): min(x+2, nx)]
+		{
+			if (x == xn and y == yn) continue; // don't count self
+			if g[xn, yn] == "@"
+				nneihgbors += 1;
+		}
+		//println("x, y, nneihgbors = ", [x, y, nneihgbors]);
+		if (nneihgbors < 4)
+		{
+			gm[x, y] = "x";
+			sum_ += 1;
+		}
+	}
+	//println("gm = ");
+	//print_char_mat(&gm);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//println("g = ", g);
+
+	let nx = i32(size(g, 0));
+	let ny = i32(size(g, 1));
+
+	let sum0 = -1'i64;
+	while (sum_ != sum0)
+	{
+		sum0 = sum_;
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			if (g[x, y] != "@") continue;
+			let nneihgbors = 0;
+			for yn in [max(y-1, 0): min(y+2, ny)]
+			for xn in [max(x-1, 0): min(x+2, nx)]
+			{
+				if (x == xn and y == yn) continue; // don't count self
+				if g[xn, yn] == "@"
+					nneihgbors += 1;
+			}
+			//println("x, y, nneihgbors = ", [x, y, nneihgbors]);
+			if (nneihgbors < 4)
+			{
+				g[x, y] = ".";
+				sum_ += 1;
+			}
+		}
+	}
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/4");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
