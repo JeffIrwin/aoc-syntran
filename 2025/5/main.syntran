@@ -1,0 +1,196 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let nrange = 0;
+	let ningre = 0;
+	let found_blank = false;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		if str_ == ""
+			found_blank = true;
+		else if not found_blank
+			nrange += 1;
+		else
+			ningre += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("nrange = ", nrange);
+	//println("ningre = ", ningre);
+
+	let ranges = [0'i64; 2, nrange];
+	f = open(filename, "r");
+	for i in [0: nrange]
+	{
+		ranges[:,i] = parse_i64_delim(readln(f), "-");
+	}
+	//println("ranges = ", ranges);
+	str_ = readln(f);
+
+	let ingres = [0'i64; ningre];
+	for i in [0: ningre]
+	{
+		ingres[i] = parse_i64(readln(f));
+	}
+	//println("ingres = ", ingres);
+
+	close(f);
+
+	for ingre in ingres
+	{
+		let is_fresh = false;
+		for i in [0: nrange]
+		{
+			is_fresh =
+				ranges[0,i] <= ingre and ingre <= ranges[1,i];
+			if is_fresh
+			{
+				sum_ += 1;
+				break;
+			}
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let nrange0 = 0;
+	let found_blank = false;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		if str_ == ""
+			found_blank = true;
+		else if not found_blank
+			nrange0 += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+	//println("nrange0 = ", nrange0);
+
+	let ranges0 = [0'i64; 2, nrange0];
+	f = open(filename, "r");
+	for i in [0: nrange0]
+	{
+		ranges0[:,i] = parse_i64_delim(readln(f), "-");
+	}
+	//println("ranges0 = ", ranges0);
+	close(f);
+
+	// Process the un-merged `ranges0` into merged `ranges`
+	let ranges = [0'i64; 2, nrange0];
+	ranges[:,0] = ranges0[:,0];
+	let nrange = 1;
+	//println("ranges = ", ranges);
+	for i in [1: nrange0]
+	{
+		let range = ranges0[:,i];
+		//println("processing range ", range);
+		for j in [0: nrange]
+		{
+			// Check if range i intersects with range j
+			if intersect(range, ranges[:,j])
+			{
+				// Merge them. Update old one to empty range
+
+				//println("    intersect with ", ranges[:,j]);
+				range = merge(range, ranges[:,j]);
+				ranges[:,j] = [-1, -2];  // old range is now empty
+				//println("    merged to ", range);
+			}
+		}
+		ranges[:,nrange] = range;
+		nrange += 1;
+	}
+	//println("ranges = ", ranges);
+
+	for i in [0: nrange]
+	{
+		sum_ += ranges[1,i] - ranges[0,i] + 1;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn merge(ra: [i64; :], rb: [i64; :]): [i64; :]
+{
+	if ra[0] > rb[0]
+	{
+		// Ensure consistent order
+		return merge(rb, ra);
+	}
+
+	// Now ra[0] <= rb[0] is guaranteed
+	return [ra[0], max(ra[1], rb[1])];
+}
+
+fn intersect(ra: [i64; :], rb: [i64; :]): bool
+{
+	if ra[0] < rb[0] and rb[0] > ra[1]
+		return false;
+	if rb[0] < ra[0] and ra[0] > rb[1]
+		return false;
+	return true;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/5");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
