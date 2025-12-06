@@ -25,20 +25,20 @@ fn part1(): str
 	let last_line = "";
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 		last_line = str_;
 
 		str_ = readln(f);
 	}
 	close(f);
-	println("last_line = ", last_line);
+	//println("last_line = ", last_line);
 
 	let t = i64(read_i32_mat_delim(filename, " +*"));
 	t = t[:, 0: size(t,1)-1]; // trim last garbage line
-	println("t = ", t);
+	//println("t = ", t);
 
 	let ops = split_(last_line, " ");
-	println("ops = ", ops);
+	//println("ops = ", ops);
 
 	for x in [0: size(t,0)]
 	{
@@ -59,11 +59,10 @@ fn part1(): str
 
 fn part2(): str
 {
-	println();
 	let sum_ = 0'i64;
 
 	let nlines = countln_(filename);
-	println("nlines = ", nlines);
+	//println("nlines = ", nlines);
 
 	// Ignore operator line
 	nlines -= 1;
@@ -74,18 +73,18 @@ fn part2(): str
 	for i in [0: nlines]
 	{
 		lines[i] = readln(f);
-		println("line = ", lines[i]);
+		//println("line = ", lines[i]);
 	}
 	let ops_str = readln(f);
 	close(f);
-	println("lines = ", lines);
-	println("ops_str = ", ops_str);
+	//println("lines = ", lines);
+	//println("ops_str = ", ops_str);
 
 	let ops = split_(ops_str, " ");
-	println("ops = ", ops);
+	//println("ops = ", ops);
 
 	let nops = size(ops, 0);
-	println("nops = ", nops);
+	//println("nops = ", nops);
 
 	let col_start = 0;
 	let col_end = 1;
@@ -94,15 +93,12 @@ fn part2(): str
 		// Scan to next operator
 		if iop == nops-1
 		{
-			//col_end = len(ops_str) + 1;
 			col_end = len(ops_str);
 		}
 		else
 			while ops_str[col_end] == " "
 				col_end += 1;
-		//while ops_str[col_start] == " "
-		//	col_start += 1;
-		println("col_start = ", col_start);
+		//println("col_start = ", col_start);
 		//println("ops_str slice = '", ops_str[col_start: col_end], "'");
 
 		let res = 0'i64;
@@ -117,7 +113,7 @@ fn part2(): str
 			{
 				num_str += line[col];
 			}
-			println("num_str = ", num_str);
+			//println("num_str = ", num_str);
 			if (num_str == repeat(" ", i32(len(num_str)))) continue;
 
 			let num = parse_i64(num_str);
@@ -127,29 +123,12 @@ fn part2(): str
 				res += num;
 
 		}
-		println("res = ", res);
+		//println("res = ", res);
 		sum_ += res;
 
-		//col_start += 1;
 		col_start = col_end;
 		col_end += 1;
 	}
-
-	// - tried 56133238921, wrong
-	// - tried 202412320532, wrong
-
-	//for x in [0: size(t,0)]
-	//{
-	//	if (ops[x] == "+")
-	//		sum_ += sum(t[x,:]);
-	//	else if (ops[x] == "*")
-	//		sum_ += product(t[x,:]);
-	//	else
-	//	{
-	//		println("Error: bad operator");
-	//		exit(-1);
-	//	}
-	//}
 
 	println("part 2 = ", sum_);
 	return str(sum_);
