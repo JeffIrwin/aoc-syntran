@@ -87,9 +87,7 @@ fn part2(): str
 	//println("x0, y0 = ", [x0, y0]);
 	//ig[x0, y0] = 1;
 
-	let nsplit = 0;
-
-	search2(&g, &bg, x0, y0, &nsplit);
+	search2(&g, &bg, x0, y0);
 
 	//println("g = ");
 	//print_char_mat(&g);
@@ -129,7 +127,7 @@ fn part2(): str
 	return str(sum_);
 }
 
-fn search2(g: &[str; :,:], bg: &[bool; :,:], x: i32, y: i32, nsplit: &i32)
+fn search2(g: &[str; :,:], bg: &[bool; :,:], x: i32, y: i32)
 {
 	let nx = size(g, 0);
 	let ny = size(g, 1);
@@ -139,29 +137,37 @@ fn search2(g: &[str; :,:], bg: &[bool; :,:], x: i32, y: i32, nsplit: &i32)
 		return;
 	}
 
-	let c = g[x, y];
-	if c == "|"
+	//if c == "|"
+	if bg[x, y]
 		return;
 
 	bg[x,y] = true;
 
+	let c = g[x, y];
 	if c == "^"
 	{
 		// Split
-		nsplit += 1;
-		let xl = x-1;
-		let xr = x+1;
-
-		search2(&g, &bg, xl, y, &nsplit);
-		search2(&g, &bg, xr, y, &nsplit);
+		search2(&g, &bg, x-1, y);
+		search2(&g, &bg, x+1, y);
 
 		return;
 	}
 
 	// Mark here and then go straight drown
-	g[x,y] = "|";
+
+	//g[x,y] = "|";
 	y += 1;
-	search2(&g, &bg, x, y, &nsplit);
+	while true
+	{
+		// This is the "optimized" recursion but it still takes like 7 s for
+		// part 2.  I guess stack/queue search is the way to go
+		if (y >= ny) break;
+		if (bg[x,y]) break;
+		if (g[x,y] == "^") break;
+		bg[x,y] = true;
+		y += 1;
+	}
+	search2(&g, &bg, x, y);
 
 	return;
 }
