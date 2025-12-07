@@ -14,7 +14,6 @@ for x in [0: m]
 	for w in [x-1, x+1]
 		if w>=0 and w<m
 			if g[w,y] == "^"
-				if i[w, z]>0
-					i[x,y] += i[w,z];
+				i[x,y] += i[w,z];
 }
 println(sum(i[:,n-1]));
