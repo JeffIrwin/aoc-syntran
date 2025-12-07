@@ -43,8 +43,6 @@ fn part1(): str
 	//println("x0, y0 = ", [x0, y0]);
 
 	let nsplit = 0;
-
-	//search(&g, xy0, &nsplit);
 	search(&g, x0, y0, &nsplit);
 
 	//println("g = ");
@@ -85,7 +83,6 @@ fn part2(): str
 		}
 	}
 	//println("x0, y0 = ", [x0, y0]);
-	//ig[x0, y0] = 1;
 
 	search2(&g, &bg, x0, y0);
 
@@ -107,18 +104,6 @@ fn part2(): str
 		if (x+1 < nx)
 			if g[x+1, y] == "^"
 				ig[x, y] += ig[x+1, y-1];
-
-		//if bg[x, y-1]
-		//{
-		//	ig[x, y] = ig[x, y-1];
-		//}
-		//else
-		//{
-		//	//ig[x, y] = ig[x-1, y-1] + ig[x+1, y-1];
-		//	ig[x, y] = 0;
-		//	if (x-1 >=  0) ig[x, y] += ig[x-1, y-1];
-		//	if (x+1 < nx) ig[x, y] += ig[x+1, y-1];
-		//}
 	}
 	//println("ig = ", ig);
 	sum_ = sum(ig[:, ny-1]);
