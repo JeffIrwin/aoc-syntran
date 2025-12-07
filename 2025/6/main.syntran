@@ -121,7 +121,6 @@ fn part2(): str
 				res *= num;
 			else
 				res += num;
-
 		}
 		//println("res = ", res);
 		sum_ += res;
@@ -129,6 +128,29 @@ fn part2(): str
 		col_start = col_end;
 		col_end += 1;
 	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn part2transpose(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	println("g = ");
+	print_char_mat(&g);
+
+	// Transposing the input character grid could be an elegent solution, but I
+	// haven't fleshed it out yet
+
+	let gt = [" "; size(g,1), size(g,0)];
+	for i in [0: size(g,0)]
+	for j in [0: size(g,1)]
+		gt[j,i] = g[i,j];
+
+	println("gt = ");
+	print_char_mat(&gt);
 
 	println("part 2 = ", sum_);
 	return str(sum_);

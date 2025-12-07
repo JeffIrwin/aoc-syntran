@@ -1,0 +1,231 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//println("g = ");
+	//print_char_mat(&g);
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+
+	// Find start location "S" at [x0, y0]
+	let x0 = -1;
+	let y0 = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if g[x,y] == "S"
+		{
+			x0 = x;
+			y0 = y;
+			break;
+		}
+	}
+	//println("x0, y0 = ", [x0, y0]);
+
+	let nsplit = 0;
+
+	//search(&g, xy0, &nsplit);
+	search(&g, x0, y0, &nsplit);
+
+	//println("g = ");
+	//print_char_mat(&g);
+
+	sum_ = nsplit;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	//println("g = ");
+	//print_char_mat(&g);
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+
+	// Integer grid counting how many timelines can get to a location
+	let ig = [0'i64; nx, ny];
+	let bg = [false; nx, ny];
+
+	// Find start location "S" at [x0, y0]
+	let x0 = -1;
+	let y0 = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if g[x,y] == "S"
+		{
+			x0 = x;
+			y0 = y;
+			break;
+		}
+	}
+	//println("x0, y0 = ", [x0, y0]);
+	//ig[x0, y0] = 1;
+
+	let nsplit = 0;
+
+	search2(&g, &bg, x0, y0, &nsplit);
+
+	//println("g = ");
+	//print_char_mat(&g);
+	//println("bg = ", bg);
+
+	ig[x0, y0] = 1;
+
+	for y in [1: ny]
+	for x in [0: nx]
+	{
+		if (not bg[x,y]) continue;  // skip unvisited
+
+		ig[x, y] = ig[x, y-1];  // start with upward parent's count
+		if (x-1 >= 0)
+			if g[x-1, y] == "^"
+				ig[x, y] += ig[x-1, y-1];
+		if (x+1 < nx)
+			if g[x+1, y] == "^"
+				ig[x, y] += ig[x+1, y-1];
+
+		//if bg[x, y-1]
+		//{
+		//	ig[x, y] = ig[x, y-1];
+		//}
+		//else
+		//{
+		//	//ig[x, y] = ig[x-1, y-1] + ig[x+1, y-1];
+		//	ig[x, y] = 0;
+		//	if (x-1 >=  0) ig[x, y] += ig[x-1, y-1];
+		//	if (x+1 < nx) ig[x, y] += ig[x+1, y-1];
+		//}
+	}
+	//println("ig = ", ig);
+	sum_ = sum(ig[:, ny-1]);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn search2(g: &[str; :,:], bg: &[bool; :,:], x: i32, y: i32, nsplit: &i32)
+{
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	if x < 0 or y < 0 or x >= nx or y >= ny
+	{
+		// Out of bounds
+		return;
+	}
+
+	let c = g[x, y];
+	if c == "|"
+		return;
+
+	bg[x,y] = true;
+
+	if c == "^"
+	{
+		// Split
+		nsplit += 1;
+		let xl = x-1;
+		let xr = x+1;
+
+		search2(&g, &bg, xl, y, &nsplit);
+		search2(&g, &bg, xr, y, &nsplit);
+
+		return;
+	}
+
+	// Mark here and then go straight drown
+	g[x,y] = "|";
+	y += 1;
+	search2(&g, &bg, x, y, &nsplit);
+
+	return;
+}
+
+
+fn search(g: &[str; :,:], x: i32, y: i32, nsplit: &i32)
+{
+	// TODO: this could be optimized to go straight down by multiple steps in a
+	// single function call without recursion. I think that's what's slowing me
+	// down. A recursion-free stack approach might be even faster
+	//
+	// This applies to search2() for part 2 as well
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	if x < 0 or y < 0 or x >= nx or y >= ny
+	{
+		// Out of bounds
+		return;
+	}
+
+	let c = g[x, y];
+	if c == "|"
+		return;
+
+	if c == "^"
+	{
+		// Split
+		nsplit += 1;
+		search(&g, x-1, y, &nsplit);
+		search(&g, x+1, y, &nsplit);
+		return;
+	}
+
+	// Mark here and then go straight drown
+	g[x,y] = "|";
+	y += 1;
+	search(&g, x, y, &nsplit);
+
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/7");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

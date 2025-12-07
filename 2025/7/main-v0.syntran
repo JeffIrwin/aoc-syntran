@@ -1,0 +1,205 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	println("g = ");
+	print_char_mat(&g);
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+
+	// Find start location "S" at [x0, y0]
+	let x0 = -1;
+	let y0 = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if g[x,y] == "S"
+		{
+			x0 = x;
+			y0 = y;
+			break;
+		}
+	}
+	println("x0, y0 = ", [x0, y0]);
+
+	let nsplit = 0;
+
+	//search(&g, xy0, &nsplit);
+	search(&g, x0, y0, &nsplit);
+
+	println("g = ");
+	print_char_mat(&g);
+
+	sum_ = nsplit;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(filename);
+	println("g = ");
+	print_char_mat(&g);
+
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+
+	// Integer grid counting how many timelines can get to a location
+	let ig = [0'i64; nx, ny];
+
+	// Find start location "S" at [x0, y0]
+	let x0 = -1;
+	let y0 = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if g[x,y] == "S"
+		{
+			x0 = x;
+			y0 = y;
+			break;
+		}
+	}
+	println("x0, y0 = ", [x0, y0]);
+	ig[x0, y0] = 1;
+
+	let nsplit = 0;
+
+	search2(&g, &ig, x0, y0, &nsplit);
+
+	println("g = ");
+	print_char_mat(&g);
+	println("ig = ", ig);
+
+	sum_ = nsplit;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn search2(g: &[str; :,:], ig: &[i64; :,:], x: i32, y: i32, nsplit: &i32)
+{
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	if x < 0 or y < 0 or x >= nx or y >= ny
+	{
+		// Out of bounds
+		return;
+	}
+
+	let c = g[x, y];
+	if c == "|"
+		return;
+
+	// TODO: do we need to mark "^" as visited?
+
+	if c == "^"
+	{
+		// Split
+		nsplit += 1;
+		let xl = x-1;
+		let xr = x+1;
+
+		let nl = ig[xl-1, y-1] + ig[xl+1, y-1];
+		let nr = ig[xr-1, y-1] + ig[xr+1, y-1];
+		ig[xl,y] += nl;
+		ig[xr,y] += nr;
+
+		search2(&g, &ig, xl, y, &nsplit);
+		search2(&g, &ig, xr, y, &nsplit);
+
+		return;
+	}
+
+	// Mark here and then go straight drown
+	g[x,y] = "|";
+	//ig[x,y] += 1;
+	if (y+1 < ny) ig[x, y+1] = ig[x, y];
+	y += 1;
+	search2(&g, &ig, x, y, &nsplit);
+
+	return;
+}
+
+
+fn search(g: &[str; :,:], x: i32, y: i32, nsplit: &i32)
+{
+	let nx = size(g, 0);
+	let ny = size(g, 1);
+	if x < 0 or y < 0 or x >= nx or y >= ny
+	{
+		// Out of bounds
+		return;
+	}
+
+	let c = g[x, y];
+	if c == "|"
+		return;
+
+	// TODO: do we need to mark "^" as visited?
+
+	if c == "^"
+	{
+		// Split
+		nsplit += 1;
+		search(&g, x-1, y, &nsplit);
+		search(&g, x+1, y, &nsplit);
+		return;
+	}
+
+	// Mark here and then go straight drown
+	g[x,y] = "|";
+	y += 1;
+	search(&g, x, y, &nsplit);
+
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/7");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
