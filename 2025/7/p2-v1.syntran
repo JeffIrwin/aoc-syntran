@@ -1,0 +1,59 @@
+#include("../../utils.syntran");
+
+let sum_ = 0'i64;
+
+let g = read_char_mat("input.txt");
+g = read_char_mat("test-input.txt");
+
+//println("g = ");
+//print_char_mat(&g);
+
+let nx = size(g, 0);
+let ny = size(g, 1);
+
+// Integer grid counting how many timelines can get to a location
+let ig = [0'i64; nx, ny];
+let bg = [false; nx, ny];
+
+// I do two passes here for the marking first and then the counting, but I
+// think it could be done in just one pass
+
+for y in [1: ny]
+for x in [0: nx]
+{
+	if g[x, y-1] == "S"
+		bg[x, y-1] = true;
+
+	if bg[x, y-1] and g[x, y-1] != "^"
+		bg[x,y] = true;
+
+	if x-1 >= 0
+		if g[x-1, y] == "^"
+			if bg[x-1, y-1]
+				bg[x,y] = true;
+	if x+1 < nx
+		if g[x+1, y] == "^"
+			if bg[x+1, y-1]
+				bg[x,y] = true;
+}
+
+println("g = ");
+print_char_mat(&g);
+//println("bg = ", bg);
+
+for y in [1: ny]
+for x in [0: nx]
+{
+	if (not bg[x,y]) continue;  // skip unvisited
+	if (g[x, y-1] == "S") ig[x, y-1] = 1;  // mark start
+
+	ig[x, y] = ig[x, y-1];  // start with upward parent's count
+	if (x-1 >= 0)
+		if g[x-1, y] == "^"
+			ig[x, y] += ig[x-1, y-1];
+	if (x+1 < nx)
+		if g[x+1, y] == "^"
+			ig[x, y] += ig[x+1, y-1];
+}
+//println("ig = ", ig);
+println(sum(ig[:, ny-1]));

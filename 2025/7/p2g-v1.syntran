@@ -1,0 +1,23 @@
+#include("../../utils.syntran");
+let g = read_char_mat("input.txt");
+let m = size(g,0);
+let n = size(g,1);
+let i = [0'i64; m,n];
+for y in [1: n]
+for x in [0: m]
+{
+	let z=y-1;
+	if g[x, z] == "S"
+		i[x, z] = 1;
+	if i[x, z]>0 and g[x, z] != "^"
+		i[x, y] = i[x, z];
+	if x-1 >= 0
+		if g[x-1, y] == "^"
+			if i[x-1, z]>0
+				i[x,y] += i[x-1, z];
+	if x+1 < m
+		if g[x+1, y] == "^"
+			if i[x+1, z]>0
+				i[x,y] += i[x+1, z];
+}
+println(sum(i[:,n-1]));

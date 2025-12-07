@@ -1,0 +1,33 @@
+#include("../../utils.syntran");
+
+let sum_ = 0'i64;
+
+let g = read_char_mat("input.txt");
+//g = read_char_mat("test-input.txt");
+
+let nx = size(g, 0);
+let ny = size(g, 1);
+let ig = [0'i64; nx, ny]; // int grid
+
+for y in [1: ny]
+for x in [0: nx]
+{
+	if g[x, y-1] == "S" // mark start
+		ig[x, y-1] = 1;
+
+	if ig[x, y-1]>0 and g[x, y-1] != "^"
+		ig[x, y] = ig[x, y-1];  // start with upward parent's count
+
+	if x-1 >= 0
+		if g[x-1, y] == "^"
+			if ig[x-1, y-1]>0
+				ig[x,y] += ig[x-1, y-1];
+	if x+1 < nx
+		if g[x+1, y] == "^"
+			if ig[x+1, y-1]>0
+				ig[x,y] += ig[x+1, y-1];
+}
+//println("g = ");
+//print_char_mat(&g);
+//println("ig = ", ig);
+println(sum(ig[:, ny-1]));

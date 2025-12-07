@@ -26,24 +26,35 @@ fn part1(): str
 
 	let nx = size(g, 0);
 	let ny = size(g, 1);
-
-	// Find start location "S" at [x0, y0]
-	let x0 = -1;
-	let y0 = -1;
-	for y in [0: ny]
-	for x in [0: nx]
-	{
-		if g[x,y] == "S"
-		{
-			x0 = x;
-			y0 = y;
-			break;
-		}
-	}
-	//println("x0, y0 = ", [x0, y0]);
+	let bg = [false; nx, ny];
 
 	let nsplit = 0;
-	search(&g, x0, y0, &nsplit);
+	for y in [1: ny]
+	for x in [0: nx]
+	{
+		if any(g[x, y-1] == ["S", "|"])
+		{
+			bg[x,y] = true;
+			if (g[x,y] == ".") g[x,y] = "|";
+		}
+
+		if x-1 >= 0
+			if g[x-1, y] == "^"
+				if g[x-1, y-1] == "|"
+				{
+					nsplit += 1;  // only count one side of the splits
+					bg[x,y] = true;
+					if (g[x,y] == ".") g[x,y] = "|";
+				}
+		if x+1 < nx
+			if g[x+1, y] == "^"
+				if g[x+1, y-1] == "|"
+				{
+					bg[x,y] = true;
+					if (g[x,y] == ".") g[x,y] = "|";
+				}
+	}
+	//println("x0, y0 = ", [x0, y0]);
 
 	//println("g = ");
 	//print_char_mat(&g);
@@ -69,33 +80,43 @@ fn part2(): str
 	let ig = [0'i64; nx, ny];
 	let bg = [false; nx, ny];
 
-	// Find start location "S" at [x0, y0]
-	let x0 = -1;
-	let y0 = -1;
-	for y in [0: ny]
+	// I do two passes here for the marking first and then the counting, but I
+	// think it could be done in just one pass
+
+	for y in [1: ny]
 	for x in [0: nx]
 	{
-		if g[x,y] == "S"
+		if any(g[x, y-1] == ["S", "|"])
 		{
-			x0 = x;
-			y0 = y;
-			break;
+			bg[x,y] = true;
+			if (g[x,y] == ".") g[x,y] = "|";
 		}
-	}
-	//println("x0, y0 = ", [x0, y0]);
 
-	search2(&g, &bg, x0, y0);
+		if x-1 >= 0
+			if g[x-1, y] == "^"
+				if g[x-1, y-1] == "|"
+				{
+					bg[x,y] = true;
+					if (g[x,y] == ".") g[x,y] = "|";
+				}
+		if x+1 < nx
+			if g[x+1, y] == "^"
+				if g[x+1, y-1] == "|"
+				{
+					bg[x,y] = true;
+					if (g[x,y] == ".") g[x,y] = "|";
+				}
+	}
 
 	//println("g = ");
 	//print_char_mat(&g);
 	//println("bg = ", bg);
 
-	ig[x0, y0] = 1;
-
 	for y in [1: ny]
 	for x in [0: nx]
 	{
 		if (not bg[x,y]) continue;  // skip unvisited
+		if (g[x, y-1] == "S") ig[x, y-1] = 1;  // mark start
 
 		ig[x, y] = ig[x, y-1];  // start with upward parent's count
 		if (x-1 >= 0)
@@ -110,89 +131,6 @@ fn part2(): str
 
 	println("part 2 = ", sum_);
 	return str(sum_);
-}
-
-fn search2(g: &[str; :,:], bg: &[bool; :,:], x: i32, y: i32)
-{
-	let nx = size(g, 0);
-	let ny = size(g, 1);
-	if x < 0 or y < 0 or x >= nx or y >= ny
-	{
-		// Out of bounds
-		return;
-	}
-
-	//if c == "|"
-	if bg[x, y]
-		return;
-
-	bg[x,y] = true;
-
-	let c = g[x, y];
-	if c == "^"
-	{
-		// Split
-		search2(&g, &bg, x-1, y);
-		search2(&g, &bg, x+1, y);
-
-		return;
-	}
-
-	// Mark here and then go straight drown
-
-	//g[x,y] = "|";
-	y += 1;
-	while true
-	{
-		// This is the "optimized" recursion but it still takes like 7 s for
-		// part 2.  I guess stack/queue search is the way to go
-		if (y >= ny) break;
-		if (bg[x,y]) break;
-		if (g[x,y] == "^") break;
-		bg[x,y] = true;
-		y += 1;
-	}
-	search2(&g, &bg, x, y);
-
-	return;
-}
-
-
-fn search(g: &[str; :,:], x: i32, y: i32, nsplit: &i32)
-{
-	// TODO: this could be optimized to go straight down by multiple steps in a
-	// single function call without recursion. I think that's what's slowing me
-	// down. A recursion-free stack approach might be even faster
-	//
-	// This applies to search2() for part 2 as well
-
-	let nx = size(g, 0);
-	let ny = size(g, 1);
-	if x < 0 or y < 0 or x >= nx or y >= ny
-	{
-		// Out of bounds
-		return;
-	}
-
-	let c = g[x, y];
-	if c == "|"
-		return;
-
-	if c == "^"
-	{
-		// Split
-		nsplit += 1;
-		search(&g, x-1, y, &nsplit);
-		search(&g, x+1, y, &nsplit);
-		return;
-	}
-
-	// Mark here and then go straight drown
-	g[x,y] = "|";
-	y += 1;
-	search(&g, x, y, &nsplit);
-
-	return;
 }
 
 //==============================================================================
