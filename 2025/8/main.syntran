@@ -1,0 +1,213 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let xyz = read_i32_mat_delim(filename, ",");
+	//println("xyz = ", xyz);
+
+	let nx = size(xyz, 1);
+	//println("nx = ", nx);
+
+	let dists = [0'i64; 3, nx*(nx-1)/2];
+	let k = 0;
+	for i in [0: nx]
+	for j in [0: i]
+	{
+		let xi = xyz[:,i];
+		let xj = xyz[:,j];
+		let d2 = sum((i64(xj) - xi) ** 2);
+		dists[:,k] = [d2, i, j];  // save distances and the node IDs that it came from
+		k += 1;
+	}
+	//println("dists = ", dists);
+
+	let idx = sort_index_i64(dists[0,:]);
+	dists = dists[:, idx];
+	//println("dists sorted = ", dists);
+
+	// Number of connections to make
+	let ncon = 10;
+	if (ifile == 1) ncon = 1000;
+	//println("ncon = ", ncon);
+
+	// Build an adjacency list for each node
+	let NADJ_CAP = 16;
+	let adj = [-1; NADJ_CAP, nx];
+	let nadj = [0; nx];
+	for idist in [0: ncon]
+	{
+		let i = dists[1, idist];
+		let j = dists[2, idist];
+		//println("i, j = ", [i, j]);
+
+		// Connect i to j and vice versa
+		adj[nadj[i], i] = j;
+		nadj[i] += 1;
+		adj[nadj[j], j] = i;
+		nadj[j] += 1;
+	}
+	//println("adj = ", adj);
+
+	// Mark each component by walking the adjacency graph
+	let com = [-1; nx];
+	let icom = 0;
+	for i in [0: i32(nx)]
+	{
+		if (com[i] >= 0) continue;
+
+		// Search from node i
+		let seen = [false; nx];
+		search(&adj, &nadj, &seen, &com, i, icom);
+		icom += 1;
+	}
+	//println("com = ", com);
+
+	// Count the number of nodes ncom in each component
+	let ncom = [0; nx];
+	for i in [0: nx]
+		ncom[i] = count(com == i);
+	//println("ncom = ", ncom);
+
+	ncom = sort_inplace(ncom);
+	//println("ncom = ", ncom);
+
+	sum_ = product(ncom[nx-3: nx]);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let xyz = read_i32_mat_delim(filename, ",");
+	//println("xyz = ", xyz);
+
+	let nx = size(xyz, 1);
+	//println("nx = ", nx);
+
+	let dists = [0'i64; 3, nx*(nx-1)/2];
+	let k = 0;
+	for i in [0: nx]
+	for j in [0: i]
+	{
+		let xi = xyz[:,i];
+		let xj = xyz[:,j];
+		let d2 = sum((i64(xj) - xi) ** 2);
+		dists[:,k] = [d2, i, j];  // save distances and the node IDs that it came from
+		k += 1;
+	}
+	//println("dists = ", dists);
+
+	let idx = sort_index_i64(dists[0,:]);
+	dists = dists[:, idx];
+	//println("dists sorted = ", dists);
+
+	// Build an adjacency list for each node
+	let NADJ_CAP = 64; // TODO: check overflow (part 1 too)
+	let adj = [-1; NADJ_CAP, nx];
+	let nadj = [0; nx];
+	let com = [-1; nx];
+	for idist in [0: size(dists,1)]
+	{
+		let i = dists[1, idist];
+		let j = dists[2, idist];
+		//println("i, j = ", [i, j]);
+
+		// Connect i to j and vice versa
+		adj[nadj[i], i] = j;
+		nadj[i] += 1;
+		adj[nadj[j], j] = i;
+		nadj[j] += 1;
+
+		// Mark each component by walking the adjacency graph
+		com = -1;
+		let icom = 0;
+		for i in [0: i32(nx)]
+		{
+			if (com[i] >= 0) continue;
+
+			// If there's a second component, we're not done connecting yet, but
+			// we don't need to mark all the other components
+			if (icom > 1) break;
+			//if (icom > 0) break;
+
+			// Search from node i
+			let seen = [false; nx];
+			search(&adj, &nadj, &seen, &com, i, icom);
+			icom += 1;
+		}
+		//println("icom = ", icom);
+		if (icom == 1)
+		{
+			// We're done connecting when there's only one component of the
+			// graph
+			sum_ = xyz[0,i] * xyz[0,j];
+			break;
+		}
+	}
+	//println("adj = ", adj);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn search(
+	adj: &[i32; :,:], nadj: &[i32; :],
+	seen: &[bool; :], com: &[i32; :], i: i32, icom: i32)
+{
+	// DFS
+	if (seen[i]) return;
+	seen[i] = true;
+	com[i] = icom;
+
+	for j in adj[0: nadj[i], i]
+		search(&adj, &nadj, &seen, &com, j, icom);
+
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/8");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
