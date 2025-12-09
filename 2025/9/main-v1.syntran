@@ -1,0 +1,186 @@
+
+#include("../../utils.syntran");
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let xy = read_i32_mat_delim(filename, ",");
+	//println("xy = ", xy);
+
+	let n = size(xy, 1);
+	println("n = ", n);
+	for i in [0: n]
+	for j in [0: i]
+	{
+		let a = product(abs(i64(xy[:,j]) - xy[:,i]) + 1);
+		sum_ = max(sum_, a);
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let xy = read_i32_mat_delim(filename, ",");
+	//println("xy = ", xy);
+
+	let n = size(xy, 1);
+	println("n = ", n);
+
+	let xmin = minval(xy[0,:]);
+	let ymin = minval(xy[1,:]);
+	let xmax = maxval(xy[0,:]);
+	let ymax = maxval(xy[1,:]);
+
+	println("x in ", [xmin, xmax]);
+	println("y in ", [ymin, ymax]);
+
+	let nx = xmax + 1;
+	let ny = ymax + 1;
+	//nx += 2; // TODO: buffer for debugging only
+	//ny += 2;
+
+	let g = [false; nx, ny];
+	println("done allocating g");
+
+	for i in [0: n]  // mark the red tiles
+		g[xy[0,i], xy[1,i]] = true;
+
+	// Render green tiles on horizontal connecting lines between red tiles
+	for i0 in [0: n]
+	{
+		let i1 = (i0 + 1) % n;
+		//println("i0, i1 = ", [i0, i1]);
+
+		let x0 = xy[0,i0];
+		let x1 = xy[0,i1];
+		if (x0 == x1) continue; // horizontal only here
+
+		if x0 > x1
+		{
+			let tmp = x0;
+			x0 = x1;
+			x1 = tmp;
+		}
+
+		let y = xy[1,i0];
+		g[x0+1: x1, y] = true;
+	}
+
+	// Save a list of the vertical lines
+	let vrt = [0; 3, n];
+	let nvrt = 0;
+	for i0 in [0: n]
+	{
+		let i1 = (i0 + 1) % n;
+
+		let y0 = xy[1,i0];
+		let y1 = xy[1,i1];
+		if (y0 == y1) continue; // vertical only
+
+		if y0 > y1
+		{
+			let tmp = y0;
+			y0 = y1;
+			y1 = tmp;
+		}
+		let x = xy[0,i0];
+		vrt[:, nvrt] = [x, y0, y1];
+		nvrt += 1;
+	}
+	vrt = vrt[:, 0: nvrt]; // trim
+	println("vrt = ", vrt);
+
+	// Go along horizontal scanlines, flipping the in/out state at every
+	// vertical line, and render the green tiles inside the shape
+	for y in [0: ny]
+	{
+		let inside = false;
+		for x in [0: nx]
+		{
+			if inside
+				g[x,y] = true;
+
+			if not any(x == vrt[0,:]) continue;
+			let iv = 0;
+			while (x != vrt[0,iv]) iv += 1;
+
+			if (y <= vrt[1,iv]) continue;
+			if (y >  vrt[2,iv]) continue;
+
+			inside = not inside;  // flip state
+			if inside
+				g[x,y] = true;
+
+			println("x, y = ", [x, y]);
+			println("vrt iv = ", vrt[:,iv]);
+			println();
+		}
+	}
+
+	//print_char_mat(&g);
+	println("g = ", g);
+
+	for i in [0: n]
+	for j in [0: i]
+	{
+		let xlo = minval(xy[0, [i,j]]);
+		let xhi = maxval(xy[0, [i,j]]);
+		let ylo = minval(xy[1, [i,j]]);
+		let yhi = maxval(xy[1, [i,j]]);
+
+		if any(g[xlo: xhi+1, ylo: yhi+1] == false) continue;
+
+		let a = i64(xhi - xlo + 1) * (yhi - ylo + 1);
+		//let a = product(abs(i64(xy[:,j]) - xy[:,i]) + 1);
+		sum_ = max(sum_, a);
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/9");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
