@@ -1,6 +1,6 @@
 
 #include("../../utils.syntran");
-//#include("../../dict_i64.syntran");
+#include("../../dict_i64.syntran");
 
 //==============================================================================
 
@@ -24,7 +24,7 @@ fn part1(): str
 	//println("xy = ", xy);
 
 	let n = size(xy, 1);
-	//println("n = ", n);
+	println("n = ", n);
 	for i in [0: n]
 	for j in [0: i]
 	{
@@ -44,48 +44,32 @@ fn part2(): str
 	//println("xy = ", xy);
 
 	let n = size(xy, 1);
-	//println("n = ", n);
-
-	// Get the unique x and y coordinates
-	let xu = uniq(xy[0,:]);
-	let yu = uniq(xy[1,:]);
-	//println("xu = ", xu);
-	//println("yu = ", yu);
-
-	let xy0 = xy;  // backup original "exploded" coordinates
-
-	// Compress the input points down to a smaller version of the same shape.
-	// The smallest x coordinate will become 0, next smallest becomes 1, ...
-	for i in [0: n]
-	{
-		// Compress x.  This could be done more optimally with a mapping array
-		// if uniq() returned one
-		let j = 0;
-		while (xu[j] != xy[0,i]) j += 1;
-		xy[0,i] = j;
-
-		// Compress y
-		j = 0;
-		while (yu[j] != xy[1,i]) j += 1;
-		xy[1,i] = j;
-	}
-	//println("xy (compressed) = ", xy);
+	println("n = ", n);
 
 	let xmin = minval(xy[0,:]);
 	let ymin = minval(xy[1,:]);
 	let xmax = maxval(xy[0,:]);
 	let ymax = maxval(xy[1,:]);
 
-	//println("x in ", [xmin, xmax]);
-	//println("y in ", [ymin, ymax]);
+	println("x in ", [xmin, xmax]);
+	println("y in ", [ymin, ymax]);
 
 	let nx = xmax + 1;
 	let ny = ymax + 1;
+	//nx += 2; // TODO: buffer for debugging only
+	//ny += 2;
 
-	let g = [false; nx, ny];
+	//let g = [false; nx, ny];
+	//println("done allocating g");
+	let set  = new_dict_i64();
+	let vset = new_dict_i64();  // set of pixels on vertical lines
+
 	println("marking red tiles ...");
-	for i in [0: n]
-		g[xy[0,i], xy[1,i]] = true;
+	for i in [0: n]  // mark the red tiles
+	{
+		//g[xy[0,i], xy[1,i]] = true;
+		set_dict_i64(&set, str(xy[:,i]), 1'i64);
+	}
 
 	// Render green tiles on horizontal connecting lines between red tiles
 	println("marking horizontal lines ...");
@@ -104,19 +88,18 @@ fn part2(): str
 			x0 = x1;
 			x1 = tmp;
 		}
-		let y = xy[1,i0];
-		g[x0+1: x1, y] = true;
-	}
 
-	let NCAP = 32; // TODO: check overflow. Or just don't use the sparse vrt
-				   // line optimization now that we have spatial compression
+		let y = xy[1,i0];
+		//g[x0+1: x1, y] = true;
+		//set_dict_i64(&set, str(xy[:,i]), 1'i64);
+		for xl in [x0+1: x1]
+			set_dict_i64(&set, str([xl, y]), 1'i64);
+	}
 
 	// Save a list of the vertical lines
 	println("getting vertical line list ...");
 	let vrt = [0; 3, n];
 	let nvrt = 0;
-	let ixv = [-1; NCAP, nx]; // list of vrt line IDs at each x coord
-	let nxv = [0; nx];
 	for i0 in [0: n]
 	{
 		let i1 = (i0 + 1) % n;
@@ -127,77 +110,103 @@ fn part2(): str
 
 		let x = xy[0,i0];
 
+		if y0 < y1
+			for y in [y0: y1]
+				set_dict_i64(&vset, str([x,y]), 1'i64);
+		else
+			for y in [y1+1: y0+1]
+				set_dict_i64(&vset, str([x,y]), 1'i64);
+
+		if y0 > y1
+		{
+			// TODO: swapping here is not right for twisty shapes
+			let tmp = y0;
+			y0 = y1;
+			y1 = tmp;
+		}
 		vrt[:, nvrt] = [x, y0, y1];
-		ixv[nxv[x], x] = nvrt;
-		nxv[x] += 1;
 		nvrt += 1;
 	}
 	vrt = vrt[:, 0: nvrt]; // trim
-	//println("vrt = ", vrt);
-
-	// Instead of sorting, do a pigeonhole and make a list of each vrt at given
-	// x coordinates
+	println("vrt = ", vrt);
 
 	// Go along horizontal scanlines, flipping the in/out state at every
 	// vertical line, and render the green tiles inside the shape
 	println("rendering scanlines ...");
 	for y in [0: ny]
 	{
-		//println("y = ", y, " / ", ny);
+		println("y = ", y, " / ", ny);
 		let inside = false;
 		for x in [0: nx]
 		{
 			if inside
-				g[x,y] = true;
-
-			for iv in ixv[0: nxv[x], x]
 			{
-				// Don't swap y start/end above but account for it here
-				if (y < minval(vrt[[1,2], iv])) continue;
-				if (y > maxval(vrt[[1,2], iv])) continue;
-				if (y == vrt[1,iv]) continue;
-				inside = not inside;  // flip state
-
-				if inside
-					g[x,y] = true;
-
-				//println("x, y = ", [x, y]);
-				//println("vrt iv = ", vrt[:,iv]);
-				//println();
+				//g[x,y] = true;
+				set_dict_i64(&set, str([x,y]), 1'i64);
 			}
+
+			//// Could sort vrt lines by x to optimize this part
+			//if not any(x == vrt[0,:]) continue;
+			//let iv = 0;
+			//while (x != vrt[0,iv]) iv += 1;
+
+			//// TODO: this is not right. Line iv may not ensconce y bounds, but
+			//// other lines with same x coordinate might
+
+			//// TODO: don't swap above but account for it here
+			//if (y <= vrt[1,iv]) continue;
+			//if (y >  vrt[2,iv]) continue;
+
+			//inside = not inside;  // flip state
+
+			let is_vset = get_dict_i64(&vset, str([x,y])) == 1;
+			if (is_vset) inside = not inside;
+			if inside
+			{
+				//g[x,y] = true;
+				set_dict_i64(&set, str([x,y]), 1'i64);
+			}
+
+			//println("x, y = ", [x, y]);
+			//println("vrt iv = ", vrt[:,iv]);
+			//println();
 		}
 	}
+
+	//print_char_mat(&g);
 	//println("g = ", g);
 
-	// This is now the most expensive block
 	println("checking rectangles ...");
 	for i in [0: n]
 	{
-	//println("i = ", i, " / ", n);
+	println("i = ", i, " / ", n);
 	for j in [0: i]
 	{
-		// [xy](hi|lo) exist in compressed space and are used for the in/out
-		// logic
 		let xlo = minval(xy[0, [i,j]]);
 		let xhi = maxval(xy[0, [i,j]]);
 		let ylo = minval(xy[1, [i,j]]);
 		let yhi = maxval(xy[1, [i,j]]);
 
-		if not all(g[xlo: xhi+1, ylo: yhi+1]) continue;
+		//if any(g[xlo: xhi+1, ylo: yhi+1] == false) continue;
+		let all_in = true;
+		for y in [ylo: yhi+1]
+		{
+			for x in [xlo: xhi+1]
+			{
+				let inside = get_dict_i64(&set, str([x,y])) == 1;
+				all_in = all_in and inside;
+				if (not all_in) break;
+			}
+			if (not all_in) break;
+		}
+		if (not all_in) continue;
 
-		// [xy](hi|lo)0 exist in original exploded space and are used only for
-		// the final area calculation
-		let xlo0 = minval(xy0[0, [i,j]]);
-		let xhi0 = maxval(xy0[0, [i,j]]);
-		let ylo0 = minval(xy0[1, [i,j]]);
-		let yhi0 = maxval(xy0[1, [i,j]]);
-
-		let a = i64(xhi0 - xlo0 + 1) * (yhi0 - ylo0 + 1);
+		let a = i64(xhi - xlo + 1) * (yhi - ylo + 1);
+		//let a = product(abs(i64(xy[:,j]) - xy[:,i]) + 1);
 		sum_ = max(sum_, a);
 	}
 	}
 
-	// 1603439684 :green-check:
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
