@@ -83,12 +83,12 @@ fn part2(): str
 	let ny = ymax + 1;
 
 	let g = [false; nx, ny];
-	println("marking red tiles ...");
+	//println("marking red tiles ...");
 	for i in [0: n]
 		g[xy[0,i], xy[1,i]] = true;
 
 	// Render green tiles on horizontal connecting lines between red tiles
-	println("marking horizontal lines ...");
+	//println("marking horizontal lines ...");
 	for i0 in [0: n]
 	{
 		let i1 = (i0 + 1) % n;
@@ -112,7 +112,7 @@ fn part2(): str
 				   // line optimization now that we have spatial compression
 
 	// Save a list of the vertical lines
-	println("getting vertical line list ...");
+	//println("getting vertical line list ...");
 	let vrt = [0; 3, n];
 	let nvrt = 0;
 	let ixv = [-1; NCAP, nx]; // list of vrt line IDs at each x coord
@@ -140,7 +140,7 @@ fn part2(): str
 
 	// Go along horizontal scanlines, flipping the in/out state at every
 	// vertical line, and render the green tiles inside the shape
-	println("rendering scanlines ...");
+	//println("rendering scanlines ...");
 	for y in [0: ny]
 	{
 		//println("y = ", y, " / ", ny);
@@ -170,10 +170,8 @@ fn part2(): str
 	//println("g = ", g);
 
 	// This is now the most expensive block
-	println("checking rectangles ...");
+	//println("checking rectangles ...");
 	for i in [0: n]
-	{
-	//println("i = ", i, " / ", n);
 	for j in [0: i]
 	{
 		// [xy](hi|lo) exist in compressed space and are used for the in/out
@@ -195,9 +193,7 @@ fn part2(): str
 		let a = i64(xhi0 - xlo0 + 1) * (yhi0 - ylo0 + 1);
 		sum_ = max(sum_, a);
 	}
-	}
 
-	// 1603439684 :green-check:
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
