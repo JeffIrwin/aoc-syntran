@@ -6,7 +6,7 @@
 //==============================================================================
 
 let ifile = 0;
-ifile = 1;
+//ifile = 1;
 
 let filenames =
 [
@@ -153,169 +153,6 @@ fn part1(): str
 	return str(sum_);
 }
 
-fn transpose_(a: [f64; :,:]): [f64; :,:]
-{
-	let m = size(a,0);
-	let n = size(a,1);
-	let at = [0.0; n, m];
-	for i in [0: m]
-	for j in [0: n]
-		at[j,i] = a[i,j];
-	return at;
-}
-
-fn matmul_vec_(mat: [f64; :,:], vec: [f64; :]): [f64; :]
-{
-	// Matrix-vector multiplication.  Return mat * vec
-	//println("starting mul_mat_vec()");
-	//let ans =  [0.0f; size(mat,0)];
-	let n = size(mat,0);
-	let ans =  [0.0; n];
-	for     j in [0: size(mat,1)]
-		for i in [0: size(mat,0)]
-			ans[i] = ans[i] + mat[i,j] * vec[j];
-
-	return ans;
-}
-
-fn matmul_(a: [f64; :,:], b: [f64; :,:]): [f64; :,:]
-{
-	// Matrix-matrix multiplication.  Return a * b
-	//println("starting matmul_()");
-	let l = size(a,0);
-	//println("l = ", l);
-	let m = size(a,1);
-	//println("m = ", m);
-	let n = size(b,1);
-	//println("n = ", n);
-	let c = [0.0; l, n];
-	for         k in [0: n]
-		for     j in [0: m]
-			for i in [0: l]
-				c[i,k] = c[i,k] + a[i,j] * b[j,k];
-	return c;
-}
-
-fn norm_(v: [f64; :]): f64
-{
-	return sqrt(sum(v * v));
-}
-
-fn qr_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
-{
-	let n0 = size(a,0);
-	let n1 = size(a,1);
-	let n = min(n0, n1);
-	let diag__ = [0.0; n];
-	let pivot = [0: n];
-
-	for i in [0: n]
-	{
-		let ip = pivot[i];
-		let normx = norm_(a[i:n0, ip]);
-		let max_index = i;
-//			do j = i+1, n
-//				jp = pivot(j)
-//				normj = norm2(a(i:, jp))
-//				if (normj > normx) then
-//					max_index = j
-//					normx = normj
-//				end if
-//			end do
-//			!print *, "normx = ", normx
-		for j in [i+1: n]
-		{
-			let jp = pivot[j];
-			let normj = norm_(a[i:n0, jp]);
-			if normj > normx
-			{
-				println("normj, normx = ", [normj, normx]);
-				max_index = j;
-				normx = normj;
-			}
-		}
-		println("normx = ", normx);
-
-//			! Swap cols
-//			pivot([i, max_index]) = pivot([max_index, i])
-		pivot[[i, max_index]] = pivot[[max_index, i]];
-		ip = pivot[i];
-
-		//if (normx <= tol_) then
-		//	rank__ = rank__ - 1
-		//	diag__(i) = 0
-		//	cycle
-		//end if
-		if normx <= 1.e-12
-		{
-			diag__[i] = 0.0;
-			continue;
-		}
-
-//		s = -sign_(a(i, ip))
-//		u1 = a(i, ip) - s * normx
-//		a(i+1:, ip) = a(i+1:, ip) / u1
-//		a(i, ip) = s * normx
-		let s = -sign_f64(a[i, ip]);
-		let u1 = a[i,ip] - s * normx;
-		a[i+1:n0, ip] = a[i+1:n0, ip] / u1;
-		a[i, ip] = s * normx;
-
-//		diag__(i) = -s * u1 / normx
-		diag__[i] = -s * u1 / normx;
-
-		println("a i ip = ", a[i,ip]);
-		println("s = ", s);
-		println("diag__ i = ", diag__[i]);
-
-//		do k = i+1, n
-//			if (present(pivot)) then
-//				kp = pivot(k)
-//			else
-//				kp = k
-//			end if
-//			wa = diag__(i) * (dot_product(a(i+1:, ip), a(i+1:, kp)) + a(i, kp))
-//			a(i, kp) = a(i, kp) - wa
-//			a(i+1:, kp) = a(i+1:, kp) - a(i+1:, ip) * wa
-//		end do
-		for k in [i+1: n]
-		{
-			let kp = pivot[k];
-			let wa = diag__[i] * (sum(a[i+1:n0, ip] * a[i+1:n0, kp]) + a[i,kp]);
-			println("wa = ", wa);
-			a[i,kp] -= wa;
-			a[i+1:n0, kp] -= a[i+1:n0, ip] * wa;
-		}
-
-	}
-
-	return [0.0]; // TODO
-}
-
-//h := 1 /* Initialization of the pivot row */
-//k := 1 /* Initialization of the pivot column */
-//
-//while h ≤ m and k ≤ n:
-//    /* Find the k-th pivot: */
-//    i_max := argmax (i = h ... m, abs(A[i, k]))
-//    if A[i_max, k] = 0:
-//        /* No pivot in this column, pass to next column */
-//        k := k + 1
-//    else:
-//        swap rows(h, i_max)
-//        /* Do for all rows below pivot: */
-//
-//        for i = h + 1 ... m:
-//            f := A[i, k] / A[h, k]
-//            /* Fill with zeros the lower part of pivot column: */
-//            A[i, k] := 0
-//            /* Do for all remaining elements in current row: */
-//            for j = k + 1 ... n:
-//                A[i, j] := A[i, j] - A[h, j] * f
-//        /* Increase pivot row and column */
-//        h := h + 1
-//        k := k + 1
-
 fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 {
 	// Solve linear algebra problem a*x == b for x using LU decomposition
@@ -326,8 +163,6 @@ fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 	let mn = min(m, n);
 	let mx = max(m, n);
 
-	let nrank = n;
-
 //	if (size(a, 2) /= n) then
 //		msg = "matrix is not square in lu_factor_f64()"
 //		call PANIC(msg, present(iostat))
@@ -335,86 +170,64 @@ fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 //		return
 //	end if
 
-//	if (.not. allocated(pivot)) then
+//	if (.not. allocated(ipiv)) then
 //		! Or we could just allocate and initialize (to identity perm) here
 //		!
 //		! Maybe this shouldn't be checked manually at all and we should just let
 //		! a stacktrace get issued, as with `a`
-//		msg = "pivot is not allocated in lu_factor_f64()"
+//		msg = "ipiv is not allocated in lu_factor_f64()"
 //		call PANIC(msg, present(iostat))
 //		iostat = 2
 //		return
 //	end if
-//	!print *, "pivot init = ", pivot
+//	!print *, "ipiv init = ", ipiv
 
-	let pivot = [0: mn];
-	//let pivot = [0: n];
-	//let pivot = [0: m];
-	println("pivot = ", pivot);
+	let ipiv = [0: mn];
+	//let ipiv = [0: n];
+	//let ipiv = [0: m];
+	println("ipiv = ", ipiv);
 	println("m, n, mn, mx = ", [m, n, mn, mx]);
 
-	//let is_zero = [false; mn];
-	let is_zero = [false; n];
+	let jpiv = [0: mn];
 
 //	do i = 1, n
 	//for i in [0: m]
-	for i in [0: n]
-	//for i in [0: mn]
+	//for i in [0: n]
+	for i in [0: mn]
 	{
-		println("i = ", i);
-
 		// Find max value in column i
+		println("a col i = ", a[:,i]);
 		let max_index = i;
-		let ip = pivot[i];
-		let amax = abs(a[ip,i]);
-		for j in [i+1: m]
+		let max_j     = i;
+		let ip = ipiv[i];
+		let amax = abs(a[ip,jpiv[i]]);
+		for j in [i: m]
 		//for j in [i+1: n]
 		{
-			let jp = pivot[j];
-			if abs(a[jp,i]) > amax
+			let jp = ipiv[j];
+			//if abs(a[jp,i]) > amax
+			//{
+			//	max_index = j;
+			//	amax = abs(a[jp,i]);
+			//}
+			for k in [i: n]
 			{
-				max_index = j;
-				amax = abs(a[jp,i]);
+				let kp = jpiv[k];
+				if abs(a[jp,kp]) > amax
+				{
+					max_index = j;
+					max_j = k;
+					amax = abs(a[jp,kp]);
+				}
 			}
 		}
-
-		//// Find max value in lower-right submat
-		//let imax = i;
-		//let jmax = i;
-		//let amax = abs(a[i,i]);
-		//for j in [i: n]
-		//for i in [i: m]
-		//{
-		//	if abs(a[i,j]) > amax
-		//	{
-		//		imax = i;
-		//		jmax = j;
-		//		amax = abs(a[i,j]);
-		//	}
-		//}
-
 		println("amax = ", amax);
-		if amax == 0.0
-		{
-			println("Warning: skipping pivot i = ", i);
-			is_zero[i] = true;
-			continue;
-		}
-
-		// Swap explicitly
-		a[[i,max_index], :] = a[[max_index,i], :];
-		//a[:, [i,jmax]] = a[:, [jmax,i]];
-		println("a ii = ", a[i,i]);
-
-		// Swap RHS too. TODO?
-		b[[i, max_index]] = b[[max_index, i]];
-
 //		max_index = i
-//		ip = pivot(i)
+//		ip = ipiv(i)
 //		amax = abs(a(ip, i))
 //		!if (DO_PIVOT) then
 //			do j = i+1, n
-//				jp = pivot(j)
+//				jp = ipiv(j)
 //				!print *, "aj, ai = ", a(j,i), a(i,i)
 //				if (abs(a(jp, i)) > amax) then
 //					max_index = j
@@ -423,23 +236,26 @@ fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 //			end do
 //		!end if
 
-//		! Swap rows
-//		pivot([i, max_index]) = pivot([max_index, i])
-//		ip = pivot(i)
+		// Swap rows
+////		ipiv([i, max_index]) = ipiv([max_index, i])
+////		ip = ipiv(i)
+//		ipiv[[i, max_index]] = ipiv[[max_index, i]];
+//		jpiv[[i, max_j    ]] = jpiv[[max_j    , i]];
+//		ip = ipiv[i];
 
-		//pivot[[i, max_index]] = pivot[[max_index, i]];
-		//ip = pivot[i];
-		//println("    pivot = ", pivot);
+		a[[i, max_index], :] = a[[max_index, i], :];
+		a[:, [i, max_j]] = a[:, [max_j, i]];
+		println("    ipiv = ", ipiv);
 
 //		!print *, "swapping ", i, max_index
 //		!print *, "i = ", i
 //		!call print_mat(a, "a unpiv = ")
-//		!call print_mat(a(pivot,:), "a pivot = ")
+//		!call print_mat(a(ipiv,:), "a ipiv = ")
 //		!print *, "ap = ", a(ip, i)
 //		!print *, "ai = ", a(i, i)
-//		!print *, "pivot = ", pivot
+//		!print *, "ipiv = ", ipiv
 //		!print *, ""
-//
+
 //		if (.not. allow_singular_ .and. a(ip, i) == 0) then
 //			msg = "matrix is singular in lu_factor_f64()"
 //			call PANIC(msg, present(iostat))
@@ -449,15 +265,11 @@ fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 		if a[i, i] == 0.0
 		{
 			println("Error: matrix is singular in lu_invmul()");
-			//exit(1);
-			nrank = i;
-			println("nrank = ", nrank);
-			//break;
-			continue;
+			exit(1);
 		}
 
 //		do j = i+1, n
-//			jp = pivot(j)
+//			jp = ipiv(j)
 //			a(jp, i) = a(jp, i) / a(ip, i)
 //			do k = i+1, n
 //				a(jp, k) = a(jp, k) - a(jp, i) * a(ip, k)
@@ -467,9 +279,11 @@ fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 		for j in [i+1: m]
 		//for j in [i+1: n]
 		{
-			a[j, i] = a[j, i] / a[i, i];
+			// TODO: m or n for both of these loop bounds?
+			let jp = j;//ipiv[j];
+			a[jp, i] = a[jp, i] / a[i, i];
 			for k in [i+1: n]
-				a[j, k] = a[j, k] - a[j, i] * a[i, k];
+				a[jp, k] = a[jp, k] - a[jp, i] * a[i, k];
 		}
 //	end do
 	}
@@ -486,59 +300,49 @@ fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 
 //	! Forward substitution
 //	do i = 1, n
-//		ip = pivot(i)
+//		ip = ipiv(i)
 //		do j = 1, i-1
-//			jp = pivot(j)
+//			jp = ipiv(j)
 //			bx(ip) = bx(ip) - a(ip, j) * bx(jp)
 //		end do
 //	end do
 //	!print *, "bx forward = ", bx
-
-	//let x = b;
-	let x = [0.0; n];
-	//x[0:m] = b;
-
-	let ib = 0;
-	for ix in [0: n]
-	{
-		if is_zero[ix] continue;
-		x[ix] = b[ib];
-		ib += 1;
-	}
-	println("b = ", b);
-	println("x = ", x);
-
-	//for i in [0: nrank]
-	//for i in [0: mn]
+	let x = b;
+	for i in [0: mn]
 	//for i in [0: m]
-	for i in [0: n]
+	//for i in [0: n]
 	{
-		if is_zero[i] continue;
 		// TODO: loop bounds?
+		let ip = i;//ipiv[i];
 		for j in [0: i]
-			x[i] = x[i] - a[i, j] * x[j];
+		{
+			let jp = j;//ipiv[j];
+			x[ip] = x[ip] - a[ip, j] * x[jp];
+		}
 	}
 	println("x forward = ", x);
 
-//	call backsub(a, bx, pivot)
+//	call backsub(a, bx, ipiv)
 //	n = min(size(a,1), size(a,2))
 
-	//for i in [nrank-1: -1: -1]
 	for i in [m-1: -1: -1]
 	//for i in [n-1: -1: -1]
 	{
-		if is_zero[i] continue;
+		let ip = i;//ipiv[i];
 		for j in [i+1: n]
-			x[i] = x[i] - a[i, j] * x[j];
-		x[i] = x[i] / a[i, i];
+		{
+			let jp = j;//ipiv[j];
+			x[ip] = x[ip] - a[ip, j] * x[jp];
+		}
+		x[ip] = x[ip] / a[ip, i];
 	}
 	println("x backsub = ", x);
 
-//	if (present(pivot)) then
+//	if (present(ipiv)) then
 //		do i = n, 1, -1
-//			ip = pivot(i)
+//			ip = ipiv(i)
 //			do j = i+1, n
-//				jp = pivot(j)
+//				jp = ipiv(j)
 //				bx(ip) = bx(ip) - a(ip, j) * bx(jp)
 //			end do
 //			bx(ip) = bx(ip) / a(ip, i)
@@ -553,154 +357,19 @@ fn lu_invmul(a: [f64; :,:], b: [f64; :]): [f64; :]
 //	end if
 //	!print *, "bx back = ", bx
 
-//	! Unpivot
-//	bx = bx(pivot)
-//	!print *, "bx unpivot = ", bx
-	//x = x[pivot];
-	println("x unpivot = ", x);
-	println("is_zero = ", is_zero);
+//	! Unipiv
+//	bx = bx(ipiv)
+//	!print *, "bx unipiv = ", bx
+	//x = x[ipiv];
+	println("x unipiv = ", x);
 
 	return x;
 	//return [0.0]; // TODO
 }
 
-
-//fn gauss(a: [f64; :,:], b: [f64; :]): [f64; :]
-//{
-//	let m = size(a,0);
-//	let n = size(a,1);
-//	let h = 0;
-//	let k = 0;
-//	while h < m and k < n
-//	{
-////    /* Find the k-th pivot: */
-////    i_max := argmax (i = h ... m, abs(A[i, k]))
-//		let i_max = 0;
-//		let amax = abs(a[h,k]);
-//		for i in [h: m]
-//			if abs(a[i,k]) > amax {
-//				i_max = i;
-//				amax = abs(a[i,k]);
-//			}
-//		println("i_max = ", i_max);
-//
-////    if A[i_max, k] = 0:
-////        /* No pivot in this column, pass to next column */
-////        k := k + 1
-//
-//		if a[i_max,k] == 0.0 {
-//			println("skipping k = ", k);
-//			k += 1;
-//		} else {
-////    else:
-////        swap rows(h, i_max)
-//
-//			a[[h, i_max], :] = a[[i_max, h], :];
-//			//a[:, [h, i_max]] = a[:, [i_max, h]];
-//
-////        /* Do for all rows below pivot: */
-////        for i = h + 1 ... m:
-////            f := A[i, k] / A[h, k]
-////            /* Fill with zeros the lower part of pivot column: */
-////            A[i, k] := 0
-////            /* Do for all remaining elements in current row: */
-////            for j = k + 1 ... n:
-////                A[i, j] := A[i, j] - A[h, j] * f
-//			for i in [h+1: m]
-//			{
-//				let f = a[i,k] / a[h,k];
-//				a[i,k] = 0.0;
-//				for j in [k+1: n]
-//					a[i,j] -= a[h,j] * f;
-//			}
-//
-////        /* Increase pivot row and column */
-////        h := h + 1
-////        k := k + 1
-//			h += 1;
-//			k += 1;
-//		}
-//	}
-//	println("a (factored) = ", a);
-//
-//	// Factoring done
-//
-//	// ****************************
-//	// Solve phase
-//
-//	//let x = b;
-//	let x = [0.0; n];
-//	x[0: m] = b;
-//	println("x = ", x);
-//
-//	let mn = min(m, n);
-//
-//	//for i in [0: nrank]
-//	for i in [0: mn]
-//	//for i in [0: m]
-//	//for i in [0: n]
-//	{
-//		// TODO: loop bounds?
-//		for j in [0: i]
-//			x[i] = x[i] - a[i, j] * x[j];
-//	}
-//	println("x forward = ", x);
-//
-////	call backsub(a, bx, pivot)
-////	n = min(size(a,1), size(a,2))
-//
-//	//for i in [nrank-1: -1: -1]
-//	for i in [mn-1: -1: -1]
-//	//for i in [m-1: -1: -1]
-//	//for i in [n-1: -1: -1]
-//	{
-//		for j in [i+1: n]
-//			x[i] = x[i] - a[i, j] * x[j];
-//		x[i] = x[i] / a[i, i];
-//	}
-//	println("x backsub = ", x);
-//
-////	if (present(pivot)) then
-////		do i = n, 1, -1
-////			ip = pivot(i)
-////			do j = i+1, n
-////				jp = pivot(j)
-////				bx(ip) = bx(ip) - a(ip, j) * bx(jp)
-////			end do
-////			bx(ip) = bx(ip) / a(ip, i)
-////		end do
-////	else
-////		do i = n, 1, -1
-////			do j = i+1, n
-////				bx(i) = bx(i) - a(i, j) * bx(j)
-////			end do
-////			bx(i) = bx(i) / a(i, i)
-////		end do
-////	end if
-////	!print *, "bx back = ", bx
-//
-////	! Unpivot
-////	bx = bx(pivot)
-////	!print *, "bx unpivot = ", bx
-//	//x = x[pivot];
-//	println("x unpivot = ", x);
-//
-//	return x;
-//
-//	return [0.0]; // TODO
-//}
-
 fn part2(): str
 {
 	let sum_ = 0'i64;
-
-	//let fo = open("script.sci", "w"); // open generated scilab script
-	let fo = open("script.py", "w"); // open generated python script
-
-	writeln(fo, "# This script was generated by AOC 2025 day 10 main.syntran");
-	writeln(fo, "import numpy as np");
-	writeln(fo, "from scipy.optimize import milp, LinearConstraint, Bounds");
-	writeln(fo, "sum_ = 0");
 
 	let f = open(filename, "r");
 	let str_ = readln(f);
@@ -737,91 +406,12 @@ fn part2(): str
 		let b = [0.0'f64; njlts];
 		b += jlts_goal;
 
-		//writeln(fo, "a = ...");
-		//writeln(fo, str(a));
-		//writeln(fo, "b = ", str(b));
-		//writeln(fo, "inc = sum(a' \ b');");
-		//writeln(fo, "mprintf(""inc = %f\n"", inc);");
-		//writeln(fo, "sum_ = sum_ + inc;");
-		////break;
-
-//# Objective function coefficients
-//#c = np.array([-1, 4]) # Maximize: x[1] - 4*x[0]
-//c = np.array([1, 1, 1, 1, 1, 1])
-		writeln(fo, "c = np.array(" + str([1; nbuts]) + ")");
-
-//# Constraint matrix and bounds
-//A = np.array([
-//    [0, 0, 0, 1],
-//    [0, 1, 0, 1],
-//    [0, 0, 1, 0],
-//    [0, 0, 1, 1],
-//    [1, 0, 1, 0],
-//    [1, 1, 0, 0],
-//])
-//A = np.transpose(A)
-		writeln(fo, "A = np.array([");
-		for i in [0: njlts]
-			writeln(fo, "    " + str(buts[i,:]) + ",");
-		writeln(fo, "])");
-
-//b_l = [3, 5, 4, 7]  # lower bounds
-//b_u = b_l           # upper bounds same as lower (equality is what we actually need)
-
-		writeln(fo, "b_l = " + str(jlts_goal));
-		writeln(fo, "b_u = " + str(jlts_goal));
-
-//# Variable bounds
-//bounds = Bounds(
-//    [0, 0, 0, 0, 0, 0],
-//    [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
-//)
-		writeln(fo, "bounds = Bounds(");
-		writeln(fo, str([0; nbuts]) + ",");
-		writeln(fo, "[" + repeat("np.inf, ", i32(nbuts)) + "]");
-		writeln(fo, ")");
-
-//# Integrality constraints (both variables are integers)
-//integrality = [1, 1, 1, 1, 1, 1]
-		writeln(fo, "integrality = " + str([1; nbuts]));
-
-//# Linear constraints
-//constraints = LinearConstraint(A, b_l, b_u)
-		writeln(fo, "constraints = LinearConstraint(A, b_l, b_u)");
-
-//# Solve MILP
-//result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-		writeln(fo, "result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)");
-
-//# Display results
-//print("Optimal Solution:", result.x)
-//print("Optimal Value:", result.fun)
-		writeln(fo, "print(""Optimal Solution:"", result.x)");
-		writeln(fo, "print(""Optimal Value:"", result.fun)");
-
-		writeln(fo, "sum_ += result.fun");
-
-		str_ = readln(f);
-		continue;
-		// TODO: dead code below
-
-		//****************************************************
-
-		////let at = transpose_(a);
-		////println("at = ", i32(at));
-		////let ata = matmul_(at, a);
-		////println("ata = ", i32(ata));
-		////let atb = matmul_vec_(at, b);
-		////println("atb = ", atb);
-		//let x = qr_invmul(a, b);
-		////let x = qr_invmul(transpose_(a), b);
-		//let x = gauss(a, b);
+		//let x = lu_invmul(f64(buts), f64(jlts_goal));
 		let x = lu_invmul(a, b);
 
 		println("x = ", x);
 		//println("sum x = ", i32(sum(x)));
 		println("sum x = ", i32(sum(x[0: nbuts])));
-
 		exit(0);
 
 		let DIST_INFTY = 2_000_000_000;
@@ -1028,12 +618,7 @@ fn part2(): str
 		//println();
 		str_ = readln(f);
 	}
-
-	writeln(fo, "print(""sum = "", sum_)");
-	writeln(fo, "print(""sum = "", int(sum_))");
-
 	close(f);
-	close(fo);
 
 	println("part 2 = ", sum_);
 	return str(sum_);
@@ -1050,7 +635,7 @@ fn main(): str
 
 	let p1 = ""; let p2 = "";
 
-	p1 = part1();
+	//p1 = part1(); // TODO
 	p2 = part2();
 
 	println("Ending AOC syntran main");

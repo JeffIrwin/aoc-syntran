@@ -1050,7 +1050,7 @@ fn main(): str
 
 	let p1 = ""; let p2 = "";
 
-	p1 = part1();
+	//p1 = part1(); // TODO
 	p2 = part2();
 
 	println("Ending AOC syntran main");

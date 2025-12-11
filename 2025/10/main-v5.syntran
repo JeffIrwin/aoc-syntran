@@ -1,0 +1,428 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+#include("../../minheap_vec_i32.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		//println("words = ", words);
+
+		let lits_str = words[0];
+		//println("lits_str = ", lits_str);
+		let nlits = len(lits_str) - 2;
+		let lits_goal = vec_str(lits_str[1: nlits+1]) == "#";
+		//println("lits_goal = ", lits_goal);
+
+		let nbuts = size(words,0) - 2;
+		//println("nbuts = ", nbuts);
+		let buts = [false; nlits, nbuts];
+		for ib in [0: nbuts]
+		{
+			let but_str = words[ib+1];
+			//println("but_str = ", but_str);
+			buts[parse_i32_delim(but_str, "(,)"), ib] = true;
+		}
+		//println("buts = ", buts);
+
+		let npress = 0;
+		let has_solution = false;
+		while true
+		{
+			npress += 1;  // no input is ever all [......] reachable in 0 presses
+
+			//let pos = [0; nbuts];
+			//let pos = [0; npress];
+			let pos = [0; npress+1]; // entry 0 is a dummy for the break condition
+
+			//void combination_with_repetiton(int n, int k) {
+			//  while (1) {
+			//    for (int i = k; i > 0; i -= 1) {
+			//      if (pos[i] > n - 1) // if number spilled over: xx0(n-1)xx
+			//      {
+			//        pos[i - 1] += 1; // set xx1(n-1)xx
+			//        for (int j = i; j <= k; j += 1)
+			//          pos[j] = pos[j - 1]; // set xx11..1
+			//      }
+			//    }
+			//    if (pos[0] > 0) // stop condition: 1xxxx
+			//      break;
+			//    printDonuts(k);
+			//    pos[k] += 1; // xxxxN -> xxxxN+1
+			//  }
+			//}
+
+			// Source: combinations with repetition:  https://rosettacode.org/wiki/Combinations_with_repetitions#C
+			let n = nbuts;
+			let k = npress;
+			while true {
+				for i in [k: -1: 0] {
+					if (pos[i] > n - 1)
+					{
+						pos[i-1] += 1;
+						for j in [i: k+1]
+							pos[j] = pos[j-1];
+					}
+				}
+				if pos[0] > 0
+					break;
+
+				//println("pos = ", pos);
+
+				// Apply button presses according to `pos` combination
+				let state = [false; nlits];
+				for p in pos[1: npress+1]
+				{
+					//state ^= buts[:,p];
+					for i in [0: nlits]
+						state[i] = state[i] != buts[i,p];
+				}
+				//println("state = ", state);
+				if all(state == lits_goal)
+				{
+					//println("**********************");
+					//println("found solution");
+					//println();
+					has_solution = true;
+					break;
+				}
+
+				pos[k] += 1;
+			}
+
+			if (has_solution)
+			{
+				sum_ += npress;
+				break;
+			}
+			//if (npress == 3) break; // TODO
+
+			// Example: 3 buttons with 1 total press
+			//     [1, 0, 0]
+			//     [0, 1, 0]
+			//     [0, 0, 1]
+			//
+			// Example: 3 buttons with 2 total presses
+			//     [2, 0, 0]
+			//     [1, 1, 0]
+			//     [1, 0, 1]
+			//     [0, 2, 0]
+			//     [0, 1, 1]
+			//     [0, 0, 2]
+			//
+			// Example: 3 buttons with 3 total presses
+			//     [3, 0, 0]
+			//     [2, 1, 0]
+			//     [2, 0, 1]
+			//     [1, 2, 0]
+			//     [1, 1, 1]
+			//     [1, 0, 2]
+			//     [0, 3, 0]
+			//     [0, 2, 1]
+			//     [0, 1, 2]
+			//     [0, 0, 3]
+		}
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let iline = 0;
+	while not eof(f)
+	{
+		println("iline = ", iline);
+		iline += 1;
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		println("words = ", words);
+
+		let jlts_str = words[size(words,0)-1];
+		println("jlts_str = ", jlts_str);
+		let jlts_goal = parse_i32_delim(jlts_str, "{,}");
+		println("jlts_goal = ", jlts_goal);
+		let njlts = size(jlts_goal,0);
+		//exit(0);
+
+		let nbuts = size(words,0) - 2;
+		//println("nbuts = ", nbuts);
+		let buts = [0; njlts, nbuts];
+		for ib in [0: nbuts]
+		{
+			let but_str = words[ib+1];
+			//println("but_str = ", but_str);
+			buts[parse_i32_delim(but_str, "(,)"), ib] = 1;
+		}
+		println("buts = ", buts);
+
+		//let x = lu_invmul(f64(buts), f64(jlts_goal));
+		//println("x = ", x);
+		//exit(0);
+
+		let DIST_INFTY = 2_000_000_000;
+
+		// Dijkstra's algorithm with a minheap priority queue
+		let dist = new_dict_i64();
+		let seen = new_dict_i64();
+
+		// Initialize source vertex to 0 distance and depth
+		let src = [0; njlts];
+		//let src = y;
+		let src_str = str(src);
+		set_dict_i64(&dist, src_str, 0'i64);
+		let q = new_minheap_vec_i32();
+		//let npre = 0;
+		//push_minheap_vec_i32(&q, [[0, npre], src]);  // queue contains distance, depth, then coords
+
+		// Try "preprocessing" before Dijkstra by just taking ~some trivial
+		// steps in the right direction before starting Dijkstra search
+		let npre = 0;
+		let d2_goal = DIST_INFTY;
+		let d2_thresh = 5 ** 2; // TODO
+		let y = [0; njlts]; // current position
+		let yg = jlts_goal - y;
+		while d2_goal > d2_thresh
+		{
+			npre += 1;
+			//println("y = ", y);
+
+			// Do dot products to figure out which button takes us closest
+			// towards the goal from our current position
+			let dotmax = 0;
+			let imax = -1;
+			for i in [0: nbuts]
+			{
+				let dot_ = sum(yg * buts[:,i]);
+				if dot_ > dotmax
+				{
+					dotmax = dot_;
+					imax = i;
+				}
+			}
+			if (imax < 0) break;
+			y += buts[:,imax];
+			yg = jlts_goal - y;
+			d2_goal = sum(yg * yg);
+
+			let ystr = str(y);
+			set_dict_i64(&dist, ystr, i64(d2_goal));
+			push_minheap_vec_i32(&q, [[d2_goal, npre], y]);
+			//let src_str = str(src);
+			//set_dict_i64(&dist, src_str, 0'i64);
+			//let q = new_minheap_vec_i32();
+			//let npre = 0;
+			//push_minheap_vec_i32(&q, [[0, npre], src]);  // queue contains distance, depth, then coords
+		}
+
+		let dist_end = DIST_INFTY;
+		while q.len > 0
+		{
+			let u = pop_minheap_vec_i32(&q);
+			//println("u = ", u);
+
+			// Unpack from vector
+			let dist0  = u[0];
+			let depth0 = u[1];
+			let x0 = u[2: njlts+2];
+			//println("x0 = ", x0);
+
+			if all(x0 == jlts_goal)
+			{
+				//dist_end = min(dist_end, dist0);
+				dist_end = min(dist_end, depth0);
+				break;
+			}
+
+			//let x0str = str(x0);
+			let x0str = str(u);
+			let is_seen = get_dict_i64(&seen, x0str) == 1;
+			if (is_seen) continue;
+			set_dict_i64(&seen, x0str, 1'i64);
+
+			// Traverse neighbors
+			for i in [0: nbuts]
+			{
+				let x = x0 + buts[:,i];
+
+				// Check if we are past the solution. We can't go backwards today
+				if any(x > jlts_goal) continue;
+				//println("x > jlts_goal = ", x > jlts_goal);
+				//println("x  = ", x);
+				//println("jg = ", jlts_goal);
+
+				//let alt = dist0 + 1;
+				let xg = jlts_goal - x;
+				let alt = sum(xg * xg); // distance squared
+
+				let xstr = str(x);
+				let distx = get_dict_i64(&dist, xstr);
+				if (distx < 0) distx = DIST_INFTY;
+				if alt < distx
+				{
+					set_dict_i64(&dist, xstr, i64(alt));
+					push_minheap_vec_i32(&q, [[alt, depth0+1], x]);
+				}
+			}
+		}
+		println("dist_end = ", dist_end);
+		println();
+
+		if dist_end == DIST_INFTY
+		{
+			println("Error: could not complete search");
+			exit(1);
+		}
+		sum_ += dist_end;
+		//exit(0);
+
+		//let npress = 0;
+		//let has_solution = false;
+		//let x = [0; njlts];  // current position
+		//while true
+		//{
+		//	npress += 1;  // no input is ever all [......] reachable in 0 presses
+
+		//	let xg = jlts_goal - x;  // vector from x to goal
+		//	println("x  = ", x);
+		//	println("xg = ", xg);
+
+		//	// Do dot products to figure out which button takes us closest
+		//	// towards the goal from our current position
+		//	//
+		//	// This naive approach doesn't work
+		//	let dotmax = 0;
+		//	let imax = -1;
+		//	for i in [0: nbuts]
+		//	{
+		//		let dot_ = sum(xg * buts[:,i]);
+		//		println("dot_ = ", dot_);
+		//		if dot_ > dotmax
+		//		{
+		//			dotmax = dot_;
+		//			imax = i;
+		//		}
+		//	}
+		//	println("dotmax, imax = ", [dotmax, imax]);
+
+		//	x += buts[:,imax];
+
+		//	if (npress == 20) exit(0);
+		//	has_solution = all(x == jlts_goal);
+		//	if (has_solution)
+		//	{
+		//		sum_ += npress;
+		//		break;
+		//	}
+
+		//	//****************
+
+		//	//let pos = [0; npress+1]; // entry 0 is a dummy for the break condition
+
+		//	//// Source: combinations with repetition:  https://rosettacode.org/wiki/Combinations_with_repetitions#C
+		//	//let n = nbuts;
+		//	//let k = npress;
+		//	//while true {
+		//	//	for i in [k: -1: 0] {
+		//	//		if (pos[i] > n - 1)
+		//	//		{
+		//	//			pos[i-1] += 1;
+		//	//			for j in [i: k+1]
+		//	//				pos[j] = pos[j-1];
+		//	//		}
+		//	//	}
+		//	//	if pos[0] > 0
+		//	//		break;
+
+		//	//	//println("pos = ", pos);
+
+		//	//	// Apply button presses according to `pos` combination
+		//	//	let state = [0; njlts];
+		//	//	for p in pos[1: npress+1]
+		//	//		state += buts[:,p];
+		//	//	//println("state = ", state);
+		//	//	if all(state == jlts_goal)
+		//	//	{
+		//	//		//println("**********************");
+		//	//		//println("found solution");
+		//	//		println("npress = ", npress);
+		//	//		println();
+		//	//		has_solution = true;
+		//	//		break;
+		//	//	}
+
+		//	//	pos[k] += 1;
+		//	//}
+
+		//	//if (has_solution)
+		//	//{
+		//	//	sum_ += npress;
+		//	//	break;
+		//	//}
+		//	////if (npress == 3) break; // TODO
+		//}
+		//println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/10");
+
+	let p1 = ""; let p2 = "";
+
+	//p1 = part1(); // TODO
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
