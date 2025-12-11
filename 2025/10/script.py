@@ -21,8 +21,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -44,8 +42,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -63,8 +59,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -85,8 +79,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -110,8 +102,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -133,8 +123,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -154,8 +142,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -175,8 +161,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1])
 A = np.array([
@@ -194,8 +178,6 @@ bounds = Bounds(
 integrality = [1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -217,8 +199,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -237,8 +217,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -257,8 +235,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -278,8 +254,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -298,8 +272,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -317,8 +289,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -339,8 +309,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -361,8 +329,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -381,8 +347,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -404,8 +368,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -424,8 +386,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -448,8 +408,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -467,8 +425,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -491,8 +447,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -516,8 +470,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -541,8 +493,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -562,8 +512,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -586,8 +534,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -610,8 +556,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -634,8 +578,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -655,8 +597,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -675,8 +615,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -700,8 +638,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -722,8 +658,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -743,8 +677,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -764,8 +696,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -786,8 +716,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -811,8 +739,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -831,8 +757,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -850,8 +774,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -869,8 +791,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -891,8 +811,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -912,8 +830,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -936,8 +852,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -959,8 +873,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -979,8 +891,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -999,8 +909,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1021,8 +929,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1044,8 +950,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1066,8 +970,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1086,8 +988,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -1108,8 +1008,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1132,8 +1030,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1157,8 +1053,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1181,8 +1075,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1204,8 +1096,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1225,8 +1115,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1248,8 +1136,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1273,8 +1159,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1297,8 +1181,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1321,8 +1203,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1343,8 +1223,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1368,8 +1246,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1393,8 +1269,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1417,8 +1291,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1439,8 +1311,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1459,8 +1329,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1478,8 +1346,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1501,8 +1367,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -1521,8 +1385,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1])
 A = np.array([
@@ -1540,8 +1402,6 @@ bounds = Bounds(
 integrality = [1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1565,8 +1425,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1587,8 +1445,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1610,8 +1466,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1])
 A = np.array([
@@ -1629,8 +1483,6 @@ bounds = Bounds(
 integrality = [1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1653,8 +1505,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -1672,8 +1522,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -1691,8 +1539,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -1710,8 +1556,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1734,8 +1578,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -1755,8 +1597,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1776,8 +1616,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1798,8 +1636,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1])
 A = np.array([
@@ -1817,8 +1653,6 @@ bounds = Bounds(
 integrality = [1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -1836,8 +1670,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1855,8 +1687,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1880,8 +1710,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -1901,8 +1729,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1924,8 +1750,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1945,8 +1769,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -1970,8 +1792,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -1989,8 +1809,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2009,8 +1827,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2031,8 +1847,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2054,8 +1868,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -2073,8 +1885,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2097,8 +1907,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2122,8 +1930,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2144,8 +1950,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2167,8 +1971,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2192,8 +1994,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -2212,8 +2012,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1])
 A = np.array([
@@ -2231,8 +2029,6 @@ bounds = Bounds(
 integrality = [1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2252,8 +2048,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2277,8 +2071,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -2297,8 +2089,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -2317,8 +2107,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -2336,8 +2124,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2359,8 +2145,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2382,8 +2166,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2405,8 +2187,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2430,8 +2210,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -2449,8 +2227,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2473,8 +2249,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2495,8 +2269,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -2515,8 +2287,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -2534,8 +2304,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2553,8 +2321,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2576,8 +2342,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2601,8 +2365,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2621,8 +2383,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2641,8 +2401,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2665,8 +2423,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2690,8 +2446,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2715,8 +2469,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2739,8 +2491,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2763,8 +2513,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2785,8 +2533,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -2807,8 +2553,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2832,8 +2576,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2855,8 +2597,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -2876,8 +2616,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -2897,8 +2635,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2919,8 +2655,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2942,8 +2676,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -2964,8 +2696,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -2989,8 +2719,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3010,8 +2738,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3033,8 +2759,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3058,8 +2782,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3079,8 +2801,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3102,8 +2822,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3125,8 +2843,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3146,8 +2862,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1])
 A = np.array([
@@ -3166,8 +2880,6 @@ bounds = Bounds(
 integrality = [1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3191,8 +2903,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3216,8 +2926,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3240,8 +2948,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3263,8 +2969,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3286,8 +2990,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1])
 A = np.array([
@@ -3307,8 +3009,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3328,8 +3028,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3351,8 +3049,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3376,8 +3072,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3395,8 +3089,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3419,8 +3111,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -3440,8 +3130,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3459,8 +3147,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3479,8 +3165,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3501,8 +3185,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3526,8 +3208,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3551,8 +3231,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1])
 A = np.array([
@@ -3570,8 +3248,6 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
 c = np.array([1, 1, 1, 1, 1, 1, 1])
 A = np.array([
@@ -3592,8 +3268,5 @@ bounds = Bounds(
 integrality = [1, 1, 1, 1, 1, 1, 1]
 constraints = LinearConstraint(A, b_l, b_u)
 result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)
-print("Optimal Solution:", result.x)
-print("Optimal Value:", result.fun)
 sum_ += result.fun
-print("sum = ", sum_)
-print("sum = ", int(sum_))
+print("part 2 = ", int(sum_))
