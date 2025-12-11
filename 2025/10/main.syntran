@@ -1,7 +1,5 @@
 
 #include("../../utils.syntran");
-#include("../../dict_i64.syntran");
-#include("../../minheap_vec_i32.syntran");
 
 // I had to cheat for part 2 here by looking at the reddit *and* I still just
 // ended up shelling out to scipy
