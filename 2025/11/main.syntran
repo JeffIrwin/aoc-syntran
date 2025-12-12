@@ -34,14 +34,6 @@ fn part1(): str
 		let children = chunks[1];
 		set_dict_str(&map, node, children);
 
-		//let nodes = split_(str_, ": ");
-		//println("nodes = ", nodes);
-
-		////let node = nodes[0];
-		////let children = get_dict_str(&map, node);
-		//for child in nodes[1: size(nodes,0)]
-		//	set_dict_str(&map, nodes[0], child);
-
 		str_ = readln(f);
 	}
 	close(f);
@@ -79,8 +71,6 @@ fn part2(): str
 		str_ = readln(f);
 	}
 	close(f);
-	//println("keys = ", keys_dict_str(&map));
-	//println("vals = ", vals_dict_str(&map));  // hard to read, no quotes
 
 	//****************
 	//
