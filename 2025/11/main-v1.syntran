@@ -1,0 +1,275 @@
+
+#include("../../utils.syntran");
+#include("../../dict_i64.syntran");
+#include("../../dict_str.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let map = new_dict_str();
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let chunks = split_(str_, ":");
+		let node = chunks[0];
+		let children = chunks[1];
+		set_dict_str(&map, node, children);
+
+		//let nodes = split_(str_, ": ");
+		//println("nodes = ", nodes);
+
+		////let node = nodes[0];
+		////let children = get_dict_str(&map, node);
+		//for child in nodes[1: size(nodes,0)]
+		//	set_dict_str(&map, nodes[0], child);
+
+		str_ = readln(f);
+	}
+	close(f);
+	println("keys = ", keys_dict_str(&map));
+	println("vals = ", vals_dict_str(&map));  // hard to read, no quotes
+
+	let node = "you";
+	let dest = "out";
+	let npaths = 0;
+	search(&map, node, dest, &npaths);
+
+	sum_ = npaths;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let map = new_dict_str();
+
+	let f = open(filename, "r");
+	//f = open("test-input2.txt", "r"); // TODO
+
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+		let chunks = split_(str_, ":");
+		let node = chunks[0];
+		let children = chunks[1];
+		set_dict_str(&map, node, children);
+		str_ = readln(f);
+	}
+	close(f);
+	println("keys = ", keys_dict_str(&map));
+	println("vals = ", vals_dict_str(&map));  // hard to read, no quotes
+
+	//let node = "svr";
+	//let dest = "out";
+	//let seen_dac = false;
+	//let seen_fft = false;
+	//let npaths = 0;
+	//search2(&map, node, dest, &npaths, seen_dac, seen_fft);
+
+	////****************
+
+	//let nsvr2dac = 0;
+	//search3(&map, "svr", "dac", &nsvr2dac, "fft");
+	//println("nsvr2dac = ", nsvr2dac);
+
+	//let nsvr2fft = 0;
+	//search3(&map, "svr", "fft", &nsvr2fft, "dac");
+	//println("nsvr2fft = ", nsvr2fft);
+	////****************
+
+	//let ndac2fft = 0;
+	//search3(&map, "dac", "fft", &ndac2fft, "");
+	//println("ndac2fft = ", ndac2fft);
+
+	//let nfft2dac = 0;
+	//search3(&map, "fft", "dac", &nfft2dac, "");
+	//println("nfft2dac = ", nfft2dac);
+
+	////****************
+
+	//let ndac2out = 0;
+	//search3(&map, "dac", "out", &ndac2out, "fft");
+	//println("ndac2out = ", ndac2out);
+
+	//let nfft2out = 0;
+	//search3(&map, "fft", "out", &nfft2out, "dac");
+	//println("nfft2out = ", nfft2out);
+	////****************
+
+	//****************
+
+	let cache = new_dict_i64();
+	let nsvr2dac = count_paths(&map, &cache, "svr", "dac", "fft");
+	println("nsvr2dac = ", nsvr2dac);
+
+	cache = new_dict_i64(); // cache invalidation is hard :(
+	let nsvr2fft = count_paths(&map, &cache, "svr", "fft", "dac");
+	println("nsvr2fft = ", nsvr2fft);
+	//****************
+
+	cache = new_dict_i64();
+	let ndac2fft = count_paths(&map, &cache, "dac", "fft", "");
+	println("ndac2fft = ", ndac2fft);
+
+	cache = new_dict_i64();
+	let nfft2dac = count_paths(&map, &cache, "fft", "dac", "");
+	println("nfft2dac = ", nfft2dac);
+
+	//****************
+
+	cache = new_dict_i64();
+	let ndac2out = count_paths(&map, &cache, "dac", "out", "fft");
+	println("ndac2out = ", ndac2out);
+
+	cache = new_dict_i64();
+	let nfft2out = count_paths(&map, &cache, "fft", "out", "dac");
+	println("nfft2out = ", nfft2out);
+	//****************
+
+	//sum_ = npaths;
+	sum_ = 
+		(nsvr2fft * nfft2dac * ndac2out) + 
+		(nsvr2dac * ndac2fft * nfft2out);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn count_paths(map: &dict_str, cache: &dict_i64, node: str, dest: str, avoid: str): i64
+//fn search3(map: &dict_str, node: str, dest: str, npaths: &i32, avoid: str)
+{
+	let hit = get_dict_i64(&cache, node);
+	if hit >= 0
+		return hit;  // cache hit
+
+	// Otherwise, cache miss
+
+	// Base cases
+	if node == avoid
+	{
+		set_dict_i64(&cache, node, 0'i64);
+		return 0'i64;
+	}
+	if node == dest
+	{
+		set_dict_i64(&cache, node, 1'i64);
+		return 1'i64;
+	}
+
+	// Recursive case
+	let npaths = 0'i64;
+	let children = get_dict_str(&map, node);
+	for child in split_(children, " ")
+		npaths += count_paths(&map, &cache, child, dest, avoid);
+	set_dict_i64(&cache, node, npaths);
+	return npaths;
+}
+
+fn search3(map: &dict_str, node: str, dest: str, npaths: &i32, avoid: str)
+{
+	if node == avoid
+		return;
+	if node == dest
+		npaths += 1;
+
+	// DFS
+	let children = get_dict_str(&map, node);
+	//println("children = ", children);
+
+	for child in split_(children, " ")
+	{
+		//println("child = ", child);
+		search3(&map, child, dest, &npaths, avoid);
+	}
+
+	return;
+}
+
+fn search2(map: &dict_str, node: str, dest: str, npaths: &i32, seen_dac: bool, seen_fft: bool)
+{
+	if node == dest and seen_dac and seen_fft
+		npaths += 1;
+	if node == "dac"
+		seen_dac = true;
+	if node == "fft"
+		seen_fft = true;
+
+	// DFS
+	let children = get_dict_str(&map, node);
+	//println("children = ", children);
+
+	for child in split_(children, " ")
+	{
+		//println("child = ", child);
+		search2(&map, child, dest, &npaths, seen_dac, seen_fft);
+	}
+
+	return;
+}
+
+fn search(map: &dict_str, node: str, dest: str, npaths: &i32)
+{
+	if node == dest
+		npaths += 1;
+
+	// DFS
+	let children = get_dict_str(&map, node);
+	//println("children = ", children);
+
+	for child in split_(children, " ")
+	{
+		//println("child = ", child);
+		search(&map, child, dest, &npaths);
+	}
+
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/11");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

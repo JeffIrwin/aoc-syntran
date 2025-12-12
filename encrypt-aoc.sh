@@ -4,14 +4,17 @@
 set +x
 set -e
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -lt 1 ]]; then
 	echo "Error: bad command arguments"
 	echo "Usage:"
-	echo "    encrypt-aoc.sh plaintext.txt"
+	echo "    encrypt-aoc.sh plaintext1.txt [plaintext2.txt ...]"
 	exit 1
 fi
-input_plaintext="$1"
 
-gpg --batch --yes --passphrase "$AOC_GPG_PASSPHRASE" -c "$input_plaintext"
-rm "$input_plaintext"
+for f in $* ; do
+	input_plaintext="$f"
+	gpg --batch --yes --passphrase "$AOC_GPG_PASSPHRASE" -c "$input_plaintext"
+	echo Encrypted file $input_plaintext.gpg
+	rm "$input_plaintext"
+done
 
