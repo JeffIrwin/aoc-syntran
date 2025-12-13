@@ -196,8 +196,6 @@ fn part1(): str
 		//println("is_packable = ", is_packable);
 		//if is_packable
 		//	sum_ += 1;
-
-		//if (iproblem == 1) exit(0);
 		//exit(0);
 
 		println();
@@ -210,24 +208,10 @@ fn part1(): str
 
 fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]): bool
 {
-	//// Might have to put other things (isi, ist?) in the cache str? Shapes are
-	//// always packed in order so I don't think it matters
-	//let str_g = str(g);
-
+	// Should just pass isi and ist instead of mostly unused state array
 	if (get_dict_i64(&cache, bool_to_str(g)) == 67) return false;
-	////println("bool_to_str g = ", bool_to_str(g));
-	//for t in [1: nt]
-	//{
-	//	println("t = ", t);
-	//	// Check symmetric caches (already tried t==0)
-	//	let sgt = str(trans_(g, t));
-	//	println("sgt = ", sgt);
-	//	if (get_dict_i64(&cache, sgt) == 67) return false;
-	//}
-
 	//println("shape type     = ", ist);
 	//println("shape instance = ", isi);
-
 	//println("nx - nsx = ", nx - nsx);
 
 	// Place the current shape in every possible pos and ori
@@ -236,7 +220,7 @@ fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]
 	{
 	//println("at pos ", [x, y]);
 	//if (state[3] == 0) println("type 0 at pos ", [x, y]);
-	if (state[3] == 4 and state[4] == 0) println("shape 4.0 at pos ", [x, y]);
+	//if (state[3] == 4 and state[4] == 0) println("shape 4.0 at pos ", [x, y]);
 	//if (state[3] == 4 and state[4] == 1) println("shape 4.1 at pos ", [x, y]);
 	for t in [0: nt]
 	{
@@ -251,28 +235,19 @@ fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]
 		let statel = state;
 		//print_bool_mat("before", g);
 		gl[x: x+nsx, y: y+nsx] = g[x: x+nsx, y: y+nsx] or s;
-		//print_bool_mat("after", gl);
+		print_bool_mat("after", gl);
 
 		// First increment shape instance `isi`
-		//println("isi = ", isi);
-		//println("ist = ", ist);
-		//println("nsv = ", nsv);
-		//println("nsv[ist] = ", nsv[ist]);
 		if isi < nsv[ist]-1
 		{
 			statel[4] += 1;
 			if search(gl, &shapes, nsv, statel) return true;
-			//println("continue 1");
 			continue;
-			//return search(gl, &shapes, nsv, statel);
 		}
 		statel[4] = 0;  // reset shape instance
 	
 		// Then increment shape type `ist`
-		//println("ist = ", ist);
 		ist += 1;
-		//println("ist = ", ist);
-		//while (nsv[ist] == 0) ist += 1;
 		while true
 		{
 			if (ist >= ns) { println("done"); return true;} // done
@@ -281,28 +256,16 @@ fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]
 		}
 		statel[3] = ist;
 		if search(gl, &shapes, nsv, statel) return true;
-		//println("continue 2");
-		//return search(gl, &shapes, nsv, statel);
 	}
 	}
 
 	// Cache this grid state as a known un-winnable situation
 	set_dict_i64(&cache, bool_to_str(g), 67'i64);
-	//for t in [1: nt]
-	//{
-	//	println("t = ", t);
-	//	// Check symmetric caches (already tried t==0)
-	//	let sgt = str(trans_(g, t));
-	//	println("sgt = ", sgt);
-	//	if (get_dict_i64(&cache, sgt) == 67) return false;
-	//}
 
-	// Cache symmetric cases too. Does this actually make it faster?
+	// Cache symmetric cases too
 	for t in [1: nt]
 	{
-		//let sgt = str(trans_(g, t));
 		let sgt = bool_to_str(trans_(g, t));
-		//println("sgt = ", sgt);
 		set_dict_i64(&cache, sgt, 67'i64);
 	}
 	return false;
