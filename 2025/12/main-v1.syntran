@@ -1,13 +1,11 @@
 
 #include("../../utils.syntran");
-#include("../../dict_i64.syntran");
-
-// I had to cheat again today
+//#include("../../dict_i64.syntran");
 
 //==============================================================================
 
 let ifile = 0;
-ifile = 1;
+//ifile = 1;
 
 let filenames =
 [
@@ -17,16 +15,6 @@ let filenames =
 let filename = filenames[ifile];
 
 //==============================================================================
-
-// Global vars and constants
-let nsx =  3;  // individual shape size
-let nsy =  3;
-let ns  =  6;  // number of shapes
-let nt  =  8;  // number of rotation/flip transformation permutations
-let nx  = -1;  // grid size
-let ny  = -1;
-
-let cache = new_dict_i64();
 
 fn print_bool_mat(msg: str, b: [bool; :,:])
 {
@@ -39,22 +27,6 @@ fn print_bool_mat(msg: str, b: [bool; :,:])
 		if (b[x,y]) c[x,y] = "#";
 	print_char_mat(&c);
 	return;
-}
-
-fn bool_to_str(b: [bool; :,:]): str
-{
-	// Compact bool array to str conversion, for better hashmap keys
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let s = repeat(".", i32(nx*ny));
-	let k = 0;
-	for y in [0: ny]
-	for x in [0: nx]
-	{
-		if (b[x,y]) s[k] = "#";
-		k += 1;
-	}
-	return s;
 }
 
 fn transpose_(b: [bool; :,:]): [bool; :,:]
@@ -72,7 +44,7 @@ fn fliplr_(b: [bool; :,:]): [bool; :,:]
 {
 	let nx = size(b,0);
 	let ny = size(b,1);
-	let t = [false; nx, ny];
+	let t = [false; ny, nx];
 	for y in [0: ny]
 	for x in [0: nx]
 		t[nx-x-1, y] = b[x,y];
@@ -83,7 +55,7 @@ fn flipud_(b: [bool; :,:]): [bool; :,:]
 {
 	let nx = size(b,0);
 	let ny = size(b,1);
-	let t = [false; nx, ny];
+	let t = [false; ny, nx];
 	for y in [0: ny]
 	for x in [0: nx]
 		t[x, ny-y-1] = b[x,y];
@@ -93,14 +65,14 @@ fn flipud_(b: [bool; :,:]): [bool; :,:]
 fn trans_(b: [bool; :,:], i: i32): [bool; :,:]
 {
 	// Make 1 of 8 possible transformations (permutations of rotations and flips)
-	if (i == 0) return b;                       // no transformation
-	if (i == 1) return transpose_(b);           // main diagonal mirror
-	if (i == 2) return fliplr_(b);              // left-right mirror
-	if (i == 3) return flipud_(b);              // up-down mirror
-	if (i == 4) return fliplr_(flipud_(b));     // rot 180
-	if (i == 5) return fliplr_(transpose_(b));  // rot 270 ccw
-	if (i == 6) return flipud_(transpose_(b));  // rot 90 ccw
-	if (i == 7) return fliplr_(flipud_(transpose_(b))); // other diagonal mirror
+	if (i == 0) return b;
+	if (i == 1) return transpose_(b);
+	if (i == 2) return fliplr_(b);
+	if (i == 3) return flipud_(b);
+	if (i == 4) return fliplr_(flipud_(b));
+	if (i == 5) return fliplr_(transpose_(b));
+	if (i == 6) return flipud_(transpose_(b));
+	if (i == 7) return fliplr_(flipud_(transpose_(b)));
 }
 
 fn part1(): str
@@ -110,7 +82,12 @@ fn part1(): str
 	let nlines = countln_(filename);
 	println("nlines = ", nlines);
 
+	let nsx = 3; // shape size
+	let nsy = 3;
+	let ns  = 6; // number of shapes
 	let shapes = [false; nsx, nsy, ns];
+
+	let nt = 8; // number of rotation/flip transformation permutations
 
 	let f = open(filename, "r");
 	for i in [0: ns]
@@ -138,11 +115,6 @@ fn part1(): str
 	//print_bool_mat("ud tr  = ", flipud_(transpose_(s0)));
 	//print_bool_mat("lrudtr = ", fliplr_(flipud_(transpose_(s0))));
 
-	let nblocks = [0; ns];
-	for i in [0: ns]
-		nblocks[i] = count(shapes[:,:,i]);
-	println("nblocks = ", nblocks);
-
 	for iproblem in [0: nlines - 5 * ns]
 	{
 		let str_ = readln(f);
@@ -151,8 +123,8 @@ fn part1(): str
 		let nums = parse_i32_delim(str_, "x: ");
 		println("nums = ", nums);
 
-		nx = nums[0]; // global size vars
-		ny = nums[1];
+		let nx = nums[0];
+		let ny = nums[1];
 		let nsv = nums[2: ns+2];
 		println("nx, ny = ", [nx, ny]);
 		println("nsv = ", nsv);
@@ -173,32 +145,13 @@ fn part1(): str
 		state[3] = ist;
 		println("ist = ", ist);
 
-		// ARe you fucking kidding me rn
-		//
-		// Test input is not solvable like this but real input is
-		let nb = sum(nblocks * nsv);
-		println("nb = ", nb);
-
-		if nb <= nx * ny
+		let is_packable = search(g, &shapes, nsv, state);
+		println("is_packable = ", is_packable);
+		if is_packable
 			sum_ += 1;
 
-		//// I miscalculated the number of permutations and I thought that this
-		//// would be explicitly solvable
-		////
-		//// I initiall thought there were nx * ny * nt * sum(nsv) permutations
-		//// of ways to place parts, but it's actually more like 
-		//// (nx * ny * nt) ** sum(nsv)
-		////
-		//// Not even the last line of the test input is calculatable like this
-
-		//cache = new_dict_i64();
-		//let is_packable = search(g, &shapes, nsv, state);
-		//println("is_packable = ", is_packable);
-		//if is_packable
-		//	sum_ += 1;
-
-		//if (iproblem == 1) exit(0);
-		//exit(0);
+		//if (iproblem == 1) exit(0); // TODO
+		exit(0); // TODO
 
 		println();
 	}
@@ -210,102 +163,142 @@ fn part1(): str
 
 fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]): bool
 {
-	//// Might have to put other things (isi, ist?) in the cache str? Shapes are
-	//// always packed in order so I don't think it matters
-	//let str_g = str(g);
+	//let state0 = state;
+	let statel = state;
 
-	if (get_dict_i64(&cache, bool_to_str(g)) == 67) return false;
-	////println("bool_to_str g = ", bool_to_str(g));
-	//for t in [1: nt]
-	//{
-	//	println("t = ", t);
-	//	// Check symmetric caches (already tried t==0)
-	//	let sgt = str(trans_(g, t));
-	//	println("sgt = ", sgt);
-	//	if (get_dict_i64(&cache, sgt) == 67) return false;
-	//}
+	// Unpack statel
+	//let x   = statel[0];
+	//let y   = statel[1];
+	//let t   = statel[2];
+	let ist = statel[3];
+	let isi = statel[4];
 
-	//println("shape type     = ", ist);
-	//println("shape instance = ", isi);
+	//let s = trans_(shapes[:,:,ist], t);
+	println("shape type     = ", ist);
+	println("shape instance = ", isi);
+	//print_bool_mat("packing shape", s);
+	//println("at pos ", [x, y]);
+	//println("with t ", t);
 
-	//println("nx - nsx = ", nx - nsx);
+	let nsx = 3;
+	let nsy = 3;
+	let nt  = 8;
+	let nx = size(g,0);
+	let ny = size(g,1);
+
+	println("nx - nsx = ", nx - nsx);
 
 	// Place the current shape in every possible pos and ori
 	for x in [0: nx-nsx+1]
 	for y in [0: ny-nsy+1]
 	{
-	//println("at pos ", [x, y]);
-	//if (state[3] == 0) println("type 0 at pos ", [x, y]);
-	if (state[3] == 4 and state[4] == 0) println("shape 4.0 at pos ", [x, y]);
-	//if (state[3] == 4 and state[4] == 1) println("shape 4.1 at pos ", [x, y]);
+	println("at pos ", [x, y]);
 	for t in [0: nt]
 	{
-		let ist = state[3];
-		let isi = state[4];
-
 		let s = trans_(shapes[:,:,ist], t);
 		//print_bool_mat("packing shape", s);
 		if any(g[x: x+nsx, y: y+nsx] and s) continue; // not packable
 
 		let gl = g; // local copy
-		let statel = state;
-		//print_bool_mat("before", g);
+		print_bool_mat("before", g);
 		gl[x: x+nsx, y: y+nsx] = g[x: x+nsx, y: y+nsx] or s;
-		//print_bool_mat("after", gl);
+		print_bool_mat("after", gl);
 
 		// First increment shape instance `isi`
-		//println("isi = ", isi);
-		//println("ist = ", ist);
-		//println("nsv = ", nsv);
-		//println("nsv[ist] = ", nsv[ist]);
+		//println("isi < nsv ? ", [isi, nsv[ist] - 1]);
+		println("isi = ", isi);
+		println("ist = ", ist);
+		println("nsv = ", nsv);
+		println("nsv[ist] = ", nsv[ist]);
 		if isi < nsv[ist]-1
 		{
 			statel[4] += 1;
 			if search(gl, &shapes, nsv, statel) return true;
-			//println("continue 1");
+			statel = state;
+			println("continue 1");
 			continue;
 			//return search(gl, &shapes, nsv, statel);
 		}
 		statel[4] = 0;  // reset shape instance
 	
+		let ns  = 6; // number of shapes
+	
 		// Then increment shape type `ist`
-		//println("ist = ", ist);
+		println("ist = ", ist);
 		ist += 1;
-		//println("ist = ", ist);
+		println("ist = ", ist);
 		//while (nsv[ist] == 0) ist += 1;
 		while true
 		{
-			if (ist >= ns) { println("done"); return true;} // done
+			if (ist >= ns) return true; // done
 			if (nsv[ist] != 0) break; // found next shape type to pack
 			ist += 1;
 		}
 		statel[3] = ist;
 		if search(gl, &shapes, nsv, statel) return true;
-		//println("continue 2");
+		statel = state;
+		println("continue 2");
 		//return search(gl, &shapes, nsv, statel);
 	}
 	}
-
-	// Cache this grid state as a known un-winnable situation
-	set_dict_i64(&cache, bool_to_str(g), 67'i64);
-	//for t in [1: nt]
-	//{
-	//	println("t = ", t);
-	//	// Check symmetric caches (already tried t==0)
-	//	let sgt = str(trans_(g, t));
-	//	println("sgt = ", sgt);
-	//	if (get_dict_i64(&cache, sgt) == 67) return false;
-	//}
-
-	// Cache symmetric cases too. Does this actually make it faster?
-	for t in [1: nt]
-	{
-		//let sgt = str(trans_(g, t));
-		let sgt = bool_to_str(trans_(g, t));
-		//println("sgt = ", sgt);
-		set_dict_i64(&cache, sgt, 67'i64);
-	}
 	return false;
+
+	//// Check if packable
+	//if any(g[x: x+nsx, y: y+nsx] and s)
+	//{
+	//	println("*NOT* packable");
+
+	//	// Increment x/y/t and try same shape again
+	//	if x < nx-nsx
+	//	{
+	//		state[0] += 1;
+	//		return search(g, &shapes, nsv, state);
+	//	}
+	//	state[0] = 0; // reset x
+
+	//	if y < ny-nsy
+	//	{
+	//		state[1] += 1;
+	//		return search(g, &shapes, nsv, state);
+	//	}
+	//	state[1] = 0; // reset y
+
+	//	if t < nt-1
+	//	{
+	//		state[2] += 1;
+	//		return search(g, &shapes, nsv, state);
+	//	}
+	//	state[2] = 0; // reset t (probably not necessary)
+
+	//	return false;
+	//}
+	//println("packable");
+
+	//print_bool_mat("before", g);
+	//g[x: x+nsx, y: y+nsx] = g[x: x+nsx, y: y+nsx] or s;
+	//print_bool_mat("after", g);
+
+	//// First increment shape instance `isi`
+	//if isi < nsv[ist] - 1
+	//{
+	//	state[4] += 1;
+	//	return search(g, &shapes, nsv, state);
+	//}
+	//state[4] = 0;  // reset shape instance
+
+	//let ns  = 6; // number of shapes
+
+	//// Then increment shape type `ist`
+	//ist += 1;
+	////while (nsv[ist] == 0) ist += 1;
+	//while true
+	//{
+	//	if (ist == ns) return true; // done
+	//	if (nsv[ist] != 0) break; // found next shape type to pack
+	//	ist += 1;
+	//}
+	//state[3] = ist;
+	//return search(g, &shapes, nsv, state);
 }
 
 //==============================================================================
@@ -320,7 +313,7 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	p1 = part1();
-	// no part 2 on the last day
+	//p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();

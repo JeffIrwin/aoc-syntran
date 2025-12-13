@@ -1,13 +1,11 @@
 
 #include("../../utils.syntran");
-#include("../../dict_i64.syntran");
-
-// I had to cheat again today
+//#include("../../dict_i64.syntran");
 
 //==============================================================================
 
 let ifile = 0;
-ifile = 1;
+//ifile = 1;
 
 let filenames =
 [
@@ -26,8 +24,6 @@ let nt  =  8;  // number of rotation/flip transformation permutations
 let nx  = -1;  // grid size
 let ny  = -1;
 
-let cache = new_dict_i64();
-
 fn print_bool_mat(msg: str, b: [bool; :,:])
 {
 	println(msg);
@@ -39,22 +35,6 @@ fn print_bool_mat(msg: str, b: [bool; :,:])
 		if (b[x,y]) c[x,y] = "#";
 	print_char_mat(&c);
 	return;
-}
-
-fn bool_to_str(b: [bool; :,:]): str
-{
-	// Compact bool array to str conversion, for better hashmap keys
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let s = repeat(".", i32(nx*ny));
-	let k = 0;
-	for y in [0: ny]
-	for x in [0: nx]
-	{
-		if (b[x,y]) s[k] = "#";
-		k += 1;
-	}
-	return s;
 }
 
 fn transpose_(b: [bool; :,:]): [bool; :,:]
@@ -72,7 +52,7 @@ fn fliplr_(b: [bool; :,:]): [bool; :,:]
 {
 	let nx = size(b,0);
 	let ny = size(b,1);
-	let t = [false; nx, ny];
+	let t = [false; ny, nx];
 	for y in [0: ny]
 	for x in [0: nx]
 		t[nx-x-1, y] = b[x,y];
@@ -83,7 +63,7 @@ fn flipud_(b: [bool; :,:]): [bool; :,:]
 {
 	let nx = size(b,0);
 	let ny = size(b,1);
-	let t = [false; nx, ny];
+	let t = [false; ny, nx];
 	for y in [0: ny]
 	for x in [0: nx]
 		t[x, ny-y-1] = b[x,y];
@@ -93,14 +73,14 @@ fn flipud_(b: [bool; :,:]): [bool; :,:]
 fn trans_(b: [bool; :,:], i: i32): [bool; :,:]
 {
 	// Make 1 of 8 possible transformations (permutations of rotations and flips)
-	if (i == 0) return b;                       // no transformation
-	if (i == 1) return transpose_(b);           // main diagonal mirror
-	if (i == 2) return fliplr_(b);              // left-right mirror
-	if (i == 3) return flipud_(b);              // up-down mirror
-	if (i == 4) return fliplr_(flipud_(b));     // rot 180
-	if (i == 5) return fliplr_(transpose_(b));  // rot 270 ccw
-	if (i == 6) return flipud_(transpose_(b));  // rot 90 ccw
-	if (i == 7) return fliplr_(flipud_(transpose_(b))); // other diagonal mirror
+	if (i == 0) return b;
+	if (i == 1) return transpose_(b);
+	if (i == 2) return fliplr_(b);
+	if (i == 3) return flipud_(b);
+	if (i == 4) return fliplr_(flipud_(b));
+	if (i == 5) return fliplr_(transpose_(b));
+	if (i == 6) return flipud_(transpose_(b));
+	if (i == 7) return fliplr_(flipud_(transpose_(b)));
 }
 
 fn part1(): str
@@ -138,11 +118,6 @@ fn part1(): str
 	//print_bool_mat("ud tr  = ", flipud_(transpose_(s0)));
 	//print_bool_mat("lrudtr = ", fliplr_(flipud_(transpose_(s0))));
 
-	let nblocks = [0; ns];
-	for i in [0: ns]
-		nblocks[i] = count(shapes[:,:,i]);
-	println("nblocks = ", nblocks);
-
 	for iproblem in [0: nlines - 5 * ns]
 	{
 		let str_ = readln(f);
@@ -173,32 +148,13 @@ fn part1(): str
 		state[3] = ist;
 		println("ist = ", ist);
 
-		// ARe you fucking kidding me rn
-		//
-		// Test input is not solvable like this but real input is
-		let nb = sum(nblocks * nsv);
-		println("nb = ", nb);
-
-		if nb <= nx * ny
+		let is_packable = search(g, &shapes, nsv, state);
+		println("is_packable = ", is_packable);
+		if is_packable
 			sum_ += 1;
 
-		//// I miscalculated the number of permutations and I thought that this
-		//// would be explicitly solvable
-		////
-		//// I initiall thought there were nx * ny * nt * sum(nsv) permutations
-		//// of ways to place parts, but it's actually more like 
-		//// (nx * ny * nt) ** sum(nsv)
-		////
-		//// Not even the last line of the test input is calculatable like this
-
-		//cache = new_dict_i64();
-		//let is_packable = search(g, &shapes, nsv, state);
-		//println("is_packable = ", is_packable);
-		//if is_packable
-		//	sum_ += 1;
-
-		//if (iproblem == 1) exit(0);
-		//exit(0);
+		//if (iproblem == 1) exit(0); // TODO
+		exit(0); // TODO
 
 		println();
 	}
@@ -210,21 +166,6 @@ fn part1(): str
 
 fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]): bool
 {
-	//// Might have to put other things (isi, ist?) in the cache str? Shapes are
-	//// always packed in order so I don't think it matters
-	//let str_g = str(g);
-
-	if (get_dict_i64(&cache, bool_to_str(g)) == 67) return false;
-	////println("bool_to_str g = ", bool_to_str(g));
-	//for t in [1: nt]
-	//{
-	//	println("t = ", t);
-	//	// Check symmetric caches (already tried t==0)
-	//	let sgt = str(trans_(g, t));
-	//	println("sgt = ", sgt);
-	//	if (get_dict_i64(&cache, sgt) == 67) return false;
-	//}
-
 	//println("shape type     = ", ist);
 	//println("shape instance = ", isi);
 
@@ -249,9 +190,9 @@ fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]
 
 		let gl = g; // local copy
 		let statel = state;
-		//print_bool_mat("before", g);
+		print_bool_mat("before", g);
 		gl[x: x+nsx, y: y+nsx] = g[x: x+nsx, y: y+nsx] or s;
-		//print_bool_mat("after", gl);
+		print_bool_mat("after", gl);
 
 		// First increment shape instance `isi`
 		//println("isi = ", isi);
@@ -285,26 +226,6 @@ fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]
 		//return search(gl, &shapes, nsv, statel);
 	}
 	}
-
-	// Cache this grid state as a known un-winnable situation
-	set_dict_i64(&cache, bool_to_str(g), 67'i64);
-	//for t in [1: nt]
-	//{
-	//	println("t = ", t);
-	//	// Check symmetric caches (already tried t==0)
-	//	let sgt = str(trans_(g, t));
-	//	println("sgt = ", sgt);
-	//	if (get_dict_i64(&cache, sgt) == 67) return false;
-	//}
-
-	// Cache symmetric cases too. Does this actually make it faster?
-	for t in [1: nt]
-	{
-		//let sgt = str(trans_(g, t));
-		let sgt = bool_to_str(trans_(g, t));
-		//println("sgt = ", sgt);
-		set_dict_i64(&cache, sgt, 67'i64);
-	}
 	return false;
 }
 
@@ -320,7 +241,7 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	p1 = part1();
-	// no part 2 on the last day
+	//p2 = part2();
 
 	println("Ending AOC syntran main");
 	println();
