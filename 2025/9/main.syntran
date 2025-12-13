@@ -30,7 +30,7 @@
 // concavities, so it's not a problem.  I think it would be not too hard to
 // modify the algorithm to keep an extra spacer point next to every `#` point to
 // prevent this problem generally, at the cost of making the compressed grid
-// about twice as big is grids that are compressed to the point of concavity
+// about twice as big as grids that are compressed to the point of concavity
 // deletion
 
 //==============================================================================
