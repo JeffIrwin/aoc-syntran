@@ -2,6 +2,37 @@
 #include("../../utils.syntran");
 //#include("../../dict_i64.syntran");
 
+// The "compression" approach that I used here doesn't actually work for general
+// inputs.  However, I think that almost all of Eric's actual inputs happen to
+// work
+//
+// The problem is that 180 degree concavities can get compressed to deletion.
+// For example, consider an input like this:
+//
+//    ..............
+//    .#XXXXXXXXXX#.
+//    .X..........X.
+//    .X..#XXXX#..X.
+//    .X..X....X..X.
+//    .X..X....X..X.
+//    .X..X....X..X.
+//    .#XX#....#XX#.
+//    ..............
+//
+// After compression by deleting rows and cols with no `#` chars:
+//
+//     #XX#
+//     X##X
+//     ####
+//
+// Note that the concavity in the bottom disappears!  The real input happens to
+// have other points elsewhere that prevent the total compression of
+// concavities, so it's not a problem.  I think it would be not too hard to
+// modify the algorithm to keep an extra spacer point next to every `#` point to
+// prevent this problem generally, at the cost of making the compressed grid
+// about twice as big is grids that are compressed to the point of concavity
+// deletion
+
 //==============================================================================
 
 let ifile = 0;
