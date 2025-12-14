@@ -12,7 +12,6 @@ let filenames =
 	"input.txt"
 ];
 let filename = filenames[ifile];
-//filename = "input-hard.txt";
 
 //==============================================================================
 
@@ -143,8 +142,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	t[0:m, n] = b;
 
 	// Gaussian elimination to (reduced?) row echelon form
-	let idx = [-1; m];  // save index of first non-zero in row after reduction
-	let ifree = [0; n]; // list of free variables (over-allocated)
+	let inonz = [-1; m];  // list of first (left-most) non-zero in each row after reduction
+	let ifree = [0; n];   // list of free variables
 	let nfree = 0;
 	let h = 0;
 	let k = 0;
@@ -170,17 +169,11 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 		}
 		else
 		{
-			idx[h] = k;
+			inonz[h] = k;
 			//println("swapping");
 			//println("imax, h = ", [imax, h]);
 
-			// Swap rows h and imax
-			if imax != h
-			{
-				// TODO: guard is need because syntran debug can crash while
-				// swapping row with itself.  Fix in interpretter
-				t[[h, imax], :] = t[[imax, h], :];
-			}
+			t[[h, imax], :] = t[[imax, h], :];  // swap rows h and imax
 
 			for i in [0: m]  // RREF
 			{
@@ -193,8 +186,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			k += 1;
 		}
 	}
-	println("t ref = ", transpose_f32(t));
-	println("idx = ", idx);
+	//println("t ref = ", transpose_f32(t));
+	println("inonz = ", inonz);
 
 	// Get the rest of the free vars
 	for k in [m: n]
@@ -202,7 +195,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	//for k in [m+1: n]
 	{
 		if (any(ifree == k)) continue; // also important
-		if (any(idx == k)) continue;   // this one matters, otherwise i was getting extra free vars that got right ans but took too long
+		if (any(inonz == k)) continue;   // this one matters, otherwise i was getting extra free vars that got right ans but took too long
 		ifree[nfree] = k;
 		nfree += 1;
 	}
@@ -221,7 +214,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			imaxes[j] = max(imaxes[j], b[i]);
 	}
 	//println("imaxes (full) = ", imaxes);
-	//println("m, n, max idx = ", [m, n, maxval(idx)]);
+	//println("m, n, max inonz = ", [m, n, maxval(inonz)]);
 
 	let xopt = [0.0'f32; n];
 	let fopt = 1.e20'f32;
@@ -238,16 +231,16 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	for i in [0: size(imaxes,0)]
 		imaxes[i] = min(imaxes[i], 210); // TODO: can this hack be removed for robustness?
 
-	// I guess you could also swap columns instead of using `idx`
+	// I guess you could also swap columns instead of using `inonz`
 	let i0 = -1;
 	for i in [m-1: -1: -1]
-		if idx[i] >= 0
+		if inonz[i] >= 0
 		{
 			i0 = i; // max non-free var
 			break;
 		}
 
-	let x = [0.0'f32; max(m,n)+1]; // wtf??
+	let x = [0.0'f32; max(m,n)+1]; // TODO wtf??
 	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
 	while true
 	{
@@ -262,12 +255,12 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			// Back substitute to solve for the other vars
 			for i in [i0: -1: -1]
 			{
-				let k = idx[i];
+				let k = inonz[i];
 				x[k] = t[i,n];
 				x[k] -= dot(t[i, ifree], x[ifree]); // rref saves math here, shorter sparse dot prod dims
 				x[k] /= t[i, k];
 				// TODO: keep running sum and break if non-optimal? Check might
-				// hurt more than it saves
+				// hurt more than it saves. Could also break if neg or non-int
 			}
 
 			let eps = abs(x) % 1.0;
@@ -291,6 +284,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	}
 	println("Optimal solution: ", xopt);
 	println("sum(xopt) = ", sum(xopt));
+
+	// TODO: return int vec, careful with rounding. Make helper fn
 
 	// Syntran needs nint!
 	let isum = i32(sum(xopt));
@@ -331,6 +326,7 @@ fn part2(): str
 		iline += 1;
 		let words = split_(str_, " ");
 
+		// TODO: rename vars before reddit
 		let jlts_str = words[size(words,0)-1];
 		let jlts_goal = parse_i32_delim(jlts_str, "{,}");
 		let njlts = size(jlts_goal,0);
