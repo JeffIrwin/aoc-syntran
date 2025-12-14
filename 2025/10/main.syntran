@@ -163,7 +163,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			}
 		//println("imax, amax = ", imax, amax);
 
-		if abs(t[imax,k]) < 1.e-3
+		if abs(t[imax,k]) < 1.e-3'f32
 		{
 			println("skipped piv k = ", k);
 			ifree[nfree] = k;
@@ -185,8 +185,10 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			}
 
 			//println("reducing");
-			for i in [h+1: m]
+			for i in [0: m]      // RREF
+			//for i in [h+1: m]  // REF
 			{
+				if (i == h) continue;
 				let f = t[i,k] / t[h,k];
 				t[i,k] = 0.0'f32;
 				t[i, k+1: n+1] -= t[h, k+1: n+1] * f;
@@ -203,15 +205,16 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	//for k in [m: n-1]
 	//for k in [m+1: n]
 	{
-		if (any(ifree == k)) continue; // TODO: necessary?
-		if (any(idx == k)) continue;  // this one matters, otherwise i was getting extra free vars that got right ans but took too long
+		if (any(ifree == k)) continue; // also important
+		if (any(idx == k)) continue;   // this one matters, otherwise i was getting extra free vars that got right ans but took too long
 		ifree[nfree] = k;
 		nfree += 1;
 	}
 
 	// Some of this paranoid 0-size checking may be unnecessary but i was
 	// getting weird crashes before padding x size to n+1 below :(
-	if (nfree > 0) ifree = ifree[0: nfree]; // trim
+	ifree = ifree[0: nfree]; // trim
+	//if (nfree > 0) ifree = ifree[0: nfree]; // trim
 	println("nfree = ", nfree);
 	println("ifree = ", ifree);
 
@@ -225,7 +228,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	println("imaxes (full) = ", imaxes);
 
 	let xopt = [0.0'f32; n];
-	let fopt = 1.e20;
+	let fopt = 1.e20'f32;
 
 	println("m, n, max idx = ", [m, n, maxval(idx)]);
 
@@ -239,7 +242,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	println("imaxes = ", imaxes);
 
 	for i in [0: size(imaxes,0)]
-		imaxes[i] = min(imaxes[i], 210);
+		imaxes[i] = min(imaxes[i], 210); // TODO: can this hack be removed for robustness?
 
 	let x = [0.0'f32; max(m,n)+1]; // wtf??
 	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
@@ -264,11 +267,9 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 				if (k < 0) continue;
 				//println("k = ", k);
 
-				// TODO: if i can get RREF (not REF) working it should save some
-				// math here
-
 				x[k] = t[i,n];
-				x[k] -= dot(t[i, k+1: n], x[k+1: n]);
+				x[k] -= dot(t[i, ifree], x[ifree]); // rref saves math here, shorter sparse dot prod dims
+				//x[k] -= dot(t[i, k+1: n], x[k+1: n]);
 				x[k] /= t[i, k];
 			}
 
@@ -281,6 +282,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 					if (all(eps < 0.0001 or eps > 0.9999)) // integer check
 					{
 						fopt = sum(abs(x));
+						println("fopt = ", fopt);
 						xopt = x;
 					}
 				}
