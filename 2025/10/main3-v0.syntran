@@ -1,0 +1,337 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+//ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		//println("words = ", words);
+
+		let lits_str = words[0];
+		//println("lits_str = ", lits_str);
+		let nlits = len(lits_str) - 2;
+		let lits_goal = vec_str(lits_str[1: nlits+1]) == "#";
+		//println("lits_goal = ", lits_goal);
+
+		let nbuts = size(words,0) - 2;
+		//println("nbuts = ", nbuts);
+		let buts = [false; nlits, nbuts];
+		for ib in [0: nbuts]
+		{
+			let but_str = words[ib+1];
+			//println("but_str = ", but_str);
+			buts[parse_i32_delim(but_str, "(,)"), ib] = true;
+		}
+		//println("buts = ", buts);
+
+		let npress = 0;
+		let has_solution = false;
+		while true
+		{
+			npress += 1;  // no input is ever all [......] reachable in 0 presses
+			let pos = [0; npress+1]; // entry 0 is a dummy for the break condition
+
+			// Source: combinations with repetition:  https://rosettacode.org/wiki/Combinations_with_repetitions#C
+			let n = nbuts;
+			let k = npress;
+			while true {
+				for i in [k: -1: 0] {
+					if (pos[i] > n - 1)
+					{
+						pos[i-1] += 1;
+						for j in [i: k+1]
+							pos[j] = pos[j-1];
+					}
+				}
+				if (pos[0] > 0) break;
+				//println("pos = ", pos);
+
+				// Apply button presses according to `pos` combination
+				let state = [false; nlits];
+				for p in pos[1: npress+1]
+					for i in [0: nlits]
+						state[i] = state[i] != buts[i,p];
+				//println("state = ", state);
+				if all(state == lits_goal)
+				{
+					has_solution = true;
+					break;
+				}
+				pos[k] += 1;
+			}
+			if (has_solution)
+			{
+				sum_ += npress;
+				break;
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn transpose_(a: [i32; :,:]): [i32; :,:]
+{
+	let m = size(a,0);
+	let n = size(a,1);
+	let t = [0; n, m];
+	for i in [0: m]
+	for j in [0: n]
+		t[j,i] = a[i,j];
+	return t;
+}
+
+fn transpose_f32(a: [f32; :,:]): [f32; :,:]
+{
+	let m = size(a,0);
+	let n = size(a,1);
+	let t = [0.0'f32; n, m];
+	for i in [0: m]
+	for j in [0: n]
+		t[j,i] = a[i,j];
+	return t;
+}
+
+fn matmul_vec_(mat: [f32; :,:], vec: [f32; :]): [f32; :]
+{
+	// Matrix-vector multiplication.  Return mat * vec
+	let n = size(mat,0);
+	let ans =  [0.0f; n];
+	for     j in [0: size(mat,1)]
+		for i in [0: size(mat,0)]
+			ans[i] = ans[i] + mat[i,j] * vec[j];
+	return ans;
+}
+
+fn ilp_solve(a: [i32; :,:], b: [i32; :]): [i32; :]
+{
+	println("a init = ", transpose_(a)); // transpose for sane display
+
+	let m = size(a,0);
+	let n = size(a,1);
+
+	// Form augmented matrix tableau
+	//let t = [0; m, n+1];
+	let t = [0.0'f32; m, n+1];
+	t[:, 0:n] = a;
+	t[:, n] = b;
+	println("t = ", transpose_f32(t));
+
+	// Gaussian elimination to (reduced?) row echelon form
+	let idx = [0; m];  // save index of first non-zero in row after reduction
+	let piv = [0: n];
+	let h = 0;
+	let k = 0;
+	while h < m and k < n
+	{
+		// Find pivot
+		let imax = h;
+		let amax = abs(t[h,k]);
+		for i in [h+1: m]
+			if abs(t[i,k]) > amax
+			{
+				amax = abs(t[i,k]);
+				imax = i;
+			}
+		println("imax, amax = ", imax, amax);
+		if t[imax,k] == 0.0'f32
+		{
+			k += 1;
+		}
+		else
+		{
+			//idx[h] = imax;
+			idx[h] = k;
+
+			// Swap rows h and imax
+			t[[h, imax], :] = t[[imax, h], :];
+			piv[[h, imax]] = piv[[imax, h]];
+
+			for i in [h+1: m]  // REF. TODO: this is probably fine, and more efficient
+			//for i in [0: m]  // RREF
+			{
+				if (i == h) continue;
+				let f = t[i,k] / t[h,k];
+				t[i,k] = 0.0'f32;
+				for j in [k+1: n]
+					t[i,j] -= t[h,j] * f;
+			}
+			h += 1;
+			k += 1;
+		}
+	}
+	println("t ref = ", transpose_f32(t));
+	println("idx = ", idx);
+	println("piv = ", piv);
+
+	// Get free vars
+	//let nfree = n - m;
+	let nfree = max(n - m, 0'i64);
+	println("nfree = ", nfree);
+
+	let ifree = [3, 5]; // TODO
+	//for i = 
+
+	let ixmax = sum(b); // TODO: better upper bound?
+	ixmax += 5;
+	println("ixmax = ", ixmax);
+
+	// TODO: get fixed vars too?
+
+	//let xopt = [0; n];
+	let xopt = [0.0'f32; n];
+	let fopt = 1.e20;
+
+	// Iterate over possible values of free vars
+	for ix3 in [0: ixmax]
+	{
+	for ix5 in [0: ixmax]
+	{
+		let x = [0.0'f32; n];
+
+		//x[ifree[0]] = 1.0 * ix3;
+		//x[ifree[1]] = 1.0 * ix5;
+		x[3] = 1.0'f32 * ix3;
+		x[5] = 1.0'f32 * ix5;
+
+		println("x = ", i32(x));
+
+		// Back substitute to solve for the other vars
+		for i in [m-1: -1: -1]
+		{
+			println("i = ", i);
+			println("idx[i] = ", idx[i]);
+			// TODO: helper var for idx[i]
+
+			x[idx[i]] = t[i,n];
+			println("rhs = ", x[idx[i]]);
+			for j in [idx[i]+1: n]  // could just itr over free vars instead of whole slice
+			{
+				println("t = ", t[i,j]);
+				x[idx[i]] -= t[i,j] * x[j];
+			}
+			x[idx[i]] /= t[i, idx[i]];
+			//x[idx[i]] /= t[i, i];
+			//x[idx[i]] /= t[idx[i], i];
+			println("solved x[", idx[i], "] = ", x[idx[i]]);
+			println();
+		}
+		println("solved all x = ", x);
+		println("matmul = ", matmul_vec_(t[:,0:n], x));
+		println("rhs    = ", t[:,n]);
+		let diff = sum(abs(matmul_vec_(t[:, 0:n], x) - t[:,n]));
+		println("diff = ", diff);
+		if (diff > 0.0001)
+		{
+			println("Error: bad linear algebra solve");
+			exit(1);
+		}
+
+		//if (any(x < 0)) continue;
+		//if (sum(x) > fopt) continue;
+		if (sum(abs(x)) > fopt) continue;
+
+		//fopt = sum(x);
+		fopt = sum(abs(x));
+		//xopt = i32(x);
+		xopt = x;
+		//break; // TODO
+	}
+		//break; // TODO
+	}
+	println("xopt = ", xopt);
+
+	return i32(xopt);
+	//return [0];
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let iline = 0;
+	while not eof(f)
+	{
+		iline += 1;
+		let words = split_(str_, " ");
+
+		let jlts_str = words[size(words,0)-1];
+		let jlts_goal = parse_i32_delim(jlts_str, "{,}");
+		let njlts = size(jlts_goal,0);
+
+		let nbuts = size(words,0) - 2;
+		let buts = [0; njlts, nbuts];
+		for ib in [0: nbuts]
+		{
+			let but_str = words[ib+1];
+			buts[parse_i32_delim(but_str, "(,)"), ib] = 1;
+		}
+		//println("buts = ", buts);
+		//println("jlts_goal = ", jlts_goal);
+
+		let x = ilp_solve(buts, jlts_goal);
+		println("x = ", x);
+
+		sum_ += sum(x);
+		break; // TODO
+
+		println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/10");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

@@ -105,22 +105,22 @@ fn transpose_(a: [i32; :,:]): [i32; :,:]
 	return t;
 }
 
-fn transpose_f32(a: [f32; :,:]): [f32; :,:]
+fn transpose_f64(a: [f64; :,:]): [f64; :,:]
 {
 	let m = size(a,0);
 	let n = size(a,1);
-	let t = [0.0'f32; n, m];
+	let t = [0.0'f64; n, m];
 	for i in [0: m]
 	for j in [0: n]
 		t[j,i] = a[i,j];
 	return t;
 }
 
-fn matmul_vec_(mat: [f32; :,:], vec: [f32; :]): [f32; :]
+fn matmul_vec_(mat: [f64; :,:], vec: [f64; :]): [f64; :]
 {
 	// Matrix-vector multiplication.  Return mat * vec
 	let n = size(mat,0);
-	let ans =  [0.0'f32; n];
+	let ans =  [0.0; n];
 	for     j in [0: size(mat,1)]
 		for i in [0: size(mat,0)]
 			ans[i] = ans[i] + mat[i,j] * vec[j];
@@ -151,11 +151,11 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 
 	// Form augmented matrix tableau
 	//let t = [0; m, n+1];
-	//let t = [0.0'f32; m+1, n+2];
-	let t = [0.0'f32; m, n+1];
+	//let t = [0.0'f64; m+1, n+2];
+	let t = [0.0'f64; m, n+1];
 	t[0:m, 0:n] = a;
 	t[0:m, n] = b;
-	//println("t = ", transpose_f32(t));
+	//println("t = ", transpose_f64(t));
 
 	// Gaussian elimination to (reduced?) row echelon form
 	let idx = [-1; m];   // save index of first non-zero in row after reduction
@@ -177,7 +177,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			}
 		//println("imax, amax = ", imax, amax);
 
-		//if t[imax,k] == 0.0'f32
+		//if t[imax,k] == 0.0'f64
 		if abs(t[imax,k]) < 1.e-3
 		{
 			ifree[nfree] = k;
@@ -205,7 +205,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			{
 				//if (i == h) continue;
 				let f = t[i,k] / t[h,k];
-				t[i,k] = 0.0'f32;
+				t[i,k] = 0.0'f64;
 				for j in [k+1: n+1]
 					t[i,j] -= t[h,j] * f;
 			}
@@ -213,8 +213,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			k += 1;
 		}
 	}
-	println("t ref = ", transpose_f32(t));
-	println("idx = ", idx);
+	//println("t ref = ", transpose_f64(t));
+	//println("idx = ", idx);
 	////println("piv = ", piv);
 
 	// Get the rest of the free vars
@@ -226,24 +226,16 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 		nfree += 1;
 	}
 	if (nfree > 0) ifree = ifree[0: nfree]; // trim
-	println("nfree = ", nfree);
-	println("ifree = ", ifree);
+	//println("nfree = ", nfree);
+	//println("ifree = ", ifree);
 
 	//let ixmax = sum(b); // better upper bound?
 	let ixmax = maxval(b);
 	//ixmax = minval(b);
-	//ixmax = (minval(b) + maxval(b)) / 2;
-	//ixmax = 3 * maxval(b) / 4;
+	ixmax = (minval(b) + maxval(b)) / 2;
 	//ixmax = minval(b) + (maxval(b) - minval(b)) / 4;  // too low
 	//println("ixmax = ", ixmax);
-	println("min, ixmax, max = ", [minval(b), ixmax, maxval(b)]);
 
-	// Upper bound is basically maxval(b). However, I think we can modify
-	// next_combo() to take a different upper bound per element, and set them by
-	// analyzing the matrix and rhs
-
-	// TODO: delete all this `fixed` var related code. Not sure why I added it,
-	// it actually causes bugs on real input line 45
 	let nfixed = 0;
 	let ifixed = [0; n];
 	for k in [0: m]
@@ -253,8 +245,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 		{
 			//ifree[nfree] = k;
 			//nfree += 1;
-			//ifixed[nfixed] = k;
-			//nfixed += 1;
+			ifixed[nfixed] = k;
+			nfixed += 1;
 		}
 	}
 	//ifree = ifree[0: nfree]; // trim
@@ -262,10 +254,10 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	// Some of this paranoid 0-size checking may be unnecessary but i was
 	// getting weird crashes before padding x size to n+1 below :(
 	if (nfixed > 0) ifixed = ifixed[0: nfixed];
-	println("ifixed = ", ifixed);
+	//println("ifixed = ", ifixed);
 	//println("nfixed = ", nfixed);
 
-	let xopt = [0.0'f32; n];
+	let xopt = [0.0'f64; n];
 	let fopt = 1.e20;
 
 	// Iterate over possible value combinations of free vars
@@ -274,7 +266,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	if (nfree > 0) combos = [0; nfree];
 	while true
 	{
-		let x = [0.0'f32; max(m,n)+1]; // n+1?? wtf!???!?!?!?!?
+		let x = [0.0'f64; max(m,n)+1]; // n+1?? wtf!???!?!?!?!?
 
 		if (nfree > 0) x[ifree] = combos;
 		//println("combos = ", combos);
@@ -314,20 +306,14 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 
 		let eps = abs(x) % 1.0;
 		if (all(x >= -0.001))
-		{
-			//println("x = ", x);
-			if (sum(abs(x)) < fopt)
-			{
-				if (all(eps < 0.0001 or eps > 0.9999)) // integer check
-				//if (all(abs(x) % 1.0'f32 < 0.1)) // integer check (not working)
-				//if (all(abs(x) % 1.0'f32 < 0.01)) // integer check
+			//if (all(abs(x) % 1.0'f64 < 0.1)) // integer check (not working)
+			//if (all(abs(x) % 1.0'f64 < 0.01)) // integer check
+			if (all(eps < 0.0001 or eps > 0.9999)) // integer check
+				if (sum(abs(x)) < fopt)
 				{
 					fopt = sum(abs(x));
 					xopt = x;
 				}
-			}
-		}
-
 		if nfree == 0
 			break;
 		if not next_combo(&combos, ixmax)
@@ -443,7 +429,7 @@ fn part2(): str
 		//let xl = ilp_solve(buts, jlts_goal);
 		let isum = ilp_solve(buts, jlts_goal);
 		//println("xl = ", xl);
-		exit(0);
+		//exit(0);
 
 		println("Line: ", iline);
 		//println("Optimal solution: ", xl);

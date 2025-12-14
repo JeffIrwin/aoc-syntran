@@ -1,0 +1,237 @@
+
+#include("../../utils.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	"test-input.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		let words = split_(str_, " ");
+
+		let lits_str = words[0];
+		let nlits = len(lits_str) - 2;
+		let lits_goal = vec_str(lits_str[1: nlits+1]) == "#";
+
+		let nbuts = size(words,0) - 2;
+		let buts = [false; nlits, nbuts];
+		for ib in [0: nbuts]
+		{
+			let but_str = words[ib+1];
+			buts[parse_i32_delim(but_str, "(,)"), ib] = true;
+		}
+
+		let npress = 0;
+		let has_solution = false;
+		while true
+		{
+			npress += 1;  // no input is ever all [......] reachable in 0 presses
+			let pos = [0; npress+1]; // entry 0 is a dummy for the break condition
+
+			// Source: combinations with repetition:  https://rosettacode.org/wiki/Combinations_with_repetitions#C
+			let n = nbuts;
+			let k = npress;
+			while true {
+				for i in [k: -1: 0] {
+					if (pos[i] > n - 1)
+					{
+						pos[i-1] += 1;
+						for j in [i: k+1]
+							pos[j] = pos[j-1];
+					}
+				}
+				if (pos[0] > 0) break;
+
+				// Apply button presses according to `pos` combination
+				let state = [false; nlits];
+				for p in pos[1: npress+1]
+					for i in [0: nlits]
+						state[i] = state[i] != buts[i,p];
+				if all(state == lits_goal)
+				{
+					has_solution = true;
+					break;
+				}
+				pos[k] += 1;
+			}
+			if (has_solution)
+			{
+				sum_ += npress;
+				break;
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		let words = split_(str_, " ");
+
+		let jlts_str = words[size(words,0)-1];
+		let jlts_goal = parse_i32_delim(jlts_str, "{,}");
+		let njlts = size(jlts_goal,0);
+		//println("jlts_goal = ", jlts_goal);
+
+		let nbuts = size(words,0) - 2;
+		let buts = [0; njlts, nbuts];
+		for ib in [0: nbuts]
+		{
+			let but_str = words[ib+1];
+			buts[parse_i32_delim(but_str, "(,)"), ib] = 1;
+		}
+		//println("buts = ", buts);
+
+		// Before starting a brute-force search, take some greedy steps using
+		// the best buttons until we're within a threshold distance
+		let d2thresh = 5**2;
+		d2thresh = 15;
+		d2thresh = 5;
+		//d2thresh = 10**2;
+		let x = [0; njlts];  // current position
+
+		//let d2 = sum((jlts_goal - x) ** 2); // idk which norm should be minimized
+		let d2 = maxval(abs(jlts_goal - x));
+		//let d2 = sum(abs(jlts_goal - x));
+
+		let npre = 0;
+		println("d2 = ", d2);
+		while d2 > d2thresh
+		{
+			let d2min = d2;
+			let xmin = x;
+			let found_better = false;
+			for i in [0: nbuts]
+			{
+				let xl = x + buts[:,i];
+
+				//d2 = sum((jlts_goal - xl) ** 2);
+				d2 = maxval(abs(jlts_goal - xl));
+				//d2 = sum(abs(jlts_goal - xl));
+
+				if any(xl >= jlts_goal-14) continue; // TODO?
+				//if any(xl >= jlts_goal-7) continue; // TODO?
+				//if any(xl >= jlts_goal-1) continue; // TODO?
+				//if any(xl >= jlts_goal) continue;
+				if d2 < d2min
+				{
+					found_better = true;
+					d2min = d2;
+					xmin = xl;
+				}
+			}
+			if (not found_better) break;
+			npre += 1;
+			x = xmin;
+			d2 = d2min;
+			println("d2 = ", d2);
+			println("jlts_goal = ", jlts_goal);
+			println("x         = ", x);
+		}
+		println("npre = ", npre);
+
+		let npress = 0;
+
+		// TODO: this brute repeats the first move(s) every time. Use actual BFS
+		// instead
+		println("starting brute-force stage ...");
+		let has_solution = false;
+		while true
+		{
+			npress += 1;  // no input is ever all [......] reachable in 0 presses
+			let pos = [0; npress+1]; // entry 0 is a dummy for the break condition
+			println("npress = ", npress);
+
+			// Source: combinations with repetition:  https://rosettacode.org/wiki/Combinations_with_repetitions#C
+			let n = nbuts;
+			let k = npress;
+			while true {
+				for i in [k: -1: 0] {
+					if (pos[i] > n - 1)
+					{
+						pos[i-1] += 1;
+						for j in [i: k+1]
+							pos[j] = pos[j-1];
+					}
+				}
+				if (pos[0] > 0) break;
+
+				// Apply button presses according to `pos` combination
+				//let state = [0; njlts];
+				let state = x;
+				for p in pos[1: npress+1]
+					state += buts[:,p];
+				//println("state = ", state);
+				if all(state == jlts_goal)
+				{
+					has_solution = true;
+					break;
+				}
+				pos[k] += 1;
+			}
+			if (has_solution)
+			{
+				//sum_ += npress;
+				sum_ += npress + npre;
+				break;
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/10");
+
+	let p1 = ""; let p2 = "";
+
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

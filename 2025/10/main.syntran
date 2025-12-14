@@ -182,8 +182,10 @@ fn part2(): str
 		writeln(fo, "result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)");
 
 		//// Display results
-		//writeln(fo, "print(""Optimal Solution:"", result.x)");
-		//writeln(fo, "print(""Optimal Value:"", result.fun)");
+		writeln(fo, "print(""Line:"", " + str(iline) + ")");
+		writeln(fo, "print(""Optimal Solution:"", result.x)");
+		writeln(fo, "print(""Optimal Value:"", result.fun)");
+		writeln(fo, "print()");
 
 		// Add up final AOC answer
 		writeln(fo, "sum_ += result.fun");

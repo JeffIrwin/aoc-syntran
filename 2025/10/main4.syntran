@@ -144,7 +144,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	//
 	//**************************************************************************
 
-	//println("a init = ", transpose_(a)); // transpose for sane display
+	println("a init = ", transpose_(a)); // transpose for sane display
 
 	let m = i32(size(a,0));
 	let n = i32(size(a,1));
@@ -229,14 +229,24 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	println("nfree = ", nfree);
 	println("ifree = ", ifree);
 
-	//let ixmax = sum(b); // better upper bound?
+	////let ixmax = sum(b); // better upper bound?
 	let ixmax = maxval(b);
-	//ixmax = minval(b);
-	//ixmax = (minval(b) + maxval(b)) / 2;
+	////ixmax = minval(b);
+	////ixmax = (minval(b) + maxval(b)) / 2;
 	//ixmax = 3 * maxval(b) / 4;
-	//ixmax = minval(b) + (maxval(b) - minval(b)) / 4;  // too low
-	//println("ixmax = ", ixmax);
-	println("min, ixmax, max = ", [minval(b), ixmax, maxval(b)]);
+	ixmax = minval(b) + (maxval(b) - minval(b)) / 4;  // too low TODO
+	////println("ixmax = ", ixmax);
+	//println("min, ixmax, max = ", [minval(b), ixmax, maxval(b)]);
+
+	let imaxes = [0; n];
+	for j in [0: n]
+	for i in [0: m]
+	{
+		if a[i,j] != 0
+			imaxes[j] = max(imaxes[j], b[i]);
+	}
+	println("imaxes (full) = ", imaxes);
+	//exit(0);
 
 	// Upper bound is basically maxval(b). However, I think we can modify
 	// next_combo() to take a different upper bound per element, and set them by
@@ -268,13 +278,27 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	let xopt = [0.0'f32; n];
 	let fopt = 1.e20;
 
+	println("m, n, max idx = ", [m, n, maxval(idx)]);
+
 	// Iterate over possible value combinations of free vars
 	//let combos = [0; ixmax+1];
 	let combos = [0];
-	if (nfree > 0) combos = [0; nfree];
+	if (nfree > 0)
+	{
+		imaxes = imaxes[ifree];
+		combos = [0; nfree];
+	}
+	println("imaxes = ", imaxes);
+
+	//imaxes = imaxes * 3 / 4 + 1;
+	for i in [0: n]
+		imaxes[i] = min(imaxes[i], 210);
+
+	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
 	while true
 	{
-		let x = [0.0'f32; max(m,n)+1]; // n+1?? wtf!???!?!?!?!?
+		let x = [0.0'f32; max(m,n)+1]; // wtf??
+		//let x = [0.0'f32; n];
 
 		if (nfree > 0) x[ifree] = combos;
 		//println("combos = ", combos);
@@ -330,11 +354,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 
 		if nfree == 0
 			break;
-		if not next_combo(&combos, ixmax)
+		if not next_combo(&combos, &imaxes)
 			break;
-		//next_combo(&combos, nfree, ixmax);
-		//if combos[0] > 0
-		//	break;
 	}
 	println("Optimal solution: ", xopt);
 	println("sum(xopt) = ", sum(xopt));
@@ -351,9 +372,9 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	////return i32(xopt);
 }
 
-fn next_combo(c: &[i32; :], n: i32): bool
+fn next_combo(c: &[i32; :], n: &[i32; :]): bool
 {
-	// Bignum += 1 algo for number in array c with each digit/element base n
+	// Bignum += 1 algo for number in array c with mixed radix
 	if size(c,0) == 0
 		return false;
 
@@ -362,56 +383,13 @@ fn next_combo(c: &[i32; :], n: i32): bool
 
 	// Find first digit less than n-1
 	let i = 0;
-	while c[i] == n-1
+	while c[i] == n[i]-1
 	{
 		c[i] = 0;
 		i += 1;
 	}
 	c[i] += 1;
 	return true;
-}
-
-fn next_combo_old(pos: &[i32; :], n: i32, k: i32)
-{
-	// TODO: one arg is redundant, related to size of pos
-	//
-	// Source: combinations with repetition:  https://rosettacode.org/wiki/Combinations_with_repetitions#C
-
-	//let pos = [0; npress+1]; // entry 0 is a dummy for the break condition
-	//let n = nbuts;
-	//let k = npress;
-	//while true {
-		pos[k] += 1;
-		for i in [k: -1: 0] {
-			if (pos[i] > n - 1)
-			{
-				pos[i-1] += 1;
-				for j in [i: k+1]
-					pos[j] = pos[j-1];
-			}
-		}
-		//if (pos[0] > 0) break;
-		//println("pos = ", pos);
-
-		//// Apply button presses according to `pos` combination
-		//let state = [false; nlits];
-		//for p in pos[1: npress+1]
-		//	for i in [0: nlits]
-		//		state[i] = state[i] != buts[i,p];
-		////println("state = ", state);
-		//if all(state == lits_goal)
-		//{
-		//	has_solution = true;
-		//	break;
-		//}
-		//pos[k] += 1;
-	//}
-	//if (has_solution)
-	//{
-	//	sum_ += npress;
-	//	break;
-	//}
-	return;
 }
 
 fn part2(): str
@@ -443,7 +421,7 @@ fn part2(): str
 		//let xl = ilp_solve(buts, jlts_goal);
 		let isum = ilp_solve(buts, jlts_goal);
 		//println("xl = ", xl);
-		exit(0);
+		//exit(0);
 
 		println("Line: ", iline);
 		//println("Optimal solution: ", xl);
