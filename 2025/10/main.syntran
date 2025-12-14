@@ -160,7 +160,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			}
 		//println("imax, amax = ", imax, amax);
 
-		if abs(t[imax,k]) < 1.e-3'f32
+		if abs(t[imax,k]) < 0.0001'f32
 		{
 			//println("skipped piv k = ", k);
 			ifree[nfree] = k;
@@ -244,9 +244,9 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
 	while true
 	{
-		// Easy non-opmitmal check? Not sure if it's actually faster
-		if sum(combos) <= fopt
+		if sum(combos) <= fopt  // fast non-optimal check
 		{
+			let is_valid = true;
 			x = 0.0'f32;
 			x[ifree] = combos;
 			//println("combos = ", combos);
@@ -261,14 +261,16 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 				x[k] /= t[i, k];
 				// TODO: keep running sum and break if non-optimal? Check might
 				// hurt more than it saves. Could also break if neg or non-int
+				is_valid = x[k] > -0.0001;
+				if (not is_valid) break;
 			}
 
-			let eps = abs(x) % 1.0;
-			if (all(x >= -0.001))
+			let frac_ = abs(x) % 1.0;
+			if (all(x > -0.0001))
 			{
 				if (sum(abs(x)) < fopt)
 				{
-					if (all(eps < 0.0001 or eps > 0.9999)) // integer check
+					if (all(frac_ < 0.0001 or frac_ > 0.9999)) // integer check
 					{
 						fopt = sum(abs(x));
 						println("fopt = ", fopt);
