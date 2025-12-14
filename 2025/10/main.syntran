@@ -34,16 +34,16 @@ fn part1(): str
 		let lits_goal = vec_str(lits_str[1: nlits+1]) == "#";
 		//println("lits_goal = ", lits_goal);
 
-		let nbuts = size(words,0) - 2;
-		//println("nbuts = ", nbuts);
-		let buts = [false; nlits, nbuts];
-		for ib in [0: nbuts]
+		let num_buttons = size(words,0) - 2;
+		//println("num_buttons = ", num_buttons);
+		let buttons = [false; nlits, num_buttons];
+		for ib in [0: num_buttons]
 		{
 			let but_str = words[ib+1];
 			//println("but_str = ", but_str);
-			buts[parse_i32_delim(but_str, "(,)"), ib] = true;
+			buttons[parse_i32_delim(but_str, "(,)"), ib] = true;
 		}
-		//println("buts = ", buts);
+		//println("buttons = ", buttons);
 
 		let npress = 0;
 		let has_solution = false;
@@ -53,7 +53,7 @@ fn part1(): str
 			let pos = [0; npress+1]; // entry 0 is a dummy for the break condition
 
 			// Source: combinations with repetition:  https://rosettacode.org/wiki/Combinations_with_repetitions#C
-			let n = nbuts;
+			let n = num_buttons;
 			let k = npress;
 			while true {
 				for i in [k: -1: 0] {
@@ -71,7 +71,7 @@ fn part1(): str
 				let state = [false; nlits];
 				for p in pos[1: npress+1]
 					for i in [0: nlits]
-						state[i] = state[i] != buts[i,p];
+						state[i] = state[i] != buttons[i,p];
 				//println("state = ", state);
 				if all(state == lits_goal)
 				{
@@ -105,6 +105,7 @@ fn transpose_(a: [i32; :,:]): [i32; :,:]
 	return t;
 }
 
+// TODO: remove unused fns for reddit
 fn transpose_f32(a: [f32; :,:]): [f32; :,:]
 {
 	let m = size(a,0);
@@ -158,7 +159,7 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 				amax = abs(t[i,k]);
 				imax = i;
 			}
-		//println("imax, amax = ", imax, amax);
+		println("imax, amax = ", imax, amax);
 
 		if abs(t[imax,k]) < 0.0001'f32
 		{
@@ -170,9 +171,9 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 		else
 		{
 			//println("swapping");
-			//println("imax, h = ", [imax, h]);
+			println("imax, h = ", [imax, h]);
 			inonz[h] = k;
-			t[[h, imax], :] = t[[imax, h], :];  // swap rows h and imax
+			if (h != imax) t[[h, imax], :] = t[[imax, h], :];  // swap rows h and imax. TODO: fix interpretter
 
 			for i in [0: m]  // RREF
 			{
@@ -196,9 +197,6 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 		ifree[nfree] = k;
 		nfree += 1;
 	}
-
-	// Some of this paranoid 0-size checking may be unnecessary but i was
-	// getting weird crashes before padding x size to n+1 below :(
 	ifree = ifree[0: nfree];  // trim
 	println("nfree = ", nfree);
 	println("ifree = ", ifree);
@@ -215,7 +213,7 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 	let fopt = 1.e20'f32;
 
 	// Iterate over possible value combinations of free vars
-	imaxes = imaxes[ifree];
+	imaxes = imaxes[ifree];  // TODO: interpretter breaks on some empty ifree array like this in debug
 	let combos = [0; nfree];
 	println("imaxes = ", imaxes);
 
@@ -269,8 +267,7 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 				xopt = x;
 			}
 		}
-		if not next_combo(&combos, &imaxes)
-			break;
+		if (not next_combo(&combos, &imaxes)) break;
 	}
 	println("Optimal solution: ", xopt);
 	println("sum(xopt) = ", sum(xopt));
@@ -278,7 +275,7 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 	let iopt = i32(xopt);
 	for i in [0: n]
 		if iopt[i] < xopt[i] - 0.5'f32
-			iopt[i] += 1;
+			iopt[i] += 1;  // round
 	return iopt;
 }
 
@@ -320,22 +317,21 @@ fn part2(): str
 		iline += 1;
 		let words = split_(str_, " ");
 
-		// TODO: rename vars before reddit
-		let jlts_str = words[size(words,0)-1];
-		let jlts_goal = parse_i32_delim(jlts_str, "{,}");
-		let njlts = size(jlts_goal,0);
+		let jolts_str = words[size(words,0)-1];
+		let jolts_goal = parse_i32_delim(jolts_str, "{,}");
+		let num_jolts = size(jolts_goal,0);
 
-		let nbuts = size(words,0) - 2;
-		let buts = [0; njlts, nbuts];
-		for ib in [0: nbuts]
+		let num_buttons = size(words,0) - 2;
+		let buttons = [0; num_jolts, num_buttons];
+		for ib in [0: num_buttons]  // assemble button matrix
 		{
 			let but_str = words[ib+1];
-			buts[parse_i32_delim(but_str, "(,)"), ib] = 1;
+			buttons[parse_i32_delim(but_str, "(,)"), ib] = 1;
 		}
-		//println("buts = ", buts);
-		println("jlts_goal = ", jlts_goal);
+		println("buttons = ", buttons);
+		println("jolts_goal = ", jolts_goal);
 
-		let iopt = solve_ilp(buts, jlts_goal);
+		let iopt = solve_ilp(buttons, jolts_goal);
 		sum_ += sum(iopt);
 
 		println("Line: ", iline);
