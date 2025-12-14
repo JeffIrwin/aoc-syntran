@@ -1,3 +1,7 @@
+// Run:  syntran part2.syntran
+//
+// Install syntran:  https://github.com/JeffIrwin/syntran#install-binary
+
 #include("../../utils.syntran");  // utils includes split_ and parse_i32_delim
 fn main(): str {
 	let sum_ = 0'i64;
