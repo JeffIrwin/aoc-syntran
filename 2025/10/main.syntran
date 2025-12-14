@@ -133,8 +133,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	//
 	//**************************************************************************
 
-	println("a init = ", transpose_(a)); // transpose for sane display
-
+	//println("a init = ", transpose_(a)); // transpose for sane display
 	let m = i32(size(a,0));
 	let n = i32(size(a,1));
 
@@ -142,10 +141,9 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	let t = [0.0'f32; m, n+1];
 	t[0:m, 0:n] = a;
 	t[0:m, n] = b;
-	//println("t = ", transpose_f32(t));
 
 	// Gaussian elimination to (reduced?) row echelon form
-	let idx = [-1; m];   // save index of first non-zero in row after reduction
+	let idx = [-1; m];  // save index of first non-zero in row after reduction
 	let ifree = [0; n]; // list of free variables (over-allocated)
 	let nfree = 0;
 	let h = 0;
@@ -165,7 +163,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 
 		if abs(t[imax,k]) < 1.e-3'f32
 		{
-			println("skipped piv k = ", k);
+			//println("skipped piv k = ", k);
 			ifree[nfree] = k;
 			nfree += 1;
 			k += 1;
@@ -184,9 +182,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 				t[[h, imax], :] = t[[imax, h], :];
 			}
 
-			//println("reducing");
-			for i in [0: m]      // RREF
-			//for i in [h+1: m]  // REF
+			for i in [0: m]  // RREF
 			{
 				if (i == h) continue;
 				let f = t[i,k] / t[h,k];
@@ -214,7 +210,6 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	// Some of this paranoid 0-size checking may be unnecessary but i was
 	// getting weird crashes before padding x size to n+1 below :(
 	ifree = ifree[0: nfree]; // trim
-	//if (nfree > 0) ifree = ifree[0: nfree]; // trim
 	println("nfree = ", nfree);
 	println("ifree = ", ifree);
 
@@ -225,12 +220,11 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 		if a[i,j] != 0
 			imaxes[j] = max(imaxes[j], b[i]);
 	}
-	println("imaxes (full) = ", imaxes);
+	//println("imaxes (full) = ", imaxes);
+	//println("m, n, max idx = ", [m, n, maxval(idx)]);
 
 	let xopt = [0.0'f32; n];
 	let fopt = 1.e20'f32;
-
-	println("m, n, max idx = ", [m, n, maxval(idx)]);
 
 	// Iterate over possible value combinations of free vars
 	let combos = [0];
@@ -244,6 +238,15 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	for i in [0: size(imaxes,0)]
 		imaxes[i] = min(imaxes[i], 210); // TODO: can this hack be removed for robustness?
 
+	// I guess you could also swap columns instead of using `idx`
+	let i0 = -1;
+	for i in [m-1: -1: -1]
+		if idx[i] >= 0
+		{
+			i0 = i; // max non-free var
+			break;
+		}
+
 	let x = [0.0'f32; max(m,n)+1]; // wtf??
 	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
 	while true
@@ -252,31 +255,24 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 		if sum(combos) <= fopt
 		{
 			x = 0.0'f32;
-			//let x = [0.0'f32; n];
-
-			//if (nfree > 0) x[ifree] = combos;
 			x[ifree] = combos;
-
 			//println("combos = ", combos);
 			//println("x[ifree] = ", x[ifree]);
 
 			// Back substitute to solve for the other vars
-			for i in [m-1: -1: -1] // maybe this loop should start at n-1
+			for i in [i0: -1: -1]
 			{
 				let k = idx[i];
-				if (k < 0) continue;
-				//println("k = ", k);
-
 				x[k] = t[i,n];
 				x[k] -= dot(t[i, ifree], x[ifree]); // rref saves math here, shorter sparse dot prod dims
-				//x[k] -= dot(t[i, k+1: n], x[k+1: n]);
 				x[k] /= t[i, k];
+				// TODO: keep running sum and break if non-optimal? Check might
+				// hurt more than it saves
 			}
 
 			let eps = abs(x) % 1.0;
 			if (all(x >= -0.001))
 			{
-				//println("x = ", x);
 				if (sum(abs(x)) < fopt)
 				{
 					if (all(eps < 0.0001 or eps > 0.9999)) // integer check
@@ -288,10 +284,6 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 				}
 			}
 		}
-		//else
-		//{
-		//	println("skipped non-optimal combo");
-		//}
 		if nfree == 0
 			break;
 		if not next_combo(&combos, &imaxes)
