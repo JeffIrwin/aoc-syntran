@@ -244,7 +244,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
 	while true
 	{
-		let sumx = sum(combos); // initialize sum to free vars only
+		let sumx = sum(1.0'f32 * combos); // initialize sum to free vars only
 		if sumx < fopt  // fast non-optimal check
 		{
 			let is_valid = true;
@@ -271,20 +271,11 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 				is_valid = is_int(x[k]);
 				if (not is_valid) break;
 			}
-
-			// TODO: remove conditions here if we check everything above
-			let frac_ = abs(x) % 1.0;
-			if (all(x > -0.0001))
+			if is_valid
 			{
-				if (sum(abs(x)) < fopt)
-				{
-					if (all(frac_ < 0.0001 or frac_ > 0.9999)) // integer check
-					{
-						fopt = sum(abs(x));
-						println("fopt = ", fopt);
-						xopt = x;
-					}
-				}
+				fopt = sumx;
+				println("fopt = ", fopt);
+				xopt = x;
 			}
 		}
 		if nfree == 0
@@ -311,19 +302,6 @@ fn is_int(x: f32): bool
 	if (frac_ > 0.9999'f32) return true;
 	return false;
 }
-//let frac_ = abs(x) % 1.0;
-//if (all(x > -0.0001))
-//{
-//	if (sum(abs(x)) < fopt)
-//	{
-//		if (all(frac_ < 0.0001 or frac_ > 0.9999)) // integer check
-//		{
-//			fopt = sum(abs(x));
-//			println("fopt = ", fopt);
-//			xopt = x;
-//		}
-//	}
-//}
 
 fn next_combo(c: &[i32; :], n: &[i32; :]): bool
 {
