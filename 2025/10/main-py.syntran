@@ -183,8 +183,8 @@ fn part2(): str
 
 		//// Display results
 		writeln(fo, "print(""Line:"", " + str(iline) + ")");
-		writeln(fo, "print(""Optimal Solution:"", result.x)");
-		writeln(fo, "print(""Optimal Value:"", result.fun)");
+		writeln(fo, "print(""Optimal solution:"", result.x)");
+		writeln(fo, "print(""Optimal value:"", result.fun)");
 		writeln(fo, "print()");
 
 		// Add up final AOC answer

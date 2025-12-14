@@ -217,8 +217,10 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 	let combos = [0; nfree];
 	println("imaxes = ", imaxes);
 
-	for i in [0: size(imaxes,0)]
-		imaxes[i] = min(imaxes[i], 210); // TODO: can this hack be removed for robustness?
+	//// TODO: remove. This hack was useful for development, but it only saves 1
+	//// minute (2 vs 3) now with other optimizations
+	//for i in [0: size(imaxes,0)]
+	//	imaxes[i] = min(imaxes[i], 210);
 
 	// I guess you could also swap columns instead of using `inonz`
 	let i0 = -1;
