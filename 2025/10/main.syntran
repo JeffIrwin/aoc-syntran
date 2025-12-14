@@ -191,11 +191,9 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 
 	// Get the rest of the free vars
 	for k in [m: n]
-	//for k in [m: n-1]
-	//for k in [m+1: n]
 	{
-		if (any(ifree == k)) continue; // also important
-		if (any(inonz == k)) continue;   // this one matters, otherwise i was getting extra free vars that got right ans but took too long
+		if (any(ifree == k)) continue;
+		if (any(inonz == k)) continue;
 		ifree[nfree] = k;
 		nfree += 1;
 	}
@@ -220,12 +218,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	let fopt = 1.e20'f32;
 
 	// Iterate over possible value combinations of free vars
-	let combos = [0];
-	if (nfree > 0)
-	{
-		imaxes = imaxes[ifree];
-		combos = [0; nfree];
-	}
+	imaxes = imaxes[ifree];
+	let combos = [0; nfree];
 	println("imaxes = ", imaxes);
 
 	for i in [0: size(imaxes,0)]
@@ -278,8 +272,6 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 				xopt = x;
 			}
 		}
-		if nfree == 0
-			break;
 		if not next_combo(&combos, &imaxes)
 			break;
 	}
@@ -306,11 +298,8 @@ fn is_int(x: f32): bool
 fn next_combo(c: &[i32; :], n: &[i32; :]): bool
 {
 	// Bignum += 1 algo for number in array c with mixed radix
-	if size(c,0) == 0
-		return false;
-
-	if all(c == n-1) // last possible combo
-		return false;
+	let nc = size(c,0);
+	if (nc == 0) return false;
 
 	// Find first digit less than n-1
 	let i = 0;
@@ -318,6 +307,7 @@ fn next_combo(c: &[i32; :], n: &[i32; :]): bool
 	{
 		c[i] = 0;
 		i += 1;
+		if (i == nc) return false;
 	}
 	c[i] += 1;
 	return true;
