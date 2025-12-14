@@ -116,7 +116,7 @@ fn transpose_f32(a: [f32; :,:]): [f32; :,:]
 	return t;
 }
 
-fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
+fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 {
 	// This is a crude integer linear programming (ILP) solver
 	//
@@ -142,7 +142,7 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	t[0:m, n] = b;
 
 	// Gaussian elimination to (reduced?) row echelon form
-	let inonz = [-1; m];  // list of first (left-most) non-zero in each row after reduction
+	let inonz = [-1; m];  // list of first (left-most) non-zero index in each row after reduction
 	let ifree = [0; n];   // list of free variables
 	let nfree = 0;
 	let h = 0;
@@ -169,10 +169,9 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 		}
 		else
 		{
-			inonz[h] = k;
 			//println("swapping");
 			//println("imax, h = ", [imax, h]);
-
+			inonz[h] = k;
 			t[[h, imax], :] = t[[imax, h], :];  // swap rows h and imax
 
 			for i in [0: m]  // RREF
@@ -200,17 +199,15 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 
 	// Some of this paranoid 0-size checking may be unnecessary but i was
 	// getting weird crashes before padding x size to n+1 below :(
-	ifree = ifree[0: nfree]; // trim
+	ifree = ifree[0: nfree];  // trim
 	println("nfree = ", nfree);
 	println("ifree = ", ifree);
 
 	let imaxes = [0; n];
 	for j in [0: n]
 	for i in [0: m]
-	{
 		if a[i,j] != 0
-			imaxes[j] = max(imaxes[j], b[i]);
-	}
+			imaxes[j] = max(imaxes[j], b[i]);  // upper bound of search space
 	//println("imaxes (full) = ", imaxes);
 	//println("m, n, max inonz = ", [m, n, maxval(inonz)]);
 
@@ -234,11 +231,11 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			break;
 		}
 
-	let x = [0.0'f32; max(m,n)+1]; // TODO wtf??
+	let x = [0.0'f32; n];
 	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
 	while true
 	{
-		let sumx = sum(1.0'f32 * combos); // initialize sum to free vars only
+		let sumx = sum(1.0'f32 * combos);  // initialize sum to free vars only
 		if sumx < fopt  // fast non-optimal check
 		{
 			let is_valid = true;
@@ -252,8 +249,8 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 			{
 				let k = inonz[i];
 				x[k] = t[i,n];
-				x[k] -= dot(t[i, ifree], x[ifree]); // rref saves math here, shorter sparse dot prod dims
-				x[k] /= t[i, k];
+				x[k] -= dot(t[i, ifree], x[ifree]);  // rref saves math here, shorter sparse dot prod dims
+				x[k] /= t[i,k];
 
 				is_valid = x[k] > -0.0001;
 				if (not is_valid) break;
@@ -278,13 +275,11 @@ fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
 	println("Optimal solution: ", xopt);
 	println("sum(xopt) = ", sum(xopt));
 
-	// TODO: return int vec, careful with rounding. Make helper fn
-
-	// Syntran needs nint!
-	let isum = i32(sum(xopt));
-	if isum < sum(xopt) - 0.5
-		isum += 1;
-	return isum;
+	let iopt = i32(xopt);
+	for i in [0: n]
+		if iopt[i] < xopt[i] - 0.5'f32
+			iopt[i] += 1;
+	return iopt;
 }
 
 fn is_int(x: f32): bool
@@ -340,17 +335,14 @@ fn part2(): str
 		//println("buts = ", buts);
 		println("jlts_goal = ", jlts_goal);
 
-		let isum = ilp_solve(buts, jlts_goal);
-		//exit(0);
+		let iopt = solve_ilp(buts, jlts_goal);
+		sum_ += sum(iopt);
 
 		println("Line: ", iline);
-		println("Optimal value: ", isum);
+		println("Optimal solution: ", iopt);
+		println("Optimal value: ", sum(iopt));
 		println(" ");
 
-		sum_ += isum;
-		//break;
-
-		println();
 		str_ = readln(f);
 	}
 	close(f);
