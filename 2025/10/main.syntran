@@ -1,35 +1,6 @@
 
 #include("../../utils.syntran");
 
-// I had to cheat for part 2 here by looking at the reddit *and* I still just
-// ended up shelling out to scipy
-//
-// Part 2 is an integer programming problem
-//
-// I recently ported scipy's simplex algorithm to Fortran:
-//
-//     https://github.com/JeffIrwin/numerical-analysis/blob/7067e5fe7d331f817c5c9f9cf922b44af7a18aa9/src/linprog.F90
-//
-// That was a grueling experience, and *integer* programming is even more
-// complicated than just *linear* programming.  I'm not looking to repeat it
-//
-// My approach here is that syntran generates the python code to solve the
-// problem, just as an excuse to keep syntran in the loop. Syntran is really
-// only parsing the input for part 2 and scipy does everything else
-//
-// There is a scipy int programming example here:
-//
-//     https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.milp.html
-//
-// In this directory, `test.py` basically follows the scipy doc's example, but
-// modified to solve the first line of AOC's sample/test input. From there, it
-// is easy to iterate over all the inputs and generate similar python code for
-// each input line, and sum it all up
-//
-// Run part 2 like this:
-//
-//     syntran main.syntran && python3 script.py
-
 //==============================================================================
 
 let ifile = 0;
@@ -123,16 +94,307 @@ fn part1(): str
 	return str(sum_);
 }
 
+fn transpose_(a: [i32; :,:]): [i32; :,:]
+{
+	let m = size(a,0);
+	let n = size(a,1);
+	let t = [0; n, m];
+	for i in [0: m]
+	for j in [0: n]
+		t[j,i] = a[i,j];
+	return t;
+}
+
+fn transpose_f32(a: [f32; :,:]): [f32; :,:]
+{
+	let m = size(a,0);
+	let n = size(a,1);
+	let t = [0.0'f32; n, m];
+	for i in [0: m]
+	for j in [0: n]
+		t[j,i] = a[i,j];
+	return t;
+}
+
+fn matmul_vec_(mat: [f32; :,:], vec: [f32; :]): [f32; :]
+{
+	// Matrix-vector multiplication.  Return mat * vec
+	let n = size(mat,0);
+	let ans =  [0.0'f32; n];
+	for     j in [0: size(mat,1)]
+		for i in [0: size(mat,0)]
+			ans[i] = ans[i] + mat[i,j] * vec[j];
+	return ans;
+}
+
+//fn ilp_solve(a: [i32; :,:], b: [i32; :]): [i32; :]
+fn ilp_solve(a: [i32; :,:], b: [i32; :]): i32
+{
+	// This is a crude integer linear programming (ILP) solver
+	//
+	// First, Gaussian elimination is applied to the augmented matrix to make it
+	// row-echelon form.  This reduces the dimension of the search space.
+	//
+	// Then the reduced search space is brute forced over all possible integer
+	// values of free variables, while back-substituting to solve for the other
+	// variables
+	//
+	// Searching could probably be improved with something like the "branch and
+	// bound" algorithm
+	//
+	//**************************************************************************
+
+	println("a init = ", transpose_(a)); // transpose for sane display
+
+	let m = i32(size(a,0));
+	let n = i32(size(a,1));
+
+	// Form augmented matrix tableau
+	//let t = [0; m, n+1];
+	//let t = [0.0'f32; m+1, n+2];
+	let t = [0.0'f32; m, n+1];
+	t[0:m, 0:n] = a;
+	t[0:m, n] = b;
+	//println("t = ", transpose_f32(t));
+
+	// Gaussian elimination to (reduced?) row echelon form
+	let idx = [-1; m];   // save index of first non-zero in row after reduction
+	//let piv = [0: n];   // not used?
+	let ifree = [0; n]; // list of free variables (over-allocated)
+	let nfree = 0;
+	let h = 0;
+	let k = 0;
+	while h < m and k < n
+	{
+		// Find pivot
+		let imax = h;
+		let amax = abs(t[h,k]);
+		for i in [h+1: m]
+			if abs(t[i,k]) > amax
+			{
+				amax = abs(t[i,k]);
+				imax = i;
+			}
+		//println("imax, amax = ", imax, amax);
+
+		//if t[imax,k] == 0.0'f32
+		if abs(t[imax,k]) < 1.e-3
+		{
+			ifree[nfree] = k;
+			nfree += 1;
+			k += 1;
+		}
+		else
+		{
+			idx[h] = k;
+			//println("swapping");
+
+			//println("imax, h = ", [imax, h]);
+
+			// Swap rows h and imax
+			if imax != h
+			{
+				// TODO: guard is need because syntran debug can crash while
+				// swapping row with itself.  Fix in interpretter
+				t[[h, imax], :] = t[[imax, h], :];
+				//piv[[h, imax]] = piv[[imax, h]];
+			}
+
+			//println("reducing");
+			for i in [h+1: m]  // REF. this is probably fine, and more efficient
+			{
+				//if (i == h) continue;
+				let f = t[i,k] / t[h,k];
+				t[i,k] = 0.0'f32;
+				for j in [k+1: n+1]
+					t[i,j] -= t[h,j] * f;
+			}
+			h += 1;
+			k += 1;
+		}
+	}
+	println("t ref = ", transpose_f32(t));
+	println("idx = ", idx);
+	////println("piv = ", piv);
+
+	// Get the rest of the free vars
+	//println("m, n = ", [m, n]);
+	for k in [m: n]
+	{
+		if (any(ifree == k)) continue;
+		ifree[nfree] = k;
+		nfree += 1;
+	}
+	if (nfree > 0) ifree = ifree[0: nfree]; // trim
+	println("nfree = ", nfree);
+	println("ifree = ", ifree);
+
+	////let ixmax = sum(b); // better upper bound?
+	let ixmax = maxval(b);
+	////ixmax = minval(b);
+	////ixmax = (minval(b) + maxval(b)) / 2;
+	//ixmax = 3 * maxval(b) / 4;
+	ixmax = minval(b) + (maxval(b) - minval(b)) / 4;  // too low TODO
+	////println("ixmax = ", ixmax);
+	//println("min, ixmax, max = ", [minval(b), ixmax, maxval(b)]);
+
+	let imaxes = [0; n];
+	for j in [0: n]
+	for i in [0: m]
+	{
+		if a[i,j] != 0
+			imaxes[j] = max(imaxes[j], b[i]);
+	}
+	println("imaxes (full) = ", imaxes);
+	//exit(0);
+
+	// Upper bound is basically maxval(b). However, I think we can modify
+	// next_combo() to take a different upper bound per element, and set them by
+	// analyzing the matrix and rhs
+
+	// TODO: delete all this `fixed` var related code. Not sure why I added it,
+	// it actually causes bugs on real input line 45
+	let nfixed = 0;
+	let ifixed = [0; n];
+	for k in [0: m]
+	{
+		if (any(k == ifree)) continue;
+		if all(abs(t[k,0:n]) < 0.0001)
+		{
+			//ifree[nfree] = k;
+			//nfree += 1;
+			//ifixed[nfixed] = k;
+			//nfixed += 1;
+		}
+	}
+	//ifree = ifree[0: nfree]; // trim
+
+	// Some of this paranoid 0-size checking may be unnecessary but i was
+	// getting weird crashes before padding x size to n+1 below :(
+	if (nfixed > 0) ifixed = ifixed[0: nfixed];
+	println("ifixed = ", ifixed);
+	//println("nfixed = ", nfixed);
+
+	let xopt = [0.0'f32; n];
+	let fopt = 1.e20;
+
+	println("m, n, max idx = ", [m, n, maxval(idx)]);
+
+	// Iterate over possible value combinations of free vars
+	//let combos = [0; ixmax+1];
+	let combos = [0];
+	if (nfree > 0)
+	{
+		imaxes = imaxes[ifree];
+		combos = [0; nfree];
+	}
+	println("imaxes = ", imaxes);
+
+	//imaxes = imaxes * 3 / 4 + 1;
+	for i in [0: n]
+		imaxes[i] = min(imaxes[i], 210);
+
+	println("imaxes = ", imaxes, " (perms = ", product(imaxes), ")");
+	while true
+	{
+		let x = [0.0'f32; max(m,n)+1]; // wtf??
+		//let x = [0.0'f32; n];
+
+		if (nfree > 0) x[ifree] = combos;
+		//println("combos = ", combos);
+		//println("x[ifree] = ", x[ifree]);
+		//println("ifixed = ", ifixed);
+
+		//println("checking fixed");
+		if (nfixed > 0)
+		{
+			x[ifixed] = 0.0;
+		}
+		//println("done checking fixed");
+
+		// Back substitute to solve for the other vars
+		for i in [m-1: -1: -1] // maybe this loop should start at n-1
+		{
+			if (nfixed > 0) if (any(idx[i] == ifixed)) continue;
+			//if (any(idx[i] == ifree)) continue;
+			if (idx[i] < 0) continue;
+			//println("idx[i] = ", idx[i]);
+
+			// TODO: helper var for idx[i]
+			x[idx[i]] = t[i,n];
+			for j in [idx[i]+1: n]
+				x[idx[i]] -= t[i,j] * x[j];
+			x[idx[i]] /= t[i, idx[i]];
+		}
+		//let diff = sum(abs(matmul_vec_(t[:, 0:n], x) - t[:,n]));
+		//println("diff = ", diff);
+		//println("x = ", x);
+		////break;
+		//if (diff > 0.0001)
+		//{
+		//	println("Error: bad linear algebra solve");
+		//	exit(1);
+		//}
+
+		let eps = abs(x) % 1.0;
+		if (all(x >= -0.001))
+		{
+			//println("x = ", x);
+			if (sum(abs(x)) < fopt)
+			{
+				if (all(eps < 0.0001 or eps > 0.9999)) // integer check
+				//if (all(abs(x) % 1.0'f32 < 0.1)) // integer check (not working)
+				//if (all(abs(x) % 1.0'f32 < 0.01)) // integer check
+				{
+					fopt = sum(abs(x));
+					xopt = x;
+				}
+			}
+		}
+
+		if nfree == 0
+			break;
+		if not next_combo(&combos, &imaxes)
+			break;
+	}
+	println("Optimal solution: ", xopt);
+	println("sum(xopt) = ", sum(xopt));
+
+	// Syntran needs nint!
+	let isum = i32(sum(xopt));
+	if isum < sum(xopt) - 0.5
+		isum += 1;
+	return isum;
+
+	//let ix = i32(xopt);
+	//println("ix = ", ix);
+	//return ix;
+	////return i32(xopt);
+}
+
+fn next_combo(c: &[i32; :], n: &[i32; :]): bool
+{
+	// Bignum += 1 algo for number in array c with mixed radix
+	if size(c,0) == 0
+		return false;
+
+	if all(c == n-1) // last possible combo
+		return false;
+
+	// Find first digit less than n-1
+	let i = 0;
+	while c[i] == n[i]-1
+	{
+		c[i] = 0;
+		i += 1;
+	}
+	c[i] += 1;
+	return true;
+}
+
 fn part2(): str
 {
 	let sum_ = 0'i64;
-
-	let fo = open("script.py", "w"); // open generated python script
-
-	writeln(fo, "# This script was generated by AOC 2025 day 10 main.syntran");
-	writeln(fo, "import numpy as np");
-	writeln(fo, "from scipy.optimize import milp, LinearConstraint, Bounds");
-	writeln(fo, "sum_ = 0");
 
 	let f = open(filename, "r");
 	let str_ = readln(f);
@@ -153,51 +415,29 @@ fn part2(): str
 			let but_str = words[ib+1];
 			buts[parse_i32_delim(but_str, "(,)"), ib] = 1;
 		}
+		println("buts = ", buts);
+		println("jlts_goal = ", jlts_goal);
 
-		// Objective function coefficients
-		writeln(fo, "c = np.array(" + str([1; nbuts]) + ")");
+		//let xl = ilp_solve(buts, jlts_goal);
+		let isum = ilp_solve(buts, jlts_goal);
+		//println("xl = ", xl);
+		//exit(0);
 
-		// Constraint matrix and bounds
-		writeln(fo, "A = np.array([");
-		for i in [0: njlts]
-			writeln(fo, "    " + str(buts[i,:]) + ",");
-		writeln(fo, "])");
+		println("Line: ", iline);
+		//println("Optimal solution: ", xl);
+		//println("Optimal value: ", sum(xl));
+		println("Optimal value: ", isum);
+		println(" ");
 
-		writeln(fo, "b_l = " + str(jlts_goal));  // lower bounds
-		writeln(fo, "b_u = " + str(jlts_goal));  // upper bounds
+		sum_ += isum;
+		//break; // TODO
 
-		// Variable bounds
-		writeln(fo, "bounds = Bounds(");
-		writeln(fo, str([0; nbuts]) + ",");
-		writeln(fo, "[" + repeat("np.inf, ", i32(nbuts)) + "]");
-		writeln(fo, ")");
-
-		// Integrality constraints (all variables are integers)
-		writeln(fo, "integrality = " + str([1; nbuts]));
-
-		// Linear constraints
-		writeln(fo, "constraints = LinearConstraint(A, b_l, b_u)");
-
-		// Solve MILP
-		writeln(fo, "result = milp(c=c, integrality=integrality, bounds=bounds, constraints=constraints)");
-
-		//// Display results
-		writeln(fo, "print(""Line:"", " + str(iline) + ")");
-		writeln(fo, "print(""Optimal Solution:"", result.x)");
-		writeln(fo, "print(""Optimal Value:"", result.fun)");
-		writeln(fo, "print()");
-
-		// Add up final AOC answer
-		writeln(fo, "sum_ += result.fun");
-
+		println();
 		str_ = readln(f);
 	}
-	//writeln(fo, "print(""sum = "", sum_)");
-	writeln(fo, "print(""part 2 = "", int(sum_))");
 	close(f);
-	close(fo);
 
-	println("part 2 = `python3 script.py`");
+	println("part 2 = ", sum_);
 	return str(sum_);
 }
 
