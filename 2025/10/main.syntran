@@ -4,7 +4,7 @@
 //==============================================================================
 
 let ifile = 0;
-ifile = 1;
+//ifile = 1;
 
 let filenames =
 [
@@ -185,7 +185,7 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 			k += 1;
 		}
 	}
-	//println("t ref = ", transpose_f32(t));
+	println("t ref = ", transpose_f32(t));
 	println("inonz = ", inonz);
 
 	// Get the rest of the free vars

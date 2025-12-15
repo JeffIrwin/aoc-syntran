@@ -114,27 +114,27 @@ function solve_ilp(a, b) result(iopt)
 	!print *, "m, n = ", m, n
 
 	! Form augmented matrix tableau
-	allocate(t(0:m-1, 0:n))
+	allocate(t(m, n+1))
 	t = 0.0
-	t(:, 0:n-1) = a
-	t(:,   n  ) = b
+	t(:, 1: n  ) = a
+	t(:,    n+1) = b
 
 	! Gaussian elimination to (reduced?) row echelon form
 	!
 	! See part2.syntran or main.syntran for marginally more comments on the same
 	! algorithm
-	allocate(inonz(0:m-1))
+	allocate(inonz(m))
 	inonz = -1
-	allocate(ifree(0:n-1))
+	allocate(ifree(n))
 	ifree = 0
 	nfree = 0
-	h = 0
-	k = 0
-	do while (h < m .and. k < n)
+	h = 1
+	k = 1
+	do while (h <= m .and. k <= n)
 		! Find pivot
-		i1 = maxloc(abs(t(h:m-1, k)))
+		i1 = maxloc(abs(t(h:m, k)))
 		print *, "i1 = ", i1
-		imax = i1(1) + h - 1  ! almost easier to just scan manually
+		imax = i1(1) + h - 1  ! almost easier to just scan manually, like below
 		amax = -1.0
 		if (imax >= 0) amax = abs(t(imax, k))
 		!imax = h
@@ -149,20 +149,20 @@ function solve_ilp(a, b) result(iopt)
 		!print *, "imax, amax = ", imax, amax
 
 		if (amax < 0.0001) then
-			ifree(nfree) = k
 			nfree = nfree + 1
+			ifree(nfree) = k
 			k = k + 1
 		else
 			inonz(h) = k
-			!print *, "swapping ", h, imax
+			print *, "swapping ", h, imax
 			if (h /= imax) t([h, imax], :) = t([imax, h], :)
 
-			do i = 0, m-1  ! RREF
+			do i = 1, m  ! RREF
 				if (i == h) cycle
 				f = t(i,k) / t(h,k)
 				print *, "f = ", f
 				t(i,k) = 0.0
-				t(i, k+1: n) = t(i, k+1: n) - t(h, k+1: n) * f
+				t(i, k+1: n+1) = t(i, k+1: n+1) - t(h, k+1: n+1) * f
 			end do
 
 			h = h + 1
@@ -170,30 +170,31 @@ function solve_ilp(a, b) result(iopt)
 		end if
 	end do
 	print *, "inonz = ", inonz
+	call print_mat_f32("t ref = ", t)
 
 	! Get the rest of the free vars
-	do k = m, n-1
+	do k = m, n
 		if (any(ifree == k)) cycle
 		if (any(inonz == k)) cycle
-		ifree(nfree) = k
 		nfree = nfree + 1
+		ifree(nfree) = k
 	end do
-	ifree = ifree(0: nfree-1)
+	ifree = ifree(1: nfree)
 	print *, "nfree = ", nfree
 	print *, "ifree = ", ifree
 
-	allocate(imaxes(0: n-1))
+	allocate(imaxes(n))
 	imaxes = 0
-	do j = 0, n-1
-	do i = 0, m-1
-		if (a(i+1,j+1) /= 0) then
-			imaxes(j) = max(imaxes(j), b(i+1))
+	do j = 1, n
+	do i = 1, m
+		if (a(i,j) /= 0) then
+			imaxes(j) = max(imaxes(j), b(i))
 		end if
 	end do
 	end do
 	print *, "imaxes (full) = ", imaxes
 
-	allocate(xopt(0: n-1))
+	allocate(xopt(n))
 	xopt = 0.0
 	fopt = huge(fopt)
 	!print *, "fopt = ", fopt
@@ -205,28 +206,31 @@ function solve_ilp(a, b) result(iopt)
 	print *, "imaxes = ", imaxes
 
 	i0 = -1
-	do i = m-1, 0, -1
-		if (inonz(i) >= 0) then
+	do i = m, 1, -1
+		if (inonz(i) >= 1) then
 			i0 = i
 			exit
 		end if
 	end do
+	print *, "i0 = ", i0
 
 	! TODO: zeros(), ones(), etc. fns like matlab would be nice here. I have
 	! most of this implemented with nice overloads in my numerical-analysis repo
-	allocate(x(0: n-1))
+	allocate(x(n))
 	x = 0.0
 	do
 		sumx = sum(1.0 * combos)
+		!print *, "combos = ", combos
 		if (sumx < fopt) then
 			is_valid = .true.
 			x = 0.0
 			x(ifree) = combos
 
 			! Back substitute to solve for the other vars
-			do i = i0, 0, -1
+			do i = i0, 1, -1
 				k = inonz(i)
-				x(k) = t(i,n)
+				!print *, "k = ", k
+				x(k) = t(i,n+1)
 				x(k) = x(k) - dot_product(t(i, ifree), x(ifree))
 				x(k) = x(k) / t(i,k)
 
@@ -250,6 +254,7 @@ function solve_ilp(a, b) result(iopt)
 		if (.not. next_combo(combos, imaxes)) exit
 	end do
 	iopt = nint(xopt)
+	!stop
 
 end function solve_ilp
 
