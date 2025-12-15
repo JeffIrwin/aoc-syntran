@@ -105,7 +105,6 @@ fn transpose_(a: [i32; :,:]): [i32; :,:]
 	return t;
 }
 
-// TODO: remove unused fns for reddit
 fn transpose_f32(a: [f32; :,:]): [f32; :,:]
 {
 	let m = size(a,0);
@@ -217,8 +216,8 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 	let combos = [0; nfree];
 	println("imaxes = ", imaxes);
 
-	//// TODO: remove. This hack was useful for development, but it only saves 1
-	//// minute (2 vs 3) now with other optimizations
+	//// This hack was useful for development, but it only saves 1 minute (2 vs 3)
+	//// now with other optimizations
 	//for i in [0: size(imaxes,0)]
 	//	imaxes[i] = min(imaxes[i], 210);
 
