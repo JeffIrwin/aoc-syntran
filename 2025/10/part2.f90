@@ -63,11 +63,11 @@ subroutine print_mat_f32(msg, a)
 	real, intent(in) :: a(:,:)
 	!********
 	integer :: i, j, m, n
-	m = ubound(a,1)-1
-	n = ubound(a,2)-1
+	m = size(a,1)
+	n = size(a,2)
 	print "(a)", " " // msg
-	do i = lbound(a,1), m+1
-		do j = lbound(a,2), n+1
+	do i = 1, m
+		do j = 1, n
 			write(*, "(es11.3)", advance = "no") a(i,j)
 		end do
 		print *, ""
@@ -85,11 +85,11 @@ subroutine print_mat_i32(msg, a)
 	integer, intent(in) :: a(:,:)
 	!********
 	integer :: i, j, m, n
-	m = ubound(a,1)-1
-	n = ubound(a,2)-1
+	m = size(a,1)
+	n = size(a,2)
 	print "(a)", " " // msg
-	do i = lbound(a,1), m+1
-		do j = lbound(a,2), n+1
+	do i = 1, m
+		do j = 1, n
 			write(*, "(i6)", advance = "no") a(i,j)
 		end do
 		print *, ""
@@ -109,8 +109,8 @@ function solve_ilp(a, b) result(iopt)
 	real :: amax, f, fopt, sumx
 	real, allocatable :: t(:,:), xopt(:), x(:)
 
-	m = ubound(a,1)
-	n = ubound(a,2)
+	m = size(a,1)
+	n = size(a,2)
 	!print *, "m, n = ", m, n
 
 	! Form augmented matrix tableau
@@ -119,7 +119,7 @@ function solve_ilp(a, b) result(iopt)
 	t(:, 1: n  ) = a
 	t(:,    n+1) = b
 
-	! Gaussian elimination to (reduced?) row echelon form
+	! Gaussian elimination to reduced row echelon form
 	!
 	! See part2.syntran or main.syntran for marginally more comments on the same
 	! algorithm
@@ -136,7 +136,7 @@ function solve_ilp(a, b) result(iopt)
 		print *, "i1 = ", i1
 		imax = i1(1) + h - 1  ! almost easier to just scan manually, like below
 		amax = -1.0
-		if (imax >= 0) amax = abs(t(imax, k))
+		if (imax >= 1) amax = abs(t(imax, k))
 		!imax = h
 		!amax = abs(t(h,k))
 		!do i = h+1, m-1
@@ -154,7 +154,7 @@ function solve_ilp(a, b) result(iopt)
 			k = k + 1
 		else
 			inonz(h) = k
-			print *, "swapping ", h, imax
+			!print *, "swapping ", h, imax
 			if (h /= imax) t([h, imax], :) = t([imax, h], :)
 
 			do i = 1, m  ! RREF
@@ -170,7 +170,7 @@ function solve_ilp(a, b) result(iopt)
 		end if
 	end do
 	print *, "inonz = ", inonz
-	call print_mat_f32("t ref = ", t)
+	!call print_mat_f32("t ref = ", t)
 
 	! Get the rest of the free vars
 	do k = m, n
@@ -181,7 +181,7 @@ function solve_ilp(a, b) result(iopt)
 	end do
 	ifree = ifree(1: nfree)
 	print *, "nfree = ", nfree
-	print *, "ifree = ", ifree
+	!print *, "ifree = ", ifree
 
 	allocate(imaxes(n))
 	imaxes = 0
@@ -192,7 +192,7 @@ function solve_ilp(a, b) result(iopt)
 		end if
 	end do
 	end do
-	print *, "imaxes (full) = ", imaxes
+	!print *, "imaxes (full) = ", imaxes
 
 	allocate(xopt(n))
 	xopt = 0.0
@@ -203,7 +203,7 @@ function solve_ilp(a, b) result(iopt)
 	imaxes = imaxes(ifree)
 	allocate(combos(nfree))
 	combos = 0
-	print *, "imaxes = ", imaxes
+	!print *, "imaxes = ", imaxes
 
 	i0 = -1
 	do i = m, 1, -1
@@ -212,7 +212,7 @@ function solve_ilp(a, b) result(iopt)
 			exit
 		end if
 	end do
-	print *, "i0 = ", i0
+	!print *, "i0 = ", i0
 
 	! TODO: zeros(), ones(), etc. fns like matlab would be nice here. I have
 	! most of this implemented with nice overloads in my numerical-analysis repo
@@ -230,7 +230,7 @@ function solve_ilp(a, b) result(iopt)
 			do i = i0, 1, -1
 				k = inonz(i)
 				!print *, "k = ", k
-				x(k) = t(i,n+1)
+				x(k) = t(i, n+1)
 				x(k) = x(k) - dot_product(t(i, ifree), x(ifree))
 				x(k) = x(k) / t(i,k)
 
@@ -254,7 +254,6 @@ function solve_ilp(a, b) result(iopt)
 		if (.not. next_combo(combos, imaxes)) exit
 	end do
 	iopt = nint(xopt)
-	!stop
 
 end function solve_ilp
 
