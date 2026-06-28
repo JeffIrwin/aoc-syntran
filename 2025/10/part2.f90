@@ -311,7 +311,13 @@ program main
 		if (io /= 0) exit
 		print *, "str_ = ", str_
 
-		! TODO: I need to port my str split_() fn to Fortran
+		! TODO: I need to port my str split_() fn to Fortran. Actually it's
+		! already in ribbit, along with better read_line, string builder, string
+		! vec types, etc.
+		!
+		! Also take hashmap and maybe other stuff from vi-codin. Then I'll have
+		! a pretty good set of utils to do AOC in Fortran again
+
 		i0 = scan(str_, "{") + 1
 		i1 = scan(str_, "}") - 1
 		jolts_str = str_(i0: i1)

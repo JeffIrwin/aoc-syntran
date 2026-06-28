@@ -101,6 +101,7 @@ fn trans_(b: [bool; :,:], i: i32): [bool; :,:]
 	if (i == 5) return fliplr_(transpose_(b));  // rot 270 ccw
 	if (i == 6) return flipud_(transpose_(b));  // rot 90 ccw
 	if (i == 7) return fliplr_(flipud_(transpose_(b))); // other diagonal mirror
+	return b; // default
 }
 
 fn part1(): str

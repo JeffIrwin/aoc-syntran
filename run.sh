@@ -3,9 +3,13 @@
 # Go to every sub dir and run the subdir script
 
 #set -exu
-set -eu
+#set -eu
+set -x
 
 echo "starting top-level run.sh"
+
+## TODO: try both backends, diff, compare runtime
+#export SYNTRAN_BACKEND=ast
 
 dirs=$( \
 	find . -maxdepth 1 -name "2*" -type d -printf '%P\n' \

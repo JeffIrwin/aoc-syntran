@@ -33,11 +33,6 @@ fn shuffle_str_2(a: &[str; :,:], seed: i32)
 	return;
 }
 
-fn is_lower(char_: str): bool
-{
-	return i32("a") <= i32(char_) and i32(char_) <= i32("z");
-}
-
 fn part1(): str
 {
 	let sum_ = 0'i64;

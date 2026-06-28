@@ -179,6 +179,7 @@ fn run_activation_system(magic_number: i32, is_part_1: bool): i32
 				a /= 256;
 		}
 	}
+	return -1; // unreachable
 }
 
 fn part12(): str
