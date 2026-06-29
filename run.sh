@@ -8,7 +8,11 @@ set -x
 
 echo "starting top-level run.sh"
 
-## TODO: try both backends, diff, compare runtime
+# Try both backends, diff, compare runtime
+#
+#   - 31m12s for bytecode, commit f1b1e02b
+#   - 45m51s for ast
+#
 #export SYNTRAN_BACKEND=ast
 
 dirs=$( \

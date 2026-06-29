@@ -15,7 +15,6 @@ dirs=$( \
 for dir in ${dirs[@]} ; do
 	pushd "$dir" >/dev/null
 
-	pwd
 	main=main.syntran
 	grep 'Expect' "$main" | tr -d '\t'
 
