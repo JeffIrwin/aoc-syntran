@@ -40,16 +40,9 @@ cp template.syntran $1/main.syntran
 
 pushd $1
 
-# The cookies text file can be downloaded via firefox addin "cookies.txt"
-#
-# To save cookies, click the puzzle-shaped icon in the top-right of Firefox to
-# access your extensions.  Then click on cookies.txt and "open extension" and
-# finally "current site" (or "ALL").  Take whichever file gets exported for AOC
-# and copy it to "~/cookies.txt", which is where the curl command below expects
-# to find your cookies
-#
-# There are built-in browser features that can probably do this more easily
-#
+# To get the cookie in chrome, login to AOC -> F12 -> Application tab -> Cookies
+# -> (expand Cookies) -> copy the "value" from the "session" row -> replace just
+# the one long hex string in ~/cookies.txt
 curl --cookie ~/cookies.txt https://adventofcode.com/${year}/day/${day}/input -o input.txt
 
 popd

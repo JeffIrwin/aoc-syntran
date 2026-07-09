@@ -7,10 +7,7 @@ set -eu
 
 echo "starting run.sh"
 
-dirs=$( \
-	find . -type d -printf '%P\n' \
-	| sort -g\
-)
+dirs=$(ls | grep '^[0-9]' | sort -g)
 
 for dir in ${dirs[@]} ; do
 

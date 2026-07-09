@@ -15,10 +15,11 @@ echo "starting top-level run.sh"
 #
 #export SYNTRAN_BACKEND=ast
 
-dirs=$( \
-	find . -maxdepth 1 -name "2*" -type d -printf '%P\n' \
-	| sort -g\
-)
+dirs=$(ls | grep '^2' | sort -g)
+#dirs=$( \
+#	find . -maxdepth 1 -name "2*" -type d -printf '%P\n' \
+#	| sort -g\
+#)
 
 for dir in ${dirs[@]} ; do
 

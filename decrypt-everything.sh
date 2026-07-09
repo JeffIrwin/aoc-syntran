@@ -10,10 +10,11 @@ set +x
 
 echo "starting top-level decrypt-everything.sh"
 
-year_dirs=$( \
-	find . -maxdepth 1 -name "2*" -type d -printf '%P\n' \
-	| sort -g\
-)
+year_dirs=$(ls | grep '^2' | sort -g)
+#year_dirs=$( \
+#	find . -maxdepth 1 -name "2*" -type d -printf '%P\n' \
+#	| sort -g\
+#)
 
 for year_dir in ${year_dirs[@]} ; do
 
@@ -21,10 +22,11 @@ for year_dir in ${year_dirs[@]} ; do
 
 	pushd "$year_dir" >/dev/null
 
-	day_dirs=$( \
-		find . -type d -printf '%P\n' \
-		| sort -g\
-	)
+	day_dirs=$(ls | grep '^[0-9]' | sort -g)
+	#day_dirs=$( \
+	#	find . -type d -printf '%P\n' \
+	#	| sort -g\
+	#)
 	
 	for day_dir in ${day_dirs[@]} ; do
 	
