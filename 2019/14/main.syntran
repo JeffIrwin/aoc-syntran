@@ -1,0 +1,206 @@
+
+// TODO: update template for new dict module
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+//#include("../../dict_i64.syntran");
+
+//==============================================================================
+
+let ifile = 0;
+ifile = 1;
+
+let filenames =
+[
+	//"test-input.txt",
+	//"test-input1.txt",
+	"test-input2.txt",
+	//"test-input3.txt",
+	"input.txt"
+];
+let filename = filenames[ifile];
+
+//==============================================================================
+
+fn part1(): str
+{
+	let p1 = str(calculate_ore(1'i64));
+	println("p1 = ", p1);
+	return p1;
+}
+
+fn calculate_ore(num_fuel: i64): i64
+{
+	let sum_ = 0'i64;
+
+	let map = dict_str::new();
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let sides = split_(str_, "=>");
+		println("sides = ", sides);
+
+		let lhs = sides[0];
+		let rhs = sides[1];
+
+		let words = split_(rhs, " ");
+		let n = words[0];
+		let chem = words[1];
+		println("n, chem = ", [n, chem]);
+
+		// To solve, we will start with FUEL and work backwards to ORE, so make
+		// an inverse map backwards from rhs keys to lhs vals instead of a
+		// forward map
+		map.set(chem, n + ": " + lhs);
+
+		println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	map.print("map = ");
+
+	println("FUEL line = ", map.get("FUEL"));
+
+	// Put 1 fuel in our inventory stock and then process that stock until we're
+	// empty of all but ore
+	let stock = dict_i64::new();
+	stock.set("FUEL", -num_fuel);
+	while true
+	{
+		let all_ore = true;
+		for i in [0: stock.cap]
+		{
+			// Might want a better way to iterate on hashmap keys?
+			if (not stock.used[i]) continue;
+			let chem = stock.keys[i];
+			let n = stock.vals[i];
+			if (n >= 0) continue;
+			if (chem == "ORE") continue;  // ORE cannot be broken down further
+			all_ore = false;
+
+			// Get the formula for this chem
+			let formula = map.get(chem);
+
+			let words = split_(formula, ":");
+			let nrhs = parse_i32(words[0]);
+			words = split_(words[1], ",");
+
+			// The formula gives us `nrhs` of chem and we need `n` of chem, so we
+			// have to apply the formula nform = ceiling(n / nrhs) times
+			let nform = abs(n) / nrhs;
+			if (abs(n) % nrhs != 0) nform += 1;
+			//println("nform = ", nform);
+			//nform = 1;
+
+			// Increment the count of this chem -- we're assembling it here
+			stock.set(chem, stock.get(chem) + nrhs * nform);
+
+			for word in words
+			{
+				let words = split_(word, " "); // shadow
+				//println("    words = ", words);
+
+				let ninc = nform * parse_i32(words[0]);
+				//let ninc = parse_i32(words[0]);
+				if (stock.contains(words[1]))
+					stock.set(words[1], stock.get(words[1]) - ninc);
+				else
+					stock.set(words[1], -i64(ninc));
+			}
+			//println();
+		}
+		if (all_ore) break;
+	}
+
+	// Negative because we've decremented all the ore that we *need*
+	println("ORE = ", stock.get("ORE"));
+	sum_ = -stock.get("ORE");
+	//println("part 1 = ", sum_);
+	return sum_;
+}
+
+fn part2(): str
+{
+	let sum_ = 0'i64;
+	// #part 1:
+	// one_fuel = calculate_ore(1)
+	// print(one_fuel)
+	// 
+	// #part 2:
+	// print(int(int(1000000000000 / one_fuel)*(1000000000000 / calculate_ore(int(1000000000000 / one_fuel)))))
+
+	let factor = 1.0e12;
+	//factor     = 1.0e16;
+
+	//let one_fuel = calculate_ore(1'i64);
+	//let sum_ = i64(i64(factor / one_fuel)*(factor / calculate_ore(i64(factor / one_fuel))));
+	////let sum_ = 0'i64;
+
+	//triedfuels = []
+	//tryfuel = int(1000000000000 / ore_for_one_fuel)
+	//a = 0
+	//while a == False:
+	//    tried = calculate_ore(tryfuel)
+	//    if tried not in triedfuels:
+	//        triedfuels.append(tried)
+	//    elif tried <= 1000000000000 and tried in triedfuels:
+	//        print(int(tryfuel))
+	//        break
+	//    test = 1000000000000 / tried
+	//    tryfuel *= test
+
+	let ore_for_one_fuel = calculate_ore(1'i64);
+	let tryfuel = i64(factor / ore_for_one_fuel);
+	let triedfuels = dict_i64::new();
+	let a = 0;
+	while true
+	{
+		// calculate_ore() re-reads the whole input file on every iterations,
+		// constructs maps, etc. Not ideal but still runs real input in 0.25
+		// seconds
+		let tried = calculate_ore(tryfuel);
+		if not triedfuels.contains(str(tried))
+			triedfuels.set(str(tried), 1'i64);
+		else if tried <= factor
+		{
+			println("tryfuel = ", tryfuel);
+			sum_ = tryfuel;
+			break;
+		}
+		let test = factor / tried;
+		tryfuel *= test;
+	}
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println("Starting AOC syntran main 2025/14");
+
+	let p1 = ""; let p2 = "";
+
+	// Expect 178154:6226152
+	p1 = part1();
+	p2 = part2();
+
+	println("Ending AOC syntran main");
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
