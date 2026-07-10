@@ -32,26 +32,14 @@ fn part1(): str
 		let out = "";
 		for itr in [0: N]
 		{
-			//println("itr = ", itr);
-
 			let digit = 0;
-			//const N = 12;
-			//let pattern = [0; N];
 			for i in [1: N+1]
 			{
 				let p = PATTERN[i/(itr+1) % NP];
-				//pattern[i-1] = PATTERN[i/(itr+1) % NP];
-				//pattern[i] = PATTERN[i/(itr+1) % NP];
-				//pattern[i] = PATTERN[(i/(itr+1) + 1) % NP];
 				digit += p * parse_i32(str_[i-1]);
 			}
-			//digit %= 10;
 			digit = abs(digit % 10);
-			//digit = pmod(digit, 10);
 			out += str(digit);
-
-			//println("pattern = ", pattern);
-			//println();
 		}
 		//println("out = ", out);
 		str_ = out;
@@ -65,30 +53,11 @@ fn part2(): str
 {
 	// 22 minute runtime :(
 
-	//// python solution from le reddit
-	////
-	//// claude may have turned my brain to mush over the last six months, but i
-	//// cheated here the OLD FASHIONED WAY by GOOGLING and copying CODE from
-	//// REDDIT and PORTING IT MANUALLY into a REAL LANGUAGE
-	////
-	// h = open("C:/Projecten/d16.txt").read()*10000
-	// i = (h[int(h[0:7]):])
-	// for a in range(100):
-	//     print(a)
-	//     string = '' 
-	//     e = 0
-	//     while e < len(i):
-	//         if e == 0:
-	//             total = 0
-	//             for f in i:
-	//                 total += int(f)
-	//         elif e > 0:
-	//             total -= int(i[e-1])
-	//         string += str(total)[-1]
-	//         e+=1
-	//     i = string
-	// print(i[0:8])           
-	// #23752579
+	// stolen from python solution from le reddit
+	//
+	// claude may have turned my brain to mush over the last six months, but i
+	// cheated here the OLD FASHIONED WAY by GOOGLING and copying CODE from
+	// REDDIT and PORTING IT MANUALLY into a REAL LANGUAGE
 
 	let f = open(filename, "r");
 	let h = readln(f);
@@ -121,53 +90,6 @@ fn part2(): str
 	return i[0:8];
 }
 
-fn part2jank(): str
-{
-	let f = open(filename, "r");
-	let str_ = readln(f);
-	str_ = repeat(str_, 10_000);
-	//println("str_ = ", str_);
-	close(f);
-
-	const PATTERN = [0, 1, 0, -1];
-	const NP = size(PATTERN);
-	const N = len(str_);
-
-	for phase in [0: 100]//4]
-	{
-		println("phase = ", phase);
-		let out = str_;
-		for itr in [0: N]
-		{
-			//println("itr = ", itr);
-
-			let digit = 0;
-			//const N = 12;
-			//let pattern = [0; N];
-			for i in [1: N+1]
-			{
-				let p = PATTERN[i/(itr+1) % NP];
-				//pattern[i-1] = PATTERN[i/(itr+1) % NP];
-				//pattern[i] = PATTERN[i/(itr+1) % NP];
-				//pattern[i] = PATTERN[(i/(itr+1) + 1) % NP];
-				digit += p * parse_i32(str_[i-1]);
-			}
-			//digit %= 10;
-			digit = abs(digit % 10);
-			//digit = pmod(digit, 10);
-			out[itr] = str(digit);
-
-			//println("pattern = ", pattern);
-			//println();
-		}
-		//println("out = ", out);
-		str_ = out;
-	}
-	let ans_ = str_[0:8];
-	println("part 2 = ", ans_);
-	return ans_;
-}
-
 //==============================================================================
 
 fn main(): str
@@ -179,7 +101,7 @@ fn main(): str
 
 	let p1 = ""; let p2 = "";
 
-	//p1 = part1();
+	p1 = part1();
 	p2 = part2();
 
 	println("Ending AOC syntran main");
