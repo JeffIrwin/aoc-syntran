@@ -1,5 +1,5 @@
 
-// TODO: update template for new dict module
+// TODO: add cmd args to control input file, assertion of expected results, etc.
 use ../../utils::*;
 use ../../dict_i64_2026 as dict_i64;
 use ../../dict_str_2026 as dict_str;
