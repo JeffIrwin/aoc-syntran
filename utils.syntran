@@ -9,9 +9,22 @@
 
 //==============================================================================
 
-let digit_chars = "0123456789";
-let hex_chars = digit_chars + "abcdef";
-let NEWLINE_ = char(10);
+const digit_chars = "0123456789";
+const hex_chars = digit_chars + "abcdef";
+const NEWLINE_ = char(10);
+
+// I'm considering making these syntran std:: consts. Need to be careful, most
+// of these are also bold but boldness and color should be independent
+const ESC = char(27);
+const BOLD    = ESC + "[;1m";
+const RED     = ESC + "[1;31m";
+const GREEN   = ESC + "[1;32m";
+const YELLOW  = ESC + "[1;33m";
+const MAGENTA = ESC + "[1;35m";
+const RESET   = ESC + "[0m";
+
+const WARN_STR  = YELLOW + "Warning" + RESET + ": ";
+const ERROR_STR = RED    + "Error"   + RESET + ": ";
 
 //==============================================================================
 

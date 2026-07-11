@@ -1,27 +1,91 @@
 
-// TODO: add cmd args to control input file, assertion of expected results, etc.
 use ../../utils::*;
 //use ../../dict_i64_2026 as dict_i64;
 
 //==============================================================================
 
-let ifile = 0;
-//ifile = 1;
+struct Args
+{
+	test  : bool,
+	assert: bool,
+	part1 : bool,
+	part2 : bool,
+	help  : bool,
 
-let filenames =
-[
-	"test-input.txt",
-	"input.txt"
-];
-let filename = filenames[ifile];
+	has_input_filename: bool,
+	input_filename: str,
+}
 
-//==============================================================================
+// TODO: arg parser implementation and maybe the assertion coda from main should
+fn parse_args(): Args
+{
+	// Parse the command line arguments
+	//
+	// Based on https://github.com/JeffIrwin/aoc-fortran/blob/12830bb004a5e70d20d55d455a5077050488cfff/src/args.F90#L48
+	let args = std::args();
+	let nargs = size(args);
 
-fn part1(): str
+	let a = Args{test=false, assert=false, part1=false, part2=false,
+		help=false, has_input_filename=false, input_filename="input.txt",
+	};
+
+	let i = 0;
+	let ipos = 0; // positional arg index -- unused
+	while i < nargs
+	{
+		let arg = args[i];
+		if any(arg == ["-h", "--help", "-help"])
+			a.help = true;
+		else if arg == "-t" or arg == "--test"
+		{
+			a.test = true;
+			if not a.has_input_filename
+				a.input_filename = "test-input.txt";
+		}
+		else if arg == "-a" or arg == "--assert"
+			a.assert = true;
+		else if arg == "-1" or arg == "--part1"
+			a.part1 = true;
+		else if arg == "-2" or arg == "--part2"
+			a.part2 = true;
+		else if arg == "-i" or arg == "--input"
+		{
+			i += 1;
+			// TODO: error if i >= nargs ? I think my Fortran parser fails to
+			// enforce this as well
+			a.has_input_filename = true;
+			a.input_filename = args[i];
+		}
+		else
+			println(WARN_STR + "bad command argument """, arg, """");
+		i += 1;
+	}
+
+	if a.help
+	{
+	 	println(BOLD + "Usage:" + RESET);
+	 	println("    syntran main.syntran -- -h | --help");
+	 	println("    syntran main.syntran -- [-1 | --part1] [-2 | --part2]");
+	 	println("    syntran main.syntran -- [-t | --test] [(-i|--input) file.txt]");
+	 	println("    syntran main.syntran -- -a | --assert");
+	 	println();
+	 	println(BOLD + "Options:" + RESET);
+	 	println("    --help        Show this help");
+	 	println("    --part1       Run part 1 only. Default both parts");
+	 	println("    --part2       Run part 2 only");
+	 	println("    --test        Use test-input.txt instead of input.txt");
+	 	println("    --input       Input data filename");
+	 	println("    --assert      Abort if results do not match expected answers");
+		exit(0);
+	}
+	return a;
+}
+
+fn part1(args: &const Args): str
 {
 	let sum_ = 0'i64;
 
-	let f = open(filename, "r");
+	let f = open(args.input_filename, "r");
 	let str_ = readln(f);
 	while not eof(f)
 	{
@@ -42,14 +106,44 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2025/xx");
+	println(MAGENTA + "Starting AOC syntran main 2025/xx" + RESET);
+	let args = parse_args();
+	let do_p1 = true;
+	let do_p2 = true;
+	if (args.part1 and not args.part2) do_p2 = false;
+	if (args.part2 and not args.part1) do_p1 = false;
 
 	let p1 = ""; let p2 = "";
 
-	p1 = part1();
-	//p2 = part2();
+	if (do_p1) p1 = part1(&args);
+	//if (do_p2) p2 = part2(&args);
 
-	println("Ending AOC syntran main");
+	if args.assert
+	{
+		let error = false;
+		let expect1 = "REPLACE_ME";
+		let expect2 = "REPLACE_ME";
+		if args.test
+		{
+			expect1 = "REPLACE_ME";
+			expect2 = "REPLACE_ME";
+		}
+
+		if do_p1 and p1 != expect1
+		{
+			println(ERROR_STR + "wrong part 1 answer.  Got """ +
+				p1 + """, expected """ + expect1 + """");
+			error = true;
+		}
+		if do_p2 and p2 != expect2
+		{
+			println(ERROR_STR + "wrong part 2 answer.  Got """ +
+				p2 + """, expected """ + expect2 + """");
+			error = true;
+		}
+		if (error) exit(1);
+	}
+	println(GREEN + "Ending AOC syntran main" + RESET);
 	println();
 	return p1 + ":" + p2;
 }
