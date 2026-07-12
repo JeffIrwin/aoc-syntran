@@ -1626,3 +1626,17 @@ fn readlns_(filename: str): [str; :]
 
 //==============================================================================
 
+fn count_set_bits(n: i32): i32
+{
+	// Kernighan's algorithm, O(set bits)
+	let count = 0;
+	while n > 0
+	{
+		n &= (n - 1);  // clears the lowest set bit
+		count += 1;
+	}
+	return count;
+}
+
+//==============================================================================
+

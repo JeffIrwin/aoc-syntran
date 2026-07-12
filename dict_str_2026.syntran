@@ -94,7 +94,6 @@ struct dict_str
 		return n;
 	}
 
-	// TODO: add print to dict_i64
 	const fn print(msg: str)
 	{
 		println(msg);
@@ -105,6 +104,19 @@ struct dict_str
 			println("    """, keys[i], """: """, vals[i], """");
 		}
 		println("}");
+	}
+
+	const fn get_keys(): [str; :]
+	{
+		let k = [""; n];
+		let j = 0;
+		for i in [0: cap]
+		{
+			if (not used[i]) continue;
+			k[j] = keys[i];
+			j += 1;
+		}
+		return k;
 	}
 }
 

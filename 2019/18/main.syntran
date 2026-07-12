@@ -1,0 +1,385 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+use ../../queue_vec_i32;
+use ../../minheap_vec_i32::*;
+// TODO: need a 2026 minheap with methods
+
+//==============================================================================
+
+struct Args
+{
+	test  : bool,
+	assert: bool,
+	part1 : bool,
+	part2 : bool,
+	help  : bool,
+
+	has_input_filename: bool,
+	input_filename: str,
+}
+
+// TODO: arg parser implementation and maybe the assertion coda from main should
+// be moved into utils
+fn parse_args(): Args
+{
+	// Parse the command line arguments
+	//
+	// Based on https://github.com/JeffIrwin/aoc-fortran/blob/12830bb004a5e70d20d55d455a5077050488cfff/src/args.F90#L48
+	let args = std::args();
+	let nargs = size(args);
+
+	let a = Args{test=false, assert=false, part1=false, part2=false,
+		help=false, has_input_filename=false, input_filename="input.txt",
+	};
+
+	let i = 0;
+	let ipos = 0; // positional arg index -- unused
+	while i < nargs
+	{
+		let arg = args[i];
+		if any(arg == ["-h", "--help", "-help"])
+			a.help = true;
+		else if arg == "-t" or arg == "--test"
+		{
+			a.test = true;
+			if not a.has_input_filename
+				a.input_filename = "test-input.txt";
+		}
+		else if arg == "-a" or arg == "--assert"
+			a.assert = true;
+		else if arg == "-1" or arg == "--part1"
+			a.part1 = true;
+		else if arg == "-2" or arg == "--part2"
+			a.part2 = true;
+		else if arg == "-i" or arg == "--input"
+		{
+			i += 1;
+			// TODO: error if i >= nargs ? I think my Fortran parser fails to
+			// enforce this as well
+			a.has_input_filename = true;
+			a.input_filename = args[i];
+		}
+		else
+			println(WARN_STR + "bad command argument """, arg, """");
+		i += 1;
+	}
+
+	if a.help
+	{
+		println(BOLD + "Usage:" + RESET);
+		println("    syntran main.syntran -- -h | --help");
+		println("    syntran main.syntran -- [-1 | --part1] [-2 | --part2]");
+		println("    syntran main.syntran -- [-t | --test] [(-i|--input) file.txt]");
+		println("    syntran main.syntran -- -a | --assert");
+		println();
+		println(BOLD + "Options:" + RESET);
+		println("    --help        Show this help");
+		println("    --part1       Run part 1 only. Default both parts");
+		println("    --part2       Run part 2 only");
+		println("    --test        Use test-input.txt instead of input.txt");
+		println("    --input       Input data filename");
+		println("    --assert      Abort if results do not match expected answers");
+		exit(0);
+	}
+	return a;
+}
+
+let ALL_SET = 0;
+
+fn part1(args: &const Args): str
+{
+	// 30 minute runtime :(
+	let sum_ = 0;
+
+	let g = read_char_mat(args.input_filename);
+	println("g = ");
+	print_char_mat(&g);
+	const NX = size(g,0);
+	const NY = size(g,1);
+
+	// Save positions of key points
+	//
+	// TODO: vector dict would be useful here to avoid str/int conversion
+	let pos = dict_str::new();
+	for y in [0: NY]
+	for x in [0: NX]
+	{
+		let c = g[x,y];
+		if (c == ".") continue;
+		if (c == "#") continue;
+		pos.set(c, str(x, ",", y));
+	}
+	pos.print("pos = ");
+
+	let keys = pos.get_keys();
+	println("keys = ", keys);
+
+	// Get the number of actual "keys" per the puzzle description, not doors,
+	// not counting keys in the dict sense
+	//
+	// Assume no alphabetical gaps in keys. Not necessarily every key has a
+	// door, at least in test inputs, but we still have to collect all keys
+	let nkey = 0;
+	for i in [0: 26]
+		if pos.contains(char(i32("a") + i))
+			nkey += 1;
+	println("nkey = ", nkey);
+
+	let key_str = [""; nkey];
+	nkey = 0;
+	for i in [0: 26]
+		if pos.contains(char(i32("a") + i))
+		{
+			key_str[nkey] = char(i32("a") + i);
+			nkey += 1;
+		}
+	println("key_str = ", key_str);
+
+	// Build a graph of all keys, doors, and starting position
+	let adj = dict_str::new();
+	let dis = dict_i64::new();
+	for c0 in keys
+	{
+		println("c0 = ", c0);
+		let xy = parse_i32_delim(pos.get(c0), ",");
+		println("xy = ", xy);
+
+		// BFS from c0 at xy -- find all immediate neighbors
+		let q = queue_vec_i32::new();
+		q.push([0, xy[0], xy[1]]);
+		let seen = [false; NX, NY];
+		let nbrs = "";
+		while true
+		{
+			if (q.is_empty) break;
+			let u = q.pop();
+			let d = u[0];
+			let x = u[1];
+			let y = u[2];
+			let c = g[x,y];
+			if c != "#" and c != "." and c != c0
+			{
+				// Found a neighbor
+				nbrs = nbrs + c + ",";  // csv
+				dis.set(c0 + "," + c, i64(d));
+				dis.set(c + "," + c0, i64(d));
+				continue;
+			}
+			for vy in [y-1: y+2]
+			for vx in [x-1: x+2]
+			{
+				if (sum(abs([vx,vy] - [x,y])) > 1) continue; // diagonal
+				if (vx < 0) continue; // bounds
+				if (vy < 0) continue;
+				if (vx >= NX) continue;
+				if (vy >= NY) continue;
+				let c = g[vx, vy];
+				if (c == "#") continue; // wall
+				let v = [d+1, vx, vy];
+				let sv = str(vx, ",", vy);
+				if seen[vx,vy] continue;
+				seen[vx,vy] = true;
+				q.push(v);
+			}
+		}
+		println("nbrs = ", nbrs);
+		adj.set(c0, nbrs);
+
+		println();
+	}
+	adj.print("adj = ");
+	dis.print("dis = ");
+
+	for i in [0: nkey]
+		ALL_SET |= (1 << i);
+	println("ALL_SET = ", ALL_SET);
+
+	// Dijkstra on dense grid with position and keymask as state
+	println("-------------------------");
+	println("Starting Dijkstra");
+	let max_keys = 0;
+	let pi = pos.get("@");
+	let xi = parse_i32_delim(pi, ",");
+	let q = new_minheap_vec_i32();
+	push_minheap_vec_i32(&q, [[0], xi, [0]]); // heap of dist, pos, and key state
+	let seen = dict_i64::new();
+	seen.set(str(q.vals[:,0]), 1'i64);
+	while true
+	{
+		if (q.len <= 0)  // path is blocked
+		{
+			println("Error: BFS queue is empty");
+			exit(3);
+		}
+		let u = pop_minheap_vec_i32(&q);
+		let d  = u[0]; // unpack distance
+		let x  = u[1]; // unpack position
+		let y  = u[2];
+		let ks = u[3]; // key mask state
+
+		if is_lower(g[x,y])
+			ks |= (1 << (i32(g[x,y]) - i32("a")));
+		let num_keys_set = count_set_bits(ks);
+		if num_keys_set > max_keys
+		{
+			println("num_keys_set = ", num_keys_set);
+			max_keys = num_keys_set;
+		}
+		if (ks & ALL_SET) == ALL_SET
+		{
+			// Found all keys
+			sum_ = d;
+			break;
+		}
+
+		// Loop within a loop -- do a BFS on the door+key graph to find all
+		// reachable keys from here, and then only push keys to the minheap
+		// instead of doors and keys
+		//
+		// This is actually slightly slower than doing a dense-grid BFS
+		// (including ".") on some of the test inputs, but it's much faster for
+		// the real input which is more sparse
+		let qi = queue_vec_i32::new();
+		qi.push([d, x, y]);
+		let rv = [-1; 4, 26];  // reachable key positions
+		let nv = 0;
+		let seeni = dict_i64::new();
+		seeni.set(str(x, ",", y), 1'i64); // TODO: just use bool array
+		while true
+		{
+			if qi.is_empty
+				break;
+			let ui = qi.pop();
+			//println("ui = ", ui);
+			let di  = ui[0];
+			let xi  = ui[1];
+			let yi  = ui[2];
+			let c = g[xi,yi];
+			if is_lower(c)
+			{
+				// Ignore keys we already have
+				if ks & (1 << (i32(c) - i32("a"))) == 0
+				{
+					rv[:,nv] = [di, xi, yi, ks];
+					nv += 1;
+					continue;
+				}
+			}
+			//let c0 = g[x,y];
+			let c0 = g[xi,yi];
+			//println("c0 = ", c0);
+			let nbrs_str = adj.get(c0);
+			let nbrs = split_(nbrs_str, ",");
+			//println("nbrs = ", nbrs);
+			for c in nbrs
+			{
+				if is_upper(c)
+				{
+					// If door, confirm we have key
+					let i = i32(c) - i32("A");
+					if ks & (1 << i) == 0
+						continue;
+				}
+				let di = i32(di + dis.get(c0 + "," + c));
+				let xy = parse_i32_delim(pos.get(c), ",");
+				let v = [di, xy[0], xy[1]];
+				let sv = str(xy[0], ",", xy[1]);
+				if seeni.contains(sv) continue;
+				seeni.set(sv, 1'i64);
+				qi.push(v);
+			}
+			//for vy in [yi-1: yi+2]
+			//for vx in [xi-1: xi+2]
+			//{
+			//	if (sum(abs([vx,vy] - [xi,yi])) > 1) continue; // diagonal
+			//	if (vx < 0) continue; // bounds
+			//	if (vy < 0) continue;
+			//	if (vx >= NX) continue;
+			//	if (vy >= NY) continue;
+			//	let c = g[vx, vy];
+			//	if (c == "#") continue; // wall
+			//	if is_upper(c)
+			//	{
+			//		// If door, confirm we have key
+			//		let i = i32(c) - i32("A");
+			//		if ks & (1 << i) == 0
+			//			continue;
+			//	}
+			//	let v = [di+1, vx, vy];
+			//	let sv = str(vx, ",", vy);
+			//	if seeni.contains(sv) continue;
+			//	seeni.set(sv, 1'i64);
+			//	qi.push(v);
+			//}
+		}
+
+		for iv in [0: nv]
+		{
+			let v = rv[:,iv];
+			let sv = str(v);
+			if seen.contains(sv) continue;
+			seen.set(sv, 1'i64);
+			push_minheap_vec_i32(&q, v);
+		}
+		//println();
+	}
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/18" + RESET);
+	let args = parse_args();
+	let do_p1 = true;
+	let do_p2 = true;
+	if (args.part1 and not args.part2) do_p2 = false;
+	if (args.part2 and not args.part1) do_p1 = false;
+
+	let p1 = ""; let p2 = "";
+
+	if (do_p1) p1 = part1(&args);
+	//if (do_p2) p2 = part2(&args);
+
+	if args.assert
+	{
+		let error = false;
+		let expect1 = "REPLACE_ME";
+		let expect2 = "REPLACE_ME";
+		if args.test
+		{
+			expect1 = "REPLACE_ME";
+			expect2 = "REPLACE_ME";
+		}
+
+		if do_p1 and p1 != expect1
+		{
+			println(ERROR_STR + "wrong part 1 answer.  Got """ +
+				p1 + """, expected """ + expect1 + """");
+			error = true;
+		}
+		if do_p2 and p2 != expect2
+		{
+			println(ERROR_STR + "wrong part 2 answer.  Got """ +
+				p2 + """, expected """ + expect2 + """");
+			error = true;
+		}
+		if (error) exit(1);
+	}
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
