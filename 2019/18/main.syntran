@@ -293,6 +293,285 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+fn part2(args: &const Args): str
+{
+	let sum_ = 0;
+
+	let g = read_char_mat(args.input_filename);
+	println("g = ");
+	print_char_mat(&g);
+	const NX = size(g,0);
+	const NY = size(g,1);
+
+	// Modify the input grid from 1 starting point to 4:
+	//
+	//     #######       #######
+	//     #a.#Cd#       #a.#Cd#
+	//     ##...##       ##1#2##
+	//     ##.@.##  -->  #######
+	//     ##...##       ##3#4##
+	//     #cB#Ab#       #cB#Ab#
+	//     #######       #######
+	//
+	let p1 = [0]; let p2 = [0]; let p3 = [0]; let p4 = [0];
+	{
+		let xa = 0; let ya = 0;
+		for y in [0: NY]
+		for x in [0: NX]
+		{
+			if (g[x,y] != "@") continue;
+			xa = x;
+			ya = y;
+		}
+		println("xa, ya = ", [xa, ya]);
+		g[xa,ya] = "#";
+		g[xa+1,ya] = "#";
+		g[xa-1,ya] = "#";
+		g[xa,ya+1] = "#";
+		g[xa,ya-1] = "#";
+		g[xa-1,ya-1] = "1"; p1 = [xa-1, ya-1];
+		g[xa+1,ya-1] = "2"; p2 = [xa+1, ya-1];
+		g[xa-1,ya+1] = "3"; p3 = [xa-1, ya+1];
+		g[xa+1,ya+1] = "4"; p4 = [xa+1, ya+1];
+	}
+	print_char_mat(&g);
+	println("p1 = ", p1);
+	println("p2 = ", p2);
+	println("p3 = ", p3);
+	println("p4 = ", p4);
+
+	// Save positions of key points
+	//
+	// TODO: vector dict would be useful here to avoid str/int conversion
+	let pos = dict_str::new();
+	for y in [0: NY]
+	for x in [0: NX]
+	{
+		let c = g[x,y];
+		if (c == ".") continue;
+		if (c == "#") continue;
+		pos.set(c, str(x, ",", y));
+	}
+	pos.print("pos = ");
+
+	let keys = pos.get_keys();
+	println("keys = ", keys);
+
+	// Get the number of actual "keys" per the puzzle description, not doors,
+	// not counting keys in the dict sense
+	//
+	// Assume no alphabetical gaps in keys. Not necessarily every key has a
+	// door, at least in test inputs, but we still have to collect all keys
+	let nkey = 0;
+	for i in [0: 26]
+		if pos.contains(char(i32("a") + i))
+			nkey += 1;
+	println("nkey = ", nkey);
+
+	nkey = 0;
+	for i in [0: 26]
+		if pos.contains(char(i32("a") + i))
+			nkey += 1;
+
+	// Build a graph of all keys, doors, and starting position
+	let adj = dict_str::new();
+	let dis = dict_i64::new();
+	for c0 in keys
+	{
+		//println("c0 = ", c0);
+		let xy = parse_i32_delim(pos.get(c0), ",");
+		//println("xy = ", xy);
+
+		// BFS from c0 at xy -- find all immediate neighbors
+		let q = queue_vec_i32::new();
+		q.push([0, xy[0], xy[1]]);
+		let seen = [false; NX, NY];
+		let nbrs = "";
+		while true
+		{
+			if (q.is_empty) break;
+			let u = q.pop();
+			let d = u[0];
+			let x = u[1];
+			let y = u[2];
+			let c = g[x,y];
+			if c != "#" and c != "." and c != c0
+			{
+				// Found a neighbor
+				nbrs = nbrs + c + ",";  // csv
+				dis.set(c0 + "," + c, i64(d));
+				dis.set(c + "," + c0, i64(d));
+				continue;
+			}
+			for vy in [y-1: y+2]
+			for vx in [x-1: x+2]
+			{
+				if (sum(abs([vx,vy] - [x,y])) > 1) continue; // diagonal
+				if (vx < 0) continue; // bounds
+				if (vy < 0) continue;
+				if (vx >= NX) continue;
+				if (vy >= NY) continue;
+				let c = g[vx, vy];
+				if (c == "#") continue; // wall
+				let v = [d+1, vx, vy];
+				let sv = str(vx, ",", vy);
+				if seen[vx,vy] continue;
+				seen[vx,vy] = true;
+				q.push(v);
+			}
+		}
+		//println("nbrs = ", nbrs);
+		//println();
+		adj.set(c0, nbrs);
+	}
+	adj.print("adj = ");
+	dis.print("dis = ");
+
+	for i in [0: nkey]
+		ALL_SET |= (1 << i);
+	println("ALL_SET = ", ALL_SET);
+
+	// Dijkstra on dense grid with position and keymask as state
+	let max_keys = 0;
+	//let pi = pos.get("@");
+	//let xi = parse_i32_delim(pi, ",");
+	let xi = [p1, p2, p3, p4];
+	println("xi = ", xi);
+	let q = new_minheap_vec_i32();
+	push_minheap_vec_i32(&q, [[0, 0], xi]); // heap of dist, key state, and pos
+	let seen = dict_i64::new();
+	seen.set(str(q.vals[:,0]), 1'i64);
+	while true
+	{
+		if (q.len <= 0)  // path is blocked
+		{
+			println("Error: BFS queue is empty");
+			exit(3);
+		}
+		let u = pop_minheap_vec_i32(&q);
+		let d  = u[0]; // unpack distance
+		let ks = u[1]; // key mask state
+		let po = u[2:]; // unpack position
+		let ps = std::reshape(po, [2,4]);
+
+		//println("po = ", po);
+		//println("ps = ", ps);
+
+		for ip in [0: 4]
+		{
+			let x = ps[0,ip]; let y = ps[1,ip];
+			if is_lower(g[x,y])
+				ks |= (1 << (i32(g[x,y]) - i32("a")));
+		}
+		let num_keys_set = count_set_bits(ks);
+		if num_keys_set > max_keys
+		{
+			println("num_keys_set = ", num_keys_set);
+			max_keys = num_keys_set;
+		}
+		if (ks & ALL_SET) == ALL_SET
+		{
+			// Found all keys
+			sum_ = d;
+			break;
+		}
+
+		// Loop within a loop -- do a BFS on the door+key graph to find all
+		// reachable keys from here, and then only push keys to the minheap
+		// instead of doors and keys
+		//
+		// This is actually slightly slower than doing a dense-grid BFS
+		// (including ".") on some of the test inputs, but it's much faster for
+		// the real input which is more sparse
+		let qi = queue_vec_i32::new();
+		//qi.push([d, x, y]);
+		qi.push([[d], po]);
+		//let rv = [-1; 4, 26];  // reachable key positions
+		let rv = [-1; 10, 26];  // reachable key positions
+		let nv = 0;
+		let seeni = [false; NX, NY];
+		//let seeni = dict_i64::new();
+		while true
+		{
+			if qi.is_empty
+				break;
+			let ui = qi.pop();
+			//println("ui = ", ui);
+			let di  = ui[0];
+			let pi  = std::reshape(ui[1:], [2,4]);
+			//let xi  = ui[1];
+			//let yi  = ui[2];
+			for ip in [0: 4]
+			{
+				let xi = pi[0,ip]; let yi = pi[1,ip];
+				let c = g[xi,yi];
+				//if (c == "d") {println("found d"); exit(0);}
+				//if any(c == ["1", "2", "3", "4"]) continue;
+				if is_lower(c)
+				{
+					// Ignore keys we already have
+					if ks & (1 << (i32(c) - i32("a"))) == 0
+					{
+						//rv[:,nv] = [di, xi, yi, ks];
+						rv[:,nv] = [[di, ks], ui[1:]];
+						if (ip==0) rv[2: 4,nv] = [xi, yi];
+						if (ip==1) rv[4: 6,nv] = [xi, yi];
+						if (ip==2) rv[6: 8,nv] = [xi, yi];
+						if (ip==3) rv[8:10,nv] = [xi, yi];
+						nv += 1;
+						continue;
+					}
+				}
+				let c0 = g[xi,yi];
+				//println("c0 = ", c0);
+				let nbrs_str = adj.get(c0);
+				let nbrs = split_(nbrs_str, ",");
+				for c in nbrs
+				{
+					if is_upper(c)
+					{
+						// If door, confirm we have key
+						let i = i32(c) - i32("A");
+						if ks & (1 << i) == 0
+							continue;
+					}
+					let di = i32(di + dis.get(c0 + "," + c));
+					let xy = parse_i32_delim(pos.get(c), ",");
+
+					//let v = [di, xy[0], xy[1]];
+					let v = ui;
+					v[0] = di;
+					if (ip==0) v[1:3] = xy;
+					if (ip==1) v[3:5] = xy;
+					if (ip==2) v[5:7] = xy;
+					if (ip==3) v[7:9] = xy;
+
+					//let sv = str(xy[0], ",", xy[1]);
+					if seeni[xy[0], xy[1]] continue;
+					seeni[xy[0], xy[1]] = true;
+					//let sv = str(v[1:]);
+					//if seeni.contains(sv) continue;
+					//seeni.set(sv, 1'i64);
+
+					//println("pushing to qi ", v);
+					qi.push(v);
+				}
+			}
+		}
+		for iv in [0: nv]
+		{
+			let v = rv[:,iv];
+			let sv = str(v);
+			if seen.contains(sv) continue;
+			seen.set(sv, 1'i64);
+			//println("pushing to minheap ", v);
+			push_minheap_vec_i32(&q, v);
+		}
+	}
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
 //==============================================================================
 
 fn main(): str
@@ -310,7 +589,7 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (do_p1) p1 = part1(&args);
-	//if (do_p2) p2 = part2(&args);
+	if (do_p2) p2 = part2(&args);
 
 	if args.assert
 	{
