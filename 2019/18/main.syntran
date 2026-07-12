@@ -378,9 +378,7 @@ fn part2(args: &const Args): str
 	let dis = dict_i64::new();
 	for c0 in keys
 	{
-		//println("c0 = ", c0);
 		let xy = parse_i32_delim(pos.get(c0), ",");
-		//println("xy = ", xy);
 
 		// BFS from c0 at xy -- find all immediate neighbors
 		let q = queue_vec_i32::new();
@@ -420,12 +418,10 @@ fn part2(args: &const Args): str
 				q.push(v);
 			}
 		}
-		//println("nbrs = ", nbrs);
-		//println();
 		adj.set(c0, nbrs);
 	}
-	adj.print("adj = ");
-	dis.print("dis = ");
+	//adj.print("adj = ");
+	//dis.print("dis = ");
 
 	for i in [0: nkey]
 		ALL_SET |= (1 << i);
@@ -433,8 +429,6 @@ fn part2(args: &const Args): str
 
 	// Dijkstra on dense grid with position and keymask as state
 	let max_keys = 0;
-	//let pi = pos.get("@");
-	//let xi = parse_i32_delim(pi, ",");
 	let xi = [p1, p2, p3, p4];
 	println("xi = ", xi);
 	let q = new_minheap_vec_i32();
@@ -449,13 +443,10 @@ fn part2(args: &const Args): str
 			exit(3);
 		}
 		let u = pop_minheap_vec_i32(&q);
-		let d  = u[0]; // unpack distance
-		let ks = u[1]; // key mask state
+		let d  = u[0];  // unpack distance
+		let ks = u[1];  // key mask state
 		let po = u[2:]; // unpack position
 		let ps = std::reshape(po, [2,4]);
-
-		//println("po = ", po);
-		//println("ps = ", ps);
 
 		for ip in [0: 4]
 		{
@@ -483,47 +474,37 @@ fn part2(args: &const Args): str
 		// This is actually slightly slower than doing a dense-grid BFS
 		// (including ".") on some of the test inputs, but it's much faster for
 		// the real input which is more sparse
+		//
+		// The way that position, key, and distance info is packed into rows of
+		// `q` and differently for `qi` is error prone :shrug:
 		let qi = queue_vec_i32::new();
-		//qi.push([d, x, y]);
 		qi.push([[d], po]);
-		//let rv = [-1; 4, 26];  // reachable key positions
 		let rv = [-1; 10, 26];  // reachable key positions
 		let nv = 0;
 		let seeni = [false; NX, NY];
-		//let seeni = dict_i64::new();
 		while true
 		{
-			if qi.is_empty
-				break;
+			if (qi.is_empty) break;
 			let ui = qi.pop();
-			//println("ui = ", ui);
 			let di  = ui[0];
 			let pi  = std::reshape(ui[1:], [2,4]);
-			//let xi  = ui[1];
-			//let yi  = ui[2];
 			for ip in [0: 4]
 			{
 				let xi = pi[0,ip]; let yi = pi[1,ip];
 				let c = g[xi,yi];
-				//if (c == "d") {println("found d"); exit(0);}
-				//if any(c == ["1", "2", "3", "4"]) continue;
 				if is_lower(c)
 				{
 					// Ignore keys we already have
 					if ks & (1 << (i32(c) - i32("a"))) == 0
 					{
-						//rv[:,nv] = [di, xi, yi, ks];
 						rv[:,nv] = [[di, ks], ui[1:]];
-						if (ip==0) rv[2: 4,nv] = [xi, yi];
-						if (ip==1) rv[4: 6,nv] = [xi, yi];
-						if (ip==2) rv[6: 8,nv] = [xi, yi];
-						if (ip==3) rv[8:10,nv] = [xi, yi];
+						const K = 2 + 2*ip;
+						rv[K:K+2, nv] = [xi, yi];
 						nv += 1;
 						continue;
 					}
 				}
 				let c0 = g[xi,yi];
-				//println("c0 = ", c0);
 				let nbrs_str = adj.get(c0);
 				let nbrs = split_(nbrs_str, ",");
 				for c in nbrs
@@ -538,22 +519,13 @@ fn part2(args: &const Args): str
 					let di = i32(di + dis.get(c0 + "," + c));
 					let xy = parse_i32_delim(pos.get(c), ",");
 
-					//let v = [di, xy[0], xy[1]];
 					let v = ui;
 					v[0] = di;
-					if (ip==0) v[1:3] = xy;
-					if (ip==1) v[3:5] = xy;
-					if (ip==2) v[5:7] = xy;
-					if (ip==3) v[7:9] = xy;
+					const K = 1 + 2*ip;
+					v[K:K+2] = xy;
 
-					//let sv = str(xy[0], ",", xy[1]);
 					if seeni[xy[0], xy[1]] continue;
 					seeni[xy[0], xy[1]] = true;
-					//let sv = str(v[1:]);
-					//if seeni.contains(sv) continue;
-					//seeni.set(sv, 1'i64);
-
-					//println("pushing to qi ", v);
 					qi.push(v);
 				}
 			}
@@ -564,7 +536,6 @@ fn part2(args: &const Args): str
 			let sv = str(v);
 			if seen.contains(sv) continue;
 			seen.set(sv, 1'i64);
-			//println("pushing to minheap ", v);
 			push_minheap_vec_i32(&q, v);
 		}
 	}
