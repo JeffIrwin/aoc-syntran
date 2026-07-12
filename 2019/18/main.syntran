@@ -3,8 +3,7 @@ use ../../utils::*;
 use ../../dict_i64_2026 as dict_i64;
 use ../../dict_str_2026 as dict_str;
 use ../../queue_vec_i32;
-use ../../minheap_vec_i32::*;
-// TODO: need a 2026 minheap with methods
+use ../../minheap_vec_i32_2026 as minheap_vec_i32;
 
 //==============================================================================
 
@@ -194,8 +193,8 @@ fn part1(args: &const Args): str
 	let max_keys = 0;
 	let pi = pos.get("@");
 	let xi = parse_i32_delim(pi, ",");
-	let q = new_minheap_vec_i32();
-	push_minheap_vec_i32(&q, [[0], xi, [0]]); // heap of dist, pos, and key state
+	let q = minheap_vec_i32::new();
+	q.push([[0], xi, [0]]); // heap of dist, pos, and key state
 	let seen = dict_i64::new();
 	seen.set(str(q.vals[:,0]), 1'i64);
 	while true
@@ -205,7 +204,7 @@ fn part1(args: &const Args): str
 			println("Error: BFS queue is empty");
 			exit(3);
 		}
-		let u = pop_minheap_vec_i32(&q);
+		let u = q.pop();
 		let d  = u[0]; // unpack distance
 		let x  = u[1]; // unpack position
 		let y  = u[2];
@@ -286,7 +285,7 @@ fn part1(args: &const Args): str
 			let sv = str(v);
 			if seen.contains(sv) continue;
 			seen.set(sv, 1'i64);
-			push_minheap_vec_i32(&q, v);
+			q.push(v);
 		}
 	}
 	println("part 1 = ", sum_);
@@ -431,8 +430,8 @@ fn part2(args: &const Args): str
 	let max_keys = 0;
 	let xi = [p1, p2, p3, p4];
 	println("xi = ", xi);
-	let q = new_minheap_vec_i32();
-	push_minheap_vec_i32(&q, [[0, 0], xi]); // heap of dist, key state, and pos
+	let q = minheap_vec_i32::new();
+	q.push([[0, 0], xi]); // heap of dist, key state, and pos
 	let seen = dict_i64::new();
 	seen.set(str(q.vals[:,0]), 1'i64);
 	while true
@@ -442,7 +441,7 @@ fn part2(args: &const Args): str
 			println("Error: BFS queue is empty");
 			exit(3);
 		}
-		let u = pop_minheap_vec_i32(&q);
+		let u = q.pop();
 		let d  = u[0];  // unpack distance
 		let ks = u[1];  // key mask state
 		let po = u[2:]; // unpack position
@@ -536,7 +535,7 @@ fn part2(args: &const Args): str
 			let sv = str(v);
 			if seen.contains(sv) continue;
 			seen.set(sv, 1'i64);
-			push_minheap_vec_i32(&q, v);
+			q.push(v);
 		}
 	}
 	println("part 2 = ", sum_);
@@ -565,10 +564,11 @@ fn main(): str
 	if args.assert
 	{
 		let error = false;
-		let expect1 = "REPLACE_ME";
-		let expect2 = "REPLACE_ME";
+		let expect1 = "5406";
+		let expect2 = "1938";
 		if args.test
 		{
+			// Different tests for each part
 			expect1 = "REPLACE_ME";
 			expect2 = "REPLACE_ME";
 		}
