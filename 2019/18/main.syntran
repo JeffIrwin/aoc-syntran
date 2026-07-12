@@ -127,24 +127,19 @@ fn part1(args: &const Args): str
 			nkey += 1;
 	println("nkey = ", nkey);
 
-	let key_str = [""; nkey];
 	nkey = 0;
 	for i in [0: 26]
 		if pos.contains(char(i32("a") + i))
-		{
-			key_str[nkey] = char(i32("a") + i);
 			nkey += 1;
-		}
-	println("key_str = ", key_str);
 
 	// Build a graph of all keys, doors, and starting position
 	let adj = dict_str::new();
 	let dis = dict_i64::new();
 	for c0 in keys
 	{
-		println("c0 = ", c0);
+		//println("c0 = ", c0);
 		let xy = parse_i32_delim(pos.get(c0), ",");
-		println("xy = ", xy);
+		//println("xy = ", xy);
 
 		// BFS from c0 at xy -- find all immediate neighbors
 		let q = queue_vec_i32::new();
@@ -184,21 +179,18 @@ fn part1(args: &const Args): str
 				q.push(v);
 			}
 		}
-		println("nbrs = ", nbrs);
+		//println("nbrs = ", nbrs);
+		//println();
 		adj.set(c0, nbrs);
-
-		println();
 	}
-	adj.print("adj = ");
-	dis.print("dis = ");
+	//adj.print("adj = ");
+	//dis.print("dis = ");
 
 	for i in [0: nkey]
 		ALL_SET |= (1 << i);
 	println("ALL_SET = ", ALL_SET);
 
 	// Dijkstra on dense grid with position and keymask as state
-	println("-------------------------");
-	println("Starting Dijkstra");
 	let max_keys = 0;
 	let pi = pos.get("@");
 	let xi = parse_i32_delim(pi, ",");
@@ -245,8 +237,7 @@ fn part1(args: &const Args): str
 		qi.push([d, x, y]);
 		let rv = [-1; 4, 26];  // reachable key positions
 		let nv = 0;
-		let seeni = dict_i64::new();
-		seeni.set(str(x, ",", y), 1'i64); // TODO: just use bool array
+		let seeni = [false; NX, NY];
 		while true
 		{
 			if qi.is_empty
@@ -267,12 +258,10 @@ fn part1(args: &const Args): str
 					continue;
 				}
 			}
-			//let c0 = g[x,y];
 			let c0 = g[xi,yi];
 			//println("c0 = ", c0);
 			let nbrs_str = adj.get(c0);
 			let nbrs = split_(nbrs_str, ",");
-			//println("nbrs = ", nbrs);
 			for c in nbrs
 			{
 				if is_upper(c)
@@ -286,35 +275,11 @@ fn part1(args: &const Args): str
 				let xy = parse_i32_delim(pos.get(c), ",");
 				let v = [di, xy[0], xy[1]];
 				let sv = str(xy[0], ",", xy[1]);
-				if seeni.contains(sv) continue;
-				seeni.set(sv, 1'i64);
+				if seeni[xy[0], xy[1]] continue;
+				seeni[xy[0], xy[1]] = true;
 				qi.push(v);
 			}
-			//for vy in [yi-1: yi+2]
-			//for vx in [xi-1: xi+2]
-			//{
-			//	if (sum(abs([vx,vy] - [xi,yi])) > 1) continue; // diagonal
-			//	if (vx < 0) continue; // bounds
-			//	if (vy < 0) continue;
-			//	if (vx >= NX) continue;
-			//	if (vy >= NY) continue;
-			//	let c = g[vx, vy];
-			//	if (c == "#") continue; // wall
-			//	if is_upper(c)
-			//	{
-			//		// If door, confirm we have key
-			//		let i = i32(c) - i32("A");
-			//		if ks & (1 << i) == 0
-			//			continue;
-			//	}
-			//	let v = [di+1, vx, vy];
-			//	let sv = str(vx, ",", vy);
-			//	if seeni.contains(sv) continue;
-			//	seeni.set(sv, 1'i64);
-			//	qi.push(v);
-			//}
 		}
-
 		for iv in [0: nv]
 		{
 			let v = rv[:,iv];
@@ -323,8 +288,8 @@ fn part1(args: &const Args): str
 			seen.set(sv, 1'i64);
 			push_minheap_vec_i32(&q, v);
 		}
-		//println();
 	}
+	println("part 1 = ", sum_);
 	return str(sum_);
 }
 
