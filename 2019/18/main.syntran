@@ -549,7 +549,7 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println(MAGENTA + "Starting AOC syntran main 2025/18" + RESET);
+	println(MAGENTA + "Starting AOC syntran main 2019/18" + RESET);
 	let args = parse_args();
 	let do_p1 = true;
 	let do_p2 = true;

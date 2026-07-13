@@ -1,0 +1,484 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+use ../../queue_vec_i32;
+use ../../minheap_vec_i32_2026 as minheap_vec_i32;
+
+//==============================================================================
+
+struct Args
+{
+	test  : bool,
+	assert: bool,
+	part1 : bool,
+	part2 : bool,
+	help  : bool,
+
+	has_input_filename: bool,
+	input_filename: str,
+}
+
+// TODO: arg parser implementation and maybe the assertion coda from main should
+fn parse_args(): Args
+{
+	// Parse the command line arguments
+	//
+	// Based on https://github.com/JeffIrwin/aoc-fortran/blob/12830bb004a5e70d20d55d455a5077050488cfff/src/args.F90#L48
+	let args = std::args();
+	let nargs = size(args);
+
+	let a = Args{test=false, assert=false, part1=false, part2=false,
+		help=false, has_input_filename=false, input_filename="input.txt",
+	};
+
+	let i = 0;
+	let ipos = 0; // positional arg index -- unused
+	while i < nargs
+	{
+		let arg = args[i];
+		if any(arg == ["-h", "--help", "-help"])
+			a.help = true;
+		else if arg == "-t" or arg == "--test"
+		{
+			a.test = true;
+			if not a.has_input_filename
+				a.input_filename = "test-input.txt";
+		}
+		else if arg == "-a" or arg == "--assert"
+			a.assert = true;
+		else if arg == "-1" or arg == "--part1"
+			a.part1 = true;
+		else if arg == "-2" or arg == "--part2"
+			a.part2 = true;
+		else if arg == "-i" or arg == "--input"
+		{
+			i += 1;
+			// TODO: error if i >= nargs ? I think my Fortran parser fails to
+			// enforce this as well
+			a.has_input_filename = true;
+			a.input_filename = args[i];
+		}
+		else
+			println(WARN_STR + "bad command argument """, arg, """");
+		i += 1;
+	}
+
+	if a.help
+	{
+	 	println(BOLD + "Usage:" + RESET);
+	 	println("    syntran main.syntran -- -h | --help");
+	 	println("    syntran main.syntran -- [-1 | --part1] [-2 | --part2]");
+	 	println("    syntran main.syntran -- [-t | --test] [(-i|--input) file.txt]");
+	 	println("    syntran main.syntran -- -a | --assert");
+	 	println();
+	 	println(BOLD + "Options:" + RESET);
+	 	println("    --help        Show this help");
+	 	println("    --part1       Run part 1 only. Default both parts");
+	 	println("    --part2       Run part 2 only");
+	 	println("    --test        Use test-input.txt instead of input.txt");
+	 	println("    --input       Input data filename");
+	 	println("    --assert      Abort if results do not match expected answers");
+		exit(0);
+	}
+	return a;
+}
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(args.input_filename);
+	println("g = ");
+	print_char_mat(&g);
+	const NX = size(g,0);
+	const NY = size(g,1);
+	let g2 = g; // g but with 2-char label as 2-char str at single x/y location
+
+	for y in [0: NY]
+	for x in [0: NX]
+	{
+		let c = g[x,y];
+		if not is_upper(c) continue;
+		let cu = ","; // dummy
+		let cd = ",";
+		let cl = ",";
+		let cr = ",";
+
+		if (y>0)    cu = g[x,y-1]; // up
+		if (y+1<NY) cd = g[x,y+1]; // down
+		if (x>0)    cl = g[x-1,y]; // left
+		if (x+1<NX) cr = g[x+1,y]; // right
+
+		// AA case from first example
+		if is_upper(cu) and cd == "."
+		{
+			g2[x,y] = cu + c;
+			g2[x,y-1] = " ";
+		}
+
+		// Middle BC case
+		if is_upper(cd) and cu == "."
+		{
+			g2[x,y] = c + cd;
+			g2[x,y+1] = " ";
+		}
+
+		// Left BC case
+		if is_upper(cl) and cr == "."
+		{
+			g2[x,y] = cl + c;
+			g2[x-1,y] = " ";
+		}
+
+		// Middle DE case
+		if is_upper(cr) and cl == "."
+		{
+			g2[x,y] = c + cr;
+			g2[x+1,y] = " ";
+		}
+	}
+	print_char_mat(&g2);
+
+	// Search BFS from each portal to build a graph
+	let adj = dict_str::new();
+	let dis = dict_i64::new();
+	let pos = dict_str::new(); // again, really need vec dict
+	let aa = [0]; // find start/end while we're at it
+	let zz = [0];
+	for y in [0: NY]
+	for x in [0: NX]
+	{
+		let s = g2[x,y];
+		if (len(s) != 2) continue;
+		println("s = ", s);
+		if (s == "AA") aa = [x, y];
+		if (s == "ZZ") zz = [x, y];
+		pos.set(s, str(x, ",", y));
+
+		// BFS
+		let q = queue_vec_i32::new();
+		q.push([0, i32(x), i32(y)]); // queue of distance, x, y
+		let seen = [false; NX, NY];
+		while true
+		{
+			if (q.is_empty) break;
+			let u = q.pop();
+			let d = u[0];
+			let x = u[1];
+			let y = u[2];
+			if (x < 0) continue;
+			if (y < 0) continue;
+			if (x >= NX) continue;
+			if (y >= NY) continue;
+			if (g2[x,y] == "#") continue;
+			if (g2[x,y] == " ") continue;
+			if seen[x,y] continue;
+			seen[x,y] = true;
+			//println("u = ", u);
+
+			if len(g2[x,y]) == 2 and g2[x,y] != s
+			{
+				// Portal found
+				let a = adj.get(s);
+				adj.set(s, a + g2[x,y] + ",");
+				// -2 because we don't count stepping into or out of portals
+				dis.set(s + "," + g2[x,y], i64(d-2));
+				dis.set(g2[x,y] + "," + s, i64(d-2));
+			}
+
+			q.push([d+1, x-1, y]);
+			q.push([d+1, x+1, y]);
+			q.push([d+1, x, y-1]);
+			q.push([d+1, x, y+1]);
+		}
+	}
+	println("aa, zz = ", aa, zz);
+	adj.print("adj = ");
+	dis.print("dis = ");
+	pos.print("pos = ");
+
+	// We have the graph {adj, dis}. Now do Dijkstra from AA to ZZ
+	let q = minheap_vec_i32::new();
+	println("aa = ", aa);
+	q.push([[0], aa]);
+	let seen = [false; NX, NY];
+	while true
+	{
+		let u = q.pop();
+		println("u = ", u);
+		let d = u[0];
+		let x = u[1];
+		let y = u[2];
+		if seen[x,y] continue;
+		seen[x,y] = true;
+		let s = g2[x,y];
+		println("x, y = ", [x,y]);
+		println("s = ", s);
+		if s == "ZZ"
+		{
+			// idk where the +1 and -1 come from but idgaf about reading the
+			// puzzle carefully enough to figure out how stepping
+			// onto/through/off-of a portal counts as steps or not
+			sum_ = d - 1;
+			break;
+		}
+		let nbrs_str = adj.get(s);
+		let nbrs = split_(nbrs_str, ",");
+		println("nbrs = ", nbrs);
+
+		for nbr in nbrs
+		{
+			let ps = pos.get(nbr);
+			let p = parse_i32_delim(ps, ",");
+			let dn = i32(d + 1 + dis.get(s + "," + nbr));
+			q.push([[dn], p]);
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//let start_out = is_out(x, y, NX, NY);
+fn is_out(x: i64, y: i64, NX: i64, NY: i64): bool
+{
+	if (x < 3) return true;
+	if (y < 3) return true;
+	if (x >= NX-3) return true;
+	if (y >= NY-3) return true;
+	return false;
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(args.input_filename);
+	println("g = ");
+	print_char_mat(&g);
+	const NX = size(g,0);
+	const NY = size(g,1);
+	let g2 = g; // g but with 2-char label as 2-char str at single x/y location
+
+	for y in [0: NY]
+	for x in [0: NX]
+	{
+		let c = g[x,y];
+		if not is_upper(c) continue;
+		let cu = ","; // dummy
+		let cd = ",";
+		let cl = ",";
+		let cr = ",";
+
+		if (y>0)    cu = g[x,y-1]; // up
+		if (y+1<NY) cd = g[x,y+1]; // down
+		if (x>0)    cl = g[x-1,y]; // left
+		if (x+1<NX) cr = g[x+1,y]; // right
+
+		// AA case from first example
+		if is_upper(cu) and cd == "."
+		{
+			g2[x,y] = cu + c;
+			g2[x,y-1] = " ";
+		}
+
+		// Middle BC case
+		if is_upper(cd) and cu == "."
+		{
+			g2[x,y] = c + cd;
+			g2[x,y+1] = " ";
+		}
+
+		// Left BC case
+		if is_upper(cl) and cr == "."
+		{
+			g2[x,y] = cl + c;
+			g2[x-1,y] = " ";
+		}
+
+		// Middle DE case
+		if is_upper(cr) and cl == "."
+		{
+			g2[x,y] = c + cr;
+			g2[x+1,y] = " ";
+		}
+	}
+	print_char_mat(&g2);
+
+	// Search BFS from each portal to build a graph
+	let adj = dict_str::new();
+	let dis = dict_i64::new();
+	let lev = dict_i64::new(); // track outer/inner level changes
+	let pos = dict_str::new(); // again, really need vec dict
+	let aa = [0]; // find start/end while we're at it
+	let zz = [0];
+	for y in [0: NY]
+	for x in [0: NX]
+	{
+		let s = g2[x,y];
+		if (len(s) != 2) continue;
+		println("s = ", s);
+		if (s == "AA") aa = [x, y];
+		if (s == "ZZ") zz = [x, y];
+		pos.set(s, str(x, ",", y));
+
+		let start_out = is_out(x, y, NX, NY);
+		println("x, y = ", [x, y]);
+		println("start_out = ", start_out);
+
+		// BFS
+		let q = queue_vec_i32::new();
+		q.push([0, i32(x), i32(y)]); // queue of distance, x, y
+		let seen = [false; NX, NY];
+		while true
+		{
+			if (q.is_empty) break;
+			let u = q.pop();
+			let d = u[0];
+			let x = u[1];
+			let y = u[2];
+			if (x < 0) continue;
+			if (y < 0) continue;
+			if (x >= NX) continue;
+			if (y >= NY) continue;
+			if (g2[x,y] == "#") continue;
+			if (g2[x,y] == " ") continue;
+			if seen[x,y] continue;
+			seen[x,y] = true;
+			//println("u = ", u);
+
+			if len(g2[x,y]) == 2 and g2[x,y] != s
+			{
+				// Portal found
+				let a = adj.get(s);
+				adj.set(s, a + g2[x,y] + ",");
+				// -2 because we don't count stepping into or out of portals
+				dis.set(s + "," + g2[x,y], i64(d-2));
+				dis.set(g2[x,y] + "," + s, i64(d-2));
+
+				let end_out = is_out(i64(x), i64(y), NX, NY);
+				let l = 0; // level change: +1 going in, -1 going out, else 0
+				if (start_out and not end_out) l = 1;
+				if (not start_out and end_out) l = -1;
+				lev.set(s + "," + g2[x,y], i64(l));
+				lev.set(g2[x,y] + "," + s, -i64(l));
+			}
+
+			q.push([d+1, x-1, y]);
+			q.push([d+1, x+1, y]);
+			q.push([d+1, x, y-1]);
+			q.push([d+1, x, y+1]);
+		}
+	}
+	println("aa, zz = ", aa, zz);
+	adj.print("adj = ");
+	dis.print("dis = ");
+	pos.print("pos = ");
+	lev.print("lev = ");
+
+	// We have the graph {adj, dis}. Now do Dijkstra from AA to ZZ
+	let q = minheap_vec_i32::new();
+	println("aa = ", aa);
+	q.push([[0], aa, [0]]); // queue of dist, position, and level
+	//let seen = [false; NX, NY];
+	let seen = dict_i64::new();
+	while true
+	{
+		let u = q.pop();
+		println("u = ", u);
+		let d = u[0];
+		let x = u[1];
+		let y = u[2];
+		let l = u[3]; // level/depth
+		if (l < 0) continue; // can't go out from level 0
+		//if seen[x,y] continue;
+		//seen[x,y] = true;
+		if seen.contains(str([x,y,l])) continue;
+		seen.set(str([x,y,l]), 1'i64);
+		let s = g2[x,y];
+		println("x, y = ", [x,y]);
+		println("s = ", s);
+		if s == "ZZ" and l == 0
+		{
+			// idk where the +1 and -1 come from but idgaf about reading the
+			// puzzle carefully enough to figure out how stepping
+			// onto/through/off-of a portal counts as steps or not
+			sum_ = d - 1;
+			break;
+		}
+		let nbrs_str = adj.get(s);
+		let nbrs = split_(nbrs_str, ",");
+		println("nbrs = ", nbrs);
+
+		for nbr in nbrs
+		{
+			if (nbr == "AA" or nbr == "ZZ") and l != 1
+				continue;
+			let ps = pos.get(nbr);
+			let p = parse_i32_delim(ps, ",");
+			let dn = i32(d + 1 + dis.get(s + "," + nbr));
+			let ln = i32(l + lev.get(s + "," + nbr));
+			q.push([[dn], p, [ln]]);
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2019/20" + RESET);
+	let args = parse_args();
+	let do_p1 = true;
+	let do_p2 = true;
+	if (args.part1 and not args.part2) do_p2 = false;
+	if (args.part2 and not args.part1) do_p1 = false;
+
+	let p1 = ""; let p2 = "";
+
+	if (do_p1) p1 = part1(&args);
+	if (do_p2) p2 = part2(&args);
+
+	if args.assert
+	{
+		let error = false;
+		let expect1 = "514";
+		let expect2 = "6208";
+		if args.test
+		{
+			expect1 = "REPLACE_ME";
+			expect2 = "REPLACE_ME";
+		}
+
+		if do_p1 and p1 != expect1
+		{
+			println(ERROR_STR + "wrong part 1 answer.  Got """ +
+				p1 + """, expected """ + expect1 + """");
+			error = true;
+		}
+		if do_p2 and p2 != expect2
+		{
+			println(ERROR_STR + "wrong part 2 answer.  Got """ +
+				p2 + """, expected """ + expect2 + """");
+			error = true;
+		}
+		if (error) exit(1);
+	}
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

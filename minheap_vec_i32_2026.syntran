@@ -33,6 +33,7 @@ struct minheap_vec_i32
 
 	fn push(val: [i32; :])
 	{
+		println("pushing val = ", val);
 		let nval = size(val, 0);
 		if len >= 0 and nval != size(vals, 0)
 		{
