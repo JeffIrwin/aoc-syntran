@@ -26,6 +26,130 @@ const RESET   = ESC + "[0m";
 const WARN_STR  = YELLOW + "Warning" + RESET + ": ";
 const ERROR_STR = RED    + "Error"   + RESET + ": ";
 
+//****************
+
+struct Args
+{
+	test  : bool,
+	assert: bool,
+	part1 : bool, // true iff --part1 cmd arg is present
+	part2 : bool,
+	help  : bool,
+
+	has_input_filename: bool,
+	input_filename: str,
+
+	// See the logic in parse_args. If you omit --part1 and --part2 cmd args,
+	// these are both true -- the default is to do both parts unless the user
+	// passes only one part arg
+	do_p1: bool, // redundant with part1, packaged here for convenience
+	do_p2: bool,
+}
+
+//==============================================================================
+
+fn parse_args(): Args
+{
+	// Parse the command line arguments
+	//
+	// Based on https://github.com/JeffIrwin/aoc-fortran/blob/12830bb004a5e70d20d55d455a5077050488cfff/src/args.F90#L48
+	let args = std::args();
+	let nargs = size(args);
+
+	let a = Args{test=false, assert=false, part1=false, part2=false,
+		help=false, has_input_filename=false, input_filename="input.txt",
+		do_p1=true, do_p2=true,
+	};
+
+	let i = 0;
+	let ipos = 0; // positional arg index -- unused
+	while i < nargs
+	{
+		let arg = args[i];
+		if any(arg == ["-h", "--help", "-help"])
+			a.help = true;
+		else if arg == "-t" or arg == "--test"
+		{
+			a.test = true;
+			if not a.has_input_filename
+				a.input_filename = "test-input.txt";
+		}
+		else if arg == "-a" or arg == "--assert"
+			a.assert = true;
+		else if arg == "-1" or arg == "--part1"
+			a.part1 = true;
+		else if arg == "-2" or arg == "--part2"
+			a.part2 = true;
+		else if arg == "-i" or arg == "--input"
+		{
+			i += 1;
+			// TODO: error if i >= nargs ? I think my Fortran parser fails to
+			// enforce this as well
+			a.has_input_filename = true;
+			a.input_filename = args[i];
+		}
+		else
+			println(WARN_STR + "bad command argument """, arg, """");
+		i += 1;
+	}
+
+	if a.help
+	{
+		println(BOLD + "Usage:" + RESET);
+		println("    syntran main.syntran -- -h | --help");
+		println("    syntran main.syntran -- [-1 | --part1] [-2 | --part2]");
+		println("    syntran main.syntran -- [-t | --test] [(-i|--input) file.txt]");
+		println("    syntran main.syntran -- -a | --assert");
+		println();
+		println(BOLD + "Options:" + RESET);
+		println("    --help        Show this help");
+		println("    --part1       Run part 1 only. Default both parts");
+		println("    --part2       Run part 2 only");
+		println("    --test        Use test-input.txt instead of input.txt");
+		println("    --input       Input data filename");
+		println("    --assert      Abort if results do not match expected answers");
+		exit(0);
+	}
+
+	if (a.part1 and not a.part2) a.do_p2 = false;
+	if (a.part2 and not a.part1) a.do_p1 = false;
+
+	return a;
+}
+
+fn check_aoc_results(args: Args,
+		p1: str, p2: str,
+		expect1: str, expect2: str,
+		expect1_test: str, expect2_test: str)
+{
+	let e1 = expect1;
+	let e2 = expect2;
+	if args.assert
+	{
+		let error = false;
+		if args.test
+		{
+			e1 = expect1_test;
+			e2 = expect2_test;
+		}
+
+		if args.do_p1 and p1 != e1
+		{
+			println(ERROR_STR + "wrong part 1 answer.  Got """ +
+				p1 + """, expected """ + e1 + """");
+			error = true;
+		}
+		if args.do_p2 and p2 != e2
+		{
+			println(ERROR_STR + "wrong part 2 answer.  Got """ +
+				p2 + """, expected """ + e2 + """");
+			error = true;
+		}
+		if (error) exit(1);
+	}
+	return;
+}
+
 //==============================================================================
 
 fn countln_(filename: str): i32
