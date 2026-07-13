@@ -5,7 +5,7 @@
 //==============================================================================
 
 let ifile = 0;
-ifile = 1;
+//ifile = 1;
 
 let filenames =
 [
@@ -200,7 +200,10 @@ fn main(): str
 
 	let p1 = ""; let p2 = "";
 
-	//p1 = part1();
+	// Expect p2 == 2772 for test input
+	//
+	// Expect 10055:374307970285176 for real input (lengthy)
+	p1 = part1();
 	p2 = part2();
 
 	println("Ending AOC syntran main");

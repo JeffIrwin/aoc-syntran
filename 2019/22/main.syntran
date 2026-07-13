@@ -16,7 +16,7 @@ fn part1(args: &const Args): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("deck = ", deck);
+		//println("deck = ", deck);
 		println("str_ = ", str_);
 
 		if starts_with_(str_, "deal into")

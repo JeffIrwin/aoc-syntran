@@ -5,7 +5,7 @@ use ../../utils::*;
 //==============================================================================
 
 let ifile = 0;
-ifile = 1;
+//ifile = 1;
 
 let filenames =
 [
@@ -101,6 +101,9 @@ fn main(): str
 
 	let p1 = ""; let p2 = "";
 
+	// Expect p2 == 84462026 for test
+	//
+	// or 74608727:57920757 for real input (lengthy)
 	p1 = part1();
 	p2 = part2();
 

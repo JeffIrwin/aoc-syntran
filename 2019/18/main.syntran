@@ -481,7 +481,7 @@ fn main(): str
 
 	let expect1 = "5406";
 	let expect2 = "1938";
-	let expect1_test = "REPLACE_ME";
+	let expect1_test = "8";
 	let expect2_test = "REPLACE_ME";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
