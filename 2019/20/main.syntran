@@ -89,8 +89,7 @@ fn part1(args: &const Args): str
 	let sum_ = 0'i64;
 
 	let g = read_char_mat(args.input_filename);
-	println("g = ");
-	print_char_mat(&g);
+	//print_char_mat(&g);
 	const NX = size(g,0);
 	const NY = size(g,1);
 	let g2 = g; // g but with 2-char label as 2-char str at single x/y location
@@ -138,7 +137,7 @@ fn part1(args: &const Args): str
 			g2[x+1,y] = " ";
 		}
 	}
-	print_char_mat(&g2);
+	//print_char_mat(&g2);
 
 	// Search BFS from each portal to build a graph
 	let adj = dict_str::new();
@@ -151,7 +150,6 @@ fn part1(args: &const Args): str
 	{
 		let s = g2[x,y];
 		if (len(s) != 2) continue;
-		println("s = ", s);
 		if (s == "AA") aa = [x, y];
 		if (s == "ZZ") zz = [x, y];
 		pos.set(s, str(x, ",", y));
@@ -175,7 +173,6 @@ fn part1(args: &const Args): str
 			if (g2[x,y] == " ") continue;
 			if seen[x,y] continue;
 			seen[x,y] = true;
-			//println("u = ", u);
 
 			if len(g2[x,y]) == 2 and g2[x,y] != s
 			{
@@ -193,28 +190,23 @@ fn part1(args: &const Args): str
 			q.push([d+1, x, y+1]);
 		}
 	}
-	println("aa, zz = ", aa, zz);
-	adj.print("adj = ");
-	dis.print("dis = ");
-	pos.print("pos = ");
+	//adj.print("adj = ");
+	//dis.print("dis = ");
+	//pos.print("pos = ");
 
 	// We have the graph {adj, dis}. Now do Dijkstra from AA to ZZ
 	let q = minheap_vec_i32::new();
-	println("aa = ", aa);
 	q.push([[0], aa]);
 	let seen = [false; NX, NY];
 	while true
 	{
 		let u = q.pop();
-		println("u = ", u);
 		let d = u[0];
 		let x = u[1];
 		let y = u[2];
 		if seen[x,y] continue;
 		seen[x,y] = true;
 		let s = g2[x,y];
-		println("x, y = ", [x,y]);
-		println("s = ", s);
 		if s == "ZZ"
 		{
 			// idk where the +1 and -1 come from but idgaf about reading the
@@ -225,7 +217,6 @@ fn part1(args: &const Args): str
 		}
 		let nbrs_str = adj.get(s);
 		let nbrs = split_(nbrs_str, ",");
-		println("nbrs = ", nbrs);
 
 		for nbr in nbrs
 		{
@@ -255,8 +246,7 @@ fn part2(args: &const Args): str
 	let sum_ = 0'i64;
 
 	let g = read_char_mat(args.input_filename);
-	println("g = ");
-	print_char_mat(&g);
+	//print_char_mat(&g);
 	const NX = size(g,0);
 	const NY = size(g,1);
 	let g2 = g; // g but with 2-char label as 2-char str at single x/y location
@@ -304,7 +294,7 @@ fn part2(args: &const Args): str
 			g2[x+1,y] = " ";
 		}
 	}
-	print_char_mat(&g2);
+	//print_char_mat(&g2);
 
 	// Search BFS from each portal to build a graph
 	let adj = dict_str::new();
@@ -318,14 +308,11 @@ fn part2(args: &const Args): str
 	{
 		let s = g2[x,y];
 		if (len(s) != 2) continue;
-		println("s = ", s);
 		if (s == "AA") aa = [x, y];
 		if (s == "ZZ") zz = [x, y];
 		pos.set(s, str(x, ",", y));
 
 		let start_out = is_out(x, y, NX, NY);
-		println("x, y = ", [x, y]);
-		println("start_out = ", start_out);
 
 		// BFS
 		let q = queue_vec_i32::new();
@@ -346,7 +333,6 @@ fn part2(args: &const Args): str
 			if (g2[x,y] == " ") continue;
 			if seen[x,y] continue;
 			seen[x,y] = true;
-			//println("u = ", u);
 
 			if len(g2[x,y]) == 2 and g2[x,y] != s
 			{
@@ -371,22 +357,19 @@ fn part2(args: &const Args): str
 			q.push([d+1, x, y+1]);
 		}
 	}
-	println("aa, zz = ", aa, zz);
-	adj.print("adj = ");
-	dis.print("dis = ");
-	pos.print("pos = ");
-	lev.print("lev = ");
+	//adj.print("adj = ");
+	//dis.print("dis = ");
+	//pos.print("pos = ");
+	//lev.print("lev = ");
 
 	// We have the graph {adj, dis}. Now do Dijkstra from AA to ZZ
 	let q = minheap_vec_i32::new();
-	println("aa = ", aa);
 	q.push([[0], aa, [0]]); // queue of dist, position, and level
 	//let seen = [false; NX, NY];
 	let seen = dict_i64::new();
 	while true
 	{
 		let u = q.pop();
-		println("u = ", u);
 		let d = u[0];
 		let x = u[1];
 		let y = u[2];
@@ -397,8 +380,6 @@ fn part2(args: &const Args): str
 		if seen.contains(str([x,y,l])) continue;
 		seen.set(str([x,y,l]), 1'i64);
 		let s = g2[x,y];
-		println("x, y = ", [x,y]);
-		println("s = ", s);
 		if s == "ZZ" and l == 0
 		{
 			// idk where the +1 and -1 come from but idgaf about reading the
@@ -409,7 +390,6 @@ fn part2(args: &const Args): str
 		}
 		let nbrs_str = adj.get(s);
 		let nbrs = split_(nbrs_str, ",");
-		println("nbrs = ", nbrs);
 
 		for nbr in nbrs
 		{
