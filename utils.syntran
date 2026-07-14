@@ -1006,6 +1006,16 @@ fn pmod(i: i32, n: i32): i32
 	return (i % n + n) % n;
 }
 
+fn pmod64(i: i64, n: i64): i64
+{
+	// Modulo/remainder but always positive
+	//
+	// TODO: this is actually wrong (when n is negative?).  But it works for 2024
+	// day 14, so it works for enough cases to be helpful for aoc
+	//
+	return (i % n + n) % n;
+}
+
 //==============================================================================
 
 fn sort_index(v: [i32; :]): [i32; :]
@@ -1760,6 +1770,22 @@ fn count_set_bits(n: i32): i32
 		count += 1;
 	}
 	return count;
+}
+
+//==============================================================================
+
+fn powmod(base: i64, exponent: i64, modulus: i64): i64
+{
+	let result = 1'i64;
+	base = base % modulus;
+	while exponent > 0
+	{
+		if exponent % 2 == 1
+			result = (result * base) % modulus;
+		exponent /= 2;
+		base = (base * base) % modulus;
+	}
+	return result;
 }
 
 //==============================================================================

@@ -8,13 +8,27 @@ fn part1(args: &const Args): str
 {
 	let sum_ = 0'i64;
 
-	let deck = [0: 10];
-	if (args.input_filename == "input.txt") deck = [0: 10_007];
-	const N = size(deck);
+	let deck = [0: 10'i64];
+	if (args.input_filename == "input.txt") deck = [0: 10_007'i64];
 
-	let f = open(args.input_filename, "r");
-	let str_ = readln(f);
-	while not eof(f)
+	let lines = readlns_(args.input_filename);
+	apply_shuffle_process(&deck, &lines);
+
+	sum_ = 0;
+	while true
+	{
+		if (deck[sum_] == 2019) break;
+		sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn apply_shuffle_process(deck: &[i64; :], lines: &[str; :])
+{
+	const N = size(deck);
+	for str_ in lines
 	{
 		//println("deck = ", deck);
 		println("str_ = ", str_);
@@ -52,23 +66,355 @@ fn part1(args: &const Args): str
 			println(ERROR_STR, "bad instruction """, str_, """");
 			exit(1);
 		}
-
-		str_ = readln(f);
 	}
-	close(f);
+	return;
+}
 
-	//sum_ = deck[2019];
-	//println("deck 2018:2021 = ", deck[2018: 2021]);
-	sum_ = 0;
+fn part2brute(args: &const Args): str
+{
+	// Obviously I know brute-force won't scale, but I want this as a prototype
+	// so I can check my reverse solution at least for small NCARD/NSHUFFLE
+	let sum_ = 0'i64;
+
+	const NCARD = 10_007'i64; // TODO
+	const NSHUFFLE = 2'i64; // TODO
+
+	let deck = [0: NCARD];
+
+	let lines = readlns_(args.input_filename);
+	for i in [0: NSHUFFLE]
+		apply_shuffle_process(&deck, &lines);
+
+	//sum_ = 0;
+	//while true
+	//{
+	//	if (deck[sum_] == 2019) break;
+	//	sum_ += 1;
+	//}
+
+	// Part 1 asks what position is card 2019 in. Part 2 inversely asks what
+	// *card* is in *position* 2020. Ironically I misread part 1 for a while
+	// thinking it was asking the part 2 question (before I had even unlocked
+	// part 2)
+	sum_ = deck[2020]; // answer: 2379 for given NCARD/NSHUFFLE
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn part2idk(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const NCARD = 10_007'i64; // TODO
+	const NSHUFFLE = 2'i64; // TODO
+
+	let deck = [0: NCARD];
+	let map  = [0: NCARD];
+
+	let lines = readlns_(args.input_filename);
+	apply_shuffle_process(&map, &lines); // get the map
+
+	let period = 0'i64;
 	while true
 	{
-		if (deck[sum_] == 2019) break;
-		sum_ += 1;
+		// now we can do one whole shuffle process with a single array permutation
+		period += 1;
+		deck = deck[map];
+		if (deck[0] == 0) break;
 	}
+	// Period is 10_006 for NCARD==10_007, unfortunately it dependes on NCARD
+	println("period = ", period);
 
-	// Tried 8005 -- too high
+	const NCARD_REAL = 119_315_717_514_047;
+	const NSHUF_REAL = 101_741_582_076_661;
+	let gcd = gcd64(NCARD_REAL, NSHUF_REAL);
+	println("gcd = ", gcd); // gcd is 1! interesting coincidence
+	let lcm = lcm64(NCARD_REAL, NSHUF_REAL);
+	println("lcm = ", lcm);
 
-	println("part 1 = ", sum_);
+	// Part 1 asks what position is card 2019 in. Part 2 inversely asks what
+	// *card* is in *position* 2020. Ironically I misread part 1 for a while
+	// thinking it was asking the part 2 question (before I had even unlocked
+	// part 2)
+	sum_ = deck[2020]; // answer: 2379 for given NCARD/NSHUFFLE
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+// def inv(a, n): return pow(a, n-2, n)
+fn inv(a: i64, n: i64): i64
+{
+	return powmod(a, n-2, n);
+}
+
+fn mulmod(a: i64, b: i64, mod: i64): i64
+{
+	let result = 0'i64;
+	//a %= mod;
+	a = pmod64(a, mod);
+	
+	while (b != 0) {
+		if (b & 1'i64 != 0)
+			result = pmod64((result + a), mod);
+		a = pmod64((a + a), mod);
+		b >>= 1;
+	}
+	return result;
+}
+
+fn part2wrong(args: &const Args): str
+{
+	println();
+	let sum_ = 0'i64;
+	let la = 0'i64; let lb = 0'i64;
+
+	// n = 119315717514047
+	// c = 2020
+	// 
+	// a, b = 1, 0
+	// for l in fileinput.input():
+	//     if l == 'deal into new stack\n':
+	//         la, lb = -1, -1
+	//     elif l.startswith('deal with increment '):
+	//         la, lb = int(l[len('deal with increment '):]), 0
+	//     elif l.startswith('cut '):
+	//         la, lb = 1, -int(l[len('cut '):])
+	//     # la * (a * x + b) + lb == la * a * x + la*b + lb
+	//     # The `% n` doesn't change the result, but keeps the numbers small.
+	//     a = (la * a) % n
+	//     b = (la * b + lb) % n
+
+	const n = 119_315_717_514_047;
+	const c = 2020'i64;
+	let a = 1'i64; let b = 0'i64;
+	let lines = readlns_(args.input_filename);
+	for str_ in lines {
+		if starts_with_(str_, "deal into") {
+			la = -1; lb = -1;
+		} else if starts_with_(str_, "deal with increment") {
+			la = parse_i32(str_[19:]); lb = 0;
+		} else if starts_with_(str_, "cut") {
+			let n = parse_i32(str_[3:]);
+			la = 1; lb = -n;
+		}
+		a = (la * a) % n;
+		b = (la * b + lb) % n;
+	}
+	println("a, b = ", [a, b]);
+	const M = 101_741_582_076_661;
+
+	// # Example: (3^13) % 17
+	// print(modular_exponentiation(3, 13, 17)) 
+	// # Output: 7
+	println("powmod 3 13 17 = ", powmod(3'i64, 13'i64, 17'i64));
+
+	// # Fermat's little theorem gives a simple inv:
+	// def inv(a, n): return pow(a, n-2, n)
+	// 
+	// Ma = pow(a, M, n)
+	// Mb = (b * (Ma - 1) * inv(a-1, n)) % n
+	// 
+	// # This computes "where does 2020 end up", but I want "what is at 2020".
+	// #print((Ma * c + Mb) % n)
+	// 
+	// # So need to invert (2020 - MB) * inv(Ma)
+	// print(((c - Mb) * inv(Ma, n)) % n)
+
+	let Ma = powmod(a, M, n);
+	println("Ma = ", Ma);
+
+	//// Mb overflows :( ??
+	//let Mb = (b * (Ma - 1) * inv(a-1, n)) % n;
+	//let Mb = pmod64((b * (Ma - 1) * inv(a-1, n)), n);
+	//println("product = ", (b * (Ma - 1) * inv(a-1, n)));
+	//uint64_t result = mulmod(mulmod(a, b, d), c, d);
+	let Mb = mulmod(mulmod(b, Ma-1, n), inv(a-1,n), n);
+	println("Mb = ", Mb);
+
+	//sum_ = ((c - Mb) * inv(Ma, n)) % n;
+	sum_ = pmod64(((c - Mb) * inv(Ma, n)), n);
+	//sum_ = mulmod(c-Mb, inv(Ma,n), n);
+
+	// Tried 108426862552642 -- too high
+	// Tried 92453952123341 -- too high
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+// from __future__ import division, print_function
+// import fileinput
+// 
+// n = 119315717514047
+// c = 2020
+// 
+// a, b = 1, 0
+// for l in fileinput.input():
+//     if l == 'deal into new stack\n':
+//         la, lb = -1, -1
+//     elif l.startswith('deal with increment '):
+//         la, lb = int(l[len('deal with increment '):]), 0
+//     elif l.startswith('cut '):
+//         la, lb = 1, -int(l[len('cut '):])
+//     # la * (a * x + b) + lb == la * a * x + la*b + lb
+//     # The `% n` doesn't change the result, but keeps the numbers small.
+//     a = (la * a) % n
+//     b = (la * b + lb) % n
+// 
+// M = 101741582076661
+// # Now want to morally run:
+// # la, lb = a, b
+// # a = 1, b = 0
+// # for i in range(M):
+// #     a, b = (a * la) % n, (la * b + lb) % n
+// 
+// # For a, this is same as computing (a ** M) % n, which is in the computable
+// # realm with fast exponentiation.
+// # For b, this is same as computing ... + a**2 * b + a*b + b
+// # == b * (a**(M-1) + a**(M) + ... + a + 1) == b * (a**M - 1)/(a-1)
+// # That's again computable, but we need the inverse of a-1 mod n.
+// 
+// # Fermat's little theorem gives a simple inv:
+// def inv(a, n): return pow(a, n-2, n)
+// 
+// Ma = pow(a, M, n)
+// Mb = (b * (Ma - 1) * inv(a-1, n)) % n
+// 
+// # This computes "where does 2020 end up", but I want "what is at 2020".
+// #print((Ma * c + Mb) % n)
+// 
+// # So need to invert (2020 - MB) * inv(Ma)
+// print(((c - Mb) * inv(Ma, n)) % n)
+
+
+//---------------------------------------------------
+
+// # convert rules to linear polynomial.
+// # (g∘f)(x) = g(f(x))
+// def parse(L, rules):
+//     a,b = 1,0
+//     for s in rules[::-1]:
+//         if s == 'deal into new stack':
+//             a = -a
+//             b = L-b-1
+//             continue
+//         if s.startswith('cut'):
+//             n = int(s.split(' ')[1])
+//             b = (b+n)%L
+//             continue
+//         if s.startswith('deal with increment'):
+//             n = int(s.split(' ')[3])
+//             z = pow(n,L-2,L) # == modinv(n,L)
+//             a = a*z % L
+//             b = b*z % L
+//             continue
+//         raise Exception('unknown rule', s)
+//     return a,b
+fn parse(L: i64, rules: [str; :]): [i64; :]
+{
+	let a = 1'i64; let b = 0'i64;
+	for str_ in rules {
+		if starts_with_(str_, "deal into") {
+			a = -a;
+			b = L-b-1;
+		} else if starts_with_(str_, "deal with increment") {
+			let n = i64(parse_i32(str_[19:]));
+			b = pmod64((b+n), L);
+		} else if starts_with_(str_, "cut") {
+			let n = i64(parse_i32(str_[3:]));
+			let z = powmod(n, L-2, L);
+			a = mulmod(a, z, L); //pmod64(a*z, L);
+			b = mulmod(b, z, L); //pmod64(b*z, L);
+		}
+	}
+	return [a, b];
+}
+
+// # modpow the polynomial: (ax+b)^m % n
+// # f(x) = ax+b
+// # g(x) = cx+d
+// # f^2(x) = a(ax+b)+b = aax + ab+b
+// # f(g(x)) = a(cx+d)+b = acx + ad+b
+// def polypow(a,b,m,n):
+//     if m==0:
+//         return 1,0
+//     if m%2==0:
+//         return polypow(a*a%n, (a*b+b)%n, m//2, n)
+//     else:
+//         c,d = polypow(a,b,m-1,n)
+//         return a*c%n, (a*d+b)%n
+fn polypow(a: i64, b: i64, m: i64, n: i64): [i64; :]
+{
+	if m == 0
+		return i64([1, 0]);
+	if m%2 == 0
+	{
+		//return polypow(a*a%n, (a*b+b)%n, m/2, n);
+		//return polypow(mulmod(a,a,n), (a*b+b)%n, m/2, n);
+		return polypow(mulmod(a,a,n), pmod64((mulmod(a,b,n) + pmod64(b,n)),n), m/2, n);
+	}
+	let cd = polypow(a, b, m-1, n);
+	let c = cd[0];
+	let d = cd[1];
+	//let ans = [0'i64]; // just fixed a syntran bug where we had to workaround recursive type checker
+	//ans = [a*c%n, (a*d+b)%n];
+	//ans = [mulmod(a,c,n), (a*d+b)%n];
+	let ans = [mulmod(a,c,n), pmod64((mulmod(a,d,n) + pmod64(b,n)), n)];
+	return ans;
+}
+
+// def shuffle2(L, N, pos, rules):
+//     a,b = parse(L,rules)
+//     a,b = polypow(a,b,N,L)
+//     return (pos*a+b)%L
+fn shuffle2(L: i64, N: i64, pos: i64, rules: [str; :]): i64
+{
+	let ab = parse(L, rules);
+	ab = polypow(ab[0], ab[1], N, L);
+	//return pmod64(pos*ab[0] + ab[1], L); // TODO: overflow? mulmod?
+	//return (pos*ab[0] + ab[1]) % L; // TODO: overflow? mulmod?
+	return pmod64((mulmod(pos,ab[0],L) + pmod64(ab[1],L)), L);
+}
+
+// %%time
+// # test it out
+// pos = 2020
+// L = 10007
+// N = 10
+// deck = list(range(L))
+// for i in range(N):
+//     deck = shuffle(deck,rules)
+// print(deck[pos])
+// print(shuffle2(L,N,pos,rules))
+
+// 8434
+// 8434
+// Wall time: 794 ms
+
+// %%time
+// L = 119315717514047
+// N = 101741582076661
+// shuffle2(L,N,2020,rules)
+fn part2(args: &const Args): str
+{
+	println();
+	let sum_ = 0'i64;
+	let la = 0'i64; let lb = 0'i64;
+
+	let rules = readlns_(args.input_filename);
+	//let ab = parse(lines);
+
+	let L = 119315717514047;
+	let N = 101741582076661;
+	sum_ = shuffle2(L, N, 2020'i64, rules);
+
+	// Tried 118576047937380 -- even higher than my previous too-high answers
+	// Tried  57432733587037 -- too low
+	// Tried  67751623756271 -- wrong
+	// Tried  70714672769570 -- wrong
+	// Right: 74258074061935
+	// Tried  22115209784004
+	println("part 2 = ", sum_);
 	return str(sum_);
 }
 
@@ -85,7 +431,7 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "5169";
 	let expect2 = "REPLACE_ME";
