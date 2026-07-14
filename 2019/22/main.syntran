@@ -149,22 +149,7 @@ fn inv(a: i64, n: i64): i64
 	return powmod(a, n-2, n);
 }
 
-fn mulmod(a: i64, b: i64, mod: i64): i64
-{
-	let result = 0'i64;
-	//a %= mod;
-	a = pmod64(a, mod);
-	
-	while (b != 0) {
-		if (b & 1'i64 != 0)
-			result = pmod64((result + a), mod);
-		a = pmod64((a + a), mod);
-		b >>= 1;
-	}
-	return result;
-}
-
-fn part2wrong(args: &const Args): str
+fn part2(args: &const Args): str
 {
 	println();
 	let sum_ = 0'i64;
@@ -172,7 +157,7 @@ fn part2wrong(args: &const Args): str
 
 	// n = 119315717514047
 	// c = 2020
-	// 
+	//
 	// a, b = 1, 0
 	// for l in fileinput.input():
 	//     if l == 'deal into new stack\n':
@@ -201,24 +186,26 @@ fn part2wrong(args: &const Args): str
 		}
 		a = (la * a) % n;
 		b = (la * b + lb) % n;
+		//a = mulmod(la, a, n);
+		//b = (mulmod(la, b, n) + lb%n) % n;
 	}
 	println("a, b = ", [a, b]);
 	const M = 101_741_582_076_661;
 
 	// # Example: (3^13) % 17
-	// print(modular_exponentiation(3, 13, 17)) 
+	// print(modular_exponentiation(3, 13, 17))
 	// # Output: 7
 	println("powmod 3 13 17 = ", powmod(3'i64, 13'i64, 17'i64));
 
 	// # Fermat's little theorem gives a simple inv:
 	// def inv(a, n): return pow(a, n-2, n)
-	// 
+	//
 	// Ma = pow(a, M, n)
 	// Mb = (b * (Ma - 1) * inv(a-1, n)) % n
-	// 
+	//
 	// # This computes "where does 2020 end up", but I want "what is at 2020".
 	// #print((Ma * c + Mb) % n)
-	// 
+	//
 	// # So need to invert (2020 - MB) * inv(Ma)
 	// print(((c - Mb) * inv(Ma, n)) % n)
 
@@ -234,8 +221,13 @@ fn part2wrong(args: &const Args): str
 	println("Mb = ", Mb);
 
 	//sum_ = ((c - Mb) * inv(Ma, n)) % n;
-	sum_ = pmod64(((c - Mb) * inv(Ma, n)), n);
-	//sum_ = mulmod(c-Mb, inv(Ma,n), n);
+	//sum_ = pmod64(((c - Mb) * inv(Ma, n)), n);
+	sum_ = mulmod(c-Mb, inv(Ma,n), n);
+
+	// Finally! I probably tried the correct combination of code here (it was
+	// commented-out) but the key was also using positive modulus (pmod64) in
+	// the implementations of mulmod() and powmod(), which I had not tried
+	// before
 
 	// Tried 108426862552642 -- too high
 	// Tried 92453952123341 -- too high
@@ -244,10 +236,10 @@ fn part2wrong(args: &const Args): str
 }
 // from __future__ import division, print_function
 // import fileinput
-// 
+//
 // n = 119315717514047
 // c = 2020
-// 
+//
 // a, b = 1, 0
 // for l in fileinput.input():
 //     if l == 'deal into new stack\n':
@@ -260,29 +252,29 @@ fn part2wrong(args: &const Args): str
 //     # The `% n` doesn't change the result, but keeps the numbers small.
 //     a = (la * a) % n
 //     b = (la * b + lb) % n
-// 
+//
 // M = 101741582076661
 // # Now want to morally run:
 // # la, lb = a, b
 // # a = 1, b = 0
 // # for i in range(M):
 // #     a, b = (a * la) % n, (la * b + lb) % n
-// 
+//
 // # For a, this is same as computing (a ** M) % n, which is in the computable
 // # realm with fast exponentiation.
 // # For b, this is same as computing ... + a**2 * b + a*b + b
 // # == b * (a**(M-1) + a**(M) + ... + a + 1) == b * (a**M - 1)/(a-1)
 // # That's again computable, but we need the inverse of a-1 mod n.
-// 
+//
 // # Fermat's little theorem gives a simple inv:
 // def inv(a, n): return pow(a, n-2, n)
-// 
+//
 // Ma = pow(a, M, n)
 // Mb = (b * (Ma - 1) * inv(a-1, n)) % n
-// 
+//
 // # This computes "where does 2020 end up", but I want "what is at 2020".
 // #print((Ma * c + Mb) % n)
-// 
+//
 // # So need to invert (2020 - MB) * inv(Ma)
 // print(((c - Mb) * inv(Ma, n)) % n)
 
@@ -395,7 +387,7 @@ fn shuffle2(L: i64, N: i64, pos: i64, rules: [str; :]): i64
 // L = 119315717514047
 // N = 101741582076661
 // shuffle2(L,N,2020,rules)
-fn part2(args: &const Args): str
+fn part2_also_wrong(args: &const Args): str
 {
 	println();
 	let sum_ = 0'i64;
@@ -434,7 +426,7 @@ fn main(): str
 	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "5169";
-	let expect2 = "REPLACE_ME";
+	let expect2 = "74258074061935";
 	let expect1_test = "REPLACE_ME";
 	let expect2_test = "REPLACE_ME";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
