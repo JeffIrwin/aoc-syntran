@@ -1,0 +1,94 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(args.input_filename);
+	print_char_mat(&g);
+
+	const NX = i32(size(g,0));
+	const NY = i32(size(g,1));
+
+	let seen = dict_i64::new();
+	let it = 0'i64;
+	while true
+	{
+		const SG = str(g);
+		if (seen.contains(SG)) break;
+		seen.set(SG, it);
+		let g0 = g; // could swap current and previous roles as an optimization
+
+		for y in [0: NY]
+		for x in [0: NX]
+		{
+			// Count neighbors
+			let n = 0;
+			for yn in [max(y-1,0): min(y+2,NY)]
+			for xn in [max(x-1,0): min(x+2,NX)]
+			{
+				if (x!=xn and y!=yn) continue; // no diagonals
+				if (x==xn and y==yn) continue; // don't count self
+				if (g0[xn,yn] == "#") n += 1;
+			}
+			if g0[x,y] == "#" and n != 1
+				g[x,y] = ".";
+			if g0[x,y] == "." and (n == 1 or n == 2)
+				g[x,y] = "#";
+		}
+		print_char_mat(&g);
+
+		it += 1;
+		//if (it == 5) break;
+	}
+
+	// Calculate "biodiversity"
+	let i = 0;
+	for y in [0: NY]
+	for x in [0: NX]
+	{
+		if g[x,y] == "#"
+			sum_ |= 1'i64 << i;
+		i += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2019/24" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "REPLACE_ME_P1";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
