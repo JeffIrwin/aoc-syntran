@@ -1,0 +1,100 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let has_char = [false; 26];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		for c in str_
+			has_char[i32(c) - i32("a")] = true;
+
+		if str_ == ""
+		{
+			sum_ += count(has_char);
+			has_char = false;
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	sum_ += count(has_char); // no blank line before eof
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let has_char = [false; 26];
+	let all_yes  = [true; 26];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		has_char = false;
+		for c in str_
+			has_char[i32(c) - i32("a")] = true;
+		if (str_ != "") all_yes = all_yes and has_char;
+		//println("has_char = ", has_char);
+		//println("all_yes  = ", all_yes);
+
+		if str_ == ""
+		{
+			//println("all_yes = ", all_yes);
+			sum_ += count(all_yes);
+			all_yes  = true;
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	sum_ += count(all_yes); // no blank line before eof
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/6" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "6930";
+	let expect2 = "3585";
+	let expect1_test = "11";
+	let expect2_test = "6";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

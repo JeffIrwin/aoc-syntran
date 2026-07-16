@@ -1,0 +1,190 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+	let graph = dict_str::new();
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		//println("words = ", words);
+		if words[2] != "bags"
+		{
+			println(ERROR_STR + "did not find 'bags' as third word");
+			exit(1);
+		}
+		let parent = words[0] + " " + words[1];
+		//println("parent = ", parent);
+
+		// Ignore parents with no children
+		if words[4] != "no"
+		{
+			let i = 4;
+			while i < size(words)
+			{
+				let num = words[i];
+				let child = words[i+1] + " " + words[i+2];
+				//println("num = ", num);
+				//println("child = ", child);
+
+				let children = graph.get(parent);
+				graph.set(parent, children + child + ",");
+
+				i += 4;
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	//graph.print("graph = ");
+
+	// Find how many parent bags can reach target as direct or indirect
+	// descendents
+	let target = "shiny gold";
+	//println("keys = ", graph.get_keys());
+	for parent in graph.get_keys()
+	{
+		//println("parent = ", parent);
+		if dfs1(&graph, parent, target)
+			sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+	let graph = dict_str::new();
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let words = split_(str_, " ");
+		//println("words = ", words);
+		if words[2] != "bags"
+		{
+			println(ERROR_STR + "did not find 'bags' as third word");
+			exit(1);
+		}
+		let parent = words[0] + " " + words[1];
+		//println("parent = ", parent);
+
+		// Ignore parents with no children
+		if words[4] != "no"
+		{
+			let i = 4;
+			while i < size(words)
+			{
+				let num = words[i];
+				let child = words[i+1] + " " + words[i+2];
+				//println("num = ", num);
+				//println("child = ", child);
+
+				let children = graph.get(parent);
+				graph.set(parent, children + num + ":" + child + ",");
+
+				i += 4;
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	//graph.print("graph = ");
+
+	// Find how many parent bags can reach target as direct or indirect
+	// descendents
+	let target = "shiny gold";
+	sum_ = dfs2(&graph, target) - 1;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+let cache2 = dict_i64::new();
+fn dfs2(graph: &dict_str::dict_str, node: str): i32
+{
+	let cached = cache2.get(node);
+	if cached >= 0
+		return i32(cached);
+	let n = 1;
+	for num_child in split_(graph.get(node), ",")
+	{
+		let words = split_(num_child, ":");
+		let num = parse_i32(words[0]);
+		let child = words[1];
+		n += num * dfs2(&graph, child);
+	}
+	cache2.set(node, i64(n));
+	return n;
+}
+
+let cache1 = dict_i64::new();
+fn dfs1(graph: &dict_str::dict_str, node: str, target: str): bool
+{
+	let cached = cache1.get(node);
+	if cached >= 0
+		return cached == 1;
+	for child in split_(graph.get(node), ",")
+	{
+		if child == target
+		{
+			cache1.set(node, 1'i64);
+			return true;
+		}
+		if dfs1(&graph, child, target)
+		{
+			cache1.set(node, 1'i64);
+			return true;
+		}
+	}
+	cache1.set(node, 0'i64);
+	return false;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/7" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "185";
+	let expect2 = "89084";
+	let expect1_test = "4";
+	let expect2_test = "32";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
