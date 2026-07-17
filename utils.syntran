@@ -1647,6 +1647,36 @@ fn read_i32_mat_delim(filename: str, delims: str): [i32; :,:]
 
 //==============================================================================
 
+fn read_i64_mat(filename: str): [i64; :,:]
+{
+	// Read a matrix of comma-delimited i64 integers from a file
+	let delims = ", ";
+	return read_i64_mat_delim(filename, delims);
+}
+
+//==============================================================================
+
+fn read_i64_mat_delim(filename: str, delims: str): [i64; :,:]
+{
+	// Read a matrix of i64 integers from a file with custom delimiters
+	let ny = countln_(filename);
+	let f = open(filename, "r");
+	let str_ = readln(f);
+	let row = parse_i64_delim(str_, delims);
+	let nx = size(row, 0);
+	let mat = [0'i64; nx, ny];
+	for y in [0: ny]
+	{
+		//println("str_ = ", str_);
+		mat[:,y] = parse_i64_delim(str_, delims);
+		str_ = readln(f);
+	}
+	close(f);
+	return mat;
+}
+
+//==============================================================================
+
 fn base_n(a: i64, n: i64): [i32; :]
 {
 	// TODO: this is not well-tested.  I tried to use it in 2024/19 but then

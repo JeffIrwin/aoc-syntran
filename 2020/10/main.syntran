@@ -1,0 +1,86 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+	const MAT = read_i32_mat(args.input_filename);
+	let v = sort_inplace([[0], MAT[0,:]]); // pre-pend 0 for "charging outlet"
+	let dv = v[1:] - v[0: size(v)-1];
+	sum_ = count(dv == 1) * (count(dv == 3) + 1); // add 1 for "built-in adapter"
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+	const MAT = read_i32_mat(args.input_filename);
+
+	// Pre-pend 0 for "charging outlet" and append built-in adapter, unlike part 1
+	let v = sort_inplace([[0], MAT[0,:], [maxval(MAT)+3]]); 
+	const N = size(v);
+	//println("v = ", v);
+	//println("count 0 = ", count(v[1:] - v[0: size(v)-1] == 0));
+
+	// Count number of paths from each position to end
+	let c = [0'i64; N];
+	c[N-1] = 1; // base case
+	for i in [N-2: -1: -1]
+	{
+		// Recursive case: number of paths from index `i` to end is the sum of
+		// path counts of all nodes within 3 of current node
+		let ci = 0'i64;
+		let j = i + 1;
+		while true
+		{
+			if (j >= N) break;
+			if (v[j] - v[i] > 3) break;
+			ci += c[j]; // sum
+			j += 1;
+		}
+		c[i] = ci;
+	}
+	//println("c = ", c);
+
+	sum_ = c[0];
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/10" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "2100";
+	let expect2 = "16198260678656";
+	let expect1_test = "220";
+	let expect2_test = "19208";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

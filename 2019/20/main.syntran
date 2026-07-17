@@ -7,8 +7,6 @@ use ../../minheap_vec_i32_2026 as minheap_vec_i32;
 
 //==============================================================================
 
-// TODO: arg parser implementation and maybe the assertion coda from main should
-
 fn part1(args: &const Args): str
 {
 	let sum_ = 0'i64;

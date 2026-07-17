@@ -1,0 +1,129 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const MAT = read_i64_mat(args.input_filename);
+	//println("MAT = ", MAT);
+	let v = MAT[0,:];
+	//println("v = ", v);
+
+	const N = size(v);
+	let n = 25;
+	if (args.input_filename == "test-input.txt") n = 5;
+	//println("n = ", n);
+
+	for i in [n: N]
+	{
+		let vi = v[i];
+		let found = false;
+		for j in [i-n: i]
+		for k in [i-n: j]
+		{
+			if not found
+			{
+				found = v[j] + v[k] == vi;
+				if (found) break; // double break would be useful here
+			}
+		}
+		if not found
+		{
+			sum_ = vi;
+			break;
+		}
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const MAT = read_i64_mat(args.input_filename);
+	//println("MAT = ", MAT);
+	let v = MAT[0,:];
+	//println("v = ", v);
+
+	const N = size(v);
+	let n = 25;
+	if (args.input_filename == "test-input.txt") n = 5;
+	//println("n = ", n);
+
+	for i in [n: N]
+	{
+		let vi = v[i];
+		let found = false;
+		for j in [i-n: i]
+		for k in [i-n: j]
+		{
+			if not found
+			{
+				found = v[j] + v[k] == vi;
+				if (found) break;
+			}
+		}
+		if not found
+		{
+			// Find a range of numbers from the list which sums to vi
+			for k in [0: N]
+			for j in [0: k]
+			{
+				if (found) break;
+
+				// I believe there are better algorithms to avoid recalculating
+				// the whole sum every time (cumsum?), but this runs in 0.2 s
+				found = sum(v[j:k]) == vi;
+
+				if found
+				{
+					//println("j, k = ", [j, k]);
+					sum_ = minval(v[j:k]) + maxval(v[j:k]);
+				}
+			}
+			break;
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/9" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "1504371145";
+	let expect2 = "183278487";
+	let expect1_test = "127";
+	let expect2_test = "62";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
