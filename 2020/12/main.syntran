@@ -1,0 +1,169 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let x = 0;
+	let y = 0;
+	let dir = 0;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let c = str_[0];
+		let num = parse_i32(str_[1:]);
+		//println("c, num = ", c, " ", num);
+
+		if c == "E"
+			x += num;
+		if c == "W"
+			x -= num;
+		if c == "N"
+			y += num;
+		if c == "S"
+			y -= num;
+		if c == "L"
+			dir = pmod(dir + num, 360);
+		if c == "R"
+			dir = pmod(dir - num, 360);
+		if c == "F"
+		{
+			if dir == 0
+				x += num;
+			if dir == 90
+				y += num;
+			if dir == 180
+				x -= num;
+			if dir == 270
+				y -= num;
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	sum_ = abs(x) + abs(y);
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let x = 0;
+	let y = 0;
+	let dir = 0;
+	let wx = 10;
+	let wy = 1;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		let c = str_[0];
+		let num = parse_i32(str_[1:]);
+
+		if c == "E"
+			wx += num;
+		if c == "W"
+			wx -= num;
+		if c == "N"
+			wy += num;
+		if c == "S"
+			wy -= num;
+		if c == "L"
+		{
+			if num == 90
+			{
+				let tmp = wx;
+				wx = -wy;
+				wy =  tmp;
+			}
+			if num == 180
+			{
+				wx = -wx;
+				wy = -wy;
+			}
+			if num == 270
+			{
+				let tmp = wx;
+				wx =  wy;
+				wy = -tmp;
+			}
+		}
+		if c == "R"
+		{
+			if num == 90
+			{
+				let tmp = wx;
+				wx =  wy;
+				wy = -tmp;
+			}
+			if num == 180
+			{
+				wx = -wx;
+				wy = -wy;
+			}
+			if num == 270
+			{
+				let tmp = wx;
+				wx = -wy;
+				wy =  tmp;
+			}
+		}
+		if c == "F"
+		{
+			x += num * wx;
+			y += num * wy;
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	sum_ = abs(x) + abs(y);
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/12" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "1631";
+	let expect2 = "58606";
+	let expect1_test = "25";
+	let expect2_test = "286";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
