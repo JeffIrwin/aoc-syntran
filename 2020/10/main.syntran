@@ -34,16 +34,17 @@ fn part2(args: &const Args): str
 	{
 		// Recursive case: number of paths from index `i` to end is the sum of
 		// path counts of all nodes within 3 of current node
-		let ci = 0'i64;
+		//
+		// We're implicitly building a graph in a single vector, but just its
+		// counts instead of actual connections
 		let j = i + 1;
 		while true
 		{
 			if (j >= N) break;
 			if (v[j] - v[i] > 3) break;
-			ci += c[j]; // sum
+			c[i] += c[j]; // sum
 			j += 1;
 		}
-		c[i] = ci;
 	}
 	//println("c = ", c);
 

@@ -1,0 +1,147 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(args.input_filename);
+	const NX = i32(size(g,0));
+	const NY = i32(size(g,1));
+	//print_char_mat(&g);
+
+	let it = 0;
+	while true
+	{
+		let g0 = g;
+		for y in [0: NY]
+		for x in [0: NX]
+		{
+			let c = g0[x,y];
+			if (c == ".") continue;
+			let n = 0;
+			for yn in [max(y-1,0): min(y+2,NY)]
+			for xn in [max(x-1,0): min(x+2,NX)]
+				if (g0[xn,yn] == "#") n += 1;
+			if c == "L" and n == 0
+				g[x,y] = "#";
+			if c == "#" and n >= 5
+				g[x,y] = "L";
+		}
+		//print_char_mat(&g);
+		it += 1;
+		if all(g == g0)
+			break;
+		//if it == 5
+		//	break;
+	}
+	sum_ = count(g == "#");
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_char_mat(args.input_filename);
+	const NX = i32(size(g,0));
+	const NY = i32(size(g,1));
+	//print_char_mat(&g);
+
+	const DIRS = [
+		 1,  0,
+		-1,  0,
+		 0,  1,
+		 0, -1,
+		 1,  1,
+		 1, -1,
+		-1,  1,
+		-1, -1
+		;
+		2, 8
+	];
+
+	let it = 0;
+	while true
+	{
+		let g0 = g;
+		for y in [0: NY]
+		for x in [0: NX]
+		{
+			let c = g0[x,y];
+			if (c == ".") continue;
+			let n = 0;
+
+			// This could be optimized by caching partial site lines that have
+			// already been walked
+			for id in [0: 8]
+			{
+				const D = DIRS[:,id];
+				let dx = 0;
+				while true
+				{
+					dx += 1;
+					let xn = x + dx * D[0];
+					let yn = y + dx * D[1];
+					if (xn < 0 or xn >= NX) break;
+					if (yn < 0 or yn >= NY) break;
+					if (g0[xn,yn] == ".") continue;
+					if g0[xn,yn] == "#"
+						n += 1;
+					break;
+				}
+			}
+
+			if c == "L" and n == 0
+				g[x,y] = "#";
+			if c == "#" and n >= 5
+				g[x,y] = "L";
+		}
+		//print_char_mat(&g);
+		it += 1;
+		if all(g == g0)
+			break;
+	}
+	sum_ = count(g == "#");
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/11" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "2211";
+	let expect2 = "1995";
+	let expect1_test = "37";
+	let expect2_test = "26";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
