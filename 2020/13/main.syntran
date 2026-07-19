@@ -1,0 +1,137 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let tmin = parse_i32(readln(f));
+	let v = parse_i32_delim(readln(f), ",x"); // ignore x's
+	close(f);
+
+	//println("tmin = ", tmin);
+	//println("v = ", v);
+	//println(v - tmin%v);
+
+	let tv = v - tmin % v;
+
+	// Find minloc of tv
+	let tvmin = 2_000_000_000;
+	let imin = -1;
+	for i in [0: size(tv)]
+		if tv[i] < tvmin
+		{
+			tvmin = tv[i];
+			imin = i;
+		}
+
+	sum_ = tvmin * v[imin];
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let tmin = parse_i32(readln(f));
+
+	// Can't completely ignore x's for part 2 -- we need the original index of
+	// each period
+	let str_ = readln(f);
+	close(f);
+
+	let vstr = split_(str_, ",");
+	let v = parse_i32_delim(str_, ",x"); // ignore x's
+	const N = size(v);
+	let iv = [-1; N];
+	let k = 0;
+	for i in [0: size(vstr)]
+	{
+		let s = vstr[i];
+		if s != "x"
+		{
+			iv[k] = i;
+			k += 1;
+		}
+	}
+	println("vstr = ", vstr);
+	println("v = ", v);
+	println("iv = ", iv);
+
+	// Divide and conquer. Start with just the first two busses, find the
+	// `start` timestamp where they first sync up and the period `inc` by which
+	// they sync up again thereafter
+	//
+	// Iteratively add bus `j`. When adding the third bus, we know it can't sync
+	// up earlier than the `start` sync of the first pair and it must also
+	// happen at a whole number of `inc` periods. This massively narrows down
+	// the search space compared to incrementing by 1
+	let start = i64(iv[0]);
+	let j = 0;
+	let inc = i64(v[j]);
+	while true
+	{
+		let i = start;
+		j += 1;
+		if (j >= N) break;
+		while true
+		{
+			if (i + iv[j]) % v[j] == 0
+			{
+				start = i;
+				inc = lcm64(inc, i64(v[j]));
+				break;
+			}
+			i += inc;
+		}
+		println("i = ", i);
+		//println("start = ", start);
+		//println("inc = ", inc);
+		//println();
+	}
+	sum_ = start;
+
+	// Tried 459863907575472 -- too high
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/13" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "2045";
+	let expect2 = "402251700208309";
+	let expect1_test = "295";
+	let expect2_test = "1068781";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
