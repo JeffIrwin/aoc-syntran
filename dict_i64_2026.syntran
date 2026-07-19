@@ -112,15 +112,29 @@ struct dict_i64
 
 	const fn get_keys(): [str; :]
 	{
-		let k = [""; n];
+		let arr = [""; n];
 		let j = 0;
 		for i in [0: cap]
 		{
 			if (not used[i]) continue;
-			k[j] = keys[i];
+			arr[j] = keys[i];
 			j += 1;
 		}
-		return k;
+		return arr;
+	}
+
+	// TODO: port get_vals to dict_str
+	const fn get_vals(): [i64; :]
+	{
+		let arr = [0'i64; n];
+		let j = 0;
+		for i in [0: cap]
+		{
+			if (not used[i]) continue;
+			arr[j] = vals[i];
+			j += 1;
+		}
+		return arr;
 	}
 }
 

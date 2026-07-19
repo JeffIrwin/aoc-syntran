@@ -83,10 +83,12 @@ fn part2(args: &const Args): str
 		if (j >= N) break;
 		while true
 		{
+			//println("    i = ", i);
 			if (i + iv[j]) % v[j] == 0
 			{
 				start = i;
 				inc = lcm64(inc, i64(v[j]));
+				//inc *= v[j]; // also works since bus periods are prime
 				break;
 			}
 			i += inc;

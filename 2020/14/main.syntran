@@ -1,0 +1,178 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let mask = "";
+	let mem = dict_i64::new();
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let words = split_(str_, " =");
+
+		if starts_with_(str_, "mask")
+		{
+			mask = words[1];
+			//println("mask           = ", mask);
+		}
+		if starts_with_(str_, "mem")
+		{
+			let val = parse_i64(words[1]);
+			let words = split_(str_, "[]");
+			let adr = words[1];
+			//println("adr = ", adr);
+			//println("val = ", val);
+
+			let i = len(mask);
+			for c in mask
+			{
+				i -= 1;
+				if c == "0"
+					val &= !(1'i64 << i);
+				if c == "1"
+					val |=  (1'i64 << i);
+			}
+			//println("masked val = ", val);
+			mem.set(adr, val);
+		}
+		str_ = readln(f);
+	}
+	close(f);
+
+	sum_ = sum(mem.get_vals());
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let mask = "";
+	let mem = dict_i64::new();
+	let nxmax = 0;
+	let ix = [0; 64];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let words = split_(str_, " =");
+
+		if starts_with_(str_, "mask")
+		{
+			mask = words[1];
+			//println("mask           = ", mask);
+		}
+		if starts_with_(str_, "mem")
+		{
+			let val = parse_i64(words[1]);
+			let words = split_(str_, "[]");
+			let adr = parse_i64(words[1]);
+			//println("adr = ", adr);
+			//println("val = ", val);
+
+			let res = mask;
+			let i = len(res);
+			let nx = 0;
+			for c in res
+			{
+				i -= 1;
+				let j = len(res) - 1 - i;
+				if c == "0"
+				{
+					// Unchanged
+					if (adr >> i) & 1'i64 == 1
+						res[j] = "1";
+					else
+						res[j] = "0";
+				}
+				if c == "1" // overwrite
+					res[j] = "1";
+				if c == "X"
+				{
+					res[j] = "X";
+					ix[nx] = j;
+					nx += 1;
+				}
+			}
+			//println("res = ", res);
+			//println("nx = ", nx);
+			//println("ix = ", ix[:nx]);
+			nxmax = max(nxmax, nx);
+
+			// Spread floating X bits and iterate over all addresses and update
+			// mem dict
+			for j in [0: 1'i64 << nx]
+			{
+				//println("j = ", j);
+				let adr = res; // shadow
+
+				// Spread out the bits of j to replace the X's in adr
+				for i in [0: nx]
+				{
+					if (j >> i) & 1'i64 == 1
+						adr[ix[i]] = "1";
+					else
+						adr[ix[i]] = "0";
+				}
+				//println("adr = ", adr);
+
+				// No need to convert binary adr to decimal, just use the binary
+				// str directly as the dict key
+				mem.set(adr, val);
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	//println("nxmax = ", nxmax);
+
+	sum_ = sum(mem.get_vals());
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/14" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "12135523360904";
+	let expect2 = "2741969047858";
+	let expect1_test = "165";
+	let expect2_test = "208"; // different test-input1.txt
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
