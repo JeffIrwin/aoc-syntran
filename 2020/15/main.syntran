@@ -1,0 +1,148 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let ans = solve(&args, 2020);
+	println("part 1 = ", ans);
+	return ans;
+}
+
+fn part2(args: &const Args): str
+{
+	let ans = solve(&args, 30_000_000);
+	//let ans = solve_dict(&args, 30_000_000);
+	println("part 2 = ", ans);
+	return ans;
+}
+
+fn solve(args: &const Args, n: i32): str
+{
+	// Use an array instead of a dict. DANGER: no bounds checking
+	//
+	// Runs in ~3 s instead of 80 s
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let v = parse_i32_delim(readln(f), ",");
+	//println("v = ", v);
+	close(f);
+
+	//let last = dict_i64::new();
+	const CAP = 30_000_002; // idk
+	let last = [-1; CAP];
+	let a = -1;
+
+	for i in [0: n]
+	{
+		let a0 = a;
+		//let sa0 = str(a0);
+		if i < size(v)
+		{
+			// Just read directly from the input list
+			a = v[i];
+		}
+		else
+		{
+			//let ia0 = last.get(sa0);
+			let ia0 = last[a0];
+			if ia0 >= 0
+				a = (i-1) - ia0;
+			else
+				a = 0;
+		}
+		//println("a = ", a);
+		//if (i % 100_000 == 0) println("i = ", i);
+
+		//last.set(sa0, i64(i-1));
+		if (a0 >= 0) last[a0] = i-1;
+	}
+	sum_ = a;
+	return str(sum_);
+}
+
+fn solve_dict(args: &const Args, n: i32): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let v = parse_i32_delim(readln(f), ",");
+	//println("v = ", v);
+	close(f);
+
+	let last = dict_i64::new();
+	let a = -1;
+
+	// It only takes 2 minutes to "brute force" part 2 with the same method as
+	// part 2. I guess the even more naive approach is to iterate over the last
+	// of previous numbers at every turn instead of just caching its index in a
+	// dict? That never even occured to me for part 1
+	//
+	// It seems there are no cycles in the result -- there is still a "0" a few
+	// turns before the end with 30_000_000
+
+	for i in [0: n]
+	{
+		let a0 = a;
+		let sa0 = str(a0);
+		if i < size(v)
+		{
+			// Just read directly from the input list
+			a = v[i];
+		}
+		else
+		{
+			let ia0 = last.get(sa0);
+			//if last.contains(sa0)
+			if ia0 >= 0
+			{
+				a = (i-1) - ia0;
+				//a = (i-1) - last.get(sa0);
+			}
+			else
+				a = 0;
+		}
+		//println("a = ", a);
+		//if (i % 100_000 == 0) println("i = ", i);
+
+		last.set(sa0, i64(i-1));
+	}
+	sum_ = a;
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/15" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "475";
+	let expect2 = "11261";
+	let expect1_test = "436";
+	let expect2_test = "175594";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

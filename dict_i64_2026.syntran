@@ -81,6 +81,11 @@ struct dict_i64
 		return -1'i64;
 	}
 
+	// TODO: a common idiom is checking .contains() and then conditionally
+	// calling .get(). However, this is wasteful as does the same hashing and
+	// probing twice. Might be nice to add something like an .index() method to
+	// get the bucket index, which can then be used as the subscript for both
+	// .used[] and .vals[] without rehashing
 	const fn contains(key: str): bool
 	{
 		let slot = i32(fnv1a(key) % i64(cap));
