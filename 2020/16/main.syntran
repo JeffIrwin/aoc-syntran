@@ -1,0 +1,102 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let CAP = 40;
+	let n = 0;
+
+	let amin = [0; CAP];
+	let bmin = [0; CAP];
+	let amax = [0; CAP];
+	let bmax = [0; CAP];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+		if (str_ == "") break;
+
+		// Ignore field names for part 1
+		let range_str = split_(str_, ":")[1];
+		let nums = parse_i32_delim(range_str, "-or ");
+		amin[n] = nums[0];
+		amax[n] = nums[1];
+		bmin[n] = nums[2];
+		bmax[n] = nums[3];
+
+		println("nums = ", nums);
+		println("range_str = ", range_str);
+
+		n += 1;
+		str_ = readln(f);
+	}
+	amin = amin[:n]; // trim
+	bmin = bmin[:n];
+	amax = amax[:n];
+	bmax = bmax[:n];
+	println("amin = ", amin);
+
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+		if (str_ == "") { str_ = readln(f) ; continue ; }
+		if (str_ == "your ticket:") { str_ = readln(f) ; continue ; }
+		if (str_ == "nearby tickets:") { str_ = readln(f) ; continue ; }
+
+		let nums = parse_i32_delim(str_, ",");
+		println("nums = ", nums);
+		for num in nums
+		{
+			let any_valid =
+				any(amin <= num and num <= amax) or
+				any(bmin <= num and num <= bmax);
+			if (not any_valid) sum_ += num;
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/xx" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "REPLACE_ME_P1";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
