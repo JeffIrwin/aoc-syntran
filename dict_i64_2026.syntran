@@ -94,9 +94,18 @@ struct dict_i64
 		return used[slot];
 	}
 
-	// TODO: make an "inc" or "add" method which adds to a key's value by a
-	// given amount if the map already contains the key, or sets it initially to
-	// the given value otherwise
+	//// TODO: can't call one method (contains) from another method?
+	//fn inc(key: str, increment: i64)
+	//{
+	//	// Increment the key's value by the given amount if the map already
+	//	// contains the key, otherwise set its initial value to `increment`
+	//	if contains(key)
+	//	//if dict_i64::contains(key)
+	//		set(key, get(key) + increment);
+	//	else
+	//		set(key, increment);
+	//	return;
+	//}
 
 	const fn len(): i32
 	{

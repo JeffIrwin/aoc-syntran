@@ -20,7 +20,7 @@ fn part1(args: &const Args): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 		if (str_ == "") break;
 
 		// Ignore field names for part 1
@@ -31,8 +31,8 @@ fn part1(args: &const Args): str
 		bmin[n] = nums[2];
 		bmax[n] = nums[3];
 
-		println("nums = ", nums);
-		println("range_str = ", range_str);
+		//println("nums = ", nums);
+		//println("range_str = ", range_str);
 
 		n += 1;
 		str_ = readln(f);
@@ -41,17 +41,17 @@ fn part1(args: &const Args): str
 	bmin = bmin[:n];
 	amax = amax[:n];
 	bmax = bmax[:n];
-	println("amin = ", amin);
+	//println("amin = ", amin);
 
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 		if (str_ == "") { str_ = readln(f) ; continue ; }
 		if (str_ == "your ticket:") { str_ = readln(f) ; continue ; }
 		if (str_ == "nearby tickets:") { str_ = readln(f) ; continue ; }
 
 		let nums = parse_i32_delim(str_, ",");
-		println("nums = ", nums);
+		//println("nums = ", nums);
 		for num in nums
 		{
 			let any_valid =
@@ -68,6 +68,182 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+struct Input
+{
+	// This struct saves the constant input data and some related immutable
+	// data, so I don't have to add a million arguments to the recurse() fn
+
+	t: [i32; :,:],   // nearby ticket matrix
+	amin: [i32; :],  // 1st min bound
+	bmin: [i32; :],  // 2nd min bound, after "or"
+	amax: [i32; :],  // 1st max bound
+	bmax: [i32; :],  // 2nd max bound
+	perm_valid: [bool; :,:],  // [i,j] true if value `i` could be field `j`
+	idx: [i32; :],   // sorted index array of perm_valid row counts
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let CAP = 40;
+	let nf = 0; // number of fields
+
+	let field = [""; CAP];
+	let amin = [0; CAP];
+	let bmin = [0; CAP];
+	let amax = [0; CAP];
+	let bmax = [0; CAP];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		if (str_ == "") break;
+
+		// Load field names for part 2
+		field[nf] = split_(str_, ":")[0];
+		let range_str = split_(str_, ":")[1];
+		let nums = parse_i32_delim(range_str, "-or ");
+		amin[nf] = nums[0];
+		amax[nf] = nums[1];
+		bmin[nf] = nums[2];
+		bmax[nf] = nums[3];
+
+		nf += 1;
+		str_ = readln(f);
+	}
+	amin = amin[:nf]; // trim
+	bmin = bmin[:nf];
+	amax = amax[:nf];
+	bmax = bmax[:nf];
+	field = field[:nf];
+	//println("field = ", field);
+	//println("amin = ", amin);
+
+	str_ = readln(f); // "your ticket:"
+	let your_ticket = parse_i32_delim(readln(f), ",");
+	str_ = readln(f); // ""
+	str_ = readln(f); // "nearby tickets:"
+
+	let nt = 0; // number of "nearby" tickets
+	let TCAP = 260;
+	let t = [0; nf, TCAP];
+	while not eof(f)
+	{
+		t[:,nt] = parse_i32_delim(readln(f), ",");
+		if eof(f) continue;
+
+		// Filter out invalid rows
+		let all_valid = true;
+		for num in t[:,nt]
+		{
+			let any_valid =
+				any(amin <= num and num <= amax) or
+				any(bmin <= num and num <= bmax);
+			if (not any_valid) all_valid = false;
+		}
+		if (not all_valid) continue; // overwrite with next read
+
+		nt += 1;
+	}
+	t = t[:, 0:nt]; // trim
+	//println("t = ", t);
+	close(f);
+
+	// Pre-compute valid permutation indices
+	let perm_valid = [false; nf, nf];
+	for j in [0: nf]
+	for i in [0: nf]
+		perm_valid[i,j] = all(
+			(amin[j] <= t[i,:] and t[i,:] <= amax[j]) or
+			(bmin[j] <= t[i,:] and t[i,:] <= bmax[j]));
+	//println("perm_valid = ", perm_valid);
+
+	// Get the count of each row (col?) of perm_valid matrix, then sort by
+	// yet another permutation array of those counts. This makes recursive
+	// backtracking faster by having fewer options for the first indices
+	let counts = [0; nf];
+	for i in [0: nf]
+		counts[i] = count(perm_valid[:,i]);
+	let idx = sort_index(counts);
+	//println("counts = ", counts);
+	//println("sorted = ", counts[idx]);
+
+	//********************
+	//
+	// Sorting the counts reveals that the problem is trivial -- sorted counts
+	// are just [1, 2, 3, ..., 19, 20]
+	//
+	// Getting the right permutation is as easy as solving a trianglur matrix.
+	// You could do it with a simple loop instead of recursive backtracking.
+	// Solving the first field eliminates one of the two options for the second
+	// field, in turn eliminating 2/3 of the third field options, and so on
+	//
+	// This was a hack from my pips solver, but I didn't expect it to be
+	// completely trivial after sorting
+
+	const input = Input{
+		t = t,
+		amin = amin,
+		bmin = bmin,
+		amax = amax,
+		bmax = bmax,
+		perm_valid = perm_valid,
+		idx = idx,
+	};
+	let perm = [-1; nf];
+	let ok = recurse(&input, &perm, 0);
+	//println("perm = ", perm);
+	//println("permuted fields = ", field[idx[perm]]);
+	//println("ok = ", ok);
+
+	// Get the product of the "departure" fields from your ticket
+	let product = 1'i64;
+	for i in [0: nf]
+		if starts_with_(field[idx[perm[i]]], "departure")
+			product *= your_ticket[i];
+	sum_ = product;
+
+	// Tried 2166310033289 -- too low
+	//       51240700105297
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn recurse(inp: &const Input, perm: &[i32; :], i: i32): bool
+{
+	// Recursively search for a valid permutation using backtracking
+	const nf = size(perm);
+	const nt = size(inp.t, 1);
+	if (i >= nf) return true;
+	//println(repeat(" ", i), i);
+
+	// Which fields have been used already at previous levels?
+	let used = [false; nf];
+	for p in perm
+		if p >= 0
+			used[p] = true;
+	//println("used = ", used);
+
+	// Try using each unused field at index `i`
+	for j in [0: nf]
+	{
+		if used[j] continue;
+		let all_valid = inp.perm_valid[i, inp.idx[j]];
+		if (not all_valid) continue;
+
+		let perml = perm;
+		perml[i] = j;
+		let ok = recurse(&inp, &perml, i+1);
+		if (not ok) continue;
+
+		perm = perml;
+		return true;
+	}
+	return false;
+}
+
 //==============================================================================
 
 fn main(): str
@@ -75,18 +251,18 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println(MAGENTA + "Starting AOC syntran main 2025/xx" + RESET);
+	println(MAGENTA + "Starting AOC syntran main 2020/16" + RESET);
 	let args = parse_args();
 
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
-	let expect1 = "REPLACE_ME_P1";
-	let expect2 = "REPLACE_ME_P2";
-	let expect1_test = "REPLACE_ME_P1_TEST";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect1 = "23054";
+	let expect2 = "51240700105297";
+	let expect1_test = "71";
+	let expect2_test = "REPLACE_ME_P2_TEST"; // part 2 is not phrased in a way to have a test solution
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);
