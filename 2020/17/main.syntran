@@ -1,0 +1,170 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+//use ../../dict_str_2026 as dict_str;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g2 = read_char_mat(args.input_filename);
+	//print_char_mat(&g2);
+
+	// Use a dict instead of an array. idk, just felt like doing something
+	// different for game of life this time. It simplifies resizing and bounds
+	// checking but no idea if it's actually better for this problem (especially
+	// the unknown part 2)
+	let g = dict_i64::new();
+	for y in [0: size(g2,1)]
+	for x in [0: size(g2,0)]
+		if g2[x,y] == "#"
+			g.set(str(x, ",", y, ",", 0), 1'i64);
+	//g.print("g = ");
+
+	for it in [0: 6]
+	{
+		let g0 = g;
+		g = dict_i64::new();      // clear previous vals
+		let nn = dict_i64::new(); // number of neighbors
+		for key in g0.get_keys()
+		{
+			let me = g0.get(key);
+			if (me != 1) continue;
+			let xyz = parse_i32_delim(key, ",");
+			let x = xyz[0];
+			let y = xyz[1];
+			let z = xyz[2];
+			for zn in [z-1: z+2]
+			for yn in [y-1: y+2]
+			for xn in [x-1: x+2]
+			{
+				const kn = str(xn, ",", yn, ",", zn);
+				nn.inc(kn, 1'i64);
+			}
+		}
+
+		for key in nn.get_keys()
+		{
+			let me = g0.get(key);
+			let n  = nn.get(key);
+			if me == 1
+			{
+				if n != 3 and n != 4
+					g.set(key, 0'i64); // mark for removal in next cycle
+				else
+					g.set(key, 1'i64); // stay alive
+			}
+			else
+			{
+				if n == 3
+					g.set(key, 1'i64);
+			}
+		}
+	}
+	sum_ = count(g.get_vals() == 1'i64);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g2 = read_char_mat(args.input_filename);
+	//print_char_mat(&g2);
+
+	let g = dict_i64::new();
+	for y in [0: size(g2,1)]
+	for x in [0: size(g2,0)]
+		if g2[x,y] == "#"
+			g.set(str(x, ",", y, ",", 0, ",", 0), 1'i64);
+	//g.print("g = ");
+
+	for it in [0: 6]
+	{
+		// g/g0 are sparse hash maps. g0 will contain some zeros from cells that
+		// just died, but they will be cleared by the next cycle to avoid
+		// growing into a slow dense dict which fills the whole space
+		let g0 = g;
+		g = dict_i64::new();      // clear previous vals
+		let nn = dict_i64::new(); // number of neighbors
+		for key in g0.get_keys()
+		{
+			// Increment neighbor count for everything neighboring a living cell
+			let me = g0.get(key);
+			if (me != 1) continue;
+			let xyz = parse_i32_delim(key, ",");
+			let x = xyz[0];
+			let y = xyz[1];
+			let z = xyz[2];
+			let w = xyz[3];
+			for wn in [w-1: w+2]
+			for zn in [z-1: z+2]
+			for yn in [y-1: y+2]
+			for xn in [x-1: x+2]
+			{
+				const kn = str(xn, ",", yn, ",", zn, ",", wn);
+				nn.inc(kn, 1'i64);
+			}
+		}
+
+		for key in nn.get_keys()
+		{
+			// Update state
+			let me = g0.get(key);
+			let n  = nn.get(key);
+			if me == 1
+			{
+				if n != 3 and n != 4
+					g.set(key, 0'i64); // mark for removal in next cycle
+				else
+					g.set(key, 1'i64); // stay alive
+			}
+			else
+			{
+				if n == 3
+					g.set(key, 1'i64);
+			}
+		}
+	}
+	sum_ = count(g.get_vals() == 1'i64);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/17" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "391";
+	let expect2 = "2264";
+	let expect1_test = "112";
+	let expect2_test = "848";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
