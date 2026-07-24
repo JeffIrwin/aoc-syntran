@@ -1,0 +1,210 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let ans = eval(str_);
+		//println("ans = ", ans);
+		sum_ += ans;
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		let ans = eval2(str_);
+		sum_ += ans;
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn eval2(s: str): i64
+{
+	let iplus = scanback(s, "+");
+	let imult = scanback(s, "*");
+	let ipar  = scanback(s, ")");
+	let has_plus = iplus >= 0;
+	let has_mult = imult >= 0;
+	let has_par  = ipar >= 0;
+	let has_ops  = has_plus or has_mult;
+
+	if not has_ops and not has_par
+		// Base case
+		return parse_i64(s);
+
+	if not has_par
+	{
+		// Just arithmetic operators, no parens
+		if has_plus
+		{
+			// Scan for the bracketing operators (if any)
+			//
+			//     2 * 3 + 4 * 5
+			//       ^   ^   ^
+			//       |   |   |
+			//      iol  |   |
+			//         iplus |
+			//              ior
+			let iol = iplus - 1;
+			let ior = iplus + 1;
+			while true
+			{
+				if (iol < 0) break;
+				let c = s[iol];
+				if (c == "*" or c == "+") break;
+				iol -= 1;
+			}
+			while true
+			{
+				if (ior >= len(s)) break;
+				let c = s[ior];
+				if (c == "*" or c == "+") break;
+				ior += 1;
+			}
+			let left  = s[:iol+1];
+			let mid   = s[iol+1: ior];
+			let right = s[ior:];
+
+			// Fallback to part 1's `eval` for the addition
+			return eval2(left + str(eval(mid)) + right);
+		}
+
+		// Just multiplication, no addition
+		let right = parse_i64(s[imult+1:]);
+		let op   = s[imult];
+		return eval2(s[:imult]) * right;
+	}
+
+	// Evaluate parentheses first here. Get indices `il` of left paren and `ir`
+	// of its matching right paren. No checks for missing matches
+	let il = 0;
+	while s[il] != "("
+		il += 1;
+	let ir = il;
+	let depth = 0;
+	while true
+	{
+		if s[ir] == "("
+			depth += 1;
+		if s[ir] == ")"
+			depth -= 1;
+		if depth == 0
+			break;
+		ir += 1;
+	}
+	let left  = s[:il];
+	let paren = s[il+1: ir];
+	let right = s[ir+1:];
+
+	return eval2(left + str(eval2(paren)) + right);
+}
+
+fn eval(s: str): i64
+{
+	let iop  = scanback(s, "+*");
+	let ipar = scanback(s, ")");
+	let has_ops = iop  >= 0;
+	let has_par = ipar >= 0;
+	//println("iop = ", iop);
+
+	if not has_ops and not has_par
+		// Base case
+		return parse_i64(s);
+
+	if not has_par
+	{
+		// Just arithmetic operators, no parens
+		let right = parse_i64(s[iop+1:]);
+		let op   = s[iop];
+		//println("op   = ", op);
+		//println("right = ", right);
+		if op == "+"
+			return eval(s[:iop]) + right;
+		if op == "*"
+			return eval(s[:iop]) * right;
+	}
+
+	// Evaluate parentheses first here. Get indices `il` of left paren and `ir`
+	// of its matching right paren. No checks for missing matches
+	let il = 0;
+	while s[il] != "("
+		il += 1;
+	let ir = il;
+	let depth = 0;
+	while true
+	{
+		if s[ir] == "("
+			depth += 1;
+		if s[ir] == ")"
+			depth -= 1;
+		if depth == 0
+			break;
+		ir += 1;
+	}
+	//println("il, ir = ", [il, ir]);
+	let left  = s[:il];
+	let paren = s[il+1: ir];
+	let right = s[ir+1:];
+	//println("left  = ", left);
+	//println("paren = ", paren);
+	//println("right = ", right);
+
+	return eval(left + str(eval(paren)) + right);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/18" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "3885386961962";
+	let expect2 = "112899558798666";
+	let expect1_test = "122";
+	let expect2_test = "282";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
