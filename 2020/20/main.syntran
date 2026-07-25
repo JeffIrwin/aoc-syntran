@@ -7,118 +7,10 @@ use ../../dict_str_2026 as dict_str;
 
 const NTRANS = 8;
 
-fn count_tiles(lines: &const [str; :]): i32
-{
-	let nt = 0;
-	for line in lines
-		if starts_with_(line, "Tile")
-			nt += 1;
-	return nt;
-}
-
-// Helpers copied from 2025/12
-//fn print_bool_mat(msg: str, b: [bool; :,:])
-fn print_bool_mat(b: [bool; :,:])
-{
-	//println(msg);
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let c = ["."; nx, ny];
-	for y in [0: ny]
-	for x in [0: nx]
-		if (b[x,y]) c[x,y] = "#";
-	print_char_mat(&c);
-	//println("Ending print_bool_mat");
-	//return;
-}
-
-fn transpose_(b: [bool; :,:]): [bool; :,:]
-{
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let t = [false; ny, nx]; // transformed output
-	for y in [0: ny]
-	for x in [0: nx]
-		t[y,x] = b[x,y];
-	return t;
-}
-
-fn fliplr_(b: [bool; :,:]): [bool; :,:]
-{
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let t = [false; nx, ny];
-	for y in [0: ny]
-	for x in [0: nx]
-		t[nx-x-1, y] = b[x,y];
-	return t;
-}
-
-fn flipud_(b: [bool; :,:]): [bool; :,:]
-{
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let t = [false; nx, ny];
-	for y in [0: ny]
-	for x in [0: nx]
-		t[x, ny-y-1] = b[x,y];
-	return t;
-}
-
-fn trans_(b: [bool; :,:], i: i32): [bool; :,:]
-{
-	// Make 1 of 8 possible transformations (permutations of rotations and flips)
-	if (i == 0) return b;                       // no transformation
-	if (i == 1) return transpose_(b);           // main diagonal mirror
-	if (i == 2) return fliplr_(b);              // left-right mirror
-	if (i == 3) return flipud_(b);              // up-down mirror
-	if (i == 4) return fliplr_(flipud_(b));     // rot 180
-	if (i == 5) return fliplr_(transpose_(b));  // rot 270 ccw
-	if (i == 6) return flipud_(transpose_(b));  // rot 90 ccw
-	if (i == 7) return fliplr_(flipud_(transpose_(b))); // other diagonal mirror
-	return b; // default
-}
-
-
-fn str_to_bool(s: str): [bool; :,:]
-{
-	const NX = scan(s, NEWLINE_);
-	const NY = count_char(s, NEWLINE_);
-	let b = [false; NX, NY];
-	let x = 0;
-	let y = 0;
-	for c in s
-		if c == NEWLINE_
-		{
-			y += 1;
-			x = 0;
-		}
-		else
-		{
-			b[x,y] = c == "#";
-			x += 1;
-		}
-	return b;
-}
-fn bool_to_str(b: [bool; :,:]): [str; :,:]
-{
-	const NX = size(b,0);
-	const NY = size(b,1);
-	let s = ["."; NX, NY];
-	for y in [0: NY]
-	for x in [0: NX]
-		if b[x,y]
-			s[x,y] = "#";
-	return s;
-}
-
 fn part1(args: &const Args): str
 {
 	let sum_ = 0'i64;
-
 	let lines = readlns_(args.input_filename);
-	const NT = count_tiles(&lines);
-	println("NT = ", NT);
 
 	// Save tiles in a str dict
 	let tiles = dict_str::new();
@@ -225,10 +117,7 @@ fn part1(args: &const Args): str
 fn part2(args: &const Args): str
 {
 	let sum_ = 0'i64;
-
 	let lines = readlns_(args.input_filename);
-	const NT = count_tiles(&lines);
-	println("NT = ", NT);
 
 	// Save tiles in a str dict
 	let tiles = dict_str::new();
@@ -292,8 +181,8 @@ fn part2(args: &const Args): str
 		let g = str_to_bool(tiles.get(key));
 		g = trans_(g, t);
 		//print_bool_mat(g);
-		const NX = i32(size(g, 0));
-		const NY = i32(size(g, 1));
+		const NX = size(g, 0);
+		const NY = size(g, 1);
 		g = g[1:NX-1, 1:NY-1]; // trim borders
 		print_bool_mat(g);
 
@@ -337,8 +226,8 @@ fn part2(args: &const Args): str
 		//println("m = ", m);
 		print_char_mat(&m);
 
-		const NXM = i32(size(m,0));
-		const NYM = i32(size(m,1));
+		const NXM = size(m,0);
+		const NYM = size(m,1);
 		println("NM = ", [NXM, NYM]);
 
 		// Convolve and search for sea monsters. Fill them in with "O"
@@ -545,6 +434,100 @@ fn walk_left(
 	return false;
 }
 
+// Helpers copied from 2025/12
+//fn print_bool_mat(msg: str, b: [bool; :,:])
+fn print_bool_mat(b: [bool; :,:])
+{
+	//println(msg);
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let c = ["."; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+		if (b[x,y]) c[x,y] = "#";
+	print_char_mat(&c);
+	//println("Ending print_bool_mat");
+	//return;
+}
+
+fn transpose_(b: [bool; :,:]): [bool; :,:]
+{
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let t = [false; ny, nx]; // transformed output
+	for y in [0: ny]
+	for x in [0: nx]
+		t[y,x] = b[x,y];
+	return t;
+}
+
+fn fliplr_(b: [bool; :,:]): [bool; :,:]
+{
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let t = [false; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+		t[nx-x-1, y] = b[x,y];
+	return t;
+}
+
+fn flipud_(b: [bool; :,:]): [bool; :,:]
+{
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let t = [false; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+		t[x, ny-y-1] = b[x,y];
+	return t;
+}
+
+fn trans_(b: [bool; :,:], i: i32): [bool; :,:]
+{
+	// Make 1 of 8 possible transformations (permutations of rotations and flips)
+	if (i == 0) return b;                       // no transformation
+	if (i == 1) return transpose_(b);           // main diagonal mirror
+	if (i == 2) return fliplr_(b);              // left-right mirror
+	if (i == 3) return flipud_(b);              // up-down mirror
+	if (i == 4) return fliplr_(flipud_(b));     // rot 180
+	if (i == 5) return fliplr_(transpose_(b));  // rot 270 ccw
+	if (i == 6) return flipud_(transpose_(b));  // rot 90 ccw
+	if (i == 7) return fliplr_(flipud_(transpose_(b))); // other diagonal mirror
+	return b; // default
+}
+
+fn str_to_bool(s: str): [bool; :,:]
+{
+	const NX = scan(s, NEWLINE_);
+	const NY = count_char(s, NEWLINE_);
+	let b = [false; NX, NY];
+	let x = 0;
+	let y = 0;
+	for c in s
+		if c == NEWLINE_
+		{
+			y += 1;
+			x = 0;
+		}
+		else
+		{
+			b[x,y] = c == "#";
+			x += 1;
+		}
+	return b;
+}
+fn bool_to_str(b: [bool; :,:]): [str; :,:]
+{
+	const NX = size(b,0);
+	const NY = size(b,1);
+	let s = ["."; NX, NY];
+	for y in [0: NY]
+	for x in [0: NX]
+		if b[x,y]
+			s[x,y] = "#";
+	return s;
+}
 
 //==============================================================================
 
