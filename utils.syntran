@@ -1593,6 +1593,17 @@ fn print_char_mat(chars: &[str; :,:])
 
 //==============================================================================
 
+fn count_char(s: str, c: str): i32
+{
+	let n = 0;
+	for cs in s
+		if cs == c
+			n += 1;
+	return n;
+}
+
+//==============================================================================
+
 fn read_char_mat(filename: str): [str; :,:]
 {
 	// Read a matrix of characters from a file

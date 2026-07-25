@@ -23,7 +23,7 @@ fn part1(args: &const Args): str
 	//println("msgs = ", msgs);
 
 	// Rules could fairly easily be put in an array instead of dict. Do we need
-	// the perf?
+	// the perf? No -- both parts run in under 3 s
 	let rules = dict_str::new();
 	for rule_str in rules_str
 	{
@@ -110,9 +110,9 @@ fn part2(args: &const Args): str
 	//     https://github.com/Gprinziv/Advent2020/blob/master/Day%2019/messages.py
 	//
 	// Mine ended up being fairly different because I wanted to leverage my
-	// is_match() fn from part 1 and it looked like to much work to exactly port
-	// the python author's getLen() and getRule() fns which weren't anything
-	// like what I had for part 1
+	// is_match() fn from part 1 and it looked like too much work to exactly
+	// port the python author's getLen() and getRule() fns which weren't
+	// anything like what I had for part 1
 
 	for msg in msgs
 	{
@@ -120,31 +120,26 @@ fn part2(args: &const Args): str
 		//println("-----------");
 		//println("msg = ", msg);
 		let msg0 = msg;
-		let match = true;
-		let match42 = false;
-		let match31 = false;
 		let n42 = 0;
 		let n31 = 0;
 		while true
 		{
 			if (msg == "") break;
-			match = is_match(&rules, rule42, &msg);
+			let match = is_match(&rules, rule42, &msg);
 			if (not match) break;
-			match42 = true;
 			n42 += 1;
 			//println("42 ", msg);
 		}
 		while true
 		{
 			if (msg == "") break;
-			match = is_match(&rules, rule31, &msg);
+			let match = is_match(&rules, rule31, &msg);
 			if (not match) break;
-			match31 = true;
 			n31 += 1;
 			//println("31 ", msg);
 		}
 
-		if match and match42 and match31 and msg == "" and n42 > n31
+		if msg == "" and n42 > n31 and n31 > 0
 		{
 			//println("match: ", msg0);
 			//println("n42|31 = ", [n42, n31]);
@@ -159,16 +154,16 @@ fn part2(args: &const Args): str
 fn is_match(rules: &dict_str::dict_str, pattern: str, msg: &str): bool
 {
 	// If the msg matches the pattern, trim (consume) the matched prefix off the
-	// front of the msg and return true
+	// front of the msg out-arg and return true
 
 	//println("pattern = ", pattern);
 	//println("msg     = ", msg);
 
 	// Base cases: just "a" or "b"
-	if pattern == r#" "a""#
+	if pattern == r#" "a""# // extra space here bc we didn't bother trimming
 		if msg[0] == "a"
 		{
-			msg = msg[1:];  // trim prefix
+			msg = msg[1:];  // trim/consume prefix
 			return true;
 		}
 		else return false;

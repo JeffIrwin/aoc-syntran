@@ -1,0 +1,580 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+
+//==============================================================================
+
+const NTRANS = 8;
+
+fn count_tiles(lines: &const [str; :]): i32
+{
+	let nt = 0;
+	for line in lines
+		if starts_with_(line, "Tile")
+			nt += 1;
+	return nt;
+}
+
+// Helpers copied from 2025/12
+//fn print_bool_mat(msg: str, b: [bool; :,:])
+fn print_bool_mat(b: [bool; :,:])
+{
+	//println(msg);
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let c = ["."; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+		if (b[x,y]) c[x,y] = "#";
+	print_char_mat(&c);
+	//println("Ending print_bool_mat");
+	//return;
+}
+
+fn transpose_(b: [bool; :,:]): [bool; :,:]
+{
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let t = [false; ny, nx]; // transformed output
+	for y in [0: ny]
+	for x in [0: nx]
+		t[y,x] = b[x,y];
+	return t;
+}
+
+fn fliplr_(b: [bool; :,:]): [bool; :,:]
+{
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let t = [false; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+		t[nx-x-1, y] = b[x,y];
+	return t;
+}
+
+fn flipud_(b: [bool; :,:]): [bool; :,:]
+{
+	let nx = size(b,0);
+	let ny = size(b,1);
+	let t = [false; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+		t[x, ny-y-1] = b[x,y];
+	return t;
+}
+
+fn trans_(b: [bool; :,:], i: i32): [bool; :,:]
+{
+	// Make 1 of 8 possible transformations (permutations of rotations and flips)
+	if (i == 0) return b;                       // no transformation
+	if (i == 1) return transpose_(b);           // main diagonal mirror
+	if (i == 2) return fliplr_(b);              // left-right mirror
+	if (i == 3) return flipud_(b);              // up-down mirror
+	if (i == 4) return fliplr_(flipud_(b));     // rot 180
+	if (i == 5) return fliplr_(transpose_(b));  // rot 270 ccw
+	if (i == 6) return flipud_(transpose_(b));  // rot 90 ccw
+	if (i == 7) return fliplr_(flipud_(transpose_(b))); // other diagonal mirror
+	return b; // default
+}
+
+
+fn str_to_bool(s: str): [bool; :,:]
+{
+	const NX = scan(s, NEWLINE_);
+	const NY = count_char(s, NEWLINE_);
+	let b = [false; NX, NY];
+	let x = 0;
+	let y = 0;
+	for c in s
+		if c == NEWLINE_
+		{
+			y += 1;
+			x = 0;
+		}
+		else
+		{
+			b[x,y] = c == "#";
+			x += 1;
+		}
+	return b;
+}
+fn bool_to_str(b: [bool; :,:]): [str; :,:]
+{
+	const NX = size(b,0);
+	const NY = size(b,1);
+	let s = ["."; NX, NY];
+	for y in [0: NY]
+	for x in [0: NX]
+		if b[x,y]
+			s[x,y] = "#";
+	return s;
+}
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let lines = readlns_(args.input_filename);
+	const NT = count_tiles(&lines);
+	println("NT = ", NT);
+
+	// Save tiles in a str dict
+	let tiles = dict_str::new();
+	let id = -1;
+	let s = "";
+	for line in lines
+	{
+		if starts_with_(line, "Tile")
+		{
+			id = parse_i32(split_(line, " :")[1]);
+			s = "";
+			println("id = ", id);
+		}
+		else if line == ""
+			tiles.set(str(id), s);
+		else
+			s = s + line + NEWLINE_;
+	}
+	tiles.set(str(id), s);
+	tiles.print("tiles = ");
+
+	println("Tile 3079:");
+	print_bool_mat(str_to_bool(tiles.get("3079")));
+
+	let keys = tiles.get_keys();
+
+	let key = keys[0];
+	let t = 0;
+	while true
+	{
+		let can_walk = walk_left(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key l = ", key);
+	}
+	while true
+	{
+		let can_walk = walk_up(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key u = ", key);
+	}
+	let i0 = parse_i32(key);
+
+	key = keys[0];
+	t = 0;
+	while true
+	{
+		let can_walk = walk_left(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key l = ", key);
+	}
+	while true
+	{
+		let can_walk = walk_down(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key d = ", key);
+	}
+	let i1 = parse_i32(key);
+
+	key = keys[0];
+	t = 0;
+	while true
+	{
+		let can_walk = walk_right(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key r = ", key);
+	}
+	while true
+	{
+		let can_walk = walk_down(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key d = ", key);
+	}
+	let i2 = parse_i32(key);
+
+	key = keys[0];
+	t = 0;
+	while true
+	{
+		let can_walk = walk_right(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key r = ", key);
+	}
+	while true
+	{
+		let can_walk = walk_up(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key u = ", key);
+	}
+	let i3 = parse_i32(key);
+
+	sum_ = i64(i0) * i1 * i2 * i3;
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let lines = readlns_(args.input_filename);
+	const NT = count_tiles(&lines);
+	println("NT = ", NT);
+
+	// Save tiles in a str dict
+	let tiles = dict_str::new();
+	let id = -1;
+	let s = "";
+	for line in lines
+	{
+		if starts_with_(line, "Tile")
+		{
+			id = parse_i32(split_(line, " :")[1]);
+			s = "";
+			println("id = ", id);
+		}
+		else if line == ""
+			tiles.set(str(id), s);
+		else
+			s = s + line + NEWLINE_;
+	}
+	tiles.set(str(id), s);
+	tiles.print("tiles = ");
+
+	println("Tile 3079:");
+	print_bool_mat(str_to_bool(tiles.get("3079")));
+
+	let keys = tiles.get_keys();
+
+	// Walk to the origin in the upper left
+	let key = keys[0];
+	let t = 0;
+	while true
+	{
+		let can_walk = walk_left(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key l = ", key);
+	}
+	while true
+	{
+		let can_walk = walk_up(&tiles, &key, &t);
+		if not can_walk
+			break;
+		println("key d = ", key);
+	}
+	let ko = key;
+	let to = t;
+	println("ko, to = ", ko, ", ", to);
+	println();
+
+	let CAPX = 1024;
+	let CAPY = 1024;
+	let sg = [""; CAPX, CAPY];
+
+	// From the origin, walk right then down and fill in the supergrid `sg`
+	key = ko;
+	t = to;
+	let x = 0;
+	let y = 0;
+	while true
+	{
+		println("key r = ", key);
+		let g = str_to_bool(tiles.get(key));
+		g = trans_(g, t);
+		//print_bool_mat(g);
+		const NX = i32(size(g, 0));
+		const NY = i32(size(g, 1));
+		g = g[1:NX-1, 1:NY-1]; // trim borders
+		print_bool_mat(g);
+
+		sg[x: x+NX-2, y: y+NY-2] = bool_to_str(g);
+		x += NX-2;
+
+		let can_walk = walk_right(&tiles, &key, &t);
+		if not can_walk
+		{
+			// If we can't go right, go back to the start of the row and walk
+			// down
+			can_walk = walk_down(&tiles, &ko, &to);
+			y += NY-2;
+			if not can_walk
+				break;
+			x = 0;
+			key = ko;
+			t = to;
+		}
+	}
+
+	// Trim
+	const NXS = x;//+NX-2;
+	const NYS = y;//+NY-2;
+	//const NYS = y+NY-2;
+	//const NYS = 10;
+	sg = sg[0:NXS, 0:NYS];
+	println("NXS, NYS = ", [NXS, NYS]);
+	print_char_mat(&sg);
+
+	//sg = flipud_(sg);
+
+	// Monster
+	const FULL_COUNT = count(sg == "#");
+	for tm in [0: NTRANS]
+	{
+		let m = bool_to_str(trans_(str_to_bool(
+			"                  # " + NEWLINE_ +
+			"#    ##    ##    ###" + NEWLINE_ +
+			" #  #  #  #  #  #   " + NEWLINE_), tm));
+		//println("m = ", m);
+		print_char_mat(&m);
+
+		const NXM = i32(size(m,0));
+		const NYM = i32(size(m,1));
+		println("NM = ", [NXM, NYM]);
+
+		// Convolve and search for sea monsters. Fill them in with "O"
+		for y0 in [0: NYS - NYM]
+		for x0 in [0: NXS - NXM]
+		{
+			//println("x0 = ", x0);
+			let is_match = true;
+			for y in [y0: y0+NYM]
+			for x in [x0: x0+NXM]
+			{
+				let cm = m[x-x0, y-y0];
+				let cs = sg[x,y];
+				if cm == "#" and cs != "#"
+					is_match = false;
+			}
+			if not is_match
+				continue;
+			println("match at ", [x0, y0]);
+
+			// Fill in
+			for y in [y0: y0+NYM]
+			for x in [x0: x0+NXM]
+			{
+				let cm = m[x-x0, y-y0];
+				//let cs = sg[x,y];
+				if cm == "#"
+					sg[x,y] = "O";
+			}
+		}
+		print_char_mat(&sg);
+
+		sum_ = count(sg == "#");
+		if sum_ != FULL_COUNT
+			break;
+	}
+
+	// Tried 2518 -- too high
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn walk_down(
+		tiles: &dict_str::dict_str,
+		id0: &str,
+		t0: &i32,
+	): bool
+{
+	let g0 = str_to_bool(tiles.get(str(id0)));
+	g0 = trans_(g0, t0);
+	const NX = size(g0, 0);
+	const NY = size(g0, 1);
+	//let edge0 = g0[0,:];
+	let edge0 = g0[:,NY-1];
+
+	//println("edge0 = ", edge0);
+	for key in tiles.get_keys()
+	{
+		if key == str(id0)
+			continue;
+		//println("key = ", key);
+
+		// Potential neighbor grid
+		let g = str_to_bool(tiles.get(key));
+		for it in [0: NTRANS]
+		{
+			let gt = trans_(g, it);
+			//print_bool_mat(gt);
+
+			// Check edge
+			let edge = gt[:, 0];
+			if all(edge == edge0)
+			{
+				id0 = key;
+				t0 = it;
+				//println("match");
+				return true;
+			}
+		}
+		//break;
+	}
+	return false;
+}
+
+fn walk_up(
+		tiles: &dict_str::dict_str,
+		id0: &str,
+		t0: &i32,
+	): bool
+{
+	let g0 = str_to_bool(tiles.get(str(id0)));
+	g0 = trans_(g0, t0);
+	const NX = size(g0, 0);
+	const NY = size(g0, 1);
+	//let edge0 = g0[0,:];
+	let edge0 = g0[:,0];
+
+	//println("edge0 = ", edge0);
+	for key in tiles.get_keys()
+	{
+		if key == str(id0)
+			continue;
+		//println("key = ", key);
+
+		// Potential neighbor grid
+		let g = str_to_bool(tiles.get(key));
+		for it in [0: NTRANS]
+		{
+			let gt = trans_(g, it);
+			//print_bool_mat(gt);
+
+			// Check upper edge
+			let edge = gt[:, NY-1];
+			if all(edge == edge0)
+			{
+				id0 = key;
+				t0 = it;
+				//println("match");
+				return true;
+			}
+		}
+		//break;
+	}
+	return false;
+}
+
+fn walk_right(
+		tiles: &dict_str::dict_str,
+		id0: &str,// i32,
+		t0: &i32,
+	): bool
+{
+	let g0 = str_to_bool(tiles.get(str(id0)));
+	g0 = trans_(g0, t0);
+	const NX = size(g0, 0);
+	const NY = size(g0, 1);
+	let edge0 = g0[NX-1,:];
+
+	//println("edge0 = ", edge0);
+	for key in tiles.get_keys()
+	{
+		if key == str(id0)
+			continue;
+
+		// Potential neighbor grid
+		let g = str_to_bool(tiles.get(key));
+		for it in [0: NTRANS]
+		{
+			let gt = trans_(g, it);
+
+			// Check edge
+			let edge = gt[0, :];
+			if all(edge == edge0)
+			{
+				id0 = key;
+				t0 = it;
+				//println("match");
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+fn walk_left(
+		tiles: &dict_str::dict_str,
+		id0: &str,// i32,
+		t0: &i32,
+	): bool
+{
+	let g0 = str_to_bool(tiles.get(str(id0)));
+	g0 = trans_(g0, t0);
+	const NX = size(g0, 0);
+	const NY = size(g0, 1);
+	let edge0 = g0[0,:];
+
+	//println("edge0 = ", edge0);
+	for key in tiles.get_keys()
+	{
+		if key == str(id0)
+			continue;
+		//println("key = ", key);
+
+		// Potential neighbor grid
+		let g = str_to_bool(tiles.get(key));
+		//print_bool_mat(g);
+		for it in [0: NTRANS]
+		{
+			let gt = trans_(g, it);
+			//print_bool_mat(gt);
+
+			// Check right edge only to match with left edge0
+			let edge = gt[NX-1, :];
+			if all(edge == edge0)
+			{
+				id0 = key;
+				t0 = it;
+				//println("match");
+				return true;
+			}
+		}
+		//break;
+	}
+	return false;
+}
+
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/20" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "83775126454273";
+	let expect2 = "1993";
+	let expect1_test = "20899048083289";
+	let expect2_test = "273";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
