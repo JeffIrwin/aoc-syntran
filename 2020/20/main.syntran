@@ -22,7 +22,7 @@ fn part1(args: &const Args): str
 		{
 			id = parse_i32(split_(line, " :")[1]);
 			s = "";
-			println("id = ", id);
+			//println("id = ", id);
 		}
 		else if line == ""
 			tiles.set(str(id), s);
@@ -30,83 +30,49 @@ fn part1(args: &const Args): str
 			s = s + line + NEWLINE_;
 	}
 	tiles.set(str(id), s);
-	tiles.print("tiles = ");
+	//tiles.print("tiles = ");
 
-	println("Tile 3079:");
-	print_bool_mat(str_to_bool(tiles.get("3079")));
+	//println("Tile 3079:");
+	//print_bool_mat(str_to_bool(tiles.get("3079")));
 
 	let keys = tiles.get_keys();
 
+	// Walk from the first tile up/down/left/right to each corner
+	//
+	// No need to save tile positions are remember where intermediate tiles are
+	// placed -- we just need the corner IDs
+	//
+	// Fortunately there is just one unique match between each edge pair. We
+	// don't need any fancy recursive backtracking for tile placement
+
+	// Upper-left
 	let key = keys[0];
 	let t = 0;
-	while true
-	{
-		let can_walk = walk_left(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key l = ", key);
-	}
-	while true
-	{
-		let can_walk = walk_up(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key u = ", key);
-	}
-	let i0 = parse_i32(key);
+	while walk_left(&tiles, &key, &t) continue;
+	while walk_up(&tiles, &key, &t) continue;
+	let i0 = parse_i32(key);  // save the corner ID
 
+	// Lower-left
+	//
+	// Not very DRY for the next corner but this is simple enough
 	key = keys[0];
 	t = 0;
-	while true
-	{
-		let can_walk = walk_left(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key l = ", key);
-	}
-	while true
-	{
-		let can_walk = walk_down(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key d = ", key);
-	}
+	while walk_left(&tiles, &key, &t) continue;
+	while walk_down(&tiles, &key, &t) continue;
 	let i1 = parse_i32(key);
 
+	// Lower-right
 	key = keys[0];
 	t = 0;
-	while true
-	{
-		let can_walk = walk_right(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key r = ", key);
-	}
-	while true
-	{
-		let can_walk = walk_down(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key d = ", key);
-	}
+	while walk_right(&tiles, &key, &t) continue;
+	while walk_down(&tiles, &key, &t) continue;
 	let i2 = parse_i32(key);
 
+	// Upper-right
 	key = keys[0];
 	t = 0;
-	while true
-	{
-		let can_walk = walk_right(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key r = ", key);
-	}
-	while true
-	{
-		let can_walk = walk_up(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key u = ", key);
-	}
+	while walk_right(&tiles, &key, &t) continue;
+	while walk_up(&tiles, &key, &t) continue;
 	let i3 = parse_i32(key);
 
 	sum_ = i64(i0) * i1 * i2 * i3;
@@ -129,7 +95,7 @@ fn part2(args: &const Args): str
 		{
 			id = parse_i32(split_(line, " :")[1]);
 			s = "";
-			println("id = ", id);
+			//println("id = ", id);
 		}
 		else if line == ""
 			tiles.set(str(id), s);
@@ -137,35 +103,19 @@ fn part2(args: &const Args): str
 			s = s + line + NEWLINE_;
 	}
 	tiles.set(str(id), s);
-	tiles.print("tiles = ");
-
-	println("Tile 3079:");
-	print_bool_mat(str_to_bool(tiles.get("3079")));
-
 	let keys = tiles.get_keys();
 
 	// Walk to the origin in the upper left
 	let key = keys[0];
 	let t = 0;
-	while true
-	{
-		let can_walk = walk_left(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key l = ", key);
-	}
-	while true
-	{
-		let can_walk = walk_up(&tiles, &key, &t);
-		if not can_walk
-			break;
-		println("key d = ", key);
-	}
+	while walk_left(&tiles, &key, &t) continue;
+	while walk_up(&tiles, &key, &t) continue;
 	let ko = key;
 	let to = t;
-	println("ko, to = ", ko, ", ", to);
-	println();
+	//println("ko, to = ", ko, ", ", to);
+	//println();
 
+	// Over-allocate super-grid `sg`. Danger! No capacity bounds-checking
 	let CAPX = 1024;
 	let CAPY = 1024;
 	let sg = [""; CAPX, CAPY];
@@ -177,24 +127,23 @@ fn part2(args: &const Args): str
 	let y = 0;
 	while true
 	{
-		println("key r = ", key);
+		//println("key r = ", key);
 		let g = str_to_bool(tiles.get(key));
 		g = trans_(g, t);
-		//print_bool_mat(g);
 		const NX = size(g, 0);
 		const NY = size(g, 1);
 		g = g[1:NX-1, 1:NY-1]; // trim borders
-		print_bool_mat(g);
+		//print_bool_mat(g);
 
-		sg[x: x+NX-2, y: y+NY-2] = bool_to_str(g);
-		x += NX-2;
+		sg[x: x+NX-2, y: y+NY-2] = bool_to_str(g);  // fill-in supergrid
 
 		let can_walk = walk_right(&tiles, &key, &t);
+		x += NX-2;
 		if not can_walk
 		{
 			// If we can't go right, go back to the start of the row and walk
 			// down
-			can_walk = walk_down(&tiles, &ko, &to);
+			can_walk = walk_down(&tiles, &ko, &to);  // note ko/to get mutated
 			y += NY-2;
 			if not can_walk
 				break;
@@ -205,30 +154,27 @@ fn part2(args: &const Args): str
 	}
 
 	// Trim
-	const NXS = x;//+NX-2;
-	const NYS = y;//+NY-2;
-	//const NYS = y+NY-2;
-	//const NYS = 10;
+	const NXS = x;
+	const NYS = y;
 	sg = sg[0:NXS, 0:NYS];
-	println("NXS, NYS = ", [NXS, NYS]);
-	print_char_mat(&sg);
-
-	//sg = flipud_(sg);
+	//println("NXS, NYS = ", [NXS, NYS]);
+	//print_char_mat(&sg);
 
 	// Monster
 	const FULL_COUNT = count(sg == "#");
 	for tm in [0: NTRANS]
 	{
+		// Just try each transformation `tm` of monster until we find a match
 		let m = bool_to_str(trans_(str_to_bool(
 			"                  # " + NEWLINE_ +
 			"#    ##    ##    ###" + NEWLINE_ +
 			" #  #  #  #  #  #   " + NEWLINE_), tm));
 		//println("m = ", m);
-		print_char_mat(&m);
+		//print_char_mat(&m);
 
 		const NXM = size(m,0);
 		const NYM = size(m,1);
-		println("NM = ", [NXM, NYM]);
+		//println("NM = ", [NXM, NYM]);
 
 		// Convolve and search for sea monsters. Fill them in with "O"
 		for y0 in [0: NYS - NYM]
@@ -239,33 +185,27 @@ fn part2(args: &const Args): str
 			for y in [y0: y0+NYM]
 			for x in [x0: x0+NXM]
 			{
+				if (not is_match) break;
 				let cm = m[x-x0, y-y0];
 				let cs = sg[x,y];
 				if cm == "#" and cs != "#"
 					is_match = false;
 			}
-			if not is_match
-				continue;
-			println("match at ", [x0, y0]);
+			if (not is_match) continue;
+			//println("match at ", [x0, y0]);
 
 			// Fill in
 			for y in [y0: y0+NYM]
 			for x in [x0: x0+NXM]
-			{
-				let cm = m[x-x0, y-y0];
-				//let cs = sg[x,y];
-				if cm == "#"
-					sg[x,y] = "O";
-			}
+				if (m[x-x0, y-y0] == "#") sg[x,y] = "O";
 		}
-		print_char_mat(&sg);
+		//print_char_mat(&sg);
 
 		sum_ = count(sg == "#");
 		if sum_ != FULL_COUNT
 			break;
 	}
 
-	// Tried 2518 -- too high
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
@@ -276,26 +216,30 @@ fn walk_down(
 		t0: &i32,
 	): bool
 {
+	// Given a set of tiles, search for a match along the lower edge of tile
+	// `id0` with transformation `t0`
+	//
+	// If found, set `id0` and `t0` of the matching tile as out-args and return
+	// true
+	//
+	// If not found, return false
+
 	let g0 = str_to_bool(tiles.get(str(id0)));
 	g0 = trans_(g0, t0);
 	const NX = size(g0, 0);
 	const NY = size(g0, 1);
-	//let edge0 = g0[0,:];
 	let edge0 = g0[:,NY-1];
 
-	//println("edge0 = ", edge0);
 	for key in tiles.get_keys()
 	{
 		if key == str(id0)
 			continue;
-		//println("key = ", key);
 
 		// Potential neighbor grid
 		let g = str_to_bool(tiles.get(key));
 		for it in [0: NTRANS]
 		{
 			let gt = trans_(g, it);
-			//print_bool_mat(gt);
 
 			// Check edge
 			let edge = gt[:, 0];
@@ -303,11 +247,9 @@ fn walk_down(
 			{
 				id0 = key;
 				t0 = it;
-				//println("match");
 				return true;
 			}
 		}
-		//break;
 	}
 	return false;
 }
@@ -322,22 +264,18 @@ fn walk_up(
 	g0 = trans_(g0, t0);
 	const NX = size(g0, 0);
 	const NY = size(g0, 1);
-	//let edge0 = g0[0,:];
 	let edge0 = g0[:,0];
 
-	//println("edge0 = ", edge0);
 	for key in tiles.get_keys()
 	{
 		if key == str(id0)
 			continue;
-		//println("key = ", key);
 
 		// Potential neighbor grid
 		let g = str_to_bool(tiles.get(key));
 		for it in [0: NTRANS]
 		{
 			let gt = trans_(g, it);
-			//print_bool_mat(gt);
 
 			// Check upper edge
 			let edge = gt[:, NY-1];
@@ -345,18 +283,16 @@ fn walk_up(
 			{
 				id0 = key;
 				t0 = it;
-				//println("match");
 				return true;
 			}
 		}
-		//break;
 	}
 	return false;
 }
 
 fn walk_right(
 		tiles: &dict_str::dict_str,
-		id0: &str,// i32,
+		id0: &str,
 		t0: &i32,
 	): bool
 {
@@ -366,7 +302,6 @@ fn walk_right(
 	const NY = size(g0, 1);
 	let edge0 = g0[NX-1,:];
 
-	//println("edge0 = ", edge0);
 	for key in tiles.get_keys()
 	{
 		if key == str(id0)
@@ -384,7 +319,6 @@ fn walk_right(
 			{
 				id0 = key;
 				t0 = it;
-				//println("match");
 				return true;
 			}
 		}
@@ -394,7 +328,7 @@ fn walk_right(
 
 fn walk_left(
 		tiles: &dict_str::dict_str,
-		id0: &str,// i32,
+		id0: &str,
 		t0: &i32,
 	): bool
 {
@@ -404,20 +338,16 @@ fn walk_left(
 	const NY = size(g0, 1);
 	let edge0 = g0[0,:];
 
-	//println("edge0 = ", edge0);
 	for key in tiles.get_keys()
 	{
 		if key == str(id0)
 			continue;
-		//println("key = ", key);
 
 		// Potential neighbor grid
 		let g = str_to_bool(tiles.get(key));
-		//print_bool_mat(g);
 		for it in [0: NTRANS]
 		{
 			let gt = trans_(g, it);
-			//print_bool_mat(gt);
 
 			// Check right edge only to match with left edge0
 			let edge = gt[NX-1, :];
@@ -425,17 +355,14 @@ fn walk_left(
 			{
 				id0 = key;
 				t0 = it;
-				//println("match");
 				return true;
 			}
 		}
-		//break;
 	}
 	return false;
 }
 
 // Helpers copied from 2025/12
-//fn print_bool_mat(msg: str, b: [bool; :,:])
 fn print_bool_mat(b: [bool; :,:])
 {
 	//println(msg);
