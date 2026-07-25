@@ -1,0 +1,205 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+	let lines = readlns_(args.input_filename);
+	let N = size(lines);
+	let food_ingredients = [""; N];
+	let food_allergens = [""; N];
+
+	// Load ingredients and allergens from each line
+	let i = 0;
+	for line in lines
+	{
+		let ingredients        = split_(line, "()")[0];
+		let contains_allergens = split_(line, "()")[1];
+		let allergens = join_(split_(contains_allergens, " ,")[1:], " ");
+		food_ingredients[i] = ingredients;
+		food_allergens  [i] = allergens;
+		i += 1;
+	}
+	println("food_ingredients = ", food_ingredients);
+	println("food_allergens = ", food_allergens);
+
+	// Build a set of allergens
+	let allergen_set = dict_i64::new();
+	for allergen_line in food_allergens
+	{
+		let allergens = split_(allergen_line, " ");
+		for allergen in allergens
+			allergen_set.set(allergen, 1'i64);
+	}
+	allergen_set.print("allergen_set = ");
+
+	// Map allergens to ingredients and vice versa
+	let allergen_to_ingredient = dict_str::new();
+	let ingredient_to_allergen = dict_str::new();
+
+	// Find the easy allergens by looking at the intersections of sets of
+	// ingredients which contain them, e.g. dairy and fish from the example
+	//
+	// In each outer iteration, filter out more known ingredients determined by
+	// previous iterations
+	//
+	// Is there some other way to do part 1 without fully determining everything
+	// here? This doesn't seem too hard and it's the only thing I thought of
+	while true
+	{
+		let any_determined = false;
+		for allergen in allergen_set.get_keys()
+		{
+			let first = true;
+			let possible = [""; 0];
+			println("allergen = ", allergen);
+			for i in [0: N]
+			{
+				let allergens = split_(food_allergens[i], " ");
+				if not any(allergens == allergen) continue;
+				println("    one of ", allergens);
+
+				// Filter out known ingredients
+				let ingredients = [""; 0];
+				for ingredient in split_(food_ingredients[i], " ")
+					if not ingredient_to_allergen.contains(ingredient)
+						ingredients = [ingredients, [ingredient]];
+				//let ingredients = split_(food_ingredients[i], " ");
+
+				println("    in     ", ingredients);
+				if first
+				{
+					possible = ingredients;
+					first = false;
+				}
+				else
+					possible = intersect(possible, ingredients);
+				println("    possible = ", possible);
+				println();
+			}
+			if size(possible) == 1
+			{
+				println("Determined ", allergen);
+				any_determined = true;
+				allergen_to_ingredient.set(allergen, possible[0]);
+				ingredient_to_allergen.set(possible[0], allergen);
+			}
+		}
+		// Could actually break one iteration earlier by checking if size of
+		// allergen_to_ingredient keys is the same as the size of the
+		// allergen_set
+		if not any_determined
+			break;
+	}
+	allergen_to_ingredient.print("allergen_to_ingredient = ");
+	ingredient_to_allergen.print("ingredient_to_allergen = ");
+
+	// Now we know everything. Build a set of "safe" ingredients which don't
+	// contain any allergens
+	let safe = dict_i64::new();
+	for ingredient_line in food_ingredients
+	{
+		let ingredients = split_(ingredient_line, " ");
+		for ingredient in ingredients
+			if not ingredient_to_allergen.contains(ingredient)
+			{
+				safe.set(ingredient, 1'i64);
+				sum_ += 1;
+			}
+	}
+	safe.print("safe = ");
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+// I haven't implemented alphabetical comparison or sorting yet, but it's 8
+// elements long so just do it manually:
+//
+//allergen_to_ingredient =
+//{
+//    "wheat": "lclnj"     // output from part 1
+//    "fish": "lkv"
+//    "shellfish": "pqqks"
+//    "peanuts": "cbzcgvc"
+//    "soy": "pqrvc"
+//    "sesame": "kfgln"
+//    "dairy": "fdsfpg"
+//    "eggs": "jmvxx"
+//}
+//
+//    "dairy"    : "fdsfpg" // sorted by key
+//    "eggs"     : "jmvxx"
+//    "fish"     : "lkv"
+//    "peanuts"  : "cbzcgvc"
+//    "sesame"   : "kfgln"
+//    "shellfish": "pqqks"
+//    "soy"      : "pqrvc"
+//    "wheat"    : "lclnj"
+//
+//  fdsfpg  // values without keys
+//  jmvxx
+//  lkv
+//  cbzcgvc
+//  kfgln
+//  pqqks
+//  pqrvc
+//  lclnj
+//
+//  // Concatenate:
+//  fdsfpg,jmvxx,lkv,cbzcgvc,kfgln,pqqks,pqrvc,lclnj
+
+fn intersect(a: [str; :], b: [str; :]): [str; :]
+{
+	// O(n^2). Could use hash set if needed
+
+	let ab = a; // initial allocation
+	const NA = size(a);
+	const NB = size(b);
+	let nab = 0;
+	for aa in a
+	for bb in b
+	if aa == bb
+	{
+		ab[nab] = aa;
+		nab += 1;
+	}
+	return ab[0: nab];
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/21" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "2072";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "5";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

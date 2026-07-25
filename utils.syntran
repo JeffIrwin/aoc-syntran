@@ -1566,9 +1566,24 @@ fn cat_strs(str_vec: [str; :]): str
 	// and space delimiters
 	//
 	// TODO: ref
+	//
+	// TODO: allocate once instead of multiple cats
 	let str_ = "";
 	for i in [0: size(str_vec, 0)]
 		str_ += str_vec[i];
+	return str_;
+}
+fn join_(str_vec: [str; :], delim: str): str
+{
+	// Like cat_strs() but with delimeters
+	let str_ = "";
+	const N = size(str_vec);
+	for i in [0: N]
+	{
+		str_ += str_vec[i];
+		if i < N-1
+			str_ += delim;
+	}
 	return str_;
 }
 
