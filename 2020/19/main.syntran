@@ -19,8 +19,8 @@ fn part1(args: &const Args): str
 	//println("iblank = ", iblank);
 	let rules_str = lines[0: iblank];
 	let msgs = lines[iblank+1:];
-	println("rules_str = ", rules_str);
-	println("msgs = ", msgs);
+	//println("rules_str = ", rules_str);
+	//println("msgs = ", msgs);
 
 	// Rules could fairly easily be put in an array instead of dict. Do we need
 	// the perf?
@@ -68,12 +68,7 @@ fn part2(args: &const Args): str
 	//println("iblank = ", iblank);
 	let rules_str = lines[0: iblank];
 	let msgs = lines[iblank+1:];
-	println("rules_str = ", rules_str);
-	println("msgs = ", msgs);
-	println();
 
-	// Rules could fairly easily be put in an array instead of dict. Do we need
-	// the perf?
 	let rules = dict_str::new();
 	for rule_str in rules_str
 	{
@@ -84,23 +79,10 @@ fn part2(args: &const Args): str
 	}
 	//rules.print("rules = ");
 
-	// Overwrite rules 8 and 11 for part 2:
-	//
-	//     8: 42 | 42 8
-	//     11: 42 31 | 42 11 31
-
-	//rules.set( "8", "42 | 42 8");
-	//rules.set("11", "42 31 | 42 11 31");
-	////rules.set( "8", "42 8 | 42"); // reversing the pipe yields 0 matches??
-	////rules.set("11", "42 11 31 | 42 31");
-
-	let pattern = rules.get("0");
-	//println("pattern = ", pattern);
-
 	let rule42 = rules.get("42");
 	let rule31 = rules.get("31");
-	println("rule42 = ", rule42);
-	println("rule31 = ", rule31);
+	//println("rule42 = ", rule42);
+	//println("rule31 = ", rule31);
 	if rule42 == ""
 	{
 		println(ERROR_STR + "can't run part 2 on test-input.txt");
@@ -162,25 +144,14 @@ fn part2(args: &const Args): str
 			//println("31 ", msg);
 		}
 
-		//let msg0 = msg;
-		//let match = is_valid(&rules, pattern, &msg);
-		////println("******************");
-		////println("match = ", match);
-
 		if match and match42 and match31 and msg == "" and n42 > n31
 		{
 			//println("match: ", msg0);
 			//println("n42|31 = ", [n42, n31]);
 			sum_ += 1;
 		}
-		//else
-		//{
-		//	println("NOT match");
-		//}
 	}
 
-	// Tried 211 -- too low
-	// Tried 386 -- too high
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
@@ -190,7 +161,6 @@ fn is_match(rules: &dict_str::dict_str, pattern: str, msg: &str): bool
 	// If the msg matches the pattern, trim (consume) the matched prefix off the
 	// front of the msg and return true
 
-	//println();
 	//println("pattern = ", pattern);
 	//println("msg     = ", msg);
 
@@ -216,9 +186,6 @@ fn is_match(rules: &dict_str::dict_str, pattern: str, msg: &str): bool
 		let words = split_(pattern, "|");
 		let left  = words[0];
 		let right = words[1];
-		//println("left  = ", left);
-		//println("right = ", right);
-
 		let match = is_match(&rules, left, &msg);
 		if match
 			return true;
@@ -230,29 +197,17 @@ fn is_match(rules: &dict_str::dict_str, pattern: str, msg: &str): bool
 
 	// No pipe and no primitive a/b, just a string of other rules
 	let keys = split_(pattern, " ");
-	//println("keys = ", keys);
 	let msg0 = msg;
 	for key in keys
 	{
 		let match = is_match(&rules, rules.get(key), &msg);
-		//println("match = ", match);
 		if (not match)
 		{
 			msg = msg0;  // reset msg after failed partial match
 			return false;
 		}
 	}
-	//println("END KEYS ITER");
-	//println("msg = """, msg, """");
 	return true;
-}
-
-fn is_valid(rules: &dict_str::dict_str, pattern: str, msg: &str): bool
-{
-	// Wrapper for is_match() which also ensures the whole msg is matched, not
-	// just a partial prefix
-	let match = is_match(&rules, pattern, &msg);
-	return match and msg == "";
 }
 
 //==============================================================================
@@ -271,9 +226,9 @@ fn main(): str
 	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "160";
-	let expect2 = "REPLACE_ME_P2";
+	let expect2 = "357";
 	let expect1_test = "2";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect2_test = "REPLACE_ME_P2_TEST"; // differt part 2 test input
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);
