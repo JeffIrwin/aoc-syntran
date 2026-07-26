@@ -14,8 +14,6 @@ fn part1(args: &const Args): str
 	let player2 = false;
 	let q1 = queue_i32::new();
 	let q2 = queue_i32::new();
-	let n1 = 0;
-	let n2 = 0;
 	while not eof(f)
 	{
 		println("str_ = ", str_);
@@ -29,17 +27,10 @@ fn part1(args: &const Args): str
 		else
 		{
 			if player2
-			{
 				q2.push(parse_i32(str_));
-				n2 += 1;
-			}
 			else
-			{
 				q1.push(parse_i32(str_));
-				n1 += 1;
-			}
 		}
-
 		str_ = readln(f);
 	}
 	close(f);
@@ -52,41 +43,34 @@ fn part1(args: &const Args): str
 		{
 			println("player 2 wins");
 			w = q2;
-			n = n2;
 			break;
 		}
 		if q2.is_empty
 		{
 			println("player 1 wins");
 			w = q1;
-			n = n1;
 			break;
 		}
 		let i1 = q1.pop();
 		let i2 = q2.pop();
-		n1 -= 1;
-		n2 -= 1;
 		if i1 > i2
 		{
 			// 1 wins this round
 			q1.push(i1);
 			q1.push(i2);
-			n1 += 2; // TODO: need queue.len() so i don't have to track this
 		}
 		else
 		{
 			// 2 wins this round
 			q2.push(i2);
 			q2.push(i1);
-			n2 += 2;
 		}
 	}
-	let coef = n;//0;
+	let coef = w.len();
 	while true
 	{
 		if w.is_empty
 			break;
-		//coef += 1;
 		let wp = w.pop();
 		sum_ += coef * wp;
 		println("wp, coef = ", [wp, coef]);
@@ -104,7 +88,7 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println(MAGENTA + "Starting AOC syntran main 2025/xx" + RESET);
+	println(MAGENTA + "Starting AOC syntran main 2020/22" + RESET);
 	let args = parse_args();
 
 	let p1 = ""; let p2 = "";
