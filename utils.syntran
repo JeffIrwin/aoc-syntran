@@ -175,7 +175,7 @@ fn countln_(filename: str): i32
 
 //==============================================================================
 
-fn scan(str_: str, set: str): i64
+fn scan(str_: &const str, set: &const str): i64
 {
 	// c.f. Fortran intrinsic scan()
 
@@ -205,7 +205,7 @@ fn scan(str_: str, set: str): i64
 
 //==========================================================
 
-fn scanback(str_: str, set: str): i64
+fn scanback(str_: &const str, set: &const str): i64
 {
 	// c.f. Fortran intrinsic scan() with back = true
 
@@ -236,7 +236,7 @@ fn scanback(str_: str, set: str): i64
 
 //==========================================================
 
-fn verify(str_: str, set: str): i64
+fn verify(str_: &const str, set: &const str): i64
 {
 	// c.f. Fortran intrinsic verify()
 
@@ -269,7 +269,7 @@ fn verify(str_: str, set: str): i64
 
 //==========================================================
 
-fn tok_i32(str_: str): [i64; :]
+fn tok_i32(str_: &const str): [i64; :]
 {
 	// tokenize a string into the first int contained within it, then return the
 	// substring start index, end index, and length
@@ -317,7 +317,7 @@ fn tok_i32(str_: str): [i64; :]
 	return [beg_, end_, len_];
 }
 
-fn tok_mi32(str_: str): [i64; :]
+fn tok_mi32(str_: &const str): [i64; :]
 {
 	// tokenize a string into the first int contained within it, then return the
 	// substring start index, end index, and length
@@ -360,7 +360,7 @@ fn tok_mi32(str_: str): [i64; :]
 
 //==========================================================
 
-fn read_i32(str_: str): i32
+fn read_i32(str_: &const str): i32
 {
 	let toks = tok_i32(str_);
 
@@ -377,7 +377,7 @@ fn read_i32(str_: str): i32
 	return ans;
 }
 
-fn read_i32s(str_: str): [i32; :]
+fn read_i32s(str_: &const str): [i32; :]
 {
 	// Parse a vector of positive i32 integers from a string.  Any non-int
 	// characters (including "-") are treated as delimiters
@@ -420,7 +420,7 @@ fn read_i32s(str_: str): [i32; :]
 	return nums;
 }
 
-fn read_mi32s(str_: str): [i32; :]
+fn read_mi32s(str_: &const str): [i32; :]
 {
 	// Parse a vector of possibly negative i32 integers from a string.  Any
 	// non-int characters (including "+" but not "-") are treated as delimiters
@@ -465,7 +465,7 @@ fn read_mi32s(str_: str): [i32; :]
 
 //==============================================================================
 
-fn verifyback(str_: str, set: str): i64
+fn verifyback(str_: &const str, set: &const str): i64
 {
 	//println("");
 	//println("starting verifyback");
@@ -539,14 +539,14 @@ fn to_upper(char_: str): str
 //==============================================================================
 
 // TODO: rename to any_char_eq_str or any_char_eq_set
-fn any_str_eq_set(str_: str, set: str): bool
+fn any_str_eq_set(str_: &const str, set: &const str): bool
 {
 	return scan(str_, set) >= 0;
 }
 
 //==============================================================================
 
-fn any_mat(v: [bool; :, :]): bool
+fn any_mat(v: &const [bool; :, :]): bool
 {
 	let found = false;
 	let i = 0;
@@ -565,7 +565,7 @@ fn any_mat(v: [bool; :, :]): bool
 
 //==============================================================================
 
-fn any_r3(v: [bool; :, :, :]): bool
+fn any_r3(v: &const [bool; :, :, :]): bool
 {
 	let found = false;
 	let i = 0;
@@ -589,7 +589,7 @@ fn any_r3(v: [bool; :, :, :]): bool
 
 //==============================================================================
 
-fn minloc_mat(dist: [i32; :, :], q: [bool; :, :]): [i32; :]
+fn minloc_mat(dist: &const [i32; :, :], q: &const [bool; :, :]): [i32; :]
 {
 	let found = false;
 	let min_ = -1;
@@ -622,7 +622,7 @@ fn minloc_mat(dist: [i32; :, :], q: [bool; :, :]): [i32; :]
 
 //==============================================================================
 
-fn minloc_r3(dist: [i32; :, :, :], q: [bool; :, :, :]): [i32; :]
+fn minloc_r3(dist: &const [i32; :, :, :], q: &const [bool; :, :, :]): [i32; :]
 {
 	let found = false;
 	let min_ = -1;
@@ -656,7 +656,7 @@ fn minloc_r3(dist: [i32; :, :, :], q: [bool; :, :, :]): [i32; :]
 //==============================================================================
 
 // TODO: rename to any_str_eq_vec
-fn any_str_eq(str_: str, v: [str; :]): bool
+fn any_str_eq(str_: &const str, v: &const [str; :]): bool
 {
 	//if (any_str_eq(my_num, wn_nums_str)) nwin = 1;
 
@@ -672,7 +672,7 @@ fn any_str_eq(str_: str, v: [str; :]): bool
 
 //==============================================================================
 
-fn index_(str_: str, substr: str): i64
+fn index_(str_: &const str, substr: &const str): i64
 {
 	//println("str_   = ", str_);
 	//println("substr = ", substr);
@@ -705,7 +705,7 @@ fn index_(str_: str, substr: str): i64
 
 //==============================================================================
 
-fn indexback(str_: str, substr: str): i64
+fn indexback(str_: &const str, substr: &const str): i64
 {
 	//println("str_   = ", str_);
 	//println("substr = ", substr);
@@ -739,7 +739,7 @@ fn indexback(str_: str, substr: str): i64
 
 //==============================================================================
 
-fn split_(str_: str, delims: str): [str; :]
+fn split_(str_: &const str, delims: &const str): [str; :]
 {
 	// Split an input str_ into a vector of strs based on a set of delimiters
 
@@ -802,7 +802,7 @@ fn split_(str_: str, delims: str): [str; :]
 
 //==============================================================================
 
-fn parse_i32_hex(str_: str): i32
+fn parse_i32_hex(str_: &const str): i32
 {
 	// Lowercase hex only!  Read a hexadecimal number *without* any leading `0x`
 	// or `#` or anything besides literal hex characters
@@ -820,7 +820,7 @@ fn parse_i32_hex(str_: str): i32
 
 //==============================================================================
 
-fn parse_i32_delim(str_: str, delims: str): [i32; :]
+fn parse_i32_delim(str_: &const str, delims: &const str): [i32; :]
 {
 	let str_vec = split_(str_, delims);
 	//println("str_vec = ", str_vec);
@@ -832,7 +832,7 @@ fn parse_i32_delim(str_: str, delims: str): [i32; :]
 
 //==============================================================================
 
-fn parse_i64_delim(str_: str, delims: str): [i64; :]
+fn parse_i64_delim(str_: &const str, delims: &const str): [i64; :]
 {
 	let str_vec = split_(str_, delims);
 	//println("str_vec = ", str_vec);
@@ -844,7 +844,7 @@ fn parse_i64_delim(str_: str, delims: str): [i64; :]
 
 //==============================================================================
 
-fn rm_char(str_: str, char_: str): str
+fn rm_char(str_: &const str, char_: str): str
 {
 	// Remove all occurences of a char from a str
 
@@ -865,19 +865,15 @@ fn rm_char(str_: str, char_: str): str
 	return out[0: j];
 }
 
-fn reverse_str(str_: str): str
+fn reverse_str(str_: &const str): str
 {
 	// Reverse a str
-	let rev = str_;
-	let n = len(str_);
-	for i in [0: n]
-		rev[i] = str_[n-i-1];
-	return rev;
+	return str_[:-1:];
 }
 
 //==============================================================================
 
-fn starts_with_(str_: str, substr_: str): bool
+fn starts_with_(str_: &const str, substr_: &const str): bool
 {
 	if (len(substr_) > len(str_)) return false;
 	return str_[0: len(substr_)] == substr_;
@@ -893,6 +889,8 @@ fn starts_with_(str_: str, substr_: str): bool
 	//println("starts_with_ = ", starts_with_("abcde", "_"));
 
 //==============================================================================
+
+// TODO: convert more &const args below here
 
 fn ends_with_(str_: str, char_: str): bool
 {
@@ -1558,14 +1556,12 @@ fn cat_i32s(v: [i32; :]): i64
 	return parse_i64(str_);
 }
 
-fn cat_strs(str_vec: [str; :]): str
+fn cat_strs(str_vec: &const [str; :]): str
 {
 	// Concatenate a vector of strings (or chars) into one big str
 	//
 	// The built-in str() fn is similar but wraps in [brackets] and adds comma
 	// and space delimiters
-	//
-	// TODO: const ref
 	//
 	// TODO: allocate once instead of multiple cats
 	let str_ = "";
@@ -1587,7 +1583,7 @@ fn join_(str_vec: &const [str; :], delim: &const str): str
 	return str_;
 }
 
-fn vec_str(s: str): [str; :]
+fn vec_str(s: &const str): [str; :]
 {
 	// Divide a string into a vector of chars
 	let v = [""; len(s)];
@@ -1598,7 +1594,7 @@ fn vec_str(s: str): [str; :]
 
 //==============================================================================
 
-fn print_char_mat(chars: &[str; :,:])
+fn print_char_mat(chars: &const [str; :,:])
 {
 	for iy in [0: size(chars, 1)]
 		println(cat_strs(chars[:,iy]));
@@ -1608,7 +1604,7 @@ fn print_char_mat(chars: &[str; :,:])
 
 //==============================================================================
 
-fn count_char(s: str, c: str): i32
+fn count_char(s: &const str, c: str): i32
 {
 	let n = 0;
 	for cs in s
