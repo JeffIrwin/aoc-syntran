@@ -1565,7 +1565,7 @@ fn cat_strs(str_vec: [str; :]): str
 	// The built-in str() fn is similar but wraps in [brackets] and adds comma
 	// and space delimiters
 	//
-	// TODO: ref
+	// TODO: const ref
 	//
 	// TODO: allocate once instead of multiple cats
 	let str_ = "";
@@ -1573,7 +1573,7 @@ fn cat_strs(str_vec: [str; :]): str
 		str_ += str_vec[i];
 	return str_;
 }
-fn join_(str_vec: [str; :], delim: str): str
+fn join_(str_vec: &const [str; :], delim: &const str): str
 {
 	// Like cat_strs() but with delimeters
 	let str_ = "";

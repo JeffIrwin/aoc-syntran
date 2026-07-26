@@ -24,8 +24,8 @@ fn part1(args: &const Args): str
 		food_allergens  [i] = allergens;
 		i += 1;
 	}
-	println("food_ingredients = ", food_ingredients);
-	println("food_allergens = ", food_allergens);
+	//println("food_ingredients = ", food_ingredients);
+	//println("food_allergens = ", food_allergens);
 
 	// Build a set of allergens
 	let allergen_set = dict_i64::new();
@@ -35,7 +35,7 @@ fn part1(args: &const Args): str
 		for allergen in allergens
 			allergen_set.set(allergen, 1'i64);
 	}
-	allergen_set.print("allergen_set = ");
+	//allergen_set.print("allergen_set = ");
 
 	// Map allergens to ingredients and vice versa
 	let allergen_to_ingredient = dict_str::new();
@@ -56,12 +56,12 @@ fn part1(args: &const Args): str
 		{
 			let first = true;
 			let possible = [""; 0];
-			println("allergen = ", allergen);
+			//println("allergen = ", allergen);
 			for i in [0: N]
 			{
 				let allergens = split_(food_allergens[i], " ");
 				if not any(allergens == allergen) continue;
-				println("    one of ", allergens);
+				//println("    one of ", allergens);
 
 				// Filter out known ingredients
 				let ingredients = [""; 0];
@@ -70,7 +70,7 @@ fn part1(args: &const Args): str
 						ingredients = [ingredients, [ingredient]];
 				//let ingredients = split_(food_ingredients[i], " ");
 
-				println("    in     ", ingredients);
+				//println("    in     ", ingredients);
 				if first
 				{
 					possible = ingredients;
@@ -78,12 +78,11 @@ fn part1(args: &const Args): str
 				}
 				else
 					possible = intersect(possible, ingredients);
-				println("    possible = ", possible);
-				println();
+				//println("    possible = ", possible);
 			}
 			if size(possible) == 1
 			{
-				println("Determined ", allergen);
+				//println("Determined ", allergen);
 				any_determined = true;
 				allergen_to_ingredient.set(allergen, possible[0]);
 				ingredient_to_allergen.set(possible[0], allergen);
@@ -95,8 +94,8 @@ fn part1(args: &const Args): str
 		if not any_determined
 			break;
 	}
-	allergen_to_ingredient.print("allergen_to_ingredient = ");
-	ingredient_to_allergen.print("ingredient_to_allergen = ");
+	//allergen_to_ingredient.print("allergen_to_ingredient = ");
+	//ingredient_to_allergen.print("ingredient_to_allergen = ");
 
 	// Now we know everything. Build a set of "safe" ingredients which don't
 	// contain any allergens
@@ -111,7 +110,7 @@ fn part1(args: &const Args): str
 				sum_ += 1;
 			}
 	}
-	safe.print("safe = ");
+	//safe.print("safe = ");
 
 	println("part 1 = ", sum_);
 	return str(sum_);

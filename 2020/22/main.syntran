@@ -1,0 +1,131 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../queue_i32 as queue_i32;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	let player2 = false;
+	let q1 = queue_i32::new();
+	let q2 = queue_i32::new();
+	let n1 = 0;
+	let n2 = 0;
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		if str_ == "Player 1:" or str_ == ""
+		{
+			// no-op
+		}
+		else if str_ == "Player 2:"
+			player2 = true;
+		else
+		{
+			if player2
+			{
+				q2.push(parse_i32(str_));
+				n2 += 1;
+			}
+			else
+			{
+				q1.push(parse_i32(str_));
+				n1 += 1;
+			}
+		}
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	let w = queue_i32::new(); // declare winner queue in this scope
+	let n = 0;
+	while true
+	{
+		if q1.is_empty
+		{
+			println("player 2 wins");
+			w = q2;
+			n = n2;
+			break;
+		}
+		if q2.is_empty
+		{
+			println("player 1 wins");
+			w = q1;
+			n = n1;
+			break;
+		}
+		let i1 = q1.pop();
+		let i2 = q2.pop();
+		n1 -= 1;
+		n2 -= 1;
+		if i1 > i2
+		{
+			// 1 wins this round
+			q1.push(i1);
+			q1.push(i2);
+			n1 += 2; // TODO: need queue.len() so i don't have to track this
+		}
+		else
+		{
+			// 2 wins this round
+			q2.push(i2);
+			q2.push(i1);
+			n2 += 2;
+		}
+	}
+	let coef = n;//0;
+	while true
+	{
+		if w.is_empty
+			break;
+		//coef += 1;
+		let wp = w.pop();
+		sum_ += coef * wp;
+		println("wp, coef = ", [wp, coef]);
+		coef -= 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/xx" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "32629";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "306";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
