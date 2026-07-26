@@ -890,14 +890,12 @@ fn starts_with_(str_: &const str, substr_: &const str): bool
 
 //==============================================================================
 
-// TODO: convert more &const args below here
-
-fn ends_with_(str_: str, char_: str): bool
+fn ends_with_(str_: &const str, char_: &const str): bool
 {
 	return str_[ len(str_) - 1 ] == char_;
 }
 
-fn all_ends_with_(strs: [str; :], j: [i32; :], char_: str): bool
+fn all_ends_with_(strs: &const [str; :], j: &const [i32; :], char_: str): bool
 {
 	let i = 0;
 	let all_end = true;
@@ -984,12 +982,13 @@ fn sign_f64(x: f64): f64
 
 //==============================================================================
 
-fn sum_i32(v: [i32; :]): i32
+fn sum_i32(v: &const [i32; :]): i32
 {
-	let sum_ = 0;
-	for i in [0: size(v,0)]
-		sum_ += v[i];
-	return sum_;
+	return sum(v);
+	//let sum_ = 0;
+	//for i in [0: size(v,0)]
+	//	sum_ += v[i];
+	//return sum_;
 }
 
 //==============================================================================
@@ -1016,12 +1015,10 @@ fn pmod64(i: i64, n: i64): i64
 
 //==============================================================================
 
-fn sort_index(v: [i32; :]): [i32; :]
+fn sort_index(v: &const [i32; :]): [i32; :]
 {
 	// Quick sort algorithm.  Return index array instead of modifying the input
 	// array in-place
-	//
-	// TODO: arg should be passed by ref
 
 	//println("starting sort_index()");
 	//println("v = ", v);
@@ -1112,12 +1109,10 @@ fn sort_index(v: [i32; :]): [i32; :]
 	return ix;
 }
 
-fn sort_index_i64(v: [i64; :]): [i32; :]
+fn sort_index_i64(v: &const [i64; :]): [i32; :]
 {
 	// Quick sort algorithm.  Return index array instead of modifying the input
 	// array in-place
-	//
-	// TODO: arg should be passed by ref
 
 	//println("starting sort_index()");
 	//println("v = ", v);
@@ -1208,12 +1203,10 @@ fn sort_index_i64(v: [i64; :]): [i32; :]
 	return ix;
 }
 
-fn sort_index_f64(v: [f64; :]): [i32; :]
+fn sort_index_f64(v: &const [f64; :]): [i32; :]
 {
 	// Quick sort algorithm.  Return index array instead of modifying the input
 	// array in-place
-	//
-	// TODO: arg should be passed by ref
 
 	//println("starting sort_index()");
 	//println("v = ", v);
@@ -1506,9 +1499,8 @@ fn sort_inplace_i64(v: &[i64; :])
 
 //==============================================================================
 
-fn uniq(v_in: [i32; :]): [i32; :]
+fn uniq(v_in: &const [i32; :]): [i32; :]
 {
-	// TODO: pass by ref
 	let v = sort_inplace(v_in);
 	let u = v;
 
@@ -1534,7 +1526,7 @@ fn uniq(v_in: [i32; :]): [i32; :]
 
 //==============================================================================
 
-fn in_bounds(lo: [i32; :], x: [i32; :], hi: [i32; :]): bool
+fn in_bounds(lo: &const [i32; :], x: &const [i32; :], hi: &const [i32; :]): bool
 {
 	// Vector bounds check.  Inclusive of lo, exclusive of hi
 	for i in [0: size(x, 0)]
@@ -1547,7 +1539,7 @@ fn in_bounds(lo: [i32; :], x: [i32; :], hi: [i32; :]): bool
 
 //==============================================================================
 
-fn cat_i32s(v: [i32; :]): i64
+fn cat_i32s(v: &const [i32; :]): i64
 {
 	// Concatenate a vector of ints, as a string, into one big number
 	let str_ = "";
@@ -1775,7 +1767,7 @@ fn factorial(n: i32): i32
 
 //==============================================================================
 
-fn split_str_mat(s: str, delims: str): [str; :,:]
+fn split_str_mat(s: &const str, delims: &const str): [str; :,:]
 {
 	// Split a str by delimiters into a matrix of chars
 	let rows = split_(s, delims);
