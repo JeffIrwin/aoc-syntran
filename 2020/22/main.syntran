@@ -1,7 +1,9 @@
 
 use ../../utils::*;
-//use ../../dict_i64_2026 as dict_i64;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
 use ../../queue_i32 as queue_i32;
+//use queue_min_i32 as queue_i32;
 
 //==============================================================================
 
@@ -81,6 +83,224 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+fn part2(args: &const Args): str
+{
+	println();
+	println("Starting part 2");
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	let player2 = false;
+	let q1 = queue_i32::new();
+	let q2 = queue_i32::new();
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		if str_ == "Player 1:" or str_ == ""
+		{
+			// no-op
+		}
+		else if str_ == "Player 2:"
+			player2 = true;
+		else
+		{
+			if player2
+				q2.push(parse_i32(str_));
+			else
+				q1.push(parse_i32(str_));
+		}
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("playing main game ...");
+	let winner_id = play_game(&q1, &q2, true);
+	println("===============================");
+	println("finished main game");
+	println("winner_id = ", winner_id);
+	let w = [0];
+	if winner_id == 1
+		w = q1.get_vals();
+	else
+		w = q2.get_vals();
+	println("w = ", w);
+
+	w = w[:-1:]; // reverse
+	let n = size(w);
+	sum_ = sum([1:n+1] * w);
+
+	// Tried 34517 -- too high
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//// Attemp optimization by caching game results. Doesn't seem to help as repeated
+//// games are apparently rare, stringification and hashing may even be a marginal
+//// slowdown
+//let wcache  = dict_i64::new();
+
+let counter = 0;
+fn play_game(q1: &queue_i32::Queue_i32, q2: &queue_i32::Queue_i32, is_main: bool): i32
+{
+	// Return 1 if player 1 wins or 2 if 2 wins
+	//println("------------------");
+	//println("starting play_game");
+	//let v1 = q1.get_vals();
+	//let v2 = q2.get_vals();
+	//println("q1 vals = ", v1);
+	//println("q2 vals = ", v2);
+
+	counter += 1;
+	if (counter % 5000 == 0)
+		println("game count = ", counter);
+	//if (counter == 25_000) return 0;
+
+	//let key0 = str(v1, v2);
+	//if wcache.contains(key0)
+	//{
+	//	//println("cache hit!");
+	//	return i32(wcache.get(key0));
+	//}
+
+	//// Optimization: recursion will never happen and we can predict winner via
+	//// max instead of simulating rounds which can take surprisingly long
+	//let min1 = q1.get_min();
+	//let min2 = q2.get_min();
+	////let min1 = minval(v1);
+	////let min2 = minval(v2);
+
+	// Also re-check this condition after each round because cards are changing
+	// throughout the game. I think we'll only need to check the player who lost
+	// cards because only their min can increase
+	//
+	// But be careful not to optimize away the result of the main game, where we
+	// need to know the final deck
+
+	//if min1 >= q1.len() or min2 >= q2.len()
+	////if min1 >= size(v1) or min2 >= size(v2)
+	//{
+	//	// Not enough cards in at least one deck such that recursion can never
+	//	// happen. Whoever has the highest card will win
+	//	//println("trivial winner");
+	//	//exit(0);
+	//	let max1 = q1.get_max();
+	//	let max2 = q2.get_max();
+	//	//let max1 = maxval(v1);
+	//	//let max2 = maxval(v2);
+	//	if max1 > max2
+	//	{
+	//		//wcache.set(key0, 1'i64);
+	//		return 1;
+	//	}
+	//	else
+	//	{
+	//		//wcache.set(key0, 2'i64);
+	//		return 2;
+	//	}
+	//}
+
+	let seen = dict_i64::new(); // round cache
+	while true
+	{
+		// Check if state was seen before
+		let key = str(q1.get_vals(), q2.get_vals());
+		//println("key = ", key);
+		if seen.contains(key)
+		{
+			//wcache.set(key0, 1'i64);
+			return 1;
+		}
+		seen.set(key, 1'i64);
+
+		if q1.is_empty
+		{
+			//println("player 2 wins");
+			//wcache.set(key0, 2'i64);
+			return 2;
+		}
+		if q2.is_empty
+		{
+			//println("player 1 wins");
+			//wcache.set(key0, 1'i64);
+			return 1;
+		}
+		let i1 = q1.pop();
+		let i2 = q2.pop();
+		let l1 = q1.len();
+		let l2 = q2.len();
+		if l1 >= i1 and l2 >= i2
+		{
+			//// Ack! This worked for the test input!!
+			//let q1_copy = q1;
+			//let q2_copy = q2;
+
+			let q1_copy = queue_i32::new();
+			let q2_copy = queue_i32::new();
+			let v1 = q1.get_vals();
+			let v2 = q2.get_vals();
+			for i in [0: i1]
+				q1_copy.push(v1[i]);
+			for i in [0: i2]
+				q2_copy.push(v2[i]);
+
+			let winner_id = play_game(&q1_copy, &q2_copy, false);
+			if winner_id == 1
+			{
+				q1.push(i1);
+				q1.push(i2);
+			}
+			else if winner_id == 2
+			{
+				q2.push(i2);
+				q2.push(i1);
+			}
+			else
+			{
+				println(ERROR_STR + "bad winner ID from sub-game");
+				exit(1);
+			}
+		}
+		else if i1 > i2
+		{
+			// 1 wins this round
+			q1.push(i1);
+			q1.push(i2);
+		}
+		else
+		{
+			// 2 wins this round
+			q2.push(i2);
+			q2.push(i1);
+		}
+		//if not is_main
+		//{
+		//	// Actually twice as much work as needed here -- only losing hand
+		//	// needs min checked
+		//	let min1 = q1.get_min();
+		//	let min2 = q2.get_min();
+		//	if min1 >= q1.len() or min2 >= q2.len()
+		//	{
+		//		//println("in-game early return");
+		//		let max1 = q1.get_max();
+		//		let max2 = q2.get_max();
+		//		if max1 > max2
+		//		{
+		//			//wcache.set(key0, 1'i64);
+		//			return 1;
+		//		}
+		//		else
+		//		{
+		//			//wcache.set(key0, 2'i64);
+		//			return 2;
+		//		}
+		//	}
+		//}
+	}
+	return 0;
+}
+
 //==============================================================================
 
 fn main(): str
@@ -94,12 +314,12 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "32629";
-	let expect2 = "REPLACE_ME_P2";
+	let expect2 = "32519";
 	let expect1_test = "306";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect2_test = "291";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);
