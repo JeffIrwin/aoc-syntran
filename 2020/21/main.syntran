@@ -116,6 +116,87 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+	let lines = readlns_(args.input_filename);
+	let N = size(lines);
+	let food_ingredients = [""; N];
+	let food_allergens = [""; N];
+
+	// Load ingredients and allergens from each line
+	let i = 0;
+	for line in lines
+	{
+		let ingredients        = split_(line, "()")[0];
+		let contains_allergens = split_(line, "()")[1];
+		let allergens = join_(split_(contains_allergens, " ,")[1:], " ");
+		food_ingredients[i] = ingredients;
+		food_allergens  [i] = allergens;
+		i += 1;
+	}
+
+	// Build a set of allergens
+	let allergen_set = dict_i64::new();
+	for allergen_line in food_allergens
+	{
+		let allergens = split_(allergen_line, " ");
+		for allergen in allergens
+			allergen_set.set(allergen, 1'i64);
+	}
+
+	let allergen_to_ingredient = dict_str::new();
+	let ingredient_to_allergen = dict_str::new();
+	while true
+	{
+		let any_determined = false;
+		for allergen in allergen_set.get_keys()
+		{
+			let first = true;
+			let possible = [""; 0];
+			for i in [0: N]
+			{
+				let allergens = split_(food_allergens[i], " ");
+				if not any(allergens == allergen) continue;
+
+				// Filter out known ingredients
+				let ingredients = [""; 0];
+				for ingredient in split_(food_ingredients[i], " ")
+					if not ingredient_to_allergen.contains(ingredient)
+						ingredients = [ingredients, [ingredient]];
+				if first
+				{
+					possible = ingredients;
+					first = false;
+				}
+				else
+					possible = intersect(possible, ingredients);
+			}
+			if size(possible) == 1
+			{
+				any_determined = true;
+				allergen_to_ingredient.set(allergen, possible[0]);
+				ingredient_to_allergen.set(possible[0], allergen);
+			}
+		}
+		if (not any_determined) break;
+	}
+
+	let alrgs = allergen_to_ingredient.get_keys();
+	let idx   = sort_index_str(alrgs);
+	//println("alrgs sorted = ", alrgs[idx]);
+	let ings  = allergen_to_ingredient.get_vals()[idx];
+	//println("ings = ", ings);
+
+	let ans = "";
+	for i in [0: size(ings)-1]
+		ans += ings[i] + ",";
+	ans += ings[size(ings)-1];
+
+	println("part 2 = ", ans);
+	return ans;
+}
+
 // I haven't implemented alphabetical comparison or sorting yet, but it's 8
 // elements long so just do it manually:
 //
@@ -183,12 +264,12 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "2072";
-	let expect2 = "REPLACE_ME_P2";
+	let expect2 = "fdsfpg,jmvxx,lkv,cbzcgvc,kfgln,pqqks,pqrvc,lclnj";
 	let expect1_test = "5";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect2_test = "mxmxvkd,sqjhc,fvjkl";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);

@@ -118,6 +118,19 @@ struct dict_str
 		}
 		return k;
 	}
+
+	const fn get_vals(): [str; :]
+	{
+		let arr = [""; n];
+		let j = 0;
+		for i in [0: cap]
+		{
+			if (not used[i]) continue;
+			arr[j] = vals[i];
+			j += 1;
+		}
+		return arr;
+	}
 }
 
 fn new(): dict_str
