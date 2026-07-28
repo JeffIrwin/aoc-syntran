@@ -31,14 +31,15 @@ fn part1(args: &const Args): str
 			//println("adr = ", adr);
 			//println("val = ", val);
 
-			let i = len(mask);
-			for c in mask
+			//let i = len(mask);
+			let i = 0;
+			for c in mask[:-1:]
 			{
-				i -= 1;
 				if c == "0"
 					val &= !(1'i64 << i);
 				if c == "1"
 					val |=  (1'i64 << i);
+				i += 1;
 			}
 			//println("masked val = ", val);
 			mem.set(adr, val);

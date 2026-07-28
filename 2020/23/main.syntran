@@ -1,0 +1,135 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	println("str_ = ", str_);
+	close(f);
+
+	const N = i32(len(str_));
+	let v = [0; N];
+	for i in [0: N]
+		v[i] = parse_i32(str_[i]);
+	//println("v = ", v);
+
+	//let current = 0;
+	let curr_loc = 0;
+	//for k in [0: 10]
+	for k in [0: 100]
+	{
+		println("move ", k + 1);
+		let curr = v[curr_loc];
+		let pickup = [
+			v[(curr_loc+1) % N],
+			v[(curr_loc+2) % N],
+			v[(curr_loc+3) % N]
+		];
+		println("v = ", v);
+
+		remove_pickup(&v, pickup);
+		println("v = ", v);
+
+		println("pickup = ", pickup);
+
+		let dest = curr - 1;
+		if (dest <= 0) dest += 9;
+		while any(pickup == dest)
+		{
+			//dest = pmod(dest - 1, N);
+			dest -= 1;
+			if (dest <= 0) dest += 9;
+		}
+		println("dest = ", dest);
+
+		let dest_loc = 0;
+		while v[dest_loc] != dest
+			dest_loc += 1;
+		println("dest_loc = ", dest_loc);
+
+		insert_pickup(&v, pickup, dest_loc);
+
+		// Current may move when we insert any pickup before it, so re-scan for
+		// it again
+		curr_loc = 0;
+		while v[curr_loc] != curr
+			curr_loc += 1;
+		curr_loc = (curr_loc + 1) % N;
+
+		println();
+	}
+	println("final:");
+	println("v = ", v);
+
+	let i1 = 0;
+	while v[i1] != 1
+		i1 += 1;
+	v = [v[i1+1:], v[:i1]];
+	println("v = ", v);
+
+	let ans = cat_i32s(v);
+	println("part 1 = ", ans);
+	return str(ans);
+}
+
+fn insert_pickup(v: &[i32; :], p: &const [i32; :], dest_loc: i32)
+{
+	v = [v[0: dest_loc+1], p, v[dest_loc+1:]];
+}
+
+fn remove_pickup(v: &[i32; :], p: &const [i32; :])
+{
+	// Not the most efficient implementation -- a lot of swapping to temp
+	// arrays, but anything more efficient seems too complicated and error prone
+	// for me
+	const NV = size(v);
+	const NP = size(p);
+	let vo = [0; NV - NP];
+	let j = 0;
+	for i in [0: NV]
+		if not any(p == v[i])
+		{
+			vo[j] = v[i];
+			j += 1;
+		}
+	v = vo;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/23" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "32897654";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "67384529";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

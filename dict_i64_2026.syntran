@@ -136,7 +136,6 @@ struct dict_i64
 		return arr;
 	}
 
-	// TODO: port get_vals to dict_str
 	const fn get_vals(): [i64; :]
 	{
 		let arr = [0'i64; n];
