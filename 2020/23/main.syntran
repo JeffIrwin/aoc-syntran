@@ -10,7 +10,7 @@ fn part1(args: &const Args): str
 
 	let f = open(args.input_filename, "r");
 	let str_ = readln(f);
-	println("str_ = ", str_);
+	//println("str_ = ", str_);
 	close(f);
 
 	const N = i32(len(str_));
@@ -19,39 +19,36 @@ fn part1(args: &const Args): str
 		v[i] = parse_i32(str_[i]);
 	//println("v = ", v);
 
-	//let current = 0;
 	let curr_loc = 0;
-	//for k in [0: 10]
 	for k in [0: 100]
 	{
-		println("move ", k + 1);
+		//println("move ", k + 1);
 		let curr = v[curr_loc];
 		let pickup = [
 			v[(curr_loc+1) % N],
 			v[(curr_loc+2) % N],
 			v[(curr_loc+3) % N]
 		];
-		println("v = ", v);
+		//println("v = ", v);
 
 		remove_pickup(&v, pickup);
-		println("v = ", v);
 
-		println("pickup = ", pickup);
+		//println("v = ", v);
+		//println("pickup = ", pickup);
 
 		let dest = curr - 1;
 		if (dest <= 0) dest += 9;
 		while any(pickup == dest)
 		{
-			//dest = pmod(dest - 1, N);
 			dest -= 1;
 			if (dest <= 0) dest += 9;
 		}
-		println("dest = ", dest);
+		//println("dest = ", dest);
 
 		let dest_loc = 0;
 		while v[dest_loc] != dest
 			dest_loc += 1;
-		println("dest_loc = ", dest_loc);
+		//println("dest_loc = ", dest_loc);
 
 		insert_pickup(&v, pickup, dest_loc);
 
@@ -61,21 +58,78 @@ fn part1(args: &const Args): str
 		while v[curr_loc] != curr
 			curr_loc += 1;
 		curr_loc = (curr_loc + 1) % N;
-
-		println();
 	}
-	println("final:");
-	println("v = ", v);
+	//println("final:");
+	//println("v = ", v);
 
 	let i1 = 0;
 	while v[i1] != 1
 		i1 += 1;
 	v = [v[i1+1:], v[:i1]];
-	println("v = ", v);
+	//println("v = ", v);
 
 	let ans = cat_i32s(v);
 	println("part 1 = ", ans);
 	return str(ans);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	//println("str_ = ", str_);
+	close(f);
+
+	let N = i32(len(str_));
+	let v = [0; N];
+	for i in [0: N]
+		v[i] = parse_i32(str_[i]);
+	//println("v = ", v);
+	v = [v, [10: 1_000_001]];
+	N = size(v);
+
+	let mn = minval(v);
+	let mx = maxval(v);
+
+	let carousel = [0; N+1]; // linked list
+	for i in [0: N]
+		carousel[v[i]] = v[i+1];
+	carousel[v[N-1]] = v[0];
+	//println("carousel = ", carousel);
+
+	// From the reddit:
+	//
+	//   https://www.reddit.com/r/adventofcode/comments/kimluc/2020_day_23_solutions/
+	//
+	let current = v[0];
+	let xyz = [0; 3];
+	for k in [0: 10_000_000]
+	{
+		xyz[0] = carousel[current];
+		xyz[1] = carousel[xyz[0]];
+		xyz[2] = carousel[xyz[1]];
+		let dest = current - 1;
+		while dest < mn or any(xyz == dest)
+		{
+			dest -= 1;
+			if dest < mn
+				dest = mx;
+		}
+		carousel[current] = carousel[xyz[2]];
+		carousel[xyz[2]]  = carousel[dest];
+		carousel[dest]    = xyz[0];
+		current = carousel[current];
+	}
+
+	let c1 = carousel[1];
+	let c2 = carousel[c1];
+	//println("c1, c2 = ", [c1, c2]);
+	sum_ = i64(c1) * c2;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
 }
 
 fn insert_pickup(v: &[i32; :], p: &const [i32; :], dest_loc: i32)
@@ -114,12 +168,13 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "32897654";
-	let expect2 = "REPLACE_ME_P2";
+	let expect2 = "186715244496";
 	let expect1_test = "67384529";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	//let expect1_test = "92658374"; // shortened 10-step test
+	let expect2_test = "149245887792";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);
