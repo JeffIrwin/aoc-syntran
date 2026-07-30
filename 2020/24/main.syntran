@@ -14,7 +14,7 @@ fn part1(args: &const Args): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let pos = [0, 0];
 		let i = 0;
@@ -26,7 +26,7 @@ fn part1(args: &const Args): str
 				i += 1;
 				dir += str_[i];
 			}
-			println("dir = ", dir);
+			//println("dir = ", dir);
 
 			if dir == "e"
 				pos += [2, 0];
@@ -56,7 +56,7 @@ fn part1(args: &const Args): str
 		str_ = readln(f);
 	}
 	close(f);
-	tiles.print("tiles = ");
+	//tiles.print("tiles = ");
 
 	sum_ = sum(tiles.get_vals());
 
@@ -74,7 +74,7 @@ fn part2(args: &const Args): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let pos = [0, 0];
 		let i = 0;
@@ -86,7 +86,7 @@ fn part2(args: &const Args): str
 				i += 1;
 				dir += str_[i];
 			}
-			println("dir = ", dir);
+			//println("dir = ", dir);
 
 			if dir == "e"
 				pos += [2, 0];
@@ -116,14 +116,12 @@ fn part2(args: &const Args): str
 		str_ = readln(f);
 	}
 	close(f);
-	tiles.print("tiles = ");
+	//tiles.print("tiles = ");
+	//println("initial black tile count = ", sum(tiles.get_vals()));
 
-	println("initial black tile count = ", sum(tiles.get_vals()));
-
-	//for day in [0: 10] // TODO: 100
 	for day in [0: 100]
 	{
-		println("day = ", day);
+		//println("day = ", day);
 
 		let tiles0 = tiles;
 
