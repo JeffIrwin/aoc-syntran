@@ -1,0 +1,212 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let tiles = dict_i64::new();
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let pos = [0, 0];
+		let i = 0;
+		while i < len(str_)
+		{
+			let dir = str_[i];
+			if dir == "s" or dir == "n"
+			{
+				i += 1;
+				dir += str_[i];
+			}
+			println("dir = ", dir);
+
+			if dir == "e"
+				pos += [2, 0];
+			else if dir == "ne"
+				pos += [1, 1];
+			else if dir == "nw"
+				pos += [-1, 1];
+			else if dir == "w"
+				pos += [-2, 0];
+			else if dir == "sw"
+				pos += [-1, -1];
+			else if dir == "se"
+				pos += [1, -1];
+			else
+			{
+				println(ERROR_STR + "bad direction '" + dir + "'");
+				exit(1);
+			}
+			i += 1;
+		}
+		let key = str(pos);
+		if tiles.contains(key)
+			tiles.set(key, (tiles.get(key) + 1) % 2'i64); // toggle b/w
+		else
+			tiles.set(key, 1'i64); // set to black initially
+
+		str_ = readln(f);
+	}
+	close(f);
+	tiles.print("tiles = ");
+
+	sum_ = sum(tiles.get_vals());
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let tiles = dict_i64::new();
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let pos = [0, 0];
+		let i = 0;
+		while i < len(str_)
+		{
+			let dir = str_[i];
+			if dir == "s" or dir == "n"
+			{
+				i += 1;
+				dir += str_[i];
+			}
+			println("dir = ", dir);
+
+			if dir == "e"
+				pos += [2, 0];
+			else if dir == "ne"
+				pos += [1, 1];
+			else if dir == "nw"
+				pos += [-1, 1];
+			else if dir == "w"
+				pos += [-2, 0];
+			else if dir == "sw"
+				pos += [-1, -1];
+			else if dir == "se"
+				pos += [1, -1];
+			else
+			{
+				println(ERROR_STR + "bad direction '" + dir + "'");
+				exit(1);
+			}
+			i += 1;
+		}
+		let key = str(pos);
+		if tiles.contains(key)
+			tiles.set(key, (tiles.get(key) + 1) % 2'i64); // toggle b/w
+		else
+			tiles.set(key, 1'i64); // set to black initially
+
+		str_ = readln(f);
+	}
+	close(f);
+	tiles.print("tiles = ");
+
+	println("initial black tile count = ", sum(tiles.get_vals()));
+
+	//for day in [0: 10] // TODO: 100
+	for day in [0: 100]
+	{
+		println("day = ", day);
+
+		let tiles0 = tiles;
+
+		// Count neighbors
+		let nbrs = dict_i64::new();
+		for key in tiles0.get_keys()
+		{
+			if (tiles0.get(key) != 1) continue;
+			let pos = parse_i32_delim(key, "[],");
+			//println("pos = ", pos);
+			//nbrs.inc(str(pos + [ 0,  0]), 1'i64);  // *self*
+			nbrs.inc(str(pos + [ 2,  0]), 1'i64);  // e
+			nbrs.inc(str(pos + [ 1,  1]), 1'i64);  // ne
+			nbrs.inc(str(pos + [-1,  1]), 1'i64);  // nw
+			nbrs.inc(str(pos + [-2,  0]), 1'i64);  // w
+			nbrs.inc(str(pos + [-1, -1]), 1'i64);  // sw
+			nbrs.inc(str(pos + [ 1, -1]), 1'i64);  // se
+		}
+		//nbrs.print("nbrs = ");
+
+		// Update b/w states
+		tiles = dict_i64::new();
+		for key in nbrs.get_keys()
+		{
+			let n = nbrs.get(key);
+			let state = tiles0.get(key);
+			if state == 1
+			{
+				// Initially black tile
+				//n -= 1;  // discount self added above
+				if n == 0 or n > 2
+					tiles.set(key, 0'i64);  // flip to white
+				else
+					tiles.set(key, 1'i64);  // stay black
+			}
+			else
+			{
+				// Initially white tile
+				if n == 2
+					tiles.set(key, 1'i64);  // flip to black
+				// no-op for white-to-white
+			}
+		}
+		//tiles.print("tiles = ");
+		//println("count = ", sum(tiles.get_vals()));
+		//break;
+	}
+
+	sum_ = sum(tiles.get_vals());
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/24" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "495";
+	let expect2 = "4012";
+	let expect1_test = "10";
+	let expect2_test = "2208";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
