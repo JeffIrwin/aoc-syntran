@@ -1,0 +1,99 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let card_pub = parse_i32(readln(f));
+	let door_pub = parse_i32(readln(f));
+	println("card, door pub = ", [card_pub, door_pub]);
+
+	//let subj = 7;
+	//let loop_size = 0;
+	//let val = 1;
+	//while true
+	//{
+	//	if (loop_size > 9) break;
+	//	val *= subj;
+	//	val %= 20_201_227;
+	//	loop_size += 1;
+	//	println("loop_size, val = ", [loop_size, val]);
+	//}
+
+	let card_loop = crack_loop_size(card_pub);
+	//let door_loop = crack_loop_size(door_pub);
+	//println("card, door loops = ", [card_loop, door_loop]);
+
+	let priv1 = transform_subject(door_pub, card_loop);
+	//let priv2 = transform_subject(card_pub, door_loop);
+	println("priv1 = ", priv1);
+	//println("priv2 = ", priv2); // should be the same as priv1
+	sum_ = priv1;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn transform_subject(subject: i32, loop_size: i32): i32
+{
+	let val = 1'i64;
+	for i in [0: loop_size]
+	{
+		val *= subject;
+		val %= 20_201_227;
+	}
+	return i32(val);
+}
+
+fn crack_loop_size(pub_key: i32): i32
+{
+	const SUBJECT = 7;
+	let loop_size = 0;
+	let val = 1;
+	while true
+	{
+		val *= SUBJECT;
+		val %= 20_201_227;
+		loop_size += 1;
+		if (val == pub_key) break;
+	}
+	return loop_size;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2020/25" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	// No part 2 on day 25
+
+	let expect1 = "181800";
+	let expect2 = "";
+	let expect1_test = "14897079";
+	let expect2_test = "";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

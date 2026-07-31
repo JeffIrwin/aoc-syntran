@@ -123,6 +123,8 @@ fn part2(args: &const Args): str
 	{
 		//println("day = ", day);
 
+		// Also see AOC 2020 day 17 for Conway's game of life with dicts. Day 17
+		// was 3d/4d Cartesian, while today is 2d hexagonal
 		let tiles0 = tiles;
 
 		// Count neighbors
