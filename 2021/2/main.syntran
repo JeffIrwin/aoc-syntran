@@ -1,0 +1,98 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let x = 0;
+	let y = 0;
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		let dx = parse_i32(split_(str_, " ")[1]);
+		if starts_with_(str_, "forward")
+			x += dx;
+		else if starts_with_(str_, "down")
+			y += dx;
+		else if starts_with_(str_, "up")
+			y -= dx;
+
+		str_ = readln(f);
+	}
+	close(f);
+	sum_ = x * y;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let x = 0;
+	let y = 0;
+	let aim = 0;
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		let dx = parse_i32(split_(str_, " ")[1]);
+		if starts_with_(str_, "forward")
+		{
+			x += dx;
+			y += dx * aim;
+		}
+		else if starts_with_(str_, "down")
+			aim += dx;
+		else if starts_with_(str_, "up")
+			aim -= dx;
+
+		str_ = readln(f);
+	}
+	close(f);
+	sum_ = x * y;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/2" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "1580000";
+	let expect2 = "1251263225";
+	let expect1_test = "150";
+	let expect2_test = "900";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
