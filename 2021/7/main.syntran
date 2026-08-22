@@ -1,0 +1,93 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let v = parse_i32_delim(readln(f), ",");
+	close(f);
+	//println("v = ", v);
+
+	let vmin = minval(v);
+	let vmax = maxval(v);
+	let cost_opt = 2_000_000_000;
+	for vi in [vmin: vmax+1]
+	{
+		const COST = sum(abs(v - vi));
+		cost_opt = min(cost_opt, COST);
+	}
+	sum_ = cost_opt;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn get_cost2(v: &const [i32; :], vi: i32): i32
+{
+	let diff = abs(v - vi);
+	let cost = 0;
+	for d in diff
+		cost += d * (d+1) / 2;  // triangular number
+	return cost;
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let v = parse_i32_delim(readln(f), ",");
+	close(f);
+	//println("v = ", v);
+
+	let vmin = minval(v);
+	let vmax = maxval(v);
+	let cost_opt = 2_000_000_000;
+	for vi in [vmin: vmax+1]
+	{
+		const COST = get_cost2(v, vi);
+		cost_opt = min(cost_opt, COST);
+	}
+	sum_ = cost_opt;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/7" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "331067";
+	let expect2 = "92881128";
+	let expect1_test = "37";
+	let expect2_test = "168";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
