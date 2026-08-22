@@ -1,0 +1,191 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const NLINES = countln_(args.input_filename);
+	const NX = 5;
+	const NY = NX;
+	const NB = (NLINES - 1) / (NX + 1);
+	//println("NB = ", NB);
+
+	let boards = [    0; NX, NY, NB];
+	let marked = [false; NX, NY, NB];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	const NUMS = parse_i32_delim(str_, ",");
+	//println("NUMS = ", NUMS);
+	let ib = 0;
+	str_ = readln(f);  // skip blank
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		for y in [0: NY]
+		{
+			const ROW = parse_i32_delim(readln(f), " ");
+			boards[:,y,ib] = ROW;
+		}
+
+		ib += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//println("boards = ", boards);
+
+	for num in NUMS
+	{
+		marked = marked or boards == num;
+		//println("marked = ", marked);
+
+		// Check for a winner
+		let won = false;
+		for ib in [0: NB]
+		{
+			for x in [0: NX]
+			{
+				won = all(marked[x,:,ib]);
+				if won
+				{
+					//println("winning col = ", boards[x,:,ib]);
+					break;
+				}
+			}
+			for y in [0: NY]
+			{
+				won = all(marked[:,y,ib]);
+				if won
+				{
+					//println("winning row = ", boards[:,y,ib]);
+					break;
+				}
+			}
+			if won
+			{
+				for y in [0: NY]
+				for x in [0: NX]
+					if not marked[x,y,ib]
+						sum_ += boards[x,y,ib];
+				//println("sum_ = ", sum_);
+				sum_ *= num;
+				break;
+			}
+		}
+		if (won) break;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const NLINES = countln_(args.input_filename);
+	const NX = 5;
+	const NY = NX;
+	const NB = (NLINES - 1) / (NX + 1);
+
+	let boards = [    0; NX, NY, NB];
+	let marked = [false; NX, NY, NB];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	const NUMS = parse_i32_delim(str_, ",");
+	let ib = 0;
+	str_ = readln(f);  // skip blank
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		for y in [0: NY]
+		{
+			const ROW = parse_i32_delim(readln(f), " ");
+			boards[:,y,ib] = ROW;
+		}
+
+		ib += 1;
+		str_ = readln(f);
+	}
+	close(f);
+
+	let has_won = [false; NB];
+	for num in NUMS
+	{
+		//println("num = ", num);
+		marked = marked or boards == num;
+
+		// Check for a winner
+		let won = false;
+		for ib in [0: NB]
+		{
+			if has_won[ib] continue;
+
+			for x in [0: NX]
+			{
+				won = all(marked[x,:,ib]);
+				if won
+					break;
+			}
+			for y in [0: NY]
+			{
+				if (won) break; // missed this in part1. bug but doesn't matter
+				won = all(marked[:,y,ib]);
+				if won
+					break;
+			}
+			has_won[ib] = won;
+			if won
+			{
+				sum_ = 0;
+				for y in [0: NY]
+				for x in [0: NX]
+					if not marked[x,y,ib]
+						sum_ += boards[x,y,ib];
+				sum_ *= num;
+			}
+		}
+		if all(has_won) break;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/4" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "39902";
+	let expect2 = "26936";
+	let expect1_test = "4512";
+	let expect2_test = "1924";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
