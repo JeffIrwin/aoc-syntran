@@ -1,0 +1,189 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let out = split_(str_, "|")[1];
+		let digits = split_(out, " ");
+		//println("digits = ", digits);
+
+		for digit in digits
+			if any(len(digit) == [2, 4, 3, 7])
+				sum_ += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//   0:      1:      2:      3:      4:
+//  aaaa    ....    aaaa    aaaa    ....
+// b    c  .    c  .    c  .    c  b    c
+// b    c  .    c  .    c  .    c  b    c
+//  ....    ....    dddd    dddd    dddd
+// e    f  .    f  e    .  .    f  .    f
+// e    f  .    f  e    .  .    f  .    f
+//  gggg    ....    gggg    gggg    ....
+// 
+//   5:      6:      7:      8:      9:
+//  aaaa    aaaa    aaaa    aaaa    aaaa
+// b    .  b    .  .    c  b    c  b    c
+// b    .  b    .  .    c  b    c  b    c
+//  dddd    dddd    ....    dddd    dddd
+// .    f  e    f  .    f  e    f  .    f
+// .    f  e    f  .    f  e    f  .    f
+//  gggg    gggg    ....    gggg    gggg
+//
+// Represent the above segment displays as bitmasks
+//
+//            gfedcba
+let ZERO  = 0b1110111;
+let ONE   = 0b0100100;
+let TWO   = 0b1011101;
+let THREE = 0b1101101;
+let FOUR  = 0b0101110;
+let FIVE  = 0b1101011;
+let SIX   = 0b1111011;
+let SEVEN = 0b0100101;
+let EIGHT = 0b1111111;
+let NINE  = 0b1101111;
+let NUMS = [ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE];
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	// Bitmask decode map
+	let num_vals = [0; 256];
+	num_vals[ZERO ] = 0;
+	num_vals[ONE  ] = 1;
+	num_vals[TWO  ] = 2;
+	num_vals[THREE] = 3;
+	num_vals[FOUR ] = 4;
+	num_vals[FIVE ] = 5;
+	num_vals[SIX  ] = 6;
+	num_vals[SEVEN] = 7;
+	num_vals[EIGHT] = 8;
+	num_vals[NINE ] = 9;
+	//println("num_vals = ", num_vals);
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let sides = split_(str_, "|");
+		let patterns = split_(sides[0], " ");
+		let out = split_(sides[1], " ");
+		//println("patterns = ", patterns);
+
+		// Brute force: just try all 7 factorial permutations (5040) and find
+		// the one that works
+		//
+		// Takes ~3 s to run. There are more performant solutions but I think
+		// they're more complicated
+		let perm = [0: 7];
+		while true
+		{
+			//println("perm = ", perm);
+
+			let all_valid = true;
+			for p0 in patterns
+			{
+				// Permute the pattern
+				let p = p0;
+				for i in [0: len(p)]
+					p[i] = char(perm[i32(p0[i]) - i32("a")] + i32("a"));
+				//println("p0, p = ", p0, " ", p);
+
+				// Convert permuted pattern to bitmask. This way we don't care
+				// which order the characters are in and we don't have to sort
+				let bp = 0;
+				for c in p
+					bp |= 1 << (i32(c) - i32("a"));
+				//println("bp = ", bp);
+				all_valid = any(bp == NUMS);
+				if not all_valid
+					break;
+			}
+			if all_valid
+			{
+				//println("valid perm = ", perm);
+
+				// Decode the output
+				let out_str = "";
+				for o0 in out
+				{
+					// Permute
+					let o = o0;
+					for i in [0: len(o)]
+						o[i] = char(perm[i32(o0[i]) - i32("a")] + i32("a"));
+					//println("o0, o = ", o0, " ", o);
+
+					// Convert bitmask
+					let bo = 0;
+					for c in o
+						bo |= 1 << (i32(c) - i32("a"));
+					out_str += str(num_vals[bo]);
+				}
+				//println("out_str = ", out_str);
+				sum_ += parse_i32(out_str);
+				break;
+			}
+			if not next_perm(&perm)
+				break;
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	//println("NUMS = ", NUMS);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/8" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "342";
+	let expect2 = "1068933";
+	let expect1_test = "26";
+	let expect2_test = "61229";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
