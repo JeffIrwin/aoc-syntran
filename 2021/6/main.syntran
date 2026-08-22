@@ -1,0 +1,83 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn do_it(args: &const Args, ndays: i32): i64
+{
+	let f = open(args.input_filename, "r");
+	let v = parse_i32_delim(readln(f), ",");
+	close(f);
+	//println("v = ", v);
+
+	// Many fish will each share the same day of their cycle. Instead of
+	// tracking each individual fish, just make a histogram of how many are on
+	// each day
+	let DMAX = 8;
+	let hist = [0'i64; DMAX+1];
+	for vi in v
+		hist[vi] += 1;
+	//println("hist = ", hist);
+
+	for d in [0: ndays]
+	{
+		let h0 = hist; // backup
+		let n0 = h0[0];
+		hist[0: DMAX] = h0[1: DMAX+1]; // shift
+		hist[6] += n0;
+		hist[8] = n0;
+
+		//println("hist = ", hist);
+		//if (d == 18) break;
+	}
+	//println("hist = ", hist);
+	return sum(hist);
+}
+
+fn part1(args: &const Args): str
+{
+	let sum_ = do_it(args, 80);
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = do_it(args, 256);
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/6" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "388419";
+	let expect2 = "1740449478328";
+	let expect1_test = "5934";
+	let expect2_test = "26984457539";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
