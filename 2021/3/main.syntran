@@ -1,0 +1,180 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	const NB = i32(len(str_)); // number of bits
+	let n = 0;
+	let count_set = [0; NB];
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+
+		for i in [0: NB]
+			if str_[i] == "1"
+				count_set[i] += 1;
+		n += 1;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	//println("count_set = ", count_set);
+	//println("n = ", n);
+	let gamma = [0; NB];
+	let epsil = [0; NB];
+	for i in [0: NB]
+		if count_set[i] > n/2
+			gamma[i] = 1;
+		else
+			epsil[i] = 1;
+	//println("gamma = ", gamma);
+	//println("epsil = ", epsil);
+
+	// Reverse
+	gamma = gamma[:-1:];
+	epsil = epsil[:-1:];
+
+	let gamma_dec = dot(gamma, 2 ** [0: NB]);
+	let epsil_dec = dot(epsil, 2 ** [0: NB]);
+	//println("gamma_dec = ", gamma_dec);
+
+	sum_ = gamma_dec * epsil_dec;
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const G = read_char_mat(args.input_filename);
+	//print_char_mat(&G);
+	const NB = size(G, 0);
+
+	// Get the oxygen generator rating
+	let oxy = 0;
+	let g = G;
+	let i = 0;
+	while true
+	{
+		let g0 = g;
+		let n = size(g, 1);
+		let count_set = count(g0[i,:] == "1");
+
+		let mode = "0";
+		if 2*count_set >= n
+			mode = "1";
+		const NPASS = count(g0[i,:] == mode);
+		g = ["."; NB, NPASS];
+
+		let j = 0;
+		for k in [0: n]
+			if g0[i,k] == mode
+			{
+				g[:,j] = g0[:,k];
+				j += 1;
+			}
+		if NPASS == 1
+		{
+
+			let oxy_bin = g[:,0];
+			oxy_bin = oxy_bin[:-1:];
+			for i in [0: size(oxy_bin)]
+				if oxy_bin[i] == "1"
+					oxy |= 1 << i;
+
+			break;
+		}
+		i += 1;
+	}
+	//println("oxy = ", oxy);
+
+	// Get the co2 scrubber rating
+	let co2 = 0;
+	g = G;
+	i = 0;
+	while true
+	{
+		let g0 = g;
+		let n = size(g, 1);
+		let count_set = count(g0[i,:] == "1");
+
+		let mode = "0";
+		if 2*count_set >= n
+			mode = "1";
+
+		// Flip for co2, opposite of oxy
+		if mode == "1"
+			mode = "0";
+		else
+			mode = "1";
+
+		const NPASS = count(g0[i,:] == mode);
+		g = ["."; NB, NPASS];
+
+		let j = 0;
+		for k in [0: n]
+			if g0[i,k] == mode
+			{
+				g[:,j] = g0[:,k];
+				j += 1;
+			}
+		if NPASS == 1
+		{
+			let co2_bin = g[:,0];
+			co2_bin = co2_bin[:-1:];
+			for i in [0: size(co2_bin)]
+				if co2_bin[i] == "1"
+					co2 |= 1 << i;
+
+			break;
+		}
+		i += 1;
+	}
+	//println("co2 = ", co2);
+
+	sum_ = oxy * co2;
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/3" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "3549854";
+	let expect2 = "3765399";
+	let expect1_test = "198";
+	let expect2_test = "230";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
