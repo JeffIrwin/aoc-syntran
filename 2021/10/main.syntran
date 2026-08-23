@@ -1,0 +1,162 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let s = readln(f);
+	while not eof(f)
+	{
+		//println("s = ", s);
+
+		let stack = s;
+		let sp = 0;
+		for c in s
+		{
+			if any(c == ["(", "[", "{", "<"])
+			{
+				// Push
+				stack[sp] = c;
+				sp += 1;
+			}
+			else
+			{
+				// Pop and match
+				sp -= 1;
+				let pop = stack[sp];
+				//if c != pop
+				if not (
+					(pop == "(" and c == ")") or
+					(pop == "[" and c == "]") or
+					(pop == "{" and c == "}") or
+					(pop == "<" and c == ">")
+					)
+				{
+					//println("Expected ", pop, ", found ", c);
+					if (c == ")") sum_ += 3;
+					if (c == "]") sum_ += 57;
+					if (c == "}") sum_ += 1197;
+					if (c == ">") sum_ += 25137;
+					break;
+				}
+			}
+		}
+		s = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let s = readln(f);
+	let scores = [0'i64; 128];
+	let k = 0;
+	while not eof(f)
+	{
+		let stack = s;
+		let sp = 0;
+		let corrupt = false;
+		for c in s
+		{
+			if any(c == ["(", "[", "{", "<"])
+			{
+				// Push
+				stack[sp] = c;
+				sp += 1;
+			}
+			else
+			{
+				// Pop and match
+				sp -= 1;
+				let pop = stack[sp];
+				if not (
+					(pop == "(" and c == ")") or
+					(pop == "[" and c == "]") or
+					(pop == "{" and c == "}") or
+					(pop == "<" and c == ">")
+				)
+				{
+					corrupt = true;
+					break;
+				}
+			}
+		}
+		if not corrupt
+		{
+			// Incomplete
+			let score = 0'i64;
+			while sp > 0
+			{
+				sp -= 1;
+				let pop = stack[sp];
+				if (pop == "(") score = 5*score + 1;
+				if (pop == "[") score = 5*score + 2;
+				if (pop == "{") score = 5*score + 3;
+				if (pop == "<") score = 5*score + 4;
+			}
+			//println("score = ", score);
+			scores[k] = score;
+			k += 1;
+		}
+		s = readln(f);
+	}
+	close(f);
+	scores = scores[0:k];
+	sort_inplace_i64(&scores);
+	sum_ = scores[size(scores)/2];
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//fn parse_chunk(s: &str, i: i32): str
+//{
+//	// I thought about doing this recursively, but then I remembered it's quite
+//	// easy to do iteratively with a stack
+//	let c = s[i];
+//	return "";
+//}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/10" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "394647";
+	let expect2 = "2380061249";
+	let expect1_test = "26397";
+	let expect2_test = "288957";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
