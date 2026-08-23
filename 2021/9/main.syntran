@@ -34,8 +34,6 @@ fn part1(args: &const Args): str
 			//println("low at ", [x,y]);
 			sum_ += g[x,y] + 1;
 		}
-		//for yn in [max(y-1,0): min(y+2,NY)]
-		//for xn in [max(x-1,0): min(x+2,NX)]
 	}
 
 	println("part 1 = ", sum_);
@@ -72,15 +70,13 @@ fn part2(args: &const Args): str
 		if (yn < NY) is_low = is_low and g[x,y] < g[x,yn];
 		if is_low
 		{
-			//println("low at ", [x,y]);
 			dfs(&g, &seen, x, y);
 			basin_size[k] = count(seen);
-			//sum_ += g[x,y] + 1;
+			k += 1;
 		}
-		k += 1;
 	}
 	//println("basin_size = ", basin_size);
-	basin_size = sort_inplace(basin_size);
+	basin_size = sort_inplace(basin_size[:k]);
 	basin_size = basin_size[:-1:];
 	//println("basin_size = ", basin_size);
 	sum_ = product(basin_size[0:3]);
