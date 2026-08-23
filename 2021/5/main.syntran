@@ -103,7 +103,7 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println(MAGENTA + "Starting AOC syntran main 2025/5" + RESET);
+	println(MAGENTA + "Starting AOC syntran main 2021/5" + RESET);
 	let args = parse_args();
 
 	let p1 = ""; let p2 = "";

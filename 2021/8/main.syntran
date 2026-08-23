@@ -47,20 +47,21 @@ fn part1(args: &const Args): str
 // .    f  e    f  .    f  e    f  .    f
 //  gggg    gggg    ....    gggg    gggg
 //
-// Represent the above segment displays as bitmasks
 //
-//            gfedcba
-let ZERO  = 0b1110111;
-let ONE   = 0b0100100;
-let TWO   = 0b1011101;
-let THREE = 0b1101101;
-let FOUR  = 0b0101110;
-let FIVE  = 0b1101011;
-let SIX   = 0b1111011;
-let SEVEN = 0b0100101;
-let EIGHT = 0b1111111;
-let NINE  = 0b1101111;
-let NUMS = [ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE];
+// Represent the above segment displays as bitmasks:
+//
+//              gfedcba
+const ZERO  = 0b1110111;
+const ONE   = 0b0100100;
+const TWO   = 0b1011101;
+const THREE = 0b1101101;
+const FOUR  = 0b0101110;
+const FIVE  = 0b1101011;
+const SIX   = 0b1111011;
+const SEVEN = 0b0100101;
+const EIGHT = 0b1111111;
+const NINE  = 0b1101111;
+const NUMS = [ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE];
 
 fn part2(args: &const Args): str
 {
@@ -123,7 +124,7 @@ fn part2(args: &const Args): str
 			{
 				//println("valid perm = ", perm);
 
-				// Decode the output
+				// Decode the output. Could be DRY'd
 				let out_str = "";
 				for o0 in out
 				{
@@ -162,7 +163,7 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println(MAGENTA + "Starting AOC syntran main 2025/8" + RESET);
+	println(MAGENTA + "Starting AOC syntran main 2021/8" + RESET);
 	let args = parse_args();
 
 	let p1 = ""; let p2 = "";
