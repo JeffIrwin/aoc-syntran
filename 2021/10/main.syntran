@@ -29,7 +29,6 @@ fn part1(args: &const Args): str
 				// Pop and match
 				sp -= 1;
 				let pop = stack[sp];
-				//if c != pop
 				if not (
 					(pop == "(" and c == ")") or
 					(pop == "[" and c == "]") or
