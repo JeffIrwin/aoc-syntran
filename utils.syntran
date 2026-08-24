@@ -1647,6 +1647,16 @@ fn print_char_mat(chars: &const [str; :,:])
 	return;
 }
 
+fn char_mat_to_str(chars: &const [str; :,:]): str
+{
+	// Concatenate a char matrix with newlines as row delimiters. Non-optimal
+	// string reallocation
+	let s = "";
+	for iy in [0: size(chars, 1)]
+		s = s + cat_strs(chars[:,iy]) + NEWLINE_;
+	return s;
+}
+
 //==============================================================================
 
 fn count_char(s: &const str, c: str): i32

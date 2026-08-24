@@ -1,0 +1,178 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let CAP = countln_(args.input_filename);
+	let x = [0; 2, CAP];
+	let folding = false;
+	let k = 0;
+	let nx = 0;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		if str_ == ""
+		{
+			folding = true;
+			nx = k;
+			x = x[:, :nx];
+			//println("x = ", x);
+		}
+		else if not folding
+		{
+			x[:,k] = parse_i32_delim(str_, ",");
+			k += 1;
+		}
+		else
+		{
+			const WORDS = split_(str_, "=");
+			let x_or_y = WORDS[0, len(WORDS[0])-1];
+			let pos = parse_i32(WORDS[1]);
+			//println("x_or_y = ", x_or_y);
+			//println("pos = ", pos);
+
+			for i in [0: nx]
+			{
+				if x_or_y == "x"
+				{
+					if x[0,i] > pos
+						x[0,i] = pos - (x[0,i] - pos);
+				}
+				else
+				{
+					if x[1,i] > pos
+						x[1,i] = pos - (x[1,i] - pos);
+				}
+			}
+			//println("x = ", x);
+
+			//let g = x_to_g(&x);
+			//print_char_mat(&g);
+			break;  // first fold only for part 1
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	let g = x_to_g(&x);
+	sum_ = count(g == "#");
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let CAP = countln_(args.input_filename);
+	let x = [0; 2, CAP];
+	let folding = false;
+	let k = 0;
+	let nx = 0;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		if str_ == ""
+		{
+			folding = true;
+			nx = k;
+			x = x[:, :nx];
+		}
+		else if not folding
+		{
+			x[:,k] = parse_i32_delim(str_, ",");
+			k += 1;
+		}
+		else
+		{
+			const WORDS = split_(str_, "=");
+			let x_or_y = WORDS[0, len(WORDS[0])-1];
+			let pos = parse_i32(WORDS[1]);
+			for i in [0: nx]
+			{
+				if x_or_y == "x"
+				{
+					if x[0,i] > pos
+						x[0,i] = pos - (x[0,i] - pos);
+				}
+				else
+				{
+					if x[1,i] > pos
+						x[1,i] = pos - (x[1,i] - pos);
+				}
+			}
+		}
+		str_ = readln(f);
+	}
+	close(f);
+	let g = x_to_g(&x);
+	let ans = NEWLINE_ + char_mat_to_str(&g);
+
+	println("part 2 = ", ans);
+	return str(ans);
+}
+
+fn x_to_g(x: &const [i32; :,:]): [str; :,:]
+{
+	const XMAX = maxval(x[0,:]);
+	const YMAX = maxval(x[1,:]);
+	//println("XY MAX = ", [XMAX, YMAX]);
+	let g = ["."; XMAX+1, YMAX+1];
+	for i in [0: size(x,1)]
+		g[x[0,i], x[1,i]] = "#";
+	return g;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/13" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "602";
+	let expect2 = "
+.##...##..####...##.#..#.####..##..#..#
+#..#.#..#.#.......#.#..#....#.#..#.#.#.
+#....#..#.###.....#.####...#..#....##..
+#....####.#.......#.#..#..#...#....#.#.
+#..#.#..#.#....#..#.#..#.#....#..#.#.#.
+.##..#..#.#.....##..#..#.####..##..#..#
+"; // CAFJHZCK
+	let expect1_test = "17";
+	let expect2_test = "
+#####
+#...#
+#...#
+#...#
+#####
+";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

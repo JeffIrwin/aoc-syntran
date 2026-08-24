@@ -95,6 +95,9 @@ fn dfs2(
 	}
 
 	visits += 1;
+	if visits > 2
+		if is_lower(CAVE[0])
+			return 0;
 	nseen0.set(CAVE, i64(visits));
 
 	let keys = nseen0.get_keys();
@@ -106,12 +109,7 @@ fn dfs2(
 		let val = vals[i];
 		if is_lower(key[0])
 		{
-			if val > 2
-			{
-				//cache2.set(NODE_KEY, 0'i64);
-				return 0;
-			}
-			else if val == 2
+			if val == 2
 			{
 				if key == "start"
 				{
