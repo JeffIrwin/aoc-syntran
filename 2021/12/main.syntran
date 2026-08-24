@@ -63,40 +63,36 @@ fn part2(args: &const Args): str
 	// DFS through the product space of cave IDs and how many times we've
 	// visited it. For "small" caves (lowercase) the visit count is always 0.
 	// For "big" caves each visit count to it is unique
-	let seen = dict_i64::new();
 	let nseen = dict_i64::new();
 	nseen.set("start", 1'i64);
-	sum_ = dfs2(&map, &seen, &nseen, "start", 0);
+	sum_ = dfs2(&map, &nseen, "start", 0);
 
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
 
+let cache2 = dict_i64::new();
 fn dfs2(
 		MAP: &const dict_str::dict_str,
-		seen0: &dict_i64::dict_i64,
 		nseen0: &dict_i64::dict_i64,
 		CAVE: str,
 		visits: i32,
 	): i32
 {
-	//// idk why i get the wrong answer if i try to cache like this
-	//if (cache2.contains(node)) return cache2.get(node);
+	// TODO: backport dfs2 for part 1. Only change required is simplifying the
+	// count2 early return
 
-	//println("node = ", node);
+	//const NODE_KEY = CAVE + str(visits);
+
+	//// idk why i get the wrong answer if i try to cache like this. my solution
+	//// takes 35 s, so i think i'm missing something
+	//if (cache2.contains(NODE_KEY)) return i32(cache2.get(NODE_KEY));
+
 	if (CAVE == "end")
 	{
-		//cache2.set(node, 1'i64);
+		//cache2.set(NODE_KEY, 1'i64);
 		return 1; // base case
 	}
-
-	const NODE_KEY = CAVE + str(visits);
-	if seen0.contains(NODE_KEY)
-	{
-		//cache2.set(node, 0'i64);
-		return 0;
-	}
-	seen0.set(NODE_KEY, 1'i64);
 
 	visits += 1;
 	nseen0.set(CAVE, i64(visits));
@@ -112,20 +108,20 @@ fn dfs2(
 		{
 			if val > 2
 			{
-				//cache2.set(node, 0'i64);
+				//cache2.set(NODE_KEY, 0'i64);
 				return 0;
 			}
 			else if val == 2
 			{
 				if key == "start"
 				{
-					//cache2.set(node, 0'i64);
+					//cache2.set(NODE_KEY, 0'i64);
 					return 0;
 				}
 				count2 += 1;
 				if count2 > 1
 				{
-					//cache2.set(node, 0'i64);
+					//cache2.set(NODE_KEY, 0'i64);
 					return 0;
 				}
 			}
@@ -138,13 +134,11 @@ fn dfs2(
 	for nbr in nbrs
 	{
 		let nseen = nseen0;
-		let seen = seen0;
-		let visits = 0;
-		if nseen.contains(nbr)
-			visits = nseen.get(nbr);
-		paths += dfs2(&MAP, &seen, &nseen, nbr, visits);
+		let visits = i32(nseen.get(nbr));
+		visits = max(visits, 0);
+		paths += dfs2(&MAP, &nseen, nbr, visits);
 	}
-	//cache2.set(node, paths);
+	//cache2.set(NODE_KEY, i64(paths));
 	return paths;
 }
 
