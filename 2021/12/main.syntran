@@ -14,8 +14,7 @@ fn part1(args: &const Args): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
-
+		//println("str_ = ", str_);
 		const WORDS = split_(str_, "-");
 		let d0 = map.get(WORDS[0]);
 		let d1 = map.get(WORDS[1]);
@@ -25,14 +24,14 @@ fn part1(args: &const Args): str
 		str_ = readln(f);
 	}
 	close(f);
-	map.print("map = ");
+	//map.print("map = ");
 
 	// DFS through the product space of cave IDs and how many times we've
 	// visited it. For "small" caves (lowercase) the visit count is always 0.
 	// For "big" caves each visit count to it is unique
 	let seen = dict_i64::new();
 	let nseen = dict_i64::new();
-	sum_ = dfs(&map, &seen, &nseen, "start-0", "start-");
+	sum_ = dfs1(&map, &nseen, "start", 0);
 
 	println("part 1 = ", sum_);
 	return str(sum_);
@@ -47,8 +46,7 @@ fn part2(args: &const Args): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
-
+		//println("str_ = ", str_);
 		const WORDS = split_(str_, "-");
 		let d0 = map.get(WORDS[0]);
 		let d1 = map.get(WORDS[1]);
@@ -58,7 +56,7 @@ fn part2(args: &const Args): str
 		str_ = readln(f);
 	}
 	close(f);
-	map.print("map = ");
+	//map.print("map = ");
 
 	// DFS through the product space of cave IDs and how many times we've
 	// visited it. For "small" caves (lowercase) the visit count is always 0.
@@ -79,9 +77,6 @@ fn dfs2(
 		visits: i32,
 	): i32
 {
-	// TODO: backport dfs2 for part 1. Only change required is simplifying the
-	// count2 early return
-
 	let keys = nseen0.get_keys();
 	let vals = nseen0.get_vals();
 	const NODE_KEY = CAVE + str(keys, vals);
@@ -105,7 +100,10 @@ fn dfs2(
 	visits += 1;
 	if visits > 2
 		if is_lower(CAVE[0])
+		{
+			cache2.set(NODE_KEY, 0'i64);
 			return 0;
+		}
 	nseen0.set(CAVE, i64(visits));
 
 	keys = nseen0.get_keys();
@@ -148,73 +146,67 @@ fn dfs2(
 	return paths;
 }
 
-fn dfs(
+
+let cache1 = dict_i64::new();
+fn dfs1(
 		MAP: &const dict_str::dict_str,
-		seen0: &dict_i64::dict_i64,
 		nseen0: &dict_i64::dict_i64,
-		node: str,
-		path0: str,
-	): i64
+		CAVE: str,
+		visits: i32,
+	): i32
 {
-	println("node = ", node);
-	println("path0 = ", path0);
-	const WORDS = split_(node, "-");
-	const CAVE = WORDS[0];
+	let keys = nseen0.get_keys();
+	let vals = nseen0.get_vals();
+	const NODE_KEY = CAVE + str(keys, vals);
+
+	if (cache1.contains(NODE_KEY)) return i32(cache1.get(NODE_KEY));
+
 	if (CAVE == "end")
 	{
-		println("**** end");
-		println();
-		return 1'i64; // base case
+		cache1.set(NODE_KEY, 1'i64);
+		return 1; // base case
 	}
 
-	if seen0.contains(node)
-		return 0'i64;
-	seen0.set(node, 1'i64);
+	visits += 1;
+	if visits > 1
+		if is_lower(CAVE[0])
+		{
+			// TODO: missed this cache set in part 2
+			cache1.set(NODE_KEY, 0'i64);
+			return 0;
+		}
+	nseen0.set(CAVE, i64(visits));
 
-	let nseen = dict_i64::new();
-	for step in split_(path0, "-")
-		nseen.inc(step, 1'i64);
-
-	let keys = nseen.get_keys();
-	let vals = nseen.get_vals();
+	keys = nseen0.get_keys();
+	vals = nseen0.get_vals();
 	for i in [0: size(keys)]
 	{
 		let key = keys[i];
 		let val = vals[i];
 		if is_lower(key[0])
 		{
-			if val > 1
-				return 0'i64;
+			if val == 2
+			{
+				if key == "start"
+				{
+					cache1.set(NODE_KEY, 0'i64);
+					return 0;
+				}
+			}
 		}
 	}
-	//nseen.print("nseen = ");
+	//nseen0.print("nseen0 = ");
 
-	let visits = parse_i64(WORDS[1]);
-	//let visits = 0'i64;
-	//if nseen0.contains(CAVE)
-	//	visits = nseen0.get(CAVE);
-	println("CAVE, visits = ", CAVE, "-", visits);
-
-	//if is_upper(CAVE[0])
-		visits += 1;
-
-	println("visits = ", visits);
-	nseen0.set(CAVE, visits);
-
-	let paths = 0'i64;
+	let paths = 0;
 	let nbrs = split_(MAP.get(CAVE), "-");
-	println("nbrs = ", nbrs);
 	for nbr in nbrs
 	{
-		//println("nbr = ", nbr);
 		let nseen = nseen0;
-		let seen = seen0;
-		let visits = 0'i64;
-		if nseen.contains(nbr)
-			visits = nseen.get(nbr);
-		paths += dfs(&MAP, &seen, &nseen, nbr + "-" + str(visits), path0 + nbr + "-");
-		//paths += dfs(&MAP, &seen, &nseen, nbr);
+		let visits = i32(nseen.get(nbr));
+		visits = max(visits, 0);
+		paths += dfs1(&MAP, &nseen, nbr, visits);
 	}
+	cache1.set(NODE_KEY, i64(paths));
 	return paths;
 }
 
