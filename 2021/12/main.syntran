@@ -1,0 +1,285 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let map = dict_str::new();
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		const WORDS = split_(str_, "-");
+		let d0 = map.get(WORDS[0]);
+		let d1 = map.get(WORDS[1]);
+		map.set(WORDS[0], WORDS[1] + "-" + d0);
+		map.set(WORDS[1], WORDS[0] + "-" + d1);  // symmetric graph
+
+		str_ = readln(f);
+	}
+	close(f);
+	map.print("map = ");
+
+	// DFS through the product space of cave IDs and how many times we've
+	// visited it. For "small" caves (lowercase) the visit count is always 0.
+	// For "big" caves each visit count to it is unique
+	let seen = dict_i64::new();
+	let nseen = dict_i64::new();
+	sum_ = dfs(&map, &seen, &nseen, "start-0", "start-");
+	//sum_ = dfs(&map, &seen, &nseen, "start");
+	//nseen.print("nseen = ");
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let map = dict_str::new();
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		const WORDS = split_(str_, "-");
+		let d0 = map.get(WORDS[0]);
+		let d1 = map.get(WORDS[1]);
+		map.set(WORDS[0], WORDS[1] + "-" + d0);
+		map.set(WORDS[1], WORDS[0] + "-" + d1);  // symmetric graph
+
+		str_ = readln(f);
+	}
+	close(f);
+	map.print("map = ");
+
+	// DFS through the product space of cave IDs and how many times we've
+	// visited it. For "small" caves (lowercase) the visit count is always 0.
+	// For "big" caves each visit count to it is unique
+	let seen = dict_i64::new();
+	let nseen = dict_i64::new();
+	//sum_ = dfs2(&map, &seen, &nseen, "start-0", false);
+	//sum_ = dfs(&map, &seen, &nseen, "start-0", "start-");
+	sum_ = dfs2(&map, &seen, &nseen, "start-0", "start-");
+	//sum_ = dfs(&map, &seen, &nseen, "start");
+	//nseen.print("nseen = ");
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+let cache2 = dict_i64::new();
+fn dfs2(
+		MAP: &const dict_str::dict_str,
+		seen0: &dict_i64::dict_i64,
+		nseen0: &dict_i64::dict_i64,
+		node: str,
+		path0: str,
+	): i64
+{
+	//if (cache2.contains(node)) return cache2.get(node);
+	println("node = ", node);
+	println("path0 = ", path0);
+	const WORDS = split_(node, "-");
+	const CAVE = WORDS[0];
+	if (CAVE == "end")
+	{
+		println("**** end");
+		println();
+		cache2.set(node, 1'i64);
+		return 1'i64; // base case
+	}
+
+	if seen0.contains(node)
+	{
+		println("seen0.contains(node)");
+		cache2.set(node, 0'i64);
+		return 0'i64;
+	}
+	seen0.set(node, 1'i64);
+
+	let nseen = dict_i64::new();
+	for step in split_(path0, "-")
+		nseen.inc(step, 1'i64);
+
+	let keys = nseen.get_keys();
+	let vals = nseen.get_vals();
+	let count2 = 0;
+	for i in [0: size(keys)]
+	{
+		let key = keys[i];
+		let val = vals[i];
+		if is_lower(key[0])
+		{
+			if val > 2
+			{
+				println("------------- val > 2");
+				println();
+				cache2.set(node, 0'i64);
+				return 0'i64;
+			}
+			else if val == 2
+			{
+				if key == "start"
+				{
+					println("------------- start");
+					println();
+					cache2.set(node, 0'i64);
+					return 0'i64;
+				}
+				count2 += 1;
+				if count2 > 1
+				{
+					println("------------- count2 > 1");
+					println();
+					cache2.set(node, 0'i64);
+					return 0'i64;
+				}
+			}
+		}
+	}
+	nseen.print("nseen = ");
+
+	let visits = parse_i64(WORDS[1]);
+	//let visits = 0'i64;
+	//if nseen0.contains(CAVE)
+	//	visits = nseen0.get(CAVE);
+	println("CAVE, visits = ", CAVE, "-", visits);
+
+	//if is_upper(CAVE[0])
+		visits += 1;
+
+	println("visits = ", visits);
+	nseen0.set(CAVE, visits);
+
+	let paths = 0'i64;
+	let nbrs = split_(MAP.get(CAVE), "-");
+	println("nbrs = ", nbrs);
+	for nbr in nbrs
+	{
+		//println("nbr = ", nbr);
+		let nseen = nseen0;
+		let seen = seen0;
+		let visits = 0'i64;
+		if nseen.contains(nbr)
+			visits = nseen.get(nbr);
+		paths += dfs2(&MAP, &seen, &nseen, nbr + "-" + str(visits), path0 + nbr + "-");
+		//paths += dfs2(&MAP, &seen, &nseen, nbr);
+	}
+	cache2.set(node, paths);
+	return paths;
+}
+
+fn dfs(
+		MAP: &const dict_str::dict_str,
+		seen0: &dict_i64::dict_i64,
+		nseen0: &dict_i64::dict_i64,
+		node: str,
+		path0: str,
+	): i64
+{
+	println("node = ", node);
+	println("path0 = ", path0);
+	const WORDS = split_(node, "-");
+	const CAVE = WORDS[0];
+	if (CAVE == "end")
+	{
+		println("**** end");
+		println();
+		return 1'i64; // base case
+	}
+
+	if seen0.contains(node)
+		return 0'i64;
+	seen0.set(node, 1'i64);
+
+	let nseen = dict_i64::new();
+	for step in split_(path0, "-")
+		nseen.inc(step, 1'i64);
+
+	let keys = nseen.get_keys();
+	let vals = nseen.get_vals();
+	for i in [0: size(keys)]
+	{
+		let key = keys[i];
+		let val = vals[i];
+		if is_lower(key[0])
+		{
+			if val > 1
+				return 0'i64;
+		}
+	}
+	nseen.print("nseen = ");
+
+	let visits = parse_i64(WORDS[1]);
+	//let visits = 0'i64;
+	//if nseen0.contains(CAVE)
+	//	visits = nseen0.get(CAVE);
+	println("CAVE, visits = ", CAVE, "-", visits);
+
+	//if is_upper(CAVE[0])
+		visits += 1;
+
+	println("visits = ", visits);
+	nseen0.set(CAVE, visits);
+
+	let paths = 0'i64;
+	let nbrs = split_(MAP.get(CAVE), "-");
+	println("nbrs = ", nbrs);
+	for nbr in nbrs
+	{
+		//println("nbr = ", nbr);
+		let nseen = nseen0;
+		let seen = seen0;
+		let visits = 0'i64;
+		if nseen.contains(nbr)
+			visits = nseen.get(nbr);
+		paths += dfs(&MAP, &seen, &nseen, nbr + "-" + str(visits), path0 + nbr + "-");
+		//paths += dfs(&MAP, &seen, &nseen, nbr);
+	}
+	return paths;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/12" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	// Part 2 tried 22312 -- too low
+
+	let expect1 = "5254";
+	let expect2 = "149385";
+	let expect1_test = "10";
+	let expect2_test = "36";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
