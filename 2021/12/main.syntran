@@ -33,8 +33,6 @@ fn part1(args: &const Args): str
 	let seen = dict_i64::new();
 	let nseen = dict_i64::new();
 	sum_ = dfs(&map, &seen, &nseen, "start-0", "start-");
-	//sum_ = dfs(&map, &seen, &nseen, "start");
-	//nseen.print("nseen = ");
 
 	println("part 1 = ", sum_);
 	return str(sum_);
@@ -67,52 +65,44 @@ fn part2(args: &const Args): str
 	// For "big" caves each visit count to it is unique
 	let seen = dict_i64::new();
 	let nseen = dict_i64::new();
-	//sum_ = dfs2(&map, &seen, &nseen, "start-0", false);
-	//sum_ = dfs(&map, &seen, &nseen, "start-0", "start-");
-	sum_ = dfs2(&map, &seen, &nseen, "start-0", "start-");
-	//sum_ = dfs(&map, &seen, &nseen, "start");
-	//nseen.print("nseen = ");
+	nseen.set("start", 1'i64);
+	sum_ = dfs2(&map, &seen, &nseen, "start", 0);
 
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
 
-let cache2 = dict_i64::new();
 fn dfs2(
 		MAP: &const dict_str::dict_str,
 		seen0: &dict_i64::dict_i64,
 		nseen0: &dict_i64::dict_i64,
-		node: str,
-		path0: str,
-	): i64
+		CAVE: str,
+		visits: i32,
+	): i32
 {
+	//// idk why i get the wrong answer if i try to cache like this
 	//if (cache2.contains(node)) return cache2.get(node);
-	println("node = ", node);
-	println("path0 = ", path0);
-	const WORDS = split_(node, "-");
-	const CAVE = WORDS[0];
+
+	//println("node = ", node);
 	if (CAVE == "end")
 	{
-		println("**** end");
-		println();
-		cache2.set(node, 1'i64);
-		return 1'i64; // base case
+		//cache2.set(node, 1'i64);
+		return 1; // base case
 	}
 
-	if seen0.contains(node)
+	const NODE_KEY = CAVE + str(visits);
+	if seen0.contains(NODE_KEY)
 	{
-		println("seen0.contains(node)");
-		cache2.set(node, 0'i64);
-		return 0'i64;
+		//cache2.set(node, 0'i64);
+		return 0;
 	}
-	seen0.set(node, 1'i64);
+	seen0.set(NODE_KEY, 1'i64);
 
-	let nseen = dict_i64::new();
-	for step in split_(path0, "-")
-		nseen.inc(step, 1'i64);
+	visits += 1;
+	nseen0.set(CAVE, i64(visits));
 
-	let keys = nseen.get_keys();
-	let vals = nseen.get_vals();
+	let keys = nseen0.get_keys();
+	let vals = nseen0.get_vals();
 	let count2 = 0;
 	for i in [0: size(keys)]
 	{
@@ -122,60 +112,39 @@ fn dfs2(
 		{
 			if val > 2
 			{
-				println("------------- val > 2");
-				println();
-				cache2.set(node, 0'i64);
-				return 0'i64;
+				//cache2.set(node, 0'i64);
+				return 0;
 			}
 			else if val == 2
 			{
 				if key == "start"
 				{
-					println("------------- start");
-					println();
-					cache2.set(node, 0'i64);
-					return 0'i64;
+					//cache2.set(node, 0'i64);
+					return 0;
 				}
 				count2 += 1;
 				if count2 > 1
 				{
-					println("------------- count2 > 1");
-					println();
-					cache2.set(node, 0'i64);
-					return 0'i64;
+					//cache2.set(node, 0'i64);
+					return 0;
 				}
 			}
 		}
 	}
-	nseen.print("nseen = ");
+	//nseen0.print("nseen0 = ");
 
-	let visits = parse_i64(WORDS[1]);
-	//let visits = 0'i64;
-	//if nseen0.contains(CAVE)
-	//	visits = nseen0.get(CAVE);
-	println("CAVE, visits = ", CAVE, "-", visits);
-
-	//if is_upper(CAVE[0])
-		visits += 1;
-
-	println("visits = ", visits);
-	nseen0.set(CAVE, visits);
-
-	let paths = 0'i64;
+	let paths = 0;
 	let nbrs = split_(MAP.get(CAVE), "-");
-	println("nbrs = ", nbrs);
 	for nbr in nbrs
 	{
-		//println("nbr = ", nbr);
 		let nseen = nseen0;
 		let seen = seen0;
-		let visits = 0'i64;
+		let visits = 0;
 		if nseen.contains(nbr)
 			visits = nseen.get(nbr);
-		paths += dfs2(&MAP, &seen, &nseen, nbr + "-" + str(visits), path0 + nbr + "-");
-		//paths += dfs2(&MAP, &seen, &nseen, nbr);
+		paths += dfs2(&MAP, &seen, &nseen, nbr, visits);
 	}
-	cache2.set(node, paths);
+	//cache2.set(node, paths);
 	return paths;
 }
 
@@ -218,7 +187,7 @@ fn dfs(
 				return 0'i64;
 		}
 	}
-	nseen.print("nseen = ");
+	//nseen.print("nseen = ");
 
 	let visits = parse_i64(WORDS[1]);
 	//let visits = 0'i64;
