@@ -82,15 +82,23 @@ fn dfs2(
 	// TODO: backport dfs2 for part 1. Only change required is simplifying the
 	// count2 early return
 
-	//const NODE_KEY = CAVE + str(visits);
+	let keys = nseen0.get_keys();
+	let vals = nseen0.get_vals();
+	const NODE_KEY = CAVE + str(keys, vals);
 
-	//// idk why i get the wrong answer if i try to cache like this. my solution
-	//// takes 35 s, so i think i'm missing something
-	//if (cache2.contains(NODE_KEY)) return i32(cache2.get(NODE_KEY));
+	// Only keying the cache by the current cave and how many times we've
+	// visited it is insufficient. The cache must also key on how many times
+	// we've visited all other caves (i.e. the keys and vals of nseen0 dict),
+	// because that dictates how many times we can revisit them from here
+	//
+	// Keying on the path on the other hand, i.e. the order in which caves were
+	// visited, would always miss. DFS only visits each order once. The count of
+	// visits does not have an order dependence
+	if (cache2.contains(NODE_KEY)) return i32(cache2.get(NODE_KEY));
 
 	if (CAVE == "end")
 	{
-		//cache2.set(NODE_KEY, 1'i64);
+		cache2.set(NODE_KEY, 1'i64);
 		return 1; // base case
 	}
 
@@ -100,8 +108,8 @@ fn dfs2(
 			return 0;
 	nseen0.set(CAVE, i64(visits));
 
-	let keys = nseen0.get_keys();
-	let vals = nseen0.get_vals();
+	keys = nseen0.get_keys();
+	vals = nseen0.get_vals();
 	let count2 = 0;
 	for i in [0: size(keys)]
 	{
@@ -113,13 +121,13 @@ fn dfs2(
 			{
 				if key == "start"
 				{
-					//cache2.set(NODE_KEY, 0'i64);
+					cache2.set(NODE_KEY, 0'i64);
 					return 0;
 				}
 				count2 += 1;
 				if count2 > 1
 				{
-					//cache2.set(NODE_KEY, 0'i64);
+					cache2.set(NODE_KEY, 0'i64);
 					return 0;
 				}
 			}
@@ -136,7 +144,7 @@ fn dfs2(
 		visits = max(visits, 0);
 		paths += dfs2(&MAP, &nseen, nbr, visits);
 	}
-	//cache2.set(NODE_KEY, i64(paths));
+	cache2.set(NODE_KEY, i64(paths));
 	return paths;
 }
 
