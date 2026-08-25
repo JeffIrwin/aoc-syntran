@@ -1,0 +1,190 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+
+//==============================================================================
+
+fn part1_brute(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	const TEMPLATE = readln(f);
+	let rules = dict_str::new();
+	let str_ = readln(f);
+	str_ = readln(f);  // skip blank
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let WORDS = split_(str_, "-> ");
+		rules.set(WORDS[0], WORDS[1]);
+		str_ = readln(f);
+	}
+	close(f);
+	rules.print("rules = ");
+
+	println("TEMPLATE = ", TEMPLATE);
+	let polymer = TEMPLATE;
+	for it in [0: 10]
+	{
+		const polymer0 = polymer;
+		let np = i32(len(polymer));
+		let insert = repeat(" ", np-1);
+		for i in [0: np-1]
+		{
+			println("poly sub = ", polymer[i:i+2]);
+			insert[i] = rules.get(polymer[i:i+2]);
+		}
+		println("insert = ", insert);
+
+		polymer = polymer0 + insert;
+		for i in [0: np-1]
+			polymer[2*i: 2*i+2] = polymer0[i] + insert[i];
+		polymer[2*np-2] = polymer0[np-1];
+		println("polymer = ", polymer);
+		//break;
+	}
+
+	let counts = dict_i64::new();
+	for c in polymer
+		counts.inc(c, 1'i64);
+	counts.print("counts = ");
+	let count_vals = counts.get_vals();
+	let cmin = minval(count_vals);
+	let cmax = maxval(count_vals);
+	sum_ = cmax - cmin;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part1(args: &const Args): str
+{
+	// TODO: refactor as core fn called by part 1 and 2 with nstep arg (10 or
+	// 40)
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	const TEMPLATE = readln(f);
+	let rules = dict_str::new();
+	let str_ = readln(f);
+	str_ = readln(f);  // skip blank
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		let WORDS = split_(str_, "-> ");
+		rules.set(WORDS[0], WORDS[1]);
+		str_ = readln(f);
+	}
+	close(f);
+	rules.print("rules = ");
+
+	println("TEMPLATE = ", TEMPLATE);
+	//let polymer = TEMPLATE;
+	let polymer = dict_i64::new();
+	const NT = i32(len(TEMPLATE));
+	for i in [0: NT-1]
+		polymer.inc(TEMPLATE[i:i+2], 1'i64);
+	polymer.print("polymer = ");
+	for it in [0: 10]
+	{
+		const polymer0 = polymer;
+		polymer = dict_i64::new();
+		let keys = polymer0.get_keys();
+		let vals = polymer0.get_vals();
+		for i in [0: size(keys)]
+		{
+			let key = keys[i];
+			let val = vals[i];
+			let ins = rules.get(key);
+			let left  = key[0] + ins;
+			let right = ins + key[1];
+			polymer.inc(left , val);//1'i64);
+			polymer.inc(right, val);//1'i64);
+		}
+		polymer.print("polymer = ");
+		//break;
+	}
+	// After step 1: NCNBCHB
+	//   - NC: 1
+	//   - CN: 1
+	//   - NB: 1
+	//   - BC: 1
+	//   - CH: 1
+	//   - HB: 1
+
+	let counts = dict_i64::new();
+	let keys = polymer.get_keys();
+	let vals = polymer.get_vals();
+	for i in [0: size(keys)]
+	{
+		let key = keys[i];
+		let val = vals[i];
+		counts.inc(key[0], val);
+		counts.inc(key[1], val);
+		//polymer.inc(left , val);//1'i64);
+		//polymer.inc(right, val);//1'i64);
+	}
+
+	for key in counts.get_keys()
+	{
+		// Because we track pairs, almost all counts will be doubled
+		let val = counts.get(key);
+		counts.set(key, val/2);
+	}
+	counts.inc(TEMPLATE[0]   , 1'i64); // except first and last chars
+	if TEMPLATE[NT-1] != TEMPLATE[0]
+	{
+		// In this edge case it won't have been even to begin with before
+		// dividing by
+		// 2 above
+		counts.inc(TEMPLATE[NT-1], 1'i64);
+	}
+
+	counts.print("counts = ");
+	let count_vals = counts.get_vals();
+	let cmin = minval(count_vals);
+	let cmax = maxval(count_vals);
+	sum_ = cmax - cmin;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/14" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	// Part 2:
+	//
+	//     Tried 4807056953865 -- too low
+
+	let expect1 = "4244";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "1588";
+	let expect2_test = "2188189693529";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
