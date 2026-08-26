@@ -22,6 +22,7 @@ fn part1(args: &const Args): str
 	const NY = size(g,1);
 	//println("g = ", g);
 
+	// Dijkstra
 	let q = minheap_vec_i32::new();
 	q.push([0,0,0]);  // "distance" (total risk), pos x, and pos y
 	let dist = [2_000_000_000; NX, NY];
