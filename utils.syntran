@@ -1692,6 +1692,24 @@ fn read_char_mat(filename: str): [str; :,:]
 	return chars;
 }
 
+fn read_dec_mat(filename: str): [i32; :,:]
+{
+	// Read a dense integer matrix from a file with no delimiters. All values
+	// are 0-9
+	//
+	// Bit of a strange fn, but this turns out to be a commot AOC parsing
+	// problem
+	let gc = read_char_mat(filename);
+	const NX = i32(size(gc, 0));
+	const NY = i32(size(gc, 1));
+	let g = [0; NX, NY];
+	for y in [0: NY]
+	for x in [0: NX]
+		g[x,y] = parse_i32(gc[x,y]);
+	//println("g = ", g);
+	return g;
+}
+
 //==============================================================================
 
 fn read_i32_mat(filename: str): [i32; :,:]

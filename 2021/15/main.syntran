@@ -1,0 +1,150 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../minheap_vec_i32_2026 as minheap_vec_i32;
+
+//==============================================================================
+
+const DIRS = [
+	1, 0,
+	-1, 0,
+	0, 1,
+	0, -1,
+	; 2, 4
+];
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_dec_mat(args.input_filename);
+	const NX = size(g,0);
+	const NY = size(g,1);
+	//println("g = ", g);
+
+	let q = minheap_vec_i32::new();
+	q.push([0,0,0]);  // "distance" (total risk), pos x, and pos y
+	let dist = [2_000_000_000; NX, NY];
+	while true
+	{
+		if (q.len == 0) break;
+		let u = q.pop();
+		let d = u[0];
+		let x = u[1];
+		let y = u[2];
+
+		for id in [0: size(DIRS,1)]
+		{
+			const DX = DIRS[:,id];
+			let xn = x + DX[0];
+			let yn = y + DX[1];
+			if (xn <   0) continue;
+			if (yn <   0) continue;
+			if (xn >= NX) continue;
+			if (yn >= NY) continue;
+			let dn = dist[xn, yn];
+			let alt = d + g[xn,yn];
+			if alt < dn
+			{
+				dist[xn, yn] = alt;
+				q.push([alt, xn, yn]);
+			}
+		}
+	}
+	sum_ = dist[NX-1, NY-1];
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let g = read_dec_mat(args.input_filename);
+	const NR = 5;
+	const NX0 = size(g,0);
+	const NY0 = size(g,1);
+	const NX = NR * NX0;
+	const NY = NR * NY0;
+
+	// Expand the grid in a 5x5 pattern with altered values
+	let g0 = g;
+	g = [0; NX, NY];
+	for iy in [0: NR]
+	for ix in [0: NR]
+	{
+		g[ix*NX0: (ix+1)*NX0, iy*NY0: (iy+1)*NY0] = g0 + ix + iy;
+	}
+	g = (g - 1) % 9 + 1; // *NOT* just mod 10. 0 is not included
+	//println("g = ", g);
+	//println("NX0 NY0 = ", [NX0, NY0]);
+	//println("NX NY = ", [NX, NY]);
+
+	let q = minheap_vec_i32::new();
+	q.push([0,0,0]);  // "distance" (total risk), pos x, and pos y
+	let dist = [2_000_000_000; NX, NY];
+	while true
+	{
+		if (q.len == 0) break;
+		let u = q.pop();
+		let d = u[0];
+		let x = u[1];
+		let y = u[2];
+
+		for id in [0: size(DIRS,1)]
+		{
+			const DX = DIRS[:,id];
+			let xn = x + DX[0];
+			let yn = y + DX[1];
+			if (xn <   0) continue;
+			if (yn <   0) continue;
+			if (xn >= NX) continue;
+			if (yn >= NY) continue;
+			let dn = dist[xn, yn];
+			let alt = d + g[xn,yn];
+			if alt < dn
+			{
+				dist[xn, yn] = alt;
+				q.push([alt, xn, yn]);
+			}
+		}
+	}
+	sum_ = dist[NX-1, NY-1];
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/15" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "388";
+	let expect2 = "2819";
+	let expect1_test = "40";
+	let expect2_test = "315";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

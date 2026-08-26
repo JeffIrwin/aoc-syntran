@@ -1,7 +1,17 @@
 
+// FIXME: this file is deprecated. See the object-oriented version in
+// minheap_vec_i32_2026.syntran instead
+//
+// This version is only kept because some older AOC solutions still use it
+
+//----------------------------------------------------------------------
+
 // This file contains structs and fns for minheaps of i32 values, implemented
-// using an array as an implicit binary tree.  These are the primary functions
-// for pushing and popping values:
+// using an array as an implicit binary tree.
+//
+// Minheap order is based on element 0 of each vector.
+//
+// These are the primary functions for pushing and popping values:
 //
 //     new_minheap_vec_i32(): minheap_vec_i32                     // initialize an empty heap
 //     push_minheap_vec_i32(mh: &minheap_vec_i32, val: [i32; :])  // push or insert a new value
