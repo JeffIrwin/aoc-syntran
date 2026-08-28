@@ -1,0 +1,181 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let p1 = 0'i64;
+	let p2 = 0'i64;
+	do_it(&args, &p1, &p2);
+	println("part 1 = ", p1);
+	return str(p1);
+}
+
+fn part2(args: &const Args): str
+{
+	let p1 = 0'i64;
+	let p2 = 0'i64;
+	do_it(&args, &p1, &p2);
+	println("part 2 = ", p2);
+	return str(p2);
+}
+
+fn do_it(args: &const Args, p1: &i64, p2: &i64)
+{
+	let f = open(args.input_filename, "r");
+	let area = split_(readln(f), ":")[1];
+	//println("area = ", area);
+	close(f);
+
+	let nums = parse_i32_delim(area, "x=.,y ");
+	//println("nums = ", nums);
+	const xmin = nums[0];
+	const xmax = nums[1];
+	const ymin = nums[2];
+	const ymax = nums[3];
+
+	// X and Y are somewhat independent. We can do two O(n) one-dimensional
+	// searches to narrow down before an O(n^2) two-dimensional search
+
+	// Get min initial x velocity. We must reach at least xmin before xvel drops
+	// to 0
+	let xvel0 = 1;
+	while true
+	{
+		let x = 0;
+		let xvel = xvel0;
+		while xvel > 0
+		{
+			x += xvel;
+			xvel -= 1;
+		}
+		//println("x, xvel0 = ", [x, xvel0]);
+		if (x >= xmin) break;
+		//if (xvel0 > 10) break;
+		xvel0 += 1;
+	}
+	const xvelmin = xvel0;
+	//println("xvelmin = ", xvelmin);
+
+	// Max initial x velocity is trivial. Above a velocity of xmax, we skip over
+	// the target area entirely on the very first step
+	const xvelmax = xmax;
+	//println("xvelmax = ", xvelmax);
+
+	// Get min initial y velocity
+	let yvel0 = 1;
+	while true
+	{
+		let y = 0;
+		let yvel = yvel0;
+		let hit = false;
+		while y >= ymin
+		{
+			y += yvel;
+			yvel -= 1;
+			if ymin <= y and y <= ymax
+				hit = true;
+		}
+		yvel0 += 1;
+		//println("hit = ", hit);
+		if (hit) break;
+	}
+	const yvelmin = yvel0;
+	//println("yvelmin = ", yvelmin);
+
+	// Max initial y velocity is less obviously trivial. Since ymin is negative,
+	// consider the y velocity at y==0 on the way back down after launching
+	// upward initialy. That velocity will be yvel0 but negative (no drag in
+	// up/down dir), so the same total skip over logic as xvelmax applies for y
+	// with sign adjustment
+	const yvelmax = -ymin;
+	//println("yvelmax = ", yvelmax);
+
+	//const yvels = [yvelmin: yvelmax+1];
+	//const yvels = [[-yvelmax: -yvelmin+1], [yvelmin: yvelmax+1]];
+	const yvels = [-yvelmax: yvelmax+1];
+	//println("yvels = ", yvels);
+
+	// The search space is now limited to a finite sized square in velocity
+	// space. Brute force it
+	let ymaxmax = 0;
+	let count_ = 0;
+	for yvel0 in yvels
+	//for yvel0 in [yvelmin: yvelmax+1] // smaller sufficient range for part 1
+	for xvel0 in [xvelmin: xvelmax+1]
+	{
+		//xvel0 = 17;
+		//yvel0 = -4;
+		//println("xvel0, yvel0 = ", [xvel0, yvel0]);
+		let x = 0;
+		let y = 0;
+		let xvel = xvel0;
+		let yvel = yvel0;
+		let hit = false;
+		let yapex = 0;
+		while true
+		{
+			//println("x, y = ", [x, y]);
+			x += xvel;
+			y += yvel;
+			yapex = max(yapex, y);
+			xvel = max(xvel-1, 0);
+			yvel -= 1;
+			if
+				(
+					xmin <= x and x <= xmax and
+					ymin <= y and y <= ymax
+				)
+				hit = true;
+			if x > xmax or y < ymin
+				break;
+		}
+		//println("hit = ", hit);
+		if hit
+		{
+			count_ += 1;
+			//println("yapex = ", yapex);
+			ymaxmax = max(ymaxmax, yapex);
+		}
+		//println();
+		//break;
+	}
+	//println("count_ = ", count_);
+	p1 = ymaxmax;
+	p2 = count_;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/17" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "12246";
+	let expect2 = "3528";
+	let expect1_test = "45";
+	let expect2_test = "112";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

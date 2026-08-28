@@ -137,6 +137,7 @@ fn parse_packet(v: &const [i32; :], iv: &i32, outval: &i64)
 			}
 		}
 		//println("subvals = ", subvals);
+		outval = 0;
 		if ty == 0
 			outval = sum(subvals);
 		else if ty == 1
@@ -145,26 +146,12 @@ fn parse_packet(v: &const [i32; :], iv: &i32, outval: &i64)
 			outval = minval(subvals);
 		else if ty == 3
 			outval = maxval(subvals);
-		else if ty == 5
-		{
-			outval = 0;
-			if (subvals[0] > subvals[1]) outval = 1;
-		}
-		else if ty == 6
-		{
-			outval = 0;
-			if (subvals[0] < subvals[1]) outval = 1;
-		}
-		else if ty == 7
-		{
-			outval = 0;
-			if (subvals[0] == subvals[1]) outval = 1;
-		}
-		else
-		{
-			println(ERROR_STR + "bad operator type: ", ty);
-			exit(1);
-		}
+		else if ty == 5 and (subvals[0] > subvals[1])
+			outval = 1;
+		else if ty == 6 and (subvals[0] < subvals[1])
+			outval = 1;
+		else if ty == 7 and (subvals[0] == subvals[1])
+			outval = 1;
 	}
 	return;
 }
