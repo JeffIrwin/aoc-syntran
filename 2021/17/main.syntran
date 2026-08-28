@@ -44,27 +44,20 @@ fn do_it(args: &const Args, p1: &i64, p2: &i64)
 	let xvel0 = 1;
 	while true
 	{
-		let x = 0;
-		let xvel = xvel0;
-		while xvel > 0
-		{
-			x += xvel;
-			xvel -= 1;
-		}
-		//println("x, xvel0 = ", [x, xvel0]);
+		const x = xvel0 * (xvel0+1) / 2;  // triangular number
 		if (x >= xmin) break;
-		//if (xvel0 > 10) break;
 		xvel0 += 1;
 	}
 	const xvelmin = xvel0;
-	//println("xvelmin = ", xvelmin);
+	println("xvelmin = ", xvelmin);
 
 	// Max initial x velocity is trivial. Above a velocity of xmax, we skip over
 	// the target area entirely on the very first step
 	const xvelmax = xmax;
 	//println("xvelmax = ", xvelmax);
 
-	// Get min initial y velocity
+	// Get min initial y velocity. For part 1 we are only concerned with
+	// positive non-zero velocities
 	let yvel0 = 1;
 	while true
 	{
@@ -88,13 +81,12 @@ fn do_it(args: &const Args, p1: &i64, p2: &i64)
 	// Max initial y velocity is less obviously trivial. Since ymin is negative,
 	// consider the y velocity at y==0 on the way back down after launching
 	// upward initialy. That velocity will be yvel0 but negative (no drag in
-	// up/down dir), so the same total skip over logic as xvelmax applies for y
+	// up/down dir), so the same total skip-over logic as xvelmax applies for y
 	// with sign adjustment
 	const yvelmax = -ymin;
 	//println("yvelmax = ", yvelmax);
 
-	//const yvels = [yvelmin: yvelmax+1];
-	//const yvels = [[-yvelmax: -yvelmin+1], [yvelmin: yvelmax+1]];
+	//const yvels = [yvelmin: yvelmax+1];  // smaller sufficient range for part 1
 	const yvels = [-yvelmax: yvelmax+1];
 	//println("yvels = ", yvels);
 
@@ -103,7 +95,6 @@ fn do_it(args: &const Args, p1: &i64, p2: &i64)
 	let ymaxmax = 0;
 	let count_ = 0;
 	for yvel0 in yvels
-	//for yvel0 in [yvelmin: yvelmax+1] // smaller sufficient range for part 1
 	for xvel0 in [xvelmin: xvelmax+1]
 	{
 		//xvel0 = 17;
@@ -114,6 +105,10 @@ fn do_it(args: &const Args, p1: &i64, p2: &i64)
 		let xvel = xvel0;
 		let yvel = yvel0;
 		let hit = false;
+
+		// Maybe yapex is an unconventional variable name. At first at had a bug
+		// where ymax was mutable and I accidentally re-used that name here.
+		// Const is a useful language feature!
 		let yapex = 0;
 		while true
 		{
