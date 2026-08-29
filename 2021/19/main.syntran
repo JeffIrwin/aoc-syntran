@@ -123,7 +123,7 @@ fn both_parts(args: &const Args, p1: &str, p2: &str)
 	// - tri plus nshared count:   27 s
 
 	// Max number of triangles or tets
-	const ntmax = (nbmax-0) * (nbmax-1) * (nbmax-2) / (3 * 2 * 1);
+	const ntmax = (nbmax-0) * (nbmax-1) / (2 * 1);
 	println("ntmax = ", ntmax);
 	let tets = [""; ntmax, ns];
 	let ntps = [0; ns];
@@ -133,17 +133,11 @@ fn both_parts(args: &const Args, p1: &str, p2: &str)
 		let nt = 0;
 		for i0 in [0: nb]
 		for i1 in [i0+1: nb]
-		for i2 in [i1+1: nb]
 		{
 			// Save simplices by sorted edge lengths. This is invariant to
 			// transformations and is thus a sufficient fingerprint
 			let e01 = sum(abs(d[:,i0,is] - d[:,i1,is]));
-			let e12 = sum(abs(d[:,i1,is] - d[:,i2,is]));
-			let e20 = sum(abs(d[:,i2,is] - d[:,i0,is]));
-
-			let edges = sort_inplace([e01, e12, e20]);
-
-			tets[nt,is] = str(edges);
+			tets[nt,is] = str(e01);
 			nt += 1;
 		}
 		//println("nt = ", nt);
@@ -167,7 +161,7 @@ fn both_parts(args: &const Args, p1: &str, p2: &str)
 				if iset.contains(tets[kj,j])
 				{
 					nshared += 1;
-					if nshared >= (12 * 11 * 10) / (3 * 2 * 1)
+					if nshared >= (12 * 11) / (2 * 1)
 					{
 						// 12 common vertices will result in this many common
 						// triangles
