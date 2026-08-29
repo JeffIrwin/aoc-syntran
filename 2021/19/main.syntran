@@ -45,7 +45,7 @@ fn cross(a: [i32;:], b: [i32;:]): [i32;:]
 	return c;
 }
 
-fn part1(args: &const Args): str
+fn both_parts(args: &const Args, p1: &str, p2: &str)
 {
 	let sum_ = 0'i64;
 
@@ -91,7 +91,7 @@ fn part1(args: &const Args): str
 			ib += 1;
 		}
 	const r = get_rot_mats();
-	println("d = ", d);
+	//println("d = ", d);
 
 	// Start with only the scanner 0 fixed
 	let fixed = [false; ns];
@@ -110,11 +110,12 @@ fn part1(args: &const Args): str
 	let nfree  = ns-1;
 	let ifixed = [0];
 	let nfixed = 1;
-	let ncon = [0; ns];
+	let ncon = [0; ns];  // not used, but it helps show the graph structure
 
-	// Use simplex fingerprints to prune search space. Not sure whether tris or
-	// tets will perform better. Tets would be even more work up front compared
-	// to tris, but would prune better for a faster search later
+	// Use simplex fingerprints to prune search space. Wasn't initially sure
+	// whether tris or tets will perform better. Tets are even more work up
+	// front compared to tris, but prune better for a faster search later. Line
+	// segments could also work
 	//
 	// - no fingerprinting takes: 592 s
 	// - tri fingerprints take:   112 s
@@ -122,7 +123,7 @@ fn part1(args: &const Args): str
 	// - tri plus nshared count:   27 s
 
 	// Max number of triangles or tets
-	let ntmax = nbmax * (nbmax-1) * (nbmax-2);
+	const ntmax = (nbmax-0) * (nbmax-1) * (nbmax-2) / (3 * 2 * 1);
 	println("ntmax = ", ntmax);
 	let tets = [""; ntmax, ns];
 	let ntps = [0; ns];
@@ -145,7 +146,7 @@ fn part1(args: &const Args): str
 			tets[nt,is] = str(edges);
 			nt += 1;
 		}
-		println("nt = ", nt);
+		//println("nt = ", nt);
 		ntps[is] = nt;
 	}
 	println("ntps = ", ntps);
@@ -166,7 +167,6 @@ fn part1(args: &const Args): str
 				if iset.contains(tets[kj,j])
 				{
 					nshared += 1;
-					//if nshared > 200
 					if nshared >= (12 * 11 * 10) / (3 * 2 * 1)
 					{
 						// 12 common vertices will result in this many common
@@ -204,7 +204,7 @@ fn part1(args: &const Args): str
 		if all(fixed) break;
 		if tried[i,j] continue;
 		tried[i,j] = true;
-		println("i, j = ", [i, j]);
+		//println("i, j = ", [i, j]);
 
 		// Try all rotations of scanner j
 		for jr in [0: 24]
@@ -217,6 +217,9 @@ fn part1(args: &const Args): str
 			// j and then count how many other beacons overlap. This search is
 			// O(26**2), where ~26 is nbmax, as opposed to O(2000**3) of trying
 			// every beacon location within its detection cube
+			//
+			// If you tracked which vertices created shared fingerprint
+			// triangles, you could speed up this part a bit
 			for ii in [0: nbps[i]]
 			for jj in [0: nbps[j]]
 			{
@@ -237,12 +240,16 @@ fn part1(args: &const Args): str
 				for kj in [0: n]
 				{
 					if iset.contains(str(tj[:,kj]))
+					{
 						no += 1;
+						if (no >= 12) break;
+					}
 					else
+					{
 						nnon += 1;
-					// Break early if too many not overlapping
-					if nnon > n - 12
-						break;
+						// Break early if too many not overlapping
+						if (nnon > n - 12) break;
+					}
 				}
 
 				//println("no = ", no);
@@ -263,10 +270,8 @@ fn part1(args: &const Args): str
 
 					ncon[i] += 1;
 					ncon[j] += 1;
-					println("ncon = ", ncon);
+					//println("ncon = ", ncon);
 
-					println("found");
-					//println("t = ", t);
 					println("fixed count = ", count(fixed), " / ", ns);
 					break;
 				}
@@ -287,14 +292,15 @@ fn part1(args: &const Args): str
 	sum_ = be.len();
 
 	//println("pos = ", pos);
-	let p2 = 0;
+	let ip2 = 0;
 	for i in [0: ns]
 	for j in [i+1: ns]
-		p2 = max(p2, sum(abs(pos[:,j] - pos[:,i])));
+		ip2 = max(ip2, sum(abs(pos[:,j] - pos[:,i])));
 
 	println("part 1 = ", sum_);
-	println("part 2 = ", p2);
-	return str(sum_);
+	println("part 2 = ", ip2);
+	p1 = str(sum_);
+	p2 = str(ip2);
 }
 
 //==============================================================================
@@ -309,13 +315,12 @@ fn main(): str
 
 	let p1 = ""; let p2 = "";
 
-	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	both_parts(&args, &p1, &p2);
 
-	let expect1 = "REPLACE_ME_P1";
-	let expect2 = "REPLACE_ME_P2";
-	let expect1_test = "REPLACE_ME_P1_TEST";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect1 = "467";
+	let expect2 = "12226";
+	let expect1_test = "79";
+	let expect2_test = "3621";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);
