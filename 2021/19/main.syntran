@@ -119,9 +119,10 @@ fn part1(args: &const Args): str
 	// - no fingerprinting takes: 592 s
 	// - tri fingerprints take:   112 s
 	// - tet fingerprints take:   120 s -- too much up front
+	// - tri plus nshared count:   27 s
 
 	// Max number of triangles or tets
-	let ntmax = nbmax * (nbmax-1) * (nbmax-2) * (nbmax-3);
+	let ntmax = nbmax * (nbmax-1) * (nbmax-2);
 	println("ntmax = ", ntmax);
 	let tets = [""; ntmax, ns];
 	let ntps = [0; ns];
@@ -132,18 +133,14 @@ fn part1(args: &const Args): str
 		for i0 in [0: nb]
 		for i1 in [i0+1: nb]
 		for i2 in [i1+1: nb]
-		for i3 in [i2+1: nb]
 		{
 			// Save simplices by sorted edge lengths. This is invariant to
 			// transformations and is thus a sufficient fingerprint
 			let e01 = sum(abs(d[:,i0,is] - d[:,i1,is]));
 			let e12 = sum(abs(d[:,i1,is] - d[:,i2,is]));
 			let e20 = sum(abs(d[:,i2,is] - d[:,i0,is]));
-			let e03 = sum(abs(d[:,i0,is] - d[:,i3,is]));
-			let e13 = sum(abs(d[:,i1,is] - d[:,i3,is]));
-			let e23 = sum(abs(d[:,i2,is] - d[:,i3,is]));
 
-			let edges = sort_inplace([e01, e12, e20, e03, e13, e23]);
+			let edges = sort_inplace([e01, e12, e20]);
 
 			tets[nt,is] = str(edges);
 			nt += 1;
@@ -164,24 +161,23 @@ fn part1(args: &const Args): str
 		for j in [i+1: ns]
 		{
 			if maybe[i,j] break;
+			let nshared = 0;
 			for kj in [0: ntps[j]]
 				if iset.contains(tets[kj,j])
 				{
-					maybe[i,j] = true;
-					maybe[j,i] = true;
+					nshared += 1;
+					//if nshared > 200
+					if nshared >= (12 * 11 * 10) / (3 * 2 * 1)
+					{
+						// 12 common vertices will result in this many common
+						// triangles
+						maybe[i,j] = true;
+						maybe[j,i] = true;
+					}
 				}
 		}
 	}
 	println("maybe = ", count(maybe), " / ", size(maybe));
-
-	// idk how to do this more efficiently. maybe you could get some kind of
-	// fingerprint of each scanner -- find all possible tetrahedra contained in
-	// the beacons of each scanner, then find scanners which share tetrahedra.
-	// might still need a complete check for >= 12 beacon overlap after quick
-	// tetrahedra elimination
-	//
-	// Maybe just triangles could suffice, although it doesn't feel 3d enough
-	// and it could cause a less conservative number of clashes
 
 	// idk if all these loops are necessary but i went crazy because there was a
 	// bug in get_rot_mats
@@ -290,7 +286,7 @@ fn part1(args: &const Args): str
 		be.set(str(d[:,ib,is]), 1'i64);
 	sum_ = be.len();
 
-	println("pos = ", pos);
+	//println("pos = ", pos);
 	let p2 = 0;
 	for i in [0: ns]
 	for j in [i+1: ns]
