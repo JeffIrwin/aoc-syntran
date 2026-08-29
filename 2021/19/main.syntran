@@ -118,10 +118,10 @@ fn part1(args: &const Args): str
 	//
 	// - no fingerprinting takes: 592 s
 	// - tri fingerprints take:   112 s
-	// - tet fingerprints tbd
+	// - tet fingerprints take:   120 s -- too much up front
 
 	// Max number of triangles or tets
-	let ntmax = nbmax * (nbmax-1) * (nbmax-2);// * (nbmax-3);
+	let ntmax = nbmax * (nbmax-1) * (nbmax-2) * (nbmax-3);
 	println("ntmax = ", ntmax);
 	let tets = [""; ntmax, ns];
 	let ntps = [0; ns];
@@ -132,22 +132,20 @@ fn part1(args: &const Args): str
 		for i0 in [0: nb]
 		for i1 in [i0+1: nb]
 		for i2 in [i1+1: nb]
-		//for i3 in [i2+1: nb]
+		for i3 in [i2+1: nb]
 		{
 			// Save simplices by sorted edge lengths. This is invariant to
 			// transformations and is thus a sufficient fingerprint
 			let e01 = sum(abs(d[:,i0,is] - d[:,i1,is]));
 			let e12 = sum(abs(d[:,i1,is] - d[:,i2,is]));
 			let e20 = sum(abs(d[:,i2,is] - d[:,i0,is]));
+			let e03 = sum(abs(d[:,i0,is] - d[:,i3,is]));
+			let e13 = sum(abs(d[:,i1,is] - d[:,i3,is]));
+			let e23 = sum(abs(d[:,i2,is] - d[:,i3,is]));
 
-			let elo = min(e01, e12, e20);
-			let ehi = max(e01, e12, e20);
-			let emd = e01;
-			if (emd == elo or emd == ehi) emd = e12;
-			if (emd == elo or emd == ehi) emd = e20;
-			//println("edges = ", [elo, emd, ehi]);
+			let edges = sort_inplace([e01, e12, e20, e03, e13, e23]);
 
-			tets[nt,is] = str([elo, emd, ehi]);
+			tets[nt,is] = str(edges);
 			nt += 1;
 		}
 		println("nt = ", nt);
@@ -158,6 +156,7 @@ fn part1(args: &const Args): str
 	// Use tet hash sets to determine "maybe" possible connections
 	for i in [0: ns]
 	{
+		println("simplex ", i, " / ", ns);
 		let iset = dict_i64::new();
 		for ki in [0: ntps[i]]
 			iset.set(tets[ki,i], 1'i64);
