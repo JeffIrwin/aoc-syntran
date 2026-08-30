@@ -1,0 +1,289 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+use ../../queue_vec_i32 as queue_vec_i32;
+
+//==============================================================================
+
+struct deterministic_dice
+{
+	state: i32,
+	fn get(): i32
+	{
+		state += 1;
+		return state;
+	}
+}
+fn new_deterministic_dice(): deterministic_dice
+{
+	return deterministic_dice{state = 0};
+}
+
+const n = 10;
+let SCORE_LIMIT = 0;
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+
+	let str_ = readln(f);
+	let words = split_(str_, ":");
+	let p1 = parse_i32(words[1]);
+
+	str_ = readln(f);
+	words = split_(str_, ":");
+	let p2 = parse_i32(words[1]);
+
+	println("p1 = ", p1);
+	println("p2 = ", p2);
+	close(f);
+
+	let d = new_deterministic_dice();
+	//println([d.get(), d.get(), d.get()]);
+
+	SCORE_LIMIT = 1000;
+	let s1 = 0;
+	let s2 = 0;
+	let rolls = 0;
+	while true
+	{
+		p1 += d.get() + d.get() + d.get();
+		rolls += 3;
+		p1 = (p1 - 1) % n + 1;
+		s1 += p1;
+		if s1 >= SCORE_LIMIT
+		{
+			sum_ = s2 * rolls;
+			break;
+		}
+
+		p2 += d.get() + d.get() + d.get();
+		rolls += 3;
+		p2 = (p2 - 1) % n + 1;
+		s2 += p2;
+		if s2 >= SCORE_LIMIT
+		{
+			sum_ = s1 * rolls;
+			break;
+		}
+
+		//println("p1, s1 = ", [p1, s1]);
+		//println("p2, s2 = ", [p2, s2]);
+		//if (rolls > 20) break;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+let w1 = 0'i64;
+let w2 = 0'i64;
+//let seen = dict_i64::new();
+let seen = dict_str::new();
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+
+	let str_ = readln(f);
+	let words = split_(str_, ":");
+	let p1 = parse_i32(words[1]);
+
+	str_ = readln(f);
+	words = split_(str_, ":");
+	let p2 = parse_i32(words[1]);
+
+	println("p1 = ", p1);
+	println("p2 = ", p2);
+	close(f);
+
+	let d = new_deterministic_dice();
+	//println([d.get(), d.get(), d.get()]);
+
+	// Get all possible sums of 3 rolls
+	let v = [0; 3**3];
+	let k = 0;
+	for r1 in [1: 3+1]
+	for r2 in [1: 3+1]
+	for r3 in [1: 3+1]
+	{
+		v[k] = r1 + r2 + r3;
+		k += 1;
+	}
+	println("v = ", v);
+
+	// Make a histogram of counts of each v element
+	const nh = 3*3+1;
+	println("nh = ", nh);
+	let hist = [0; nh];
+	for vv in v
+		hist[vv] += 1;
+	println("hist = ", hist);
+
+	SCORE_LIMIT = 21;
+	//SCORE_LIMIT = 18;
+	//SCORE_LIMIT = 8;
+	//let s1 = 0'i64;
+	//let s2 = 0'i64;
+	//let wins = dfs(p1, s1, p2, s2, &v, 1);
+
+	// BFS and track the number of ways to reach each point in state space
+
+	// TODO: i64?
+	let q = queue_vec_i32::new();
+	let cnt  = [0'i64; 11, SCORE_LIMIT+1, 11, SCORE_LIMIT+1, 3, SCORE_LIMIT+1];
+	let seen = [false; 11, SCORE_LIMIT+1, 11, SCORE_LIMIT+1, 3, SCORE_LIMIT+1];
+	q.push([p1, 0, p2, 0, 1, 0]);
+	cnt[p1, 0, p2, 0, 1, 0] = 1;
+	while true
+	{
+		if (q.is_empty) break;
+		const u = q.pop();
+		const p1   = u[0];  // unpack
+		const s1   = u[1];
+		const p2   = u[2];  // player 2 pos
+		const s2   = u[3];  // player 2 score
+		const turn = u[4];  // player 1 or 2's turn?
+		const tc   = u[5];  // turn count (rolls/3)
+		const c = cnt[p1, s1, p2, s2, turn, tc];
+		//if (seen[p1, s1, p2, s2, turn]) continue;
+		//seen[p1, s1, p2, s2, turn] = true;
+		if (seen[p1, s1, p2, s2, turn, tc]) continue;
+		seen[p1, s1, p2, s2, turn, tc] = true;
+		if s1 >= SCORE_LIMIT
+		{
+			w1 += c;
+			continue;
+		}
+		if s2 >= SCORE_LIMIT
+		{
+			w2 += c;
+			continue;
+		}
+		//println("c = ", c);
+		if turn == 1
+		{
+			//for vv in v
+			for vv in [3: nh]
+			{
+				let p = p1 + vv;
+				p = (p - 1) % n + 1;
+				let s = s1 + p;
+				q.push([p, s, p2, s2, 2, tc+1]);
+				//cnt[p, s, p2, s2, 2] += c;
+				cnt[p, s, p2, s2, 2, tc+1] += c * hist[vv];
+			}
+		}
+		else
+		{
+			//for vv in v
+			for vv in [3: nh]
+			{
+				let p = p2 + vv;
+				p = (p - 1) % n + 1;
+				let s = s2 + p;
+				q.push([p1, s1, p, s, 1, tc+1]);
+				//cnt[p1, s1, p, s, 1] += c;
+				cnt[p1, s1, p, s, 1, tc+1] += c * hist[vv];
+			}
+		}
+	}
+	println("w1 = ", w1);
+	println("w2 = ", w2);
+
+	sum_ = max(w1, w2);
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//fn dfs(p1: i64, s1: i64, p2: i64, s2: i64, v: &const [i32; :], turn: i32)//: i32
+fn dfs(p1: i64, s1: i64, p2: i64, s2: i64, v: &const [i32; :], turn: i32): [i64; :]
+{
+	const key = str([p1, s1, p2, s2, i64(turn)]);
+	if seen.contains(key)
+	{
+		//println("cache hit");
+		//seen.inc(key, 1'i64);
+		let ws = seen.get(key);
+		return parse_i64_delim(ws, "[],");
+		//return;
+	}
+	//seen.set(key, 1'i64);
+	//seen.inc(key, 1'i64);
+
+	if s1 >= SCORE_LIMIT
+	{
+		w1 += 1;
+		//w1 += seen.get(key);
+		seen.set(key, "[1,0]");
+		return [1'i64, 0'i64];
+		//return 1;
+	}
+	if s2 >= SCORE_LIMIT
+	{
+		w2 += 1;
+		//w2 += seen.get(key);
+		//return;
+		seen.set(key, "[0,1]");
+		return [0'i64, 1'i64];
+		//return 2;
+	}
+	if turn == 1
+	{
+		for vv in v
+		{
+			let p = p1 + vv;
+			p = (p - 1) % n + 1;
+			let s = s1 + p;
+			let wi = dfs(p, s, p2, s2, &v, 2);
+		}
+	}
+	else
+	{
+		for vv in v
+		{
+			let p = p2 + vv;
+			p = (p - 1) % n + 1;
+			let s = s2 + p;
+			let wi = dfs(p1, s1, p, s, &v, 1);
+		}
+	}
+	return [0'i64, 0'i64];
+	//return 0;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/21" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "908595";
+	let expect2 = "91559198282731";
+	let expect1_test = "739785";
+	let expect2_test = "444356092776315";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
