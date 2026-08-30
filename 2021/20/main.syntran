@@ -1,0 +1,125 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = do_it(args, 2);
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = do_it(args, 50);
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn do_it(args: &const Args, reps: i32): i64
+{
+	const ny = countln_(args.input_filename) - 2;
+
+	let f = open(args.input_filename, "r");
+	const map = readln(f);
+	let str_ = readln(f);  // skip blank
+	str_ = readln(f);
+	const nx = i32(len(str_));
+	//println("nx, ny = ", [nx, ny]);
+	let g = [""; nx, ny];
+	let y = 0;
+	while not eof(f)
+	{
+		//println("str_ = ", str_);
+		for x in [0: nx]
+			g[x,y] = str_[x];
+
+		y += 1;
+		str_ = readln(f);
+	}
+	close(f);
+	//print_char_mat(&g);
+
+	let pad = ".";
+	for rep in [0: reps]
+	{
+		g = enhance(&g, &pad, &map);
+		//print_char_mat(&g);
+	}
+
+	return count(g == "#");
+}
+
+fn enhance(g0: &const [str; :,:], pad: &str, map: &const str): [str; :,:]
+{
+	const nx0 = size(g0, 0);
+	const ny0 = size(g0, 1);
+	const nx = nx0 + 2;
+	const ny = ny0 + 2;
+	let g = [""; nx, ny];
+
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		// Shift by 1 to account for edge growth
+		const x0 = x - 1;
+		const y0 = y - 1;
+		let idx = 0;
+		let bit = 9;
+		for yn in [y0-1: y0+2]
+		for xn in [x0-1: x0+2]
+		{
+			let c = pad;
+			if 0 <= xn and xn < nx0 and 0 <= yn and yn < nx0
+				c = g0[xn,yn];
+			bit -= 1;
+			if c == "#"
+				idx |= 1 << bit;
+			//println("c = ", c);
+		}
+		g[x,y] = map[idx];
+	}
+
+	// Update pad
+	if pad == "."
+		pad = map[0];
+	else
+		pad = map[511];
+
+	return g;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/20" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "5301";
+	let expect2 = "19492";
+	let expect1_test = "35";
+	let expect2_test = "3351";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

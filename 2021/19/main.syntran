@@ -121,6 +121,7 @@ fn both_parts(args: &const Args, p1: &str, p2: &str)
 	// - tri fingerprints take:   112 s
 	// - tet fingerprints take:   120 s -- too much up front
 	// - tri plus nshared count:   27 s
+	// - line segments:            20 s
 
 	// Max number of triangles or tets
 	const ntmax = (nbmax-0) * (nbmax-1) / (2 * 1);
