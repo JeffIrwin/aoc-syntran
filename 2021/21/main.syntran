@@ -8,6 +8,8 @@ use ../../queue_vec_i32 as queue_vec_i32;
 
 struct deterministic_dice
 {
+	// I was gearing up for an RNG implementation for part 2 but that wasn't the
+	// twist :(
 	state: i32,
 	fn get(): i32
 	{
@@ -20,8 +22,8 @@ fn new_deterministic_dice(): deterministic_dice
 	return deterministic_dice{state = 0};
 }
 
-const n = 10;
-let SCORE_LIMIT = 0;
+const n = 10;  // number of spaces on board
+
 fn part1(args: &const Args): str
 {
 	let sum_ = 0'i64;
@@ -43,7 +45,7 @@ fn part1(args: &const Args): str
 	let d = new_deterministic_dice();
 	//println([d.get(), d.get(), d.get()]);
 
-	SCORE_LIMIT = 1000;
+	const SCORE_LIMIT = 1000;
 	let s1 = 0;
 	let s2 = 0;
 	let rolls = 0;
@@ -78,10 +80,6 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
-let w1 = 0'i64;
-let w2 = 0'i64;
-//let seen = dict_i64::new();
-let seen = dict_str::new();
 fn part2(args: &const Args): str
 {
 	let sum_ = 0'i64;
@@ -115,7 +113,8 @@ fn part2(args: &const Args): str
 	}
 	println("v = ", v);
 
-	// Make a histogram of counts of each v element
+	// Make a histogram of counts of each v element. Approaches a normal
+	// distribution with more rolls per turn
 	const nh = 3*3+1;
 	println("nh = ", nh);
 	let hist = [0; nh];
@@ -123,16 +122,22 @@ fn part2(args: &const Args): str
 		hist[vv] += 1;
 	println("hist = ", hist);
 
-	SCORE_LIMIT = 21;
-	//SCORE_LIMIT = 18;
-	//SCORE_LIMIT = 8;
-	//let s1 = 0'i64;
-	//let s2 = 0'i64;
-	//let wins = dfs(p1, s1, p2, s2, &v, 1);
+	let w1 = 0'i64;  // universe win counts
+	let w2 = 0'i64;
 
-	// BFS and track the number of ways to reach each point in state space
+	// Do a BFS and track the number of ways to reach each point in state space.
+	// This is essentially a path counting problem
+	//
+	// The state space is player positions, scores, whose turn it is (1 or 2),
+	// and how many total turns have elapsed
+	//
+	// I initially tried DFS, but it broke my brain trying to figure out what
+	// state space to cache and what to return across recursion levels.
+	// Iterative BFS seemed easier to think about. The cache-free DFS was at
+	// least useful to brute-force a smaller SCORE_LIMIT, which is useful for
+	// verification
 
-	// TODO: i64?
+	const SCORE_LIMIT = 21;
 	let q = queue_vec_i32::new();
 	let cnt  = [0'i64; 11, SCORE_LIMIT+1, 11, SCORE_LIMIT+1, 3, SCORE_LIMIT+1];
 	let seen = [false; 11, SCORE_LIMIT+1, 11, SCORE_LIMIT+1, 3, SCORE_LIMIT+1];
@@ -144,50 +149,43 @@ fn part2(args: &const Args): str
 		const u = q.pop();
 		const p1   = u[0];  // unpack
 		const s1   = u[1];
-		const p2   = u[2];  // player 2 pos
+		const p2   = u[2];  // player 2 position
 		const s2   = u[3];  // player 2 score
 		const turn = u[4];  // player 1 or 2's turn?
 		const tc   = u[5];  // turn count (rolls/3)
-		const c = cnt[p1, s1, p2, s2, turn, tc];
-		//if (seen[p1, s1, p2, s2, turn]) continue;
-		//seen[p1, s1, p2, s2, turn] = true;
-		if (seen[p1, s1, p2, s2, turn, tc]) continue;
-		seen[p1, s1, p2, s2, turn, tc] = true;
-		if s1 >= SCORE_LIMIT
-		{
-			w1 += c;
-			continue;
-		}
-		if s2 >= SCORE_LIMIT
-		{
-			w2 += c;
-			continue;
-		}
-		//println("c = ", c);
+		const c = cnt[p1, s1, p2, s2, turn, tc];  // # of ways to reach this point
 		if turn == 1
 		{
-			//for vv in v
 			for vv in [3: nh]
 			{
-				let p = p1 + vv;
-				p = (p - 1) % n + 1;
-				let s = s1 + p;
-				q.push([p, s, p2, s2, 2, tc+1]);
-				//cnt[p, s, p2, s2, 2] += c;
+				const p = (p1 + vv - 1) % n + 1;
+				const s = s1 + p;
+				if s >= SCORE_LIMIT
+				{
+					w1 += c * hist[vv];
+					continue;
+				}
 				cnt[p, s, p2, s2, 2, tc+1] += c * hist[vv];
+				if seen[p, s, p2, s2, 2, tc+1] continue;
+				seen[p, s, p2, s2, 2, tc+1] = true;
+				q.push([p, s, p2, s2, 2, tc+1]);
 			}
 		}
 		else
 		{
-			//for vv in v
 			for vv in [3: nh]
 			{
-				let p = p2 + vv;
-				p = (p - 1) % n + 1;
-				let s = s2 + p;
-				q.push([p1, s1, p, s, 1, tc+1]);
-				//cnt[p1, s1, p, s, 1] += c;
+				const p = (p2 + vv - 1) % n + 1;
+				const s = s2 + p;
+				if s >= SCORE_LIMIT
+				{
+					w2 += c * hist[vv];
+					continue;
+				}
 				cnt[p1, s1, p, s, 1, tc+1] += c * hist[vv];
+				if seen[p1, s1, p, s, 1, tc+1] continue;
+				seen[p1, s1, p, s, 1, tc+1] = true;
+				q.push([p1, s1, p, s, 1, tc+1]);
 			}
 		}
 	}
@@ -197,62 +195,6 @@ fn part2(args: &const Args): str
 	sum_ = max(w1, w2);
 	println("part 2 = ", sum_);
 	return str(sum_);
-}
-
-//fn dfs(p1: i64, s1: i64, p2: i64, s2: i64, v: &const [i32; :], turn: i32)//: i32
-fn dfs(p1: i64, s1: i64, p2: i64, s2: i64, v: &const [i32; :], turn: i32): [i64; :]
-{
-	const key = str([p1, s1, p2, s2, i64(turn)]);
-	if seen.contains(key)
-	{
-		//println("cache hit");
-		//seen.inc(key, 1'i64);
-		let ws = seen.get(key);
-		return parse_i64_delim(ws, "[],");
-		//return;
-	}
-	//seen.set(key, 1'i64);
-	//seen.inc(key, 1'i64);
-
-	if s1 >= SCORE_LIMIT
-	{
-		w1 += 1;
-		//w1 += seen.get(key);
-		seen.set(key, "[1,0]");
-		return [1'i64, 0'i64];
-		//return 1;
-	}
-	if s2 >= SCORE_LIMIT
-	{
-		w2 += 1;
-		//w2 += seen.get(key);
-		//return;
-		seen.set(key, "[0,1]");
-		return [0'i64, 1'i64];
-		//return 2;
-	}
-	if turn == 1
-	{
-		for vv in v
-		{
-			let p = p1 + vv;
-			p = (p - 1) % n + 1;
-			let s = s1 + p;
-			let wi = dfs(p, s, p2, s2, &v, 2);
-		}
-	}
-	else
-	{
-		for vv in v
-		{
-			let p = p2 + vv;
-			p = (p - 1) % n + 1;
-			let s = s2 + p;
-			let wi = dfs(p1, s1, p, s, &v, 1);
-		}
-	}
-	return [0'i64, 0'i64];
-	//return 0;
 }
 
 //==============================================================================
