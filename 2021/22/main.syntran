@@ -139,11 +139,13 @@ fn add_cube(c: &Cubes, a: Cube)
 		const envz = a.zlo <= c.zlo[i] and c.zhi[i] <= a.zhi;
 
 		// Straddling low end?
+		// TODO: <= for lo to hi comparisons? Doesn't seem to matter?
 		const stlx = a.xlo < c.xlo[i] and c.xlo[i] < a.xhi and a.xhi < c.xhi[i];
 		const stly = a.ylo < c.ylo[i] and c.ylo[i] < a.yhi and a.yhi < c.yhi[i];
 		const stlz = a.zlo < c.zlo[i] and c.zlo[i] < a.zhi and a.zhi < c.zhi[i];
 
 		// Straddling high end?
+		// TODO: <= for lo to hi comparisons? Doesn't seem to matter?
 		const sthx = c.xlo[i] < a.xlo and a.xlo < c.xhi[i] and c.xhi[i] < a.xhi;
 		const sthy = c.ylo[i] < a.ylo and a.ylo < c.yhi[i] and c.yhi[i] < a.yhi;
 		const sthz = c.zlo[i] < a.zlo and a.zlo < c.zhi[i] and c.zhi[i] < a.zhi;
@@ -177,6 +179,7 @@ fn add_cube(c: &Cubes, a: Cube)
 			c.xhi = [c.xhi[:i], c.xhi[i+1:]];
 			c.yhi = [c.yhi[:i], c.yhi[i+1:]];
 			c.zhi = [c.zhi[:i], c.zhi[i+1:]];
+			c.n -= 1;
 			add_cube(&c, a);
 			return;
 		}
@@ -618,116 +621,6 @@ fn part2(args: &const Args): str
 			(c.zhi[i] - c.zlo[i]);
 
 	println();
-
-	println("part 2 = ", sum_);
-	return str(sum_);
-}
-
-fn part2_idk(args: &const Args): str
-{
-	let sum_ = 0'i64;
-
-	unit_tests();
-	return "";
-
-	const XMIN = -50;
-	const YMIN = -50;
-	const ZMIN = -50;
-	const XMAX =  50+1;
-	const YMAX =  50+1;
-	const ZMAX =  50+1;
-
-	const NX = XMAX - XMIN;
-	const NY = YMAX - YMIN;
-	const NZ = ZMAX - ZMIN;
-	let g = [false; NX, NY, NZ];
-
-	const CAP = countln_(args.input_filename);
-	println("CAP = ", CAP);
-
-	let xmins = [0; CAP];
-	let ymins = [0; CAP];
-	let zmins = [0; CAP];
-	let xmaxs = [0; CAP];
-	let ymaxs = [0; CAP];
-	let zmaxs = [0; CAP];
-	let non = 0;
-
-	let vol = 0'i64;
-	let f = open(args.input_filename, "r");
-	let str_ = readln(f);
-	while not eof(f)
-	{
-		println("str_ = ", str_);
-
-		let nums = parse_i32_delim(str_, "onff xyz=.,");
-		println("nums = ", nums);
-		const xmin = nums[0];
-		const xmax = nums[1]+1;
-		const ymin = nums[2];
-		const ymax = nums[3]+1;
-		const zmin = nums[4];
-		const zmax = nums[5]+1;
-
-		const is_on = starts_with_(str_, "on");
-
-		println();
-		str_ = readln(f);
-
-		// TODO
-
-		//if (xmax < XMIN) or
-		//   (ymax < YMIN) or
-		//   (zmax < ZMIN) or
-		//   (xmin >= XMAX) or
-		//   (ymin >= YMAX) or
-		//   (zmin >= ZMAX)
-		//{
-		//	if is_on
-		//	{
-		//		vol += i64(xmax-xmin) * (ymax-ymin) * (zmax-zmin);
-
-		//		// Just curious. Do any of the large "on" cubes overlap or do
-		//		// they all happen to be disjoint?
-		//		let any_overlap = false;
-		//		for i in [0: non]
-		//		{
-		//			const disx = xmin >= xmaxs[i] or xmins[i] >= xmax;
-		//			const disy = ymin >= ymaxs[i] or ymins[i] >= ymax;
-		//			const disz = zmin >= zmaxs[i] or zmins[i] >= zmax;
-		//			const disjoint = disx or disy or disz;
-		//			const overlap = not disjoint;
-		//			any_overlap = any_overlap or overlap;
-		//		}
-		//		println("any_overlap = ", any_overlap);
-
-		//		xmins[non] = xmin;
-		//		ymins[non] = ymin;
-		//		zmins[non] = zmin;
-		//		xmaxs[non] = xmax;
-		//		ymaxs[non] = ymax;
-		//		zmaxs[non] = zmax;
-
-		//		non += 1;
-		//	}
-		//}
-		//else
-		//{
-		//	g[
-		//		xmin-XMIN: xmax-XMIN,
-		//		ymin-YMIN: ymax-YMIN,
-		//		zmin-ZMIN: zmax-ZMIN,
-		//	] = is_on;
-		//}
-	}
-	close(f);
-	sum_ = count(g);
-	println("non = ", non);
-	println();
-
-	println("vol = ", vol);
-	println("sum = ", sum_);
-	println("vol + sum_ = ", vol + sum_);
 
 	println("part 2 = ", sum_);
 	return str(sum_);
