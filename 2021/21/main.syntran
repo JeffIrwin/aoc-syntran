@@ -142,7 +142,7 @@ fn part2(args: &const Args): str
 	let cnt  = [0'i64; 11, SCORE_LIMIT+1, 11, SCORE_LIMIT+1, 3, SCORE_LIMIT+1];
 	let seen = [false; 11, SCORE_LIMIT+1, 11, SCORE_LIMIT+1, 3, SCORE_LIMIT+1];
 	q.push([p1, 0, p2, 0, 1, 0]);
-	cnt[p1, 0, p2, 0, 1, 0] = 1;
+	cnt    [p1, 0, p2, 0, 1, 0] = 1;
 	while true
 	{
 		if (q.is_empty) break;
@@ -165,9 +165,9 @@ fn part2(args: &const Args): str
 					w1 += c * hist[vv];
 					continue;
 				}
-				cnt[p, s, p2, s2, 2, tc+1] += c * hist[vv];
+				cnt    [p, s, p2, s2, 2, tc+1] += c * hist[vv];
 				if seen[p, s, p2, s2, 2, tc+1] continue;
-				seen[p, s, p2, s2, 2, tc+1] = true;
+				seen   [p, s, p2, s2, 2, tc+1] = true;
 				q.push([p, s, p2, s2, 2, tc+1]);
 			}
 		}
@@ -182,9 +182,9 @@ fn part2(args: &const Args): str
 					w2 += c * hist[vv];
 					continue;
 				}
-				cnt[p1, s1, p, s, 1, tc+1] += c * hist[vv];
+				cnt    [p1, s1, p, s, 1, tc+1] += c * hist[vv];
 				if seen[p1, s1, p, s, 1, tc+1] continue;
-				seen[p1, s1, p, s, 1, tc+1] = true;
+				seen   [p1, s1, p, s, 1, tc+1] = true;
 				q.push([p1, s1, p, s, 1, tc+1]);
 			}
 		}

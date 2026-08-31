@@ -1,0 +1,684 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const XMIN = -50;
+	const YMIN = -50;
+	const ZMIN = -50;
+	const XMAX =  50+1;
+	const YMAX =  50+1;
+	const ZMAX =  50+1;
+
+	const NX = XMAX - XMIN;
+	const NY = YMAX - YMIN;
+	const NZ = ZMAX - ZMIN;
+	let g = [false; NX, NY, NZ];
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let nums = parse_i32_delim(str_, "onff xyz=.,");
+		println("nums = ", nums);
+		const xmin = nums[0];
+		const xmax = nums[1]+1;
+		const ymin = nums[2];
+		const ymax = nums[3]+1;
+		const zmin = nums[4];
+		const zmax = nums[5]+1;
+
+		const is_on = starts_with_(str_, "on");
+
+		println();
+		str_ = readln(f);
+
+		if (xmax < XMIN) continue;
+		if (ymax < YMIN) continue;
+		if (zmax < ZMIN) continue;
+		if (xmin >= XMAX) continue;
+		if (ymin >= YMAX) continue;
+		if (zmin >= ZMAX) continue;
+
+		g[
+			xmin-XMIN: xmax-XMIN,
+			ymin-YMIN: ymax-YMIN,
+			zmin-ZMIN: zmax-ZMIN,
+		] = is_on;
+	}
+	close(f);
+	sum_ = count(g);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+struct Cube
+{
+	xlo: i32,
+	ylo: i32,
+	zlo: i32,
+	xhi: i32,
+	yhi: i32,
+	zhi: i32,
+}
+struct Cubes
+{
+	n: i32,
+	xlo: [i32; :],
+	ylo: [i32; :],
+	zlo: [i32; :],
+	xhi: [i32; :],
+	yhi: [i32; :],
+	zhi: [i32; :],
+}
+fn new_cubes(): Cubes
+{
+	const n = 0;
+	return Cubes
+	{
+		n = n,
+		xlo = [0; n],
+		ylo = [0; n],
+		zlo = [0; n],
+		xhi = [0; n],
+		yhi = [0; n],
+		zhi = [0; n],
+	};
+}
+
+fn add_cube(c: &Cubes, a: Cube)
+{
+	if c.n == 0
+	{
+		// Trivial case: first cube
+		c.n = 1;
+		c.xlo = [a.xlo];
+		c.ylo = [a.ylo];
+		c.zlo = [a.zlo];
+		c.xhi = [a.xhi];
+		c.yhi = [a.yhi];
+		c.zhi = [a.zhi];
+		return;
+	}
+	let all_disjoint = true;
+	let attached_inside = false;
+	let attached_outside = false;
+	for i in [0: c.n]
+	{
+		// Are dimensions disjoint?
+		const disx = a.xlo >= c.xhi[i] or c.xlo[i] >= a.xhi;
+		const disy = a.ylo >= c.yhi[i] or c.ylo[i] >= a.yhi;
+		const disz = a.zlo >= c.zhi[i] or c.zlo[i] >= a.zhi;
+		const disjoint = disx or disy or disz;
+		println("dis xyz = ", [disx, disy, disz]);
+		println("disjoint = ", disjoint);
+		all_disjoint = all_disjoint and disjoint;
+
+		// Are added dimensions completely inside
+		const insx = c.xlo[i] <= a.xlo and a.xhi <= c.xhi[i];
+		const insy = c.ylo[i] <= a.ylo and a.yhi <= c.yhi[i];
+		const insz = c.zlo[i] <= a.zlo and a.zhi <= c.zhi[i];
+
+		// Do added dimensions completely envelope an initial cube?
+		const envx = a.xlo <= c.xlo[i] and c.xhi[i] <= a.xhi;
+		const envy = a.ylo <= c.ylo[i] and c.yhi[i] <= a.yhi;
+		const envz = a.zlo <= c.zlo[i] and c.zhi[i] <= a.zhi;
+		println("envx = ", envx);
+
+		// Straddling low end?
+		const stlx = a.xlo < c.xlo[i] and c.xlo[i] < a.xhi and a.xhi < c.xhi[i];
+		const stly = a.ylo < c.ylo[i] and c.ylo[i] < a.yhi and a.yhi < c.yhi[i];
+		const stlz = a.zlo < c.zlo[i] and c.zlo[i] < a.zhi and a.zhi < c.zhi[i];
+
+		// Straddling high end?
+		const sthx = c.xlo[i] < a.xlo and a.xlo < c.xhi[i] and c.xhi[i] < a.xhi;
+		const sthy = c.ylo[i] < a.ylo and a.ylo < c.yhi[i] and c.yhi[i] < a.yhi;
+		const sthz = c.zlo[i] < a.zlo and a.zlo < c.zhi[i] and c.zhi[i] < a.zhi;
+
+		if disjoint
+		{
+			// no-op. all_disjoint case appended below
+		}
+		else if insx and insy and insz
+		{
+			// no-op. retain initial cube which `a` is inside of
+			println("completely inside");
+		}
+		else if envx and envy and envz
+		{
+			// Added cube completely envelopes initial cube. Replace initial
+			// with added
+			println("completely enveloping");
+			c.xlo[i] = a.xlo ; c.xhi[i] = a.xhi;
+			c.ylo[i] = a.ylo ; c.yhi[i] = a.yhi;
+			c.zlo[i] = a.zlo ; c.zhi[i] = a.zhi;
+		}
+
+		else if stlx and insy and insz
+		{
+			// Added cube is attached inside of initial -x face. Truncate added
+			// cube and append later
+			attached_inside = true;
+			a.xhi = c.xlo[i];  // truncate x
+			println("attached inside of initial -x face");
+		}
+		else if stly and insz and insx
+		{
+			attached_inside = true;
+			a.yhi = c.ylo[i];  // truncate y
+			println("attached inside of initial -y face");
+		}
+		else if stlz and insx and insy
+		{
+			attached_inside = true;
+			a.zhi = c.zlo[i];  // truncate z
+			println("attached inside of initial -z face");
+		}
+
+		else if sthx and insy and insz
+		{
+			// Added cube is attached inside of initial +x face. Truncate added
+			// cube and append later
+			attached_inside = true;
+			a.xlo = c.xhi[i];  // truncate x
+			println("attached inside of initial +x face");
+		}
+		else if sthy and insz and insx
+		{
+			attached_inside = true;
+			a.ylo = c.yhi[i];  // truncate y
+			println("attached inside of initial +y face");
+		}
+		else if sthz and insx and insy
+		{
+			attached_inside = true;
+			a.zlo = c.zhi[i];  // truncate z
+			println("attached inside of initial +z face");
+		}
+
+		else if stlx and envy and envz
+		{
+			// Added cube is attached enveloping of initial -x face. Truncate
+			// initial cube and append added cube later
+			attached_outside = true;
+			c.xlo[i] = a.xhi;  // truncate x
+			println("attached outside of initial -x face");
+		}
+		else if stly and envz and envx
+		{
+			// Added cube is attached enveloping of initial -x face. Truncate
+			// initial cube and append added cube later
+			attached_outside = true;
+			c.ylo[i] = a.yhi;  // truncate y
+			println("attached outside of initial -x face");
+		}
+		else if stlz and envx and envy
+		{
+			// Added cube is attached enveloping of initial -x face. Truncate
+			// initial cube and append added cube later
+			attached_outside = true;
+			c.zlo[i] = a.zhi;  // truncate z
+			println("attached outside of initial -x face");
+		}
+
+		else if sthx //and sthy and insz
+		{
+			// Inside of +x+y edge
+			//
+			// Subdivide added cube into two and recurse
+			//
+			// I might be overcomplicating the recursive cases. You can probably
+			// just split on one straddling dimension and then let recursion
+			// sort out the rest
+			//
+
+			// Just split at c.xhi
+			//println("inside of +x+y edge");
+			println("straddling +x");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = c.xhi[i],
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			const a2 = Cube{
+				xlo = c.xhi[i], xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			return;
+
+			//const a1 = Cube{
+			//	xlo = c.xhi[i], xhi = a.xhi,
+			//	ylo = a.ylo   , yhi = c.yhi[i],
+			//	zlo = a.zlo   , zhi = a.zhi,
+			//};
+			//const a2 = Cube{
+			//	xlo = a.xlo   , xhi = a.xhi,
+			//	ylo = c.yhi[i], yhi = a.yhi,
+			//	zlo = a.zlo   , zhi = a.zhi,
+			//};
+		}
+		else if sthy
+		{
+			// Split at c.yhi
+			println("straddling +y");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = c.yhi[i],
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			const a2 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = c.yhi[i], yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			return;
+		}
+		else if sthz
+		{
+			// Split at c.zhi
+			println("straddling +z");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = c.zhi[i],
+			};
+			const a2 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = c.zhi[i], zhi = a.zhi,
+			};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			return;
+		}
+
+		else if stlx
+		{
+			// Just split at c.xlo
+			println("straddling -x");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = c.xlo[i],
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			const a2 = Cube{
+				xlo = c.xlo[i], xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			return;
+		}
+		else if stly
+		{
+			// Split at c.ylo
+			println("straddling -y");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = c.ylo[i],
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			const a2 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = c.ylo[i], yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi,
+			};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			return;
+		}
+		else if stlz
+		{
+			// Split at c.zlo
+			println("straddling -z");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = c.zlo[i],
+			};
+			const a2 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = c.zlo[i], zhi = a.zhi,
+			};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			return;
+		}
+
+		else
+		{
+			println(ERROR_STR + "bad case in add_cube()");
+			exit(1);
+		}
+	}
+
+	if all_disjoint or attached_inside or attached_outside
+	{
+		// Simply append the added cube to the list. Non-optimal growth
+		// reallocation
+		c.n += 1;
+		c.xlo = [c.xlo, [a.xlo]];
+		c.ylo = [c.ylo, [a.ylo]];
+		c.zlo = [c.zlo, [a.zlo]];
+		c.xhi = [c.xhi, [a.xhi]];
+		c.yhi = [c.yhi, [a.yhi]];
+		c.zhi = [c.zhi, [a.zhi]];
+	}
+
+	return;
+}
+
+fn test_add(c: Cubes, a: Cube)
+{
+	// Merge added cube `a` into cubes `c` and verify the volume against the
+	// brute-force method from part 1
+	println();
+	println("Testing addition of a = ", a);
+	const xlo = min(minval(c.xlo), a.xlo);
+	const ylo = min(minval(c.ylo), a.ylo);
+	const zlo = min(minval(c.zlo), a.zlo);
+	const xhi = max(maxval(c.xhi), a.xhi);
+	const yhi = max(maxval(c.yhi), a.yhi);
+	const zhi = max(maxval(c.zhi), a.zhi);
+	const nx = xhi - xlo;
+	const ny = yhi - ylo;
+	const nz = zhi - zlo;
+	let g = [false; nx, ny, nz];
+	for i in [0: c.n]
+		g[
+			c.xlo[i] - xlo: c.xhi[i] - xlo,
+			c.ylo[i] - ylo: c.yhi[i] - ylo,
+			c.zlo[i] - zlo: c.zhi[i] - zlo,
+		] = true;
+	println("count(g) = ", count(g));
+	g[
+		a.xlo - xlo: a.xhi - xlo,
+		a.ylo - ylo: a.yhi - ylo,
+		a.zlo - zlo: a.zhi - zlo,
+	] = true;
+	println("count(g) = ", count(g));
+	const vol_expect = count(g);
+
+	add_cube(&c, a);
+	println("c = ", c);
+
+	// Get vol from bounds only (without `g`) and compare to expected vol
+	let vol = 0;
+	for i in [0: c.n]
+	{
+		const inc =
+			(c.xhi[i] - c.xlo[i]) *
+			(c.yhi[i] - c.ylo[i]) *
+			(c.zhi[i] - c.zlo[i]);
+		println("inc = ", inc);
+		vol += inc;
+	}
+	println("vol = ", vol);
+	if vol != vol_expect
+	{
+		println(ERROR_STR + "bad volume for cube addition");
+		exit(2);
+	}
+
+	//println("xlo = ", xlo);
+}
+
+fn unit_tests()
+{
+	let init_cube = Cube{
+		xlo = -10, xhi = 10,
+		ylo = -10, yhi = 10,
+		zlo = -10, zhi = 10,
+	};
+	let init_cubes = new_cubes();
+	println("init_cubes = ", init_cubes);
+	add_cube(&init_cubes, init_cube);
+	println("init_cubes = ", init_cubes);
+
+	// Disjoint, just barely
+	test_add(init_cubes,
+		Cube{xlo = 10, xhi = 14, ylo = 10, yhi = 15, zlo = 10, zhi = 16});
+
+	// Disjoint, larger gap barely
+	test_add(init_cubes,
+		Cube{xlo = 11, xhi = 14, ylo = 12, yhi = 15, zlo = 13, zhi = 16});
+
+	// Disjoint, x only
+	test_add(init_cubes,
+		Cube{xlo = 10, xhi = 14, ylo = 5, yhi = 15, zlo = 5, zhi = 16});
+
+	// Disjoint, y only
+	test_add(init_cubes,
+		Cube{xlo = 5, xhi = 14, ylo = 10, yhi = 15, zlo = 5, zhi = 16});
+
+	// Disjoint, z only
+	test_add(init_cubes,
+		Cube{xlo = 5, xhi = 14, ylo = 5, yhi = 15, zlo = 10, zhi = 16});
+
+	// Added cube inside of initial cube
+	test_add(init_cubes,
+		Cube{xlo = -3, xhi = 4, ylo = -5, yhi = 6, zlo = -8, zhi = 4});
+
+	// Added cube completely envelopes initial cube
+	test_add(init_cubes,
+		Cube{xlo = -12, xhi = 13, ylo = -14, yhi = 15, zlo = -16, zhi = 17});
+
+	// Attached inside of -x face
+	test_add(init_cubes,
+		Cube{xlo = -12, xhi = 5, ylo = -4, yhi = 5, zlo = -6, zhi = 7});
+
+	// Attached inside of -y face
+	test_add(init_cubes,
+		Cube{xlo = -2, xhi = 5, ylo = -14, yhi = 5, zlo = -6, zhi = 7});
+
+	// Attached inside of -z face
+	test_add(init_cubes,
+		Cube{xlo = -2, xhi = 5, ylo = -4, yhi = 5, zlo = -16, zhi = 7});
+
+	// Attached inside of +x face
+	test_add(init_cubes,
+		Cube{xlo = -2, xhi = 15, ylo = -4, yhi = 5, zlo = -6, zhi = 7});
+
+	// Attached inside of +y face
+	test_add(init_cubes,
+		Cube{xlo = -2, xhi = 5, ylo = -4, yhi = 15, zlo = -6, zhi = 7});
+
+	// Attached inside of +z face
+	test_add(init_cubes,
+		Cube{xlo = -2, xhi = 5, ylo = -4, yhi = 5, zlo = -6, zhi = 17});
+
+	// Attached outside of -x face
+	test_add(init_cubes,
+		Cube{xlo = -12, xhi = 5, ylo = -14, yhi = 15, zlo = -16, zhi = 17});
+
+	// Attached outside of -y face
+	test_add(init_cubes,
+		Cube{xlo = -12, xhi = 15, ylo = -14, yhi = 5, zlo = -16, zhi = 17});
+
+	// Attached outside of -z face
+	test_add(init_cubes,
+		Cube{xlo = -12, xhi = 15, ylo = -14, yhi = 15, zlo = -16, zhi = 7});
+
+	// TODO: attached outside of +xyz faces
+
+	// TODO: interlocked cases, e.g. `stlx and insy and envz`
+	//
+	// Any more unit tests or do some end-to-end integration testing of adding a
+	// bunch of (small) cubes from a real input and self-verifying?
+	//
+	// Finally, implement cut_cube(), the subtractive counterpart of add_cube()
+
+	// Inside of +x+y edge
+	test_add(init_cubes,
+		Cube{xlo = 5, xhi = 15, ylo = 4, yhi = 14, zlo = -6, zhi = 7});
+
+	// Inside of -x+y edge
+	test_add(init_cubes,
+		Cube{xlo = -15, xhi = 5, ylo = 4, yhi = 14, zlo = -6, zhi = 7});
+
+	// Inside of +x-y edge
+	test_add(init_cubes,
+		Cube{xlo = 5, xhi = 15, ylo = -14, yhi = 4, zlo = -6, zhi = 7});
+
+	// Inside of -x-y edge
+	test_add(init_cubes,
+		Cube{xlo = -15, xhi = 5, ylo = -14, yhi = 4, zlo = -6, zhi = 7});
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	unit_tests();
+	return "";
+
+	const XMIN = -50;
+	const YMIN = -50;
+	const ZMIN = -50;
+	const XMAX =  50+1;
+	const YMAX =  50+1;
+	const ZMAX =  50+1;
+
+	const NX = XMAX - XMIN;
+	const NY = YMAX - YMIN;
+	const NZ = ZMAX - ZMIN;
+	let g = [false; NX, NY, NZ];
+
+	const CAP = countln_(args.input_filename);
+	println("CAP = ", CAP);
+
+	let xmins = [0; CAP];
+	let ymins = [0; CAP];
+	let zmins = [0; CAP];
+	let xmaxs = [0; CAP];
+	let ymaxs = [0; CAP];
+	let zmaxs = [0; CAP];
+	let non = 0;
+
+	let vol = 0'i64;
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let nums = parse_i32_delim(str_, "onff xyz=.,");
+		println("nums = ", nums);
+		const xmin = nums[0];
+		const xmax = nums[1]+1;
+		const ymin = nums[2];
+		const ymax = nums[3]+1;
+		const zmin = nums[4];
+		const zmax = nums[5]+1;
+
+		const is_on = starts_with_(str_, "on");
+
+		println();
+		str_ = readln(f);
+
+		// TODO
+
+		//if (xmax < XMIN) or
+		//   (ymax < YMIN) or
+		//   (zmax < ZMIN) or
+		//   (xmin >= XMAX) or
+		//   (ymin >= YMAX) or
+		//   (zmin >= ZMAX)
+		//{
+		//	if is_on
+		//	{
+		//		vol += i64(xmax-xmin) * (ymax-ymin) * (zmax-zmin);
+
+		//		// Just curious. Do any of the large "on" cubes overlap or do
+		//		// they all happen to be disjoint?
+		//		let any_overlap = false;
+		//		for i in [0: non]
+		//		{
+		//			const disx = xmin >= xmaxs[i] or xmins[i] >= xmax;
+		//			const disy = ymin >= ymaxs[i] or ymins[i] >= ymax;
+		//			const disz = zmin >= zmaxs[i] or zmins[i] >= zmax;
+		//			const disjoint = disx or disy or disz;
+		//			const overlap = not disjoint;
+		//			any_overlap = any_overlap or overlap;
+		//		}
+		//		println("any_overlap = ", any_overlap);
+
+		//		xmins[non] = xmin;
+		//		ymins[non] = ymin;
+		//		zmins[non] = zmin;
+		//		xmaxs[non] = xmax;
+		//		ymaxs[non] = ymax;
+		//		zmaxs[non] = zmax;
+
+		//		non += 1;
+		//	}
+		//}
+		//else
+		//{
+		//	g[
+		//		xmin-XMIN: xmax-XMIN,
+		//		ymin-YMIN: ymax-YMIN,
+		//		zmin-ZMIN: zmax-ZMIN,
+		//	] = is_on;
+		//}
+	}
+	close(f);
+	sum_ = count(g);
+	println("non = ", non);
+	println();
+
+	println("vol = ", vol);
+	println("sum = ", sum_);
+	println("vol + sum_ = ", vol + sum_);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/xx" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "REPLACE_ME_P1";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
