@@ -96,6 +96,16 @@ fn new_cubes(): Cubes
 
 fn add_cube(c: &Cubes, a: Cube)
 {
+	println();
+	println("adding a = ", a);
+	if
+		a.xlo == a.xhi or
+		a.ylo == a.yhi or
+		a.zlo == a.zhi
+	{
+		// Trivial case: empty addition
+		return;
+	}
 	if c.n == 0
 	{
 		// Trivial case: first cube
@@ -109,8 +119,6 @@ fn add_cube(c: &Cubes, a: Cube)
 		return;
 	}
 	let all_disjoint = true;
-	let attached_inside = false;
-	let attached_outside = false;
 	for i in [0: c.n]
 	{
 		// Are dimensions disjoint?
@@ -118,8 +126,6 @@ fn add_cube(c: &Cubes, a: Cube)
 		const disy = a.ylo >= c.yhi[i] or c.ylo[i] >= a.yhi;
 		const disz = a.zlo >= c.zhi[i] or c.zlo[i] >= a.zhi;
 		const disjoint = disx or disy or disz;
-		println("dis xyz = ", [disx, disy, disz]);
-		println("disjoint = ", disjoint);
 		all_disjoint = all_disjoint and disjoint;
 
 		// Are added dimensions completely inside
@@ -131,7 +137,6 @@ fn add_cube(c: &Cubes, a: Cube)
 		const envx = a.xlo <= c.xlo[i] and c.xhi[i] <= a.xhi;
 		const envy = a.ylo <= c.ylo[i] and c.yhi[i] <= a.yhi;
 		const envz = a.zlo <= c.zlo[i] and c.zhi[i] <= a.zhi;
-		println("envx = ", envx);
 
 		// Straddling low end?
 		const stlx = a.xlo < c.xlo[i] and c.xlo[i] < a.xhi and a.xhi < c.xhi[i];
@@ -142,6 +147,15 @@ fn add_cube(c: &Cubes, a: Cube)
 		const sthx = c.xlo[i] < a.xlo and a.xlo < c.xhi[i] and c.xhi[i] < a.xhi;
 		const sthy = c.ylo[i] < a.ylo and a.ylo < c.yhi[i] and c.yhi[i] < a.yhi;
 		const sthz = c.zlo[i] < a.zlo and a.zlo < c.zhi[i] and c.zhi[i] < a.zhi;
+
+		println("disjoint = ", disjoint);
+		println("a x in ", [a.xlo, a.xhi]);
+		println("c x in ", [c.xlo[i], c.xhi[i]]);
+		println("dis xyz = ", [disx, disy, disz]);
+		println("ins xyz = ", [insx, insy, insz]);
+		println("env xyz = ", [envx, envy, envz]);
+		println("stl xyz = ", [stlx, stly, stlz]);
+		println("sth xyz = ", [sthx, sthy, sthz]);
 
 		if disjoint
 		{
@@ -157,91 +171,24 @@ fn add_cube(c: &Cubes, a: Cube)
 			// Added cube completely envelopes initial cube. Replace initial
 			// with added
 			println("completely enveloping");
-			c.xlo[i] = a.xlo ; c.xhi[i] = a.xhi;
-			c.ylo[i] = a.ylo ; c.yhi[i] = a.yhi;
-			c.zlo[i] = a.zlo ; c.zhi[i] = a.zhi;
+			c.xlo = [c.xlo[:i], c.xlo[i+1:]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:]];
+			add_cube(&c, a);
+			return;
 		}
 
-		else if stlx and insy and insz
-		{
-			// Added cube is attached inside of initial -x face. Truncate added
-			// cube and append later
-			attached_inside = true;
-			a.xhi = c.xlo[i];  // truncate x
-			println("attached inside of initial -x face");
-		}
-		else if stly and insz and insx
-		{
-			attached_inside = true;
-			a.yhi = c.ylo[i];  // truncate y
-			println("attached inside of initial -y face");
-		}
-		else if stlz and insx and insy
-		{
-			attached_inside = true;
-			a.zhi = c.zlo[i];  // truncate z
-			println("attached inside of initial -z face");
-		}
-
-		else if sthx and insy and insz
-		{
-			// Added cube is attached inside of initial +x face. Truncate added
-			// cube and append later
-			attached_inside = true;
-			a.xlo = c.xhi[i];  // truncate x
-			println("attached inside of initial +x face");
-		}
-		else if sthy and insz and insx
-		{
-			attached_inside = true;
-			a.ylo = c.yhi[i];  // truncate y
-			println("attached inside of initial +y face");
-		}
-		else if sthz and insx and insy
-		{
-			attached_inside = true;
-			a.zlo = c.zhi[i];  // truncate z
-			println("attached inside of initial +z face");
-		}
-
-		else if stlx and envy and envz
-		{
-			// Added cube is attached enveloping of initial -x face. Truncate
-			// initial cube and append added cube later
-			attached_outside = true;
-			c.xlo[i] = a.xhi;  // truncate x
-			println("attached outside of initial -x face");
-		}
-		else if stly and envz and envx
-		{
-			// Added cube is attached enveloping of initial -x face. Truncate
-			// initial cube and append added cube later
-			attached_outside = true;
-			c.ylo[i] = a.yhi;  // truncate y
-			println("attached outside of initial -x face");
-		}
-		else if stlz and envx and envy
-		{
-			// Added cube is attached enveloping of initial -x face. Truncate
-			// initial cube and append added cube later
-			attached_outside = true;
-			c.zlo[i] = a.zhi;  // truncate z
-			println("attached outside of initial -x face");
-		}
+		// There is a tradeoff here of implementation complication vs
+		// efficiency. By splitting here directly, the number of cases becomes
+		// large, but we avoid recursion. Each recursive splitting call to
+		// add_cube() is O(n), so more recursion multiplies that constant factor
 
 		else if sthx //and sthy and insz
 		{
-			// Inside of +x+y edge
-			//
-			// Subdivide added cube into two and recurse
-			//
-			// I might be overcomplicating the recursive cases. You can probably
-			// just split on one straddling dimension and then let recursion
-			// sort out the rest
-			//
-
 			// Just split at c.xhi
-			//println("inside of +x+y edge");
 			println("straddling +x");
 			const a1 = Cube{
 				xlo = a.xlo, xhi = c.xhi[i],
@@ -256,17 +203,6 @@ fn add_cube(c: &Cubes, a: Cube)
 			add_cube(&c, a1);
 			add_cube(&c, a2);
 			return;
-
-			//const a1 = Cube{
-			//	xlo = c.xhi[i], xhi = a.xhi,
-			//	ylo = a.ylo   , yhi = c.yhi[i],
-			//	zlo = a.zlo   , zhi = a.zhi,
-			//};
-			//const a2 = Cube{
-			//	xlo = a.xlo   , xhi = a.xhi,
-			//	ylo = c.yhi[i], yhi = a.yhi,
-			//	zlo = a.zlo   , zhi = a.zhi,
-			//};
 		}
 		else if sthy
 		{
@@ -360,6 +296,70 @@ fn add_cube(c: &Cubes, a: Cube)
 			return;
 		}
 
+		else if envx and not insx
+		{
+			// Recursive 1d enveloping case. Two splits
+			println("enveloping x");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = c.xlo[i],
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi};
+			const a2 = Cube{
+				xlo = c.xlo[i], xhi = c.xhi[i],
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi};
+			const a3 = Cube{
+				xlo = c.xhi[i], xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			add_cube(&c, a3);
+			return;
+		}
+		else if envy and not insy
+		{
+			// Recursive 1d enveloping case. Two splits
+			println("enveloping y");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = c.ylo[i],
+				zlo = a.zlo, zhi = a.zhi};
+			const a2 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = c.ylo[i], yhi = c.yhi[i],
+				zlo = a.zlo, zhi = a.zhi};
+			const a3 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = c.yhi[i], yhi = a.yhi,
+				zlo = a.zlo, zhi = a.zhi};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			add_cube(&c, a3);
+			return;
+		}
+		else if envz and not insz
+		{
+			// Recursive 1d enveloping case. Two splits
+			println("enveloping z");
+			const a1 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = a.zlo, zhi = c.zlo[i]};
+			const a2 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = c.zlo[i], zhi = c.zhi[i]};
+			const a3 = Cube{
+				xlo = a.xlo, xhi = a.xhi,
+				ylo = a.ylo, yhi = a.yhi,
+				zlo = c.zhi[i], zhi = a.zhi};
+			add_cube(&c, a1);
+			add_cube(&c, a2);
+			add_cube(&c, a3);
+			return;
+		}
+
 		else
 		{
 			println(ERROR_STR + "bad case in add_cube()");
@@ -367,7 +367,7 @@ fn add_cube(c: &Cubes, a: Cube)
 		}
 	}
 
-	if all_disjoint or attached_inside or attached_outside
+	if all_disjoint
 	{
 		// Simply append the added cube to the list. Non-optimal growth
 		// reallocation
@@ -514,14 +514,32 @@ fn unit_tests()
 	test_add(init_cubes,
 		Cube{xlo = -12, xhi = 15, ylo = -14, yhi = 15, zlo = -16, zhi = 7});
 
-	// TODO: attached outside of +xyz faces
+	// Attached outside of +xyz faces respectively
+	test_add(init_cubes,
+		Cube{xlo = 2, xhi = 15, ylo = -14, yhi = 15, zlo = -16, zhi = 17});
+	test_add(init_cubes,
+		Cube{xlo = -12, xhi = 15, ylo = 4, yhi = 15, zlo = -16, zhi = 17});
+	test_add(init_cubes,
+		Cube{xlo = -12, xhi = 15, ylo = -14, yhi = 15, zlo = 6, zhi = 17});
 
-	// TODO: interlocked cases, e.g. `stlx and insy and envz`
-	//
+	// Interlocked cases, e.g. `stlx and insy and envz`
+	println("interlock 1");
+	test_add(init_cubes,  // stlx and insy and envz
+		Cube{xlo = -12, xhi = 5, ylo = -4, yhi = 5, zlo = -16, zhi = 17});
+	test_add(init_cubes,  // insx and envy and sthz
+		Cube{xlo = -2, xhi = 5, ylo = -14, yhi = 15, zlo = -6, zhi = 17});
+	test_add(init_cubes,  // envx and sthy and insz
+		Cube{xlo = -12, xhi = 15, ylo = -4, yhi = 15, zlo = -6, zhi = 7});
+
 	// Any more unit tests or do some end-to-end integration testing of adding a
-	// bunch of (small) cubes from a real input and self-verifying?
+	// bunch of (small) cubes from a real input and self-verifying? Not really
+	// sure if the recursive implementation of add_cube is correct or if there
+	// might be latent bugs for 2+ initial cubes which i haven't seen yet
+	// starting with just 1 initial cube. Is the recursion ok when the added
+	// cube intersects with multiple initial cubes? 
 	//
 	// Finally, implement cut_cube(), the subtractive counterpart of add_cube()
+	// which is almost done
 
 	// Inside of +x+y edge
 	test_add(init_cubes,
@@ -538,9 +556,74 @@ fn unit_tests()
 	// Inside of -x-y edge
 	test_add(init_cubes,
 		Cube{xlo = -15, xhi = 5, ylo = -14, yhi = 4, zlo = -6, zhi = 7});
+
+	test_add(init_cubes,  // envx and insy and insz
+		Cube{xlo = -15, xhi = 15, ylo = -4, yhi = 4, zlo = -6, zhi = 7});
+	test_add(init_cubes,  // envx and envy and insz
+		Cube{xlo = -15, xhi = 15, ylo = -14, yhi = 14, zlo = -6, zhi = 7});
 }
 
 fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	unit_tests();
+	//return "";
+
+	let c = new_cubes();
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	let kk = 0;
+	while not eof(f)
+	{
+		println("str_ = ", str_);
+
+		let nums = parse_i32_delim(str_, "onff xyz=.,");
+		println("nums = ", nums);
+		const xmin = nums[0];
+		const xmax = nums[1]+1;
+		const ymin = nums[2];
+		const ymax = nums[3]+1;
+		const zmin = nums[4];
+		const zmax = nums[5]+1;
+
+		const is_on = starts_with_(str_, "on");
+
+		println();
+		str_ = readln(f);
+		println("kk = ", kk);
+		kk += 1;
+
+		if is_on
+		{
+			let a = Cube{
+				xlo = xmin, xhi = xmax,
+				ylo = ymin, yhi = ymax,
+				zlo = zmin, zhi = zmax,
+			};
+			add_cube(&c, a);
+			//if (kk == 3) break;
+		}
+		else
+		{
+			// TODO
+		}
+	}
+	close(f);
+	println("number of divided cubes = ", c.n);
+	for i in [0: c.n]
+		sum_ +=
+			(c.xhi[i] - c.xlo[i]) *
+			(c.yhi[i] - c.ylo[i]) *
+			(c.zhi[i] - c.zlo[i]);
+
+	println();
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn part2_idk(args: &const Args): str
 {
 	let sum_ = 0'i64;
 
