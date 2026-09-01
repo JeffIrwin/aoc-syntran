@@ -94,14 +94,195 @@ fn new_cubes(): Cubes
 	};
 }
 
+fn cut_cube(c: &Cubes, d: Cube)
+{
+	//println();
+	//println("cutting d = ", d);
+	if
+		d.xlo >= d.xhi or
+		d.ylo >= d.yhi or
+		d.zlo >= d.zhi
+	{
+		// Trivial case: empty cut
+		return;
+	}
+	if c.n == 0
+	{
+		// Trivial case: nothing to cut
+		return;
+	}
+	for i in [0: c.n]
+	{
+		// Are dimensions disjoint?
+		const disx = d.xlo >= c.xhi[i] or c.xlo[i] >= d.xhi;
+		const disy = d.ylo >= c.yhi[i] or c.ylo[i] >= d.yhi;
+		const disz = d.zlo >= c.zhi[i] or c.zlo[i] >= d.zhi;
+		const disjoint = disx or disy or disz;
+
+		// Are cut dimensions completely inside
+		const insx = c.xlo[i] <= d.xlo and d.xhi <= c.xhi[i];
+		const insy = c.ylo[i] <= d.ylo and d.yhi <= c.yhi[i];
+		const insz = c.zlo[i] <= d.zlo and d.zhi <= c.zhi[i];
+
+		// Do cut dimensions completely envelope an initial cube?
+		const envx = d.xlo <= c.xlo[i] and c.xhi[i] <= d.xhi;
+		const envy = d.ylo <= c.ylo[i] and c.yhi[i] <= d.yhi;
+		const envz = d.zlo <= c.zlo[i] and c.zhi[i] <= d.zhi;
+
+		// Straddling low end?
+		const stlx = d.xlo < c.xlo[i] and c.xlo[i] <= d.xhi and d.xhi < c.xhi[i];
+		const stly = d.ylo < c.ylo[i] and c.ylo[i] <= d.yhi and d.yhi < c.yhi[i];
+		const stlz = d.zlo < c.zlo[i] and c.zlo[i] <= d.zhi and d.zhi < c.zhi[i];
+
+		// Straddling high end?
+		const sthx = c.xlo[i] < d.xlo and d.xlo <= c.xhi[i] and c.xhi[i] < d.xhi;
+		const sthy = c.ylo[i] < d.ylo and d.ylo <= c.yhi[i] and c.yhi[i] < d.yhi;
+		const sthz = c.zlo[i] < d.zlo and d.zlo <= c.zhi[i] and c.zhi[i] < d.zhi;
+
+		//println("disjoint = ", disjoint);
+		//println("d x in ", [d.xlo, d.xhi]);
+		//println("c x in ", [c.xlo[i], c.xhi[i]]);
+		//println("dis xyz = ", [disx, disy, disz]);
+		//println("ins xyz = ", [insx, insy, insz]);
+		//println("env xyz = ", [envx, envy, envz]);
+		//println("stl xyz = ", [stlx, stly, stlz]);
+		//println("sth xyz = ", [sthx, sthy, sthz]);
+
+		if disjoint
+		{
+			// no-op
+		}
+		else if envx and envy and envz
+		{
+			// Complete cut of this cube
+			//println("completely enveloping");
+			c.xlo = [c.xlo[:i], c.xlo[i+1:]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:]];
+			c.n -= 1;
+			cut_cube(&c, d);
+			return;
+		}
+
+		else if stlx or sthx
+		{
+			// Split initial cube in x direction. Replace initial cube with two
+			// new cubes and then recurse cutting
+			//println("straddling +-x");
+			let split = d.xlo;
+			if (stlx) split = d.xhi;
+			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], split   ]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i]]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i]]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:], [split   , c.xhi[i]]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i]]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i]]];
+			c.n += 1;  // remove 1 and append 2
+			cut_cube(&c, d);
+			return;
+		}
+		else if stly or sthy
+		{
+			// Split in y
+			//println("straddling +-y");
+			let split = d.ylo;
+			if (stly) split = d.yhi;
+			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i]]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], split   ]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i]]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i]]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:], [split   , c.yhi[i]]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i]]];
+			c.n += 1;  // remove 1 and append 2
+			cut_cube(&c, d);
+			return;
+		}
+		else if stlz or sthz
+		{
+			// Split in z
+			//println("straddling +-z");
+			let split = d.zlo;
+			if (stlz) split = d.zhi;
+			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i]]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i]]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], split   ]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i]]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i]]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:], [split   , c.zhi[i]]];
+			c.n += 1;  // remove 1 and append 2
+			cut_cube(&c, d);
+			return;
+		}
+
+		else if insx and not envx
+		{
+			// Split into 3 in x
+			//println("inside x");
+			let spl1 = d.xlo;
+			let spl2 = d.xhi;
+			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], spl1    , spl2    ]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i], c.ylo[i]]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i], c.zlo[i]]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:], [spl1    , spl2    , c.xhi[i]]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i], c.yhi[i]]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i], c.zhi[i]]];
+			c.n += 2;  // remove 1 and append 3
+			cut_cube(&c, d);
+			return;
+		}
+		else if insy and not envy
+		{
+			// Split into 3 in y
+			//println("inside y");
+			let spl1 = d.ylo;
+			let spl2 = d.yhi;
+			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i], c.xlo[i]]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], spl1    , spl2    ]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i], c.zlo[i]]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i], c.xhi[i]]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:], [spl1    , spl2    , c.yhi[i]]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i], c.zhi[i]]];
+			c.n += 2;  // remove 1 and append 3
+			cut_cube(&c, d);
+			return;
+		}
+		else if insz and not envz
+		{
+			// Split into 3 in z
+			//println("inside z");
+			let spl1 = d.zlo;
+			let spl2 = d.zhi;
+			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i], c.xlo[i]]];
+			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i], c.ylo[i]]];
+			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], spl1    , spl2    ]];
+			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i], c.xhi[i]]];
+			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i], c.yhi[i]]];
+			c.zhi = [c.zhi[:i], c.zhi[i+1:], [spl1    , spl2    , c.zhi[i]]];
+			c.n += 2;  // remove 1 and append 3
+			cut_cube(&c, d);
+			return;
+		}
+
+		else
+		{
+			println(ERROR_STR + "unhandled case in cut_cube()");
+			exit(1);
+		}
+	}
+	return;
+}
+
 fn add_cube(c: &Cubes, a: Cube)
 {
-	println();
-	println("adding a = ", a);
+	//println();
+	//println("adding a = ", a);
 	if
-		a.xlo == a.xhi or
-		a.ylo == a.yhi or
-		a.zlo == a.zhi
+		a.xlo >= a.xhi or
+		a.ylo >= a.yhi or
+		a.zlo >= a.zhi
 	{
 		// Trivial case: empty addition
 		return;
@@ -140,24 +321,24 @@ fn add_cube(c: &Cubes, a: Cube)
 
 		// Straddling low end?
 		// TODO: <= for lo to hi comparisons? Doesn't seem to matter?
-		const stlx = a.xlo < c.xlo[i] and c.xlo[i] < a.xhi and a.xhi < c.xhi[i];
-		const stly = a.ylo < c.ylo[i] and c.ylo[i] < a.yhi and a.yhi < c.yhi[i];
-		const stlz = a.zlo < c.zlo[i] and c.zlo[i] < a.zhi and a.zhi < c.zhi[i];
+		const stlx = a.xlo < c.xlo[i] and c.xlo[i] <= a.xhi and a.xhi < c.xhi[i];
+		const stly = a.ylo < c.ylo[i] and c.ylo[i] <= a.yhi and a.yhi < c.yhi[i];
+		const stlz = a.zlo < c.zlo[i] and c.zlo[i] <= a.zhi and a.zhi < c.zhi[i];
 
 		// Straddling high end?
 		// TODO: <= for lo to hi comparisons? Doesn't seem to matter?
-		const sthx = c.xlo[i] < a.xlo and a.xlo < c.xhi[i] and c.xhi[i] < a.xhi;
-		const sthy = c.ylo[i] < a.ylo and a.ylo < c.yhi[i] and c.yhi[i] < a.yhi;
-		const sthz = c.zlo[i] < a.zlo and a.zlo < c.zhi[i] and c.zhi[i] < a.zhi;
+		const sthx = c.xlo[i] < a.xlo and a.xlo <= c.xhi[i] and c.xhi[i] < a.xhi;
+		const sthy = c.ylo[i] < a.ylo and a.ylo <= c.yhi[i] and c.yhi[i] < a.yhi;
+		const sthz = c.zlo[i] < a.zlo and a.zlo <= c.zhi[i] and c.zhi[i] < a.zhi;
 
-		println("disjoint = ", disjoint);
-		println("a x in ", [a.xlo, a.xhi]);
-		println("c x in ", [c.xlo[i], c.xhi[i]]);
-		println("dis xyz = ", [disx, disy, disz]);
-		println("ins xyz = ", [insx, insy, insz]);
-		println("env xyz = ", [envx, envy, envz]);
-		println("stl xyz = ", [stlx, stly, stlz]);
-		println("sth xyz = ", [sthx, sthy, sthz]);
+		//println("disjoint = ", disjoint);
+		//println("a x in ", [a.xlo, a.xhi]);
+		//println("c x in ", [c.xlo[i], c.xhi[i]]);
+		//println("dis xyz = ", [disx, disy, disz]);
+		//println("ins xyz = ", [insx, insy, insz]);
+		//println("env xyz = ", [envx, envy, envz]);
+		//println("stl xyz = ", [stlx, stly, stlz]);
+		//println("sth xyz = ", [sthx, sthy, sthz]);
 
 		if disjoint
 		{
@@ -166,13 +347,14 @@ fn add_cube(c: &Cubes, a: Cube)
 		else if insx and insy and insz
 		{
 			// no-op. retain initial cube which `a` is inside of
-			println("completely inside");
+			//println("completely inside");
+			return;
 		}
 		else if envx and envy and envz
 		{
 			// Added cube completely envelopes initial cube. Replace initial
 			// with added
-			println("completely enveloping");
+			//println("completely enveloping");
 			c.xlo = [c.xlo[:i], c.xlo[i+1:]];
 			c.ylo = [c.ylo[:i], c.ylo[i+1:]];
 			c.zlo = [c.zlo[:i], c.zlo[i+1:]];
@@ -184,77 +366,19 @@ fn add_cube(c: &Cubes, a: Cube)
 			return;
 		}
 
-		// There is a tradeoff here of implementation complication vs
-		// efficiency. By splitting here directly, the number of cases becomes
-		// large, but we avoid recursion. Each recursive splitting call to
-		// add_cube() is O(n), so more recursion multiplies that constant factor
-
-		else if sthx //and sthy and insz
+		else if stlx or sthx
 		{
-			// Just split at c.xhi
-			println("straddling +x");
+			// Split in x direction
+			//println("straddling +-x");
+			let split = c.xlo[i];
+			if (sthx) split = c.xhi[i];
 			const a1 = Cube{
-				xlo = a.xlo, xhi = c.xhi[i],
+				xlo = a.xlo, xhi = split,
 				ylo = a.ylo, yhi = a.yhi,
 				zlo = a.zlo, zhi = a.zhi,
 			};
 			const a2 = Cube{
-				xlo = c.xhi[i], xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			return;
-		}
-		else if sthy
-		{
-			// Split at c.yhi
-			println("straddling +y");
-			const a1 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = c.yhi[i],
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			const a2 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = c.yhi[i], yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			return;
-		}
-		else if sthz
-		{
-			// Split at c.zhi
-			println("straddling +z");
-			const a1 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = c.zhi[i],
-			};
-			const a2 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = c.zhi[i], zhi = a.zhi,
-			};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			return;
-		}
-
-		else if stlx
-		{
-			// Just split at c.xlo
-			println("straddling -x");
-			const a1 = Cube{
-				xlo = a.xlo, xhi = c.xlo[i],
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			const a2 = Cube{
-				xlo = c.xlo[i], xhi = a.xhi,
+				xlo = split, xhi = a.xhi,
 				ylo = a.ylo, yhi = a.yhi,
 				zlo = a.zlo, zhi = a.zhi,
 			};
@@ -262,37 +386,42 @@ fn add_cube(c: &Cubes, a: Cube)
 			add_cube(&c, a2);
 			return;
 		}
-		else if stly
+
+		else if stly or sthy
 		{
-			// Split at c.ylo
-			println("straddling -y");
+			// Split in y
+			//println("straddling +-y");
+			let split = c.ylo[i];
+			if (sthy) split = c.yhi[i];
 			const a1 = Cube{
 				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = c.ylo[i],
+				ylo = a.ylo, yhi = split,
 				zlo = a.zlo, zhi = a.zhi,
 			};
 			const a2 = Cube{
 				xlo = a.xlo, xhi = a.xhi,
-				ylo = c.ylo[i], yhi = a.yhi,
+				ylo = split, yhi = a.yhi,
 				zlo = a.zlo, zhi = a.zhi,
 			};
 			add_cube(&c, a1);
 			add_cube(&c, a2);
 			return;
 		}
-		else if stlz
+		else if stlz or sthz
 		{
-			// Split at c.zlo
-			println("straddling -z");
+			// Split in z
+			//println("straddling +-z");
+			let split = c.zlo[i];
+			if (sthz) split = c.zhi[i];
 			const a1 = Cube{
 				xlo = a.xlo, xhi = a.xhi,
 				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = c.zlo[i],
+				zlo = a.zlo, zhi = split,
 			};
 			const a2 = Cube{
 				xlo = a.xlo, xhi = a.xhi,
 				ylo = a.ylo, yhi = a.yhi,
-				zlo = c.zlo[i], zhi = a.zhi,
+				zlo = split, zhi = a.zhi,
 			};
 			add_cube(&c, a1);
 			add_cube(&c, a2);
@@ -302,7 +431,7 @@ fn add_cube(c: &Cubes, a: Cube)
 		else if envx and not insx
 		{
 			// Recursive 1d enveloping case. Two splits
-			println("enveloping x");
+			//println("enveloping x");
 			const a1 = Cube{
 				xlo = a.xlo, xhi = c.xlo[i],
 				ylo = a.ylo, yhi = a.yhi,
@@ -323,7 +452,7 @@ fn add_cube(c: &Cubes, a: Cube)
 		else if envy and not insy
 		{
 			// Recursive 1d enveloping case. Two splits
-			println("enveloping y");
+			//println("enveloping y");
 			const a1 = Cube{
 				xlo = a.xlo, xhi = a.xhi,
 				ylo = a.ylo, yhi = c.ylo[i],
@@ -344,7 +473,7 @@ fn add_cube(c: &Cubes, a: Cube)
 		else if envz and not insz
 		{
 			// Recursive 1d enveloping case. Two splits
-			println("enveloping z");
+			//println("enveloping z");
 			const a1 = Cube{
 				xlo = a.xlo, xhi = a.xhi,
 				ylo = a.ylo, yhi = a.yhi,
@@ -365,11 +494,10 @@ fn add_cube(c: &Cubes, a: Cube)
 
 		else
 		{
-			println(ERROR_STR + "bad case in add_cube()");
+			println(ERROR_STR + "unhandled case in add_cube()");
 			exit(1);
 		}
 	}
-
 	if all_disjoint
 	{
 		// Simply append the added cube to the list. Non-optimal growth
@@ -382,8 +510,60 @@ fn add_cube(c: &Cubes, a: Cube)
 		c.yhi = [c.yhi, [a.yhi]];
 		c.zhi = [c.zhi, [a.zhi]];
 	}
-
 	return;
+}
+
+fn test_cut(c: Cubes, d: Cube)
+{
+	// Remove cube `d` from cubes `c` and verify the volume against the
+	// brute-force method from part 1
+	println();
+	println("Testing deletion of d = ", d);
+	const xlo = min(minval(c.xlo), d.xlo);
+	const ylo = min(minval(c.ylo), d.ylo);
+	const zlo = min(minval(c.zlo), d.zlo);
+	const xhi = max(maxval(c.xhi), d.xhi);
+	const yhi = max(maxval(c.yhi), d.yhi);
+	const zhi = max(maxval(c.zhi), d.zhi);
+	const nx = xhi - xlo;
+	const ny = yhi - ylo;
+	const nz = zhi - zlo;
+	let g = [false; nx, ny, nz];
+	for i in [0: c.n]
+		g[
+			c.xlo[i] - xlo: c.xhi[i] - xlo,
+			c.ylo[i] - ylo: c.yhi[i] - ylo,
+			c.zlo[i] - zlo: c.zhi[i] - zlo,
+		] = true;
+	println("count(g) = ", count(g));
+	g[
+		d.xlo - xlo: d.xhi - xlo,
+		d.ylo - ylo: d.yhi - ylo,
+		d.zlo - zlo: d.zhi - zlo,
+	] = false;
+	println("count(g) = ", count(g));
+	const vol_expect = count(g);
+
+	cut_cube(&c, d);
+	println("c = ", c);
+
+	// Get vol from bounds only (without `g`) and compare to expected vol
+	let vol = 0;
+	for i in [0: c.n]
+	{
+		const inc =
+			(c.xhi[i] - c.xlo[i]) *
+			(c.yhi[i] - c.ylo[i]) *
+			(c.zhi[i] - c.zlo[i]);
+		println("inc = ", inc);
+		vol += inc;
+	}
+	println("vol = ", vol);
+	if vol != vol_expect
+	{
+		println(ERROR_STR + "bad volume for cube deletion");
+		exit(3);
+	}
 }
 
 fn test_add(c: Cubes, a: Cube)
@@ -437,8 +617,6 @@ fn test_add(c: Cubes, a: Cube)
 		println(ERROR_STR + "bad volume for cube addition");
 		exit(2);
 	}
-
-	//println("xlo = ", xlo);
 }
 
 fn unit_tests()
@@ -453,11 +631,42 @@ fn unit_tests()
 	add_cube(&init_cubes, init_cube);
 	println("init_cubes = ", init_cubes);
 
+	// ****************
+	// Subtraction tests
+
+	// Enveloping by a lot
+	test_cut(init_cubes,
+		Cube{xlo = -11, xhi = 11, ylo = -11, yhi = 11, zlo = -11, zhi = 11});
+
+	// Enveloping just barely
+	test_cut(init_cubes,
+		Cube{xlo = -10, xhi = 10, ylo = -10, yhi = 10, zlo = -10, zhi = 10});
+
+	// Cut whole +x side
+	test_cut(init_cubes,
+		Cube{xlo = 5, xhi = 15, ylo = -11, yhi = 11, zlo = -11, zhi = 11});
+	test_cut(init_cubes,
+		Cube{xlo = 5, xhi = 10, ylo = -11, yhi = 11, zlo = -11, zhi = 11});
+
+	// Cut +xyz corner
+	test_cut(init_cubes,
+		Cube{xlo = 6, xhi = 11, ylo = 7, yhi = 13, zlo = 8, zhi = 15});
+
+	// Cut -xyz corner
+	test_cut(init_cubes,
+		Cube{xlo = -16, xhi = 1, ylo = -17, yhi = 3, zlo = -18, zhi = 5});
+
+	// Could use more cut unit tests, but i was close enough for an end-to-end
+	// test with the sample inputs at this point
+
+	// ****************
+	// Addition tests
+
 	// Disjoint, just barely
 	test_add(init_cubes,
 		Cube{xlo = 10, xhi = 14, ylo = 10, yhi = 15, zlo = 10, zhi = 16});
 
-	// Disjoint, larger gap barely
+	// Disjoint, larger gap
 	test_add(init_cubes,
 		Cube{xlo = 11, xhi = 14, ylo = 12, yhi = 15, zlo = 13, zhi = 16});
 
@@ -534,16 +743,6 @@ fn unit_tests()
 	test_add(init_cubes,  // envx and sthy and insz
 		Cube{xlo = -12, xhi = 15, ylo = -4, yhi = 15, zlo = -6, zhi = 7});
 
-	// Any more unit tests or do some end-to-end integration testing of adding a
-	// bunch of (small) cubes from a real input and self-verifying? Not really
-	// sure if the recursive implementation of add_cube is correct or if there
-	// might be latent bugs for 2+ initial cubes which i haven't seen yet
-	// starting with just 1 initial cube. Is the recursion ok when the added
-	// cube intersects with multiple initial cubes? 
-	//
-	// Finally, implement cut_cube(), the subtractive counterpart of add_cube()
-	// which is almost done
-
 	// Inside of +x+y edge
 	test_add(init_cubes,
 		Cube{xlo = 5, xhi = 15, ylo = 4, yhi = 14, zlo = -6, zhi = 7});
@@ -597,26 +796,26 @@ fn part2(args: &const Args): str
 		println("kk = ", kk);
 		kk += 1;
 
+		let a = Cube{
+			xlo = xmin, xhi = xmax,
+			ylo = ymin, yhi = ymax,
+			zlo = zmin, zhi = zmax,
+		};
 		if is_on
 		{
-			let a = Cube{
-				xlo = xmin, xhi = xmax,
-				ylo = ymin, yhi = ymax,
-				zlo = zmin, zhi = zmax,
-			};
 			add_cube(&c, a);
 			//if (kk == 3) break;
 		}
 		else
 		{
-			// TODO
+			cut_cube(&c, a);
 		}
 	}
 	close(f);
 	println("number of divided cubes = ", c.n);
 	for i in [0: c.n]
 		sum_ +=
-			(c.xhi[i] - c.xlo[i]) *
+			i64(c.xhi[i] - c.xlo[i]) *
 			(c.yhi[i] - c.ylo[i]) *
 			(c.zhi[i] - c.zlo[i]);
 
@@ -641,10 +840,10 @@ fn main(): str
 	if (args.do_p1) p1 = part1(&args);
 	if (args.do_p2) p2 = part2(&args);
 
-	let expect1 = "REPLACE_ME_P1";
-	let expect2 = "REPLACE_ME_P2";
-	let expect1_test = "REPLACE_ME_P1_TEST";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect1 = "543306";
+	let expect2 = "1285501151402480";
+	let expect1_test = "474140";  // actually part 2's test input
+	let expect2_test = "2758514936282235";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);
