@@ -72,25 +72,81 @@ struct Cube
 struct Cubes
 {
 	n: i32,
+	cap: i32,
+	live: [bool; :],
 	xlo: [i32; :],
 	ylo: [i32; :],
 	zlo: [i32; :],
 	xhi: [i32; :],
 	yhi: [i32; :],
 	zhi: [i32; :],
+
+	// With properly amortized vector growth and avoiding recursion (for
+	// multiple passes of adding/cutting), real input runs in under 2 s. I was
+	// prepared to add spatial bucketing but it doesn't seem necessary
+	fn set(i: i32, a: &const Cube)
+	{
+		live[i] = true;
+		xlo[i] = a.xlo;
+		ylo[i] = a.ylo;
+		zlo[i] = a.zlo;
+		xhi[i] = a.xhi;
+		yhi[i] = a.yhi;
+		zhi[i] = a.zhi;
+	}
+	fn push(a: &const Cube)
+	{
+		if n >= cap
+		{
+			let new_cap = 1;
+			if cap > 0
+				new_cap = cap * 2;
+			let itmp = [0; new_cap];
+			itmp[0:n] = xlo;
+			xlo = itmp;
+			itmp[0:n] = ylo;
+			ylo = itmp;
+			itmp[0:n] = zlo;
+			zlo = itmp;
+			itmp[0:n] = xhi;
+			xhi = itmp;
+			itmp[0:n] = yhi;
+			yhi = itmp;
+			itmp[0:n] = zhi;
+			zhi = itmp;
+
+			let btmp = [false; new_cap];
+			btmp[0:n] = live;
+			live = btmp;
+
+			cap = new_cap;
+		}
+		xlo [n] = a.xlo;
+		ylo [n] = a.ylo;
+		zlo [n] = a.zlo;
+		xhi [n] = a.xhi;
+		yhi [n] = a.yhi;
+		zhi [n] = a.zhi;
+		live[n] = true; // pushed cubes are always live/active
+
+		n += 1;
+	}
 }
 fn new_cubes(): Cubes
 {
 	const n = 0;
+	const cap = 0;
 	return Cubes
 	{
 		n = n,
-		xlo = [0; n],
-		ylo = [0; n],
-		zlo = [0; n],
-		xhi = [0; n],
-		yhi = [0; n],
-		zhi = [0; n],
+		cap = cap,
+		live = [true; cap],
+		xlo = [0; cap],
+		ylo = [0; cap],
+		zlo = [0; cap],
+		xhi = [0; cap],
+		yhi = [0; cap],
+		zhi = [0; cap],
 	};
 }
 
@@ -111,8 +167,16 @@ fn cut_cube(c: &Cubes, d: Cube)
 		// Trivial case: nothing to cut
 		return;
 	}
-	for i in [0: c.n]
+	let i = -1;
+	//for i in [0: c.n]
+	while true
 	{
+		// Careful! This loop appends and grows c.n, so it can't be a for loop
+		// which stops at initial `c.n` before growth!
+		i += 1;
+		if (i > c.n) break;
+		if (not c.live[i]) continue;
+
 		// Are dimensions disjoint?
 		const disx = d.xlo >= c.xhi[i] or c.xlo[i] >= d.xhi;
 		const disy = d.ylo >= c.yhi[i] or c.ylo[i] >= d.yhi;
@@ -156,33 +220,25 @@ fn cut_cube(c: &Cubes, d: Cube)
 		{
 			// Complete cut of this cube
 			//println("completely enveloping");
-			c.xlo = [c.xlo[:i], c.xlo[i+1:]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:]];
-			c.n -= 1;
-			cut_cube(&c, d);
-			return;
+			c.live[i] = false;
+			continue;
 		}
 
 		else if stlx or sthx
 		{
 			// Split initial cube in x direction. Replace initial cube with two
-			// new cubes and then recurse cutting
+			// new cubes and then continue cutting remaining cubes
 			//println("straddling +-x");
 			let split = d.xlo;
 			if (stlx) split = d.xhi;
-			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], split   ]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i]]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i]]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:], [split   , c.xhi[i]]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i]]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i]]];
-			c.n += 1;  // remove 1 and append 2
-			cut_cube(&c, d);
-			return;
+			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i],
+			                 xhi=split   , yhi=c.yhi[i], zhi=c.zhi[i] };
+			const d2 = Cube{ xlo=split   , ylo=c.ylo[i], zlo=c.zlo[i],
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i] };
+			c.set(i, d1);
+			i -= 1;  // process cut of d1 on next pass
+			c.push(d2);
+			continue;
 		}
 		else if stly or sthy
 		{
@@ -190,15 +246,16 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("straddling +-y");
 			let split = d.ylo;
 			if (stly) split = d.yhi;
-			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i]]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], split   ]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i]]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i]]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:], [split   , c.yhi[i]]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i]]];
-			c.n += 1;  // remove 1 and append 2
-			cut_cube(&c, d);
-			return;
+			//c.live[i] = false;
+			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i],
+			                 xhi=c.xhi[i], yhi=split   , zhi=c.zhi[i] };
+			const d2 = Cube{ xlo=c.xlo[i], ylo=split   , zlo=c.zlo[i],
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i] };
+			c.set(i, d1);
+			i -= 1;
+			//c.push(d1);
+			c.push(d2);
+			continue;
 		}
 		else if stlz or sthz
 		{
@@ -206,32 +263,45 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("straddling +-z");
 			let split = d.zlo;
 			if (stlz) split = d.zhi;
-			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i]]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i]]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], split   ]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i]]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i]]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:], [split   , c.zhi[i]]];
-			c.n += 1;  // remove 1 and append 2
-			cut_cube(&c, d);
-			return;
+			//c.live[i] = false;
+			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=split   , };
+			const d2 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=split   , 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, d1);
+			i -= 1;
+			//c.push(d1);
+			c.push(d2);
+			continue;
 		}
 
+		// If you try to handle cases like (envx and not insx), recursion is
+		// required because we have to split the added cube and then recurse for
+		// its three new sub-cubes
+		//
+		// By handling (insx and not envx) instead, we can split the initial
+		// cube instead and just continue on another loop iteration instead of
+		// recursing, which would waste a lot of processing on already-processed
+		// cubes earlier in the list
 		else if insx and not envx
 		{
 			// Split into 3 in x
 			//println("inside x");
 			let spl1 = d.xlo;
 			let spl2 = d.xhi;
-			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], spl1    , spl2    ]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i], c.ylo[i]]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i], c.zlo[i]]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:], [spl1    , spl2    , c.xhi[i]]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i], c.yhi[i]]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i], c.zhi[i]]];
-			c.n += 2;  // remove 1 and append 3
-			cut_cube(&c, d);
-			return;
+			//c.live[i] = false;
+			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i],
+			                 xhi=spl1    , yhi=c.yhi[i], zhi=c.zhi[i], };
+			const d2 = Cube{ xlo=spl1    , ylo=c.ylo[i], zlo=c.zlo[i],
+			                 xhi=spl2    , yhi=c.yhi[i], zhi=c.zhi[i], };
+			const d3 = Cube{ xlo=spl2    , ylo=c.ylo[i], zlo=c.zlo[i],
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, d1);
+			i -= 1;
+			//c.push(d1);
+			c.push(d2);
+			c.push(d3);
+			continue;
 		}
 		else if insy and not envy
 		{
@@ -239,15 +309,19 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("inside y");
 			let spl1 = d.ylo;
 			let spl2 = d.yhi;
-			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i], c.xlo[i]]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], spl1    , spl2    ]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], c.zlo[i], c.zlo[i]]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i], c.xhi[i]]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:], [spl1    , spl2    , c.yhi[i]]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:], [c.zhi[i], c.zhi[i], c.zhi[i]]];
-			c.n += 2;  // remove 1 and append 3
-			cut_cube(&c, d);
-			return;
+			//c.live[i] = false;
+			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i],
+			                 xhi=c.xhi[i], yhi=spl1    , zhi=c.zhi[i], };
+			const d2 = Cube{ xlo=c.xlo[i], ylo=spl1    , zlo=c.zlo[i],
+			                 xhi=c.xhi[i], yhi=spl2    , zhi=c.zhi[i], };
+			const d3 = Cube{ xlo=c.xlo[i], ylo=spl2    , zlo=c.zlo[i],
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, d1);
+			i -= 1;
+			//c.push(d1);
+			c.push(d2);
+			c.push(d3);
+			continue;
 		}
 		else if insz and not envz
 		{
@@ -255,15 +329,19 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("inside z");
 			let spl1 = d.zlo;
 			let spl2 = d.zhi;
-			c.xlo = [c.xlo[:i], c.xlo[i+1:], [c.xlo[i], c.xlo[i], c.xlo[i]]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:], [c.ylo[i], c.ylo[i], c.ylo[i]]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:], [c.zlo[i], spl1    , spl2    ]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:], [c.xhi[i], c.xhi[i], c.xhi[i]]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:], [c.yhi[i], c.yhi[i], c.yhi[i]]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:], [spl1    , spl2    , c.zhi[i]]];
-			c.n += 2;  // remove 1 and append 3
-			cut_cube(&c, d);
-			return;
+			//c.live[i] = false;
+			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=spl1    , };
+			const d2 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=spl1    , 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=spl2    , };
+			const d3 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=spl2    , 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, d1);
+			i -= 1;
+			//c.push(d1);
+			c.push(d2);
+			c.push(d3);
+			continue;
 		}
 
 		else
@@ -290,18 +368,18 @@ fn add_cube(c: &Cubes, a: Cube)
 	if c.n == 0
 	{
 		// Trivial case: first cube
-		c.n = 1;
-		c.xlo = [a.xlo];
-		c.ylo = [a.ylo];
-		c.zlo = [a.zlo];
-		c.xhi = [a.xhi];
-		c.yhi = [a.yhi];
-		c.zhi = [a.zhi];
+		c.push(a);
 		return;
 	}
 	let all_disjoint = true;
-	for i in [0: c.n]
+	let all_disjoint0 = all_disjoint;
+	let i = -1;
+	while true
 	{
+		i += 1;
+		if (i > c.n) break;
+		if (not c.live[i]) continue;
+
 		// Are dimensions disjoint?
 		const disx = a.xlo >= c.xhi[i] or c.xlo[i] >= a.xhi;
 		const disy = a.ylo >= c.yhi[i] or c.ylo[i] >= a.yhi;
@@ -320,13 +398,11 @@ fn add_cube(c: &Cubes, a: Cube)
 		const envz = a.zlo <= c.zlo[i] and c.zhi[i] <= a.zhi;
 
 		// Straddling low end?
-		// TODO: <= for lo to hi comparisons? Doesn't seem to matter?
 		const stlx = a.xlo < c.xlo[i] and c.xlo[i] <= a.xhi and a.xhi < c.xhi[i];
 		const stly = a.ylo < c.ylo[i] and c.ylo[i] <= a.yhi and a.yhi < c.yhi[i];
 		const stlz = a.zlo < c.zlo[i] and c.zlo[i] <= a.zhi and a.zhi < c.zhi[i];
 
 		// Straddling high end?
-		// TODO: <= for lo to hi comparisons? Doesn't seem to matter?
 		const sthx = c.xlo[i] < a.xlo and a.xlo <= c.xhi[i] and c.xhi[i] < a.xhi;
 		const sthy = c.ylo[i] < a.ylo and a.ylo <= c.yhi[i] and c.yhi[i] < a.yhi;
 		const sthz = c.zlo[i] < a.zlo and a.zlo <= c.zhi[i] and c.zhi[i] < a.zhi;
@@ -355,141 +431,110 @@ fn add_cube(c: &Cubes, a: Cube)
 			// Added cube completely envelopes initial cube. Replace initial
 			// with added
 			//println("completely enveloping");
-			c.xlo = [c.xlo[:i], c.xlo[i+1:]];
-			c.ylo = [c.ylo[:i], c.ylo[i+1:]];
-			c.zlo = [c.zlo[:i], c.zlo[i+1:]];
-			c.xhi = [c.xhi[:i], c.xhi[i+1:]];
-			c.yhi = [c.yhi[:i], c.yhi[i+1:]];
-			c.zhi = [c.zhi[:i], c.zhi[i+1:]];
-			c.n -= 1;
-			add_cube(&c, a);
-			return;
+			c.live[i] = false;
+			all_disjoint = all_disjoint0;
+			continue;
 		}
 
 		else if stlx or sthx
 		{
 			// Split in x direction
 			//println("straddling +-x");
-			let split = c.xlo[i];
-			if (sthx) split = c.xhi[i];
-			const a1 = Cube{
-				xlo = a.xlo, xhi = split,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			const a2 = Cube{
-				xlo = split, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			return;
+
+			// Instead of killing c.[i], we can slot c1 into its place,
+			// then decrement i before continuing loop
+			let split = a.xhi;
+			if (sthx) split = a.xlo;
+			const c1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=split   , yhi=c.yhi[i], zhi=c.zhi[i], };
+			const c2 = Cube{ xlo=split   , ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, c1);
+			i -= 1;
+			//c.live[i] = false;
+			//c.push(c1);
+			c.push(c2);
+			continue;
 		}
 
 		else if stly or sthy
 		{
 			// Split in y
 			//println("straddling +-y");
-			let split = c.ylo[i];
-			if (sthy) split = c.yhi[i];
-			const a1 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = split,
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			const a2 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = split, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi,
-			};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			return;
+			let split = a.yhi;
+			if (sthy) split = a.ylo;
+			const c1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=split   , zhi=c.zhi[i], };
+			const c2 = Cube{ xlo=c.xlo[i], ylo=split   , zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, c1);
+			i -= 1;
+			c.push(c2);
+			continue;
 		}
 		else if stlz or sthz
 		{
 			// Split in z
 			//println("straddling +-z");
-			let split = c.zlo[i];
-			if (sthz) split = c.zhi[i];
-			const a1 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = split,
-			};
-			const a2 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = split, zhi = a.zhi,
-			};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			return;
+			let split = a.zhi;
+			if (sthz) split = a.zlo;
+			const c1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=split   , };
+			const c2 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=split   , 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, c1);
+			i -= 1;
+			c.push(c2);
+			continue;
 		}
 
-		else if envx and not insx
+		else if insx and not envx
 		{
-			// Recursive 1d enveloping case. Two splits
-			//println("enveloping x");
-			const a1 = Cube{
-				xlo = a.xlo, xhi = c.xlo[i],
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi};
-			const a2 = Cube{
-				xlo = c.xlo[i], xhi = c.xhi[i],
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi};
-			const a3 = Cube{
-				xlo = c.xhi[i], xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			add_cube(&c, a3);
-			return;
+			let spl1 = a.xlo;
+			let spl2 = a.xhi;
+			const c1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=spl1    , yhi=c.yhi[i], zhi=c.zhi[i], };
+			const c2 = Cube{ xlo=spl1    , ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=spl2    , yhi=c.yhi[i], zhi=c.zhi[i], };
+			const c3 = Cube{ xlo=spl2    , ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, c1);
+			i -= 1;
+			c.push(c2);
+			c.push(c3);
+			continue;
 		}
-		else if envy and not insy
+		else if insy and not envy
 		{
-			// Recursive 1d enveloping case. Two splits
-			//println("enveloping y");
-			const a1 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = c.ylo[i],
-				zlo = a.zlo, zhi = a.zhi};
-			const a2 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = c.ylo[i], yhi = c.yhi[i],
-				zlo = a.zlo, zhi = a.zhi};
-			const a3 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = c.yhi[i], yhi = a.yhi,
-				zlo = a.zlo, zhi = a.zhi};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			add_cube(&c, a3);
-			return;
+			let spl1 = a.ylo;
+			let spl2 = a.yhi;
+			const c1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=spl1    , zhi=c.zhi[i], };
+			const c2 = Cube{ xlo=c.xlo[i], ylo=spl1    , zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=spl2    , zhi=c.zhi[i], };
+			const c3 = Cube{ xlo=c.xlo[i], ylo=spl2    , zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, c1);
+			i -= 1;
+			c.push(c2);
+			c.push(c3);
+			continue;
 		}
-		else if envz and not insz
+		else if insz and not envz
 		{
-			// Recursive 1d enveloping case. Two splits
-			//println("enveloping z");
-			const a1 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = a.zlo, zhi = c.zlo[i]};
-			const a2 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = c.zlo[i], zhi = c.zhi[i]};
-			const a3 = Cube{
-				xlo = a.xlo, xhi = a.xhi,
-				ylo = a.ylo, yhi = a.yhi,
-				zlo = c.zhi[i], zhi = a.zhi};
-			add_cube(&c, a1);
-			add_cube(&c, a2);
-			add_cube(&c, a3);
-			return;
+			let spl1 = a.zlo;
+			let spl2 = a.zhi;
+			const c1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=spl1    , };
+			const c2 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=spl1    , 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=spl2    , };
+			const c3 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=spl2    , 
+			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
+			c.set(i, c1);
+			i -= 1;
+			c.push(c2);
+			c.push(c3);
+			continue;
 		}
 
 		else
@@ -502,13 +547,7 @@ fn add_cube(c: &Cubes, a: Cube)
 	{
 		// Simply append the added cube to the list. Non-optimal growth
 		// reallocation
-		c.n += 1;
-		c.xlo = [c.xlo, [a.xlo]];
-		c.ylo = [c.ylo, [a.ylo]];
-		c.zlo = [c.zlo, [a.zlo]];
-		c.xhi = [c.xhi, [a.xhi]];
-		c.yhi = [c.yhi, [a.yhi]];
-		c.zhi = [c.zhi, [a.zhi]];
+		c.push(a);
 	}
 	return;
 }
@@ -551,6 +590,7 @@ fn test_cut(c: Cubes, d: Cube)
 	let vol = 0;
 	for i in [0: c.n]
 	{
+		if (not c.live[i]) continue;
 		const inc =
 			(c.xhi[i] - c.xlo[i]) *
 			(c.yhi[i] - c.ylo[i]) *
@@ -604,6 +644,7 @@ fn test_add(c: Cubes, a: Cube)
 	let vol = 0;
 	for i in [0: c.n]
 	{
+		if (not c.live[i]) continue;
 		const inc =
 			(c.xhi[i] - c.xlo[i]) *
 			(c.yhi[i] - c.ylo[i]) *
@@ -802,23 +843,21 @@ fn part2(args: &const Args): str
 			zlo = zmin, zhi = zmax,
 		};
 		if is_on
-		{
 			add_cube(&c, a);
-			//if (kk == 3) break;
-		}
 		else
-		{
 			cut_cube(&c, a);
-		}
 	}
 	close(f);
 	println("number of divided cubes = ", c.n);
+	println("number of live cubes    = ", count(c.live[0:c.n]));
 	for i in [0: c.n]
+	{
+		if (not c.live[i]) continue;
 		sum_ +=
 			i64(c.xhi[i] - c.xlo[i]) *
 			(c.yhi[i] - c.ylo[i]) *
 			(c.zhi[i] - c.zlo[i]);
-
+	}
 	println();
 
 	println("part 2 = ", sum_);
