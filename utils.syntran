@@ -1684,7 +1684,7 @@ fn read_char_mat(filename: str): [str; :,:]
 	for y in [0: ny]
 	{
 		//println("str_ = ", str_);
-		for x in [0: nx]
+		for x in [0: min(i32(len(str_)), nx)]
 			chars[x,y] = str_[x];
 		if (not eof(f)) str_ = readln(f);
 	}

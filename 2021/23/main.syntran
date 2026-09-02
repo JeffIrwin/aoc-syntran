@@ -1,0 +1,526 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../queue_vec_i32 as queue_vec_i32;
+use ../../minheap_vec_i32_2026 as minheap_vec_i32;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 2_000_000_000'i64;
+
+	let g0 = read_char_mat(args.input_filename);
+	print_char_mat(&g0);
+
+	const nx = i32(size(g0,0));
+	const ny = i32(size(g0,1));
+	const nt = 4;  // number of types of amphipods
+	const no = 2;  // number of occurences of each type
+	const n = nt * no;  // total number of amphipods
+
+	// Get positions `p` from grid `g0`
+	let p = [0; 2, n];
+	let na = [0; nt];
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if (g0[x,y] == "") g0[x,y] = " ";
+		const c = g0[x,y];
+		if not is_alpha(c) continue;
+		const it = i32(c) - i32("A"); // type index: 0 for A, 1 for B, ...
+		const ii = na[it];
+		println("x, y, it = ", [x, y, it]);
+
+		p[0, 2*it + ii] = x;
+		p[1, 2*it + ii] = y;
+		na[it] += 1;
+	}
+	println("p = ", p);
+	const pinit = p;
+	const pv = std::reshape(p, [2 * n]);
+	println("pv = ", pv);
+
+	// Make a blank copy of the map grid with amphipods replaced with "."
+	let gb = g0;
+	for y in [0: ny]
+	for x in [0: nx]
+		if is_alpha(g0[x,y])
+			gb[x,y] = ".";
+
+	// Set of legal positions, excluding spaces immediately outside any room
+	let is_legal = [true; nx, ny];
+	is_legal[[3 + 2*[0:4]], 1] = false;
+	println("is_legal = ", is_legal);
+
+	let energy = dict_i64::new();
+	let dist   = dict_i64::new();
+
+	// Energy per step for each amphipod type
+	const eps = [1, 10, 100, 1000];
+
+	// The state is the energy consumed so far, all current positions, and an
+	// integer for whether each piece has moved at all yet
+	const state0 = [[0, 0], pv, [0; n]];
+	const key0 = char_mat_to_str(g0[1:nx-1, 1:ny-1]);
+	println("key0 = ");
+	println(key0);
+	energy.set(key0, 0'i64);
+	dist  .set(key0, 0'i64);
+	let q = minheap_vec_i32::new();
+	q.push(state0);
+	let kk = 0;
+	let nhomemax = 0;
+	let gmax = [""; 0,0];
+	while true
+	{
+		if (q.len == 0) break;
+		const u = q.pop();
+		const e0 = u[0];
+		const d0 = u[1];
+		//const d0 = u[0];
+		//const e0 = u[1];
+		const p0 = std::reshape(u[2: 2*n+2], [2, n]);  // positions
+		const im0 = u[2*n+2: 2*n+2+n];  // has each piece moved yet?
+		kk += 1;
+		const g = get_grid(&gb, &p0);
+		if (kk % 3000 == 0)
+		{
+			println("d0, e0, sum_, nhmax = ", [d0, e0, i32(sum_), nhomemax]);
+			//print_char_mat(&gmax);
+			print_char_mat(&g);
+		}
+		//println("p0 = ", p0);
+		let all_home = true;
+		let nhome = 0;
+		for ip in [0: n]
+		{
+			const it = ip / 2;
+			const px = p0[0,ip];
+			const py = p0[1,ip];
+			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
+			if (is_home) nhome += 1;
+			//println("is_home = ", is_home);
+			//if (is_home and kk > 100_000) exit(0);
+			all_home = all_home and is_home;
+		}
+		if nhome > nhomemax
+		{
+			nhomemax = nhome;
+			gmax = g;
+		}
+		if all_home
+		{
+			sum_ = min(sum_, i64(e0));
+			//println("all_home = ", all_home);
+			//exit(0);
+			continue;
+		}
+
+		for ip in [0: n]
+		{
+			const it = ip / 2;
+			const ty = char(it + i32("A"));
+			const px = p0[0,ip];
+			const py = p0[1,ip];
+
+			//const is_start = all([px,py] == pinit[:,ip]);  // still at starting pos?
+			const is_start = im0[ip] == 0;
+			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
+			const is_hall  = not (is_start or is_home);    // in hallway?
+			if is_home and not is_start
+				continue;
+
+			const dists = get_dists(&g, &p0, ip);
+
+			//println("ip, it = ", [ip, it]);
+			//println("ty = ", ty);
+			//println("start, home, hall = ", [is_start, is_home, is_hall]);
+			//println("dists = ", dists);
+
+			let im = im0;
+			im[ip] = 1;
+
+			for y in [1: ny-1]  // crop wall/unreachable margins
+			for x in [1: nx-1]
+			{
+				if (not is_legal[x,y]) continue;
+				if (dists[x,y] <= 0) continue;
+				const to_hall = y <= 1;
+				const to_home = x == 3 + it*2 and y >= 2;
+				if not (
+					// We can only move into the hallway once and then straight
+					// home
+					(is_start and to_hall) or
+					(is_hall and to_home)
+				)
+					continue;
+
+				// Enforce not moving home if another type is below us in our
+				// home. Need to build g? Or at least the bottom row?
+				if (not is_start and y == 2 and g[x,3] != ty) continue;
+
+				let p = p0;
+				p[:, ip] = [x, y];
+				const pv = std::reshape(p, [2 * n]);
+				//const key = str(pv); // swapping the two A's are different keys
+
+				const gn = get_grid(&gb, &p);
+				const key = char_mat_to_str(gn[1:nx-1, 1:ny-1]);
+
+				const d = dist  .get(key);
+				const e = energy.get(key);
+				const dalt = d0 + dists[x,y];
+				const ealt = e0 + dists[x,y] * eps[it];
+
+				//println("x, y = ", [x, y]);
+				//println("p = ", p);
+				//println("key = ", key);
+				//println("e = ", e);
+				//println("ealt = ", ealt);
+				//println();
+
+				if e < 0 or ealt < e
+				//if d < 0 or dalt < d
+				{
+					dist  .set(key, i64(dalt));
+					energy.set(key, i64(ealt));
+					q.push([[ealt, dalt], pv, im]);
+					//q.push([[dalt, ealt], pv, im]);
+				}
+			}
+			//println();
+			//if (ip == 3) break;
+		}
+	}
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 2_000_000_000'i64;
+
+	const ins1 = "  #D#C#B#A#";
+	const ins2 = "  #D#B#A#C#";
+
+	const g00 = read_char_mat(args.input_filename);
+	print_char_mat(&g00);
+
+	let gt = g00[:, 0:3];
+	let v1 = vec_str(ins1);
+	let v2 = vec_str(ins2);
+	let gd = g00[:, 3: ];
+	println("gd = ");
+	print_char_mat(&gd);
+
+	let g0 = [""; 13, 7];
+	g0[:, 0:3] = gt;
+	g0[0: size(v1), 3] = v1;
+	g0[0: size(v2), 4] = v2;
+	g0[:, 5:] = gd;
+
+	print_char_mat(&g0);
+	//exit(0);
+
+	const nx = i32(size(g0,0));
+	const ny = i32(size(g0,1));
+	const nt = 4;  // number of types of amphipods
+	const no = 4;  // number of occurences of each type
+	const n = nt * no;  // total number of amphipods
+	println("n = ", n);
+
+	// Get positions `p` from grid `g0`
+	let p = [0; 2, n];
+	let na = [0; nt];
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if (g0[x,y] == "") g0[x,y] = " ";
+		const c = g0[x,y];
+		if not is_alpha(c) continue;
+		const it = i32(c) - i32("A"); // type index: 0 for A, 1 for B, ...
+		const ii = na[it];
+		println("x, y, it = ", [x, y, it]);
+
+		p[0, 4*it + ii] = x;
+		p[1, 4*it + ii] = y;
+		na[it] += 1;
+	}
+	println("p = ", p);
+	const pinit = p;
+	const pv = std::reshape(p, [2 * n]);
+	println("pv = ", pv);
+
+	// Make a blank copy of the map grid with amphipods replaced with "."
+	let gb = g0;
+	for y in [0: ny]
+	for x in [0: nx]
+		if is_alpha(g0[x,y])
+			gb[x,y] = ".";
+
+	// Set of legal positions, excluding spaces immediately outside any room
+	let is_legal = [true; nx, ny];
+	is_legal[[3 + 2*[0:4]], 1] = false;
+	println("is_legal = ", is_legal);
+
+	let energy = dict_i64::new();
+	let dist   = dict_i64::new();
+
+	// Energy per step for each amphipod type
+	const eps = [1, 10, 100, 1000];
+
+	// The state is the energy consumed so far, all current positions, and an
+	// integer for whether each piece has moved at all yet
+	const state0 = [[0, 0], pv, [0; n]];
+	const key0 = char_mat_to_str(g0[1:nx-1, 1:ny-1]);
+	println("key0 = ");
+	println(key0);
+	energy.set(key0, 0'i64);
+	dist  .set(key0, 0'i64);
+	let q = minheap_vec_i32::new();
+	q.push(state0);
+	let kk = 0;
+	let nhomemax = 0;
+	let gmax = [""; 0,0];
+	while true
+	{
+		if (q.len == 0) break;
+		const u = q.pop();
+		const e0 = u[0];
+		const d0 = u[1];
+		//const d0 = u[0];
+		//const e0 = u[1];
+		const p0 = std::reshape(u[2: 2*n+2], [2, n]);  // positions
+		const im0 = u[2*n+2: 2*n+2+n];  // has each piece moved yet?
+		kk += 1;
+		const g = get_grid2(&gb, &p0);
+		if (kk % 3000 == 0)
+		{
+			println("d0, e0, sum_, nhmax = ", [d0, e0, i32(sum_), nhomemax]);
+			print_char_mat(&gmax);
+			print_char_mat(&g);
+		}
+		//println("p0 = ", p0);
+		let all_home = true;
+		let nhome = 0;
+		for ip in [0: n]
+		{
+			const it = ip / 4;
+			const px = p0[0,ip];
+			const py = p0[1,ip];
+			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
+			if (is_home) nhome += 1;
+			//println("is_home = ", is_home);
+			//if (is_home and kk > 100_000) exit(0);
+			all_home = all_home and is_home;
+		}
+		if nhome > nhomemax
+		{
+			nhomemax = nhome;
+			gmax = g;
+		}
+		if all_home
+		{
+			sum_ = min(sum_, i64(e0));
+			//println("all_home = ", all_home);
+			//exit(0);
+			continue;
+		}
+
+		for ip in [0: n]
+		{
+			const it = ip / 4;
+			const ty = char(it + i32("A"));
+			const px = p0[0,ip];
+			const py = p0[1,ip];
+
+			//const is_start = all([px,py] == pinit[:,ip]);  // still at starting pos?
+			const is_start = im0[ip] == 0;
+			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
+			const is_hall  = not (is_start or is_home);    // in hallway?
+			if is_home and not is_start
+				continue;
+
+			const dists = get_dists(&g, &p0, ip);
+
+			//println("ip, it = ", [ip, it]);
+			//println("ty = ", ty);
+			//println("start, home, hall = ", [is_start, is_home, is_hall]);
+			//println("dists = ", dists);
+
+			let im = im0;
+			im[ip] = 1;
+
+			for y in [1: ny-1]  // crop wall/unreachable margins
+			for x in [1: nx-1]
+			{
+				if (not is_legal[x,y]) continue;
+				if (dists[x,y] <= 0) continue;
+				const to_hall = y <= 1;
+				const to_home = x == 3 + it*2 and y >= 2;
+				if not (
+					// We can only move into the hallway once and then straight
+					// home
+					(is_start and to_hall) or
+					(is_hall and to_home)
+				)
+					continue;
+
+				// Enforce not moving home if another type is below us in our
+				// home. Need to build g? Or at least the bottom row?
+				if (not is_start and y == 2 and g[x,3] != ty) continue;
+				if (not is_start and y == 2 and g[x,4] != ty) continue;
+				if (not is_start and y == 2 and g[x,5] != ty) continue;
+				if (not is_start and y == 3 and g[x,4] != ty) continue;
+				if (not is_start and y == 3 and g[x,5] != ty) continue;
+				if (not is_start and y == 4 and g[x,5] != ty) continue;
+
+				let p = p0;
+				p[:, ip] = [x, y];
+				const pv = std::reshape(p, [2 * n]);
+				//const key = str(pv); // swapping the two A's are different keys
+
+				const gn = get_grid2(&gb, &p);
+				const key = char_mat_to_str(gn[1:nx-1, 1:ny-1]);
+
+				const d = dist  .get(key);
+				const e = energy.get(key);
+				const dalt = d0 + dists[x,y];
+				const ealt = e0 + dists[x,y] * eps[it];
+
+				//println("x, y = ", [x, y]);
+				//println("p = ", p);
+				//println("key = ", key);
+				//println("e = ", e);
+				//println("ealt = ", ealt);
+				//println();
+
+				if e < 0 or ealt < e
+				//if d < 0 or dalt < d
+				{
+					dist  .set(key, i64(dalt));
+					energy.set(key, i64(ealt));
+					q.push([[ealt, dalt], pv, im]);
+					//q.push([[dalt, ealt], pv, im]);
+				}
+			}
+			//println();
+			//if (ip == 3) break;
+		}
+	}
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+const nd = 4;
+const dirs = [
+	1, 0,
+	-1, 0,
+	0, 1,
+	0, -1
+	;
+	2, 4
+];
+
+fn get_grid2(gb: &const [str; :,:], p0: &const [i32; :,:]): [str; :,:]
+{
+	// Fill in current positions
+	let g = gb;
+	const np = i32(size(p0,1));
+	for i in [0: np]
+	{
+		const it = i / 4;
+		const ty = char(it + i32("A"));
+		g[p0[0,i], p0[1,i]] = ty;
+	}
+	return g;
+}
+
+fn get_grid(gb: &const [str; :,:], p0: &const [i32; :,:]): [str; :,:]
+{
+	// Fill in current positions
+	let g = gb;
+	const np = i32(size(p0,1));
+	for i in [0: np]
+	{
+		const it = i / 2;
+		const ty = char(it + i32("A"));
+		g[p0[0,i], p0[1,i]] = ty;
+	}
+	return g;
+}
+
+fn get_dists(g: &const [str; :,:], p0: &const [i32; :,:], ip: i32): [i32; :,:]
+{
+	// Do a BFS from the position at index `ip` and return the distances to all
+	// reachable points. Set negative distances for unreachable points
+	//
+	// The grid is changing throughout the organization process, so the set of
+	// reachable points changes, hence we can't just call this once at
+	// initialization
+	//
+	// Distance here is just literal distance. Note that in the caller, the
+	// "distance" that we care about minimizing for Dijkstra is actually energy
+	const nx = i32(size(g,0));
+	const ny = i32(size(g,1));
+	const np = i32(size(p0,1));
+	let dists = [-1; nx, ny];
+
+	let q = queue_vec_i32::new();
+	q.push([0, p0[0,ip], p0[1,ip]]); // queue of dist, x, and y
+	while true
+	{
+		if (q.is_empty) break;
+		const u = q.pop();
+		const d0 = u[0];  // unpack
+		const x0 = u[1];
+		const y0 = u[2];
+		dists[x0,y0] = d0;
+		for id in [0: nd]
+		{
+			const x = x0 + dirs[0,id];
+			const y = y0 + dirs[1,id];
+			const c = g[x,y];
+			if (c != ".") continue;
+			if (dists[x,y] >= 0) continue;
+			q.push([d0+1, x, y]);
+		}
+	}
+	//println("dists = ", dists);
+
+	return dists;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/23" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "19046";
+	let expect2 = "47484";
+	let expect1_test = "12521";
+	let expect2_test = "44169";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

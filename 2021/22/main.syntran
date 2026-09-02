@@ -24,10 +24,10 @@ fn part1(args: &const Args): str
 	let str_ = readln(f);
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let nums = parse_i32_delim(str_, "onff xyz=.,");
-		println("nums = ", nums);
+		//println("nums = ", nums);
 		const xmin = nums[0];
 		const xmax = nums[1]+1;
 		const ymin = nums[2];
@@ -37,7 +37,7 @@ fn part1(args: &const Args): str
 
 		const is_on = starts_with_(str_, "on");
 
-		println();
+		//println();
 		str_ = readln(f);
 
 		if (xmax < XMIN) continue;
@@ -62,6 +62,7 @@ fn part1(args: &const Args): str
 
 struct Cube
 {
+	// Misnomer. Not necessarily a cube, just an axis-aligned rectangular prism
 	xlo: i32,
 	ylo: i32,
 	zlo: i32,
@@ -168,7 +169,6 @@ fn cut_cube(c: &Cubes, d: Cube)
 		return;
 	}
 	let i = -1;
-	//for i in [0: c.n]
 	while true
 	{
 		// Careful! This loop appends and grows c.n, so it can't be a for loop
@@ -221,7 +221,6 @@ fn cut_cube(c: &Cubes, d: Cube)
 			// Complete cut of this cube
 			//println("completely enveloping");
 			c.live[i] = false;
-			continue;
 		}
 
 		else if stlx or sthx
@@ -238,7 +237,6 @@ fn cut_cube(c: &Cubes, d: Cube)
 			c.set(i, d1);
 			i -= 1;  // process cut of d1 on next pass
 			c.push(d2);
-			continue;
 		}
 		else if stly or sthy
 		{
@@ -246,16 +244,13 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("straddling +-y");
 			let split = d.ylo;
 			if (stly) split = d.yhi;
-			//c.live[i] = false;
 			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i],
 			                 xhi=c.xhi[i], yhi=split   , zhi=c.zhi[i] };
 			const d2 = Cube{ xlo=c.xlo[i], ylo=split   , zlo=c.zlo[i],
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i] };
 			c.set(i, d1);
 			i -= 1;
-			//c.push(d1);
 			c.push(d2);
-			continue;
 		}
 		else if stlz or sthz
 		{
@@ -263,16 +258,13 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("straddling +-z");
 			let split = d.zlo;
 			if (stlz) split = d.zhi;
-			//c.live[i] = false;
 			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=split   , };
 			const d2 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=split   , 
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
 			c.set(i, d1);
 			i -= 1;
-			//c.push(d1);
 			c.push(d2);
-			continue;
 		}
 
 		// If you try to handle cases like (envx and not insx), recursion is
@@ -289,7 +281,6 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("inside x");
 			let spl1 = d.xlo;
 			let spl2 = d.xhi;
-			//c.live[i] = false;
 			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i],
 			                 xhi=spl1    , yhi=c.yhi[i], zhi=c.zhi[i], };
 			const d2 = Cube{ xlo=spl1    , ylo=c.ylo[i], zlo=c.zlo[i],
@@ -298,10 +289,8 @@ fn cut_cube(c: &Cubes, d: Cube)
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
 			c.set(i, d1);
 			i -= 1;
-			//c.push(d1);
 			c.push(d2);
 			c.push(d3);
-			continue;
 		}
 		else if insy and not envy
 		{
@@ -309,7 +298,6 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("inside y");
 			let spl1 = d.ylo;
 			let spl2 = d.yhi;
-			//c.live[i] = false;
 			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i],
 			                 xhi=c.xhi[i], yhi=spl1    , zhi=c.zhi[i], };
 			const d2 = Cube{ xlo=c.xlo[i], ylo=spl1    , zlo=c.zlo[i],
@@ -318,10 +306,8 @@ fn cut_cube(c: &Cubes, d: Cube)
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
 			c.set(i, d1);
 			i -= 1;
-			//c.push(d1);
 			c.push(d2);
 			c.push(d3);
-			continue;
 		}
 		else if insz and not envz
 		{
@@ -329,7 +315,6 @@ fn cut_cube(c: &Cubes, d: Cube)
 			//println("inside z");
 			let spl1 = d.zlo;
 			let spl2 = d.zhi;
-			//c.live[i] = false;
 			const d1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=spl1    , };
 			const d2 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=spl1    , 
@@ -338,10 +323,8 @@ fn cut_cube(c: &Cubes, d: Cube)
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
 			c.set(i, d1);
 			i -= 1;
-			//c.push(d1);
 			c.push(d2);
 			c.push(d3);
-			continue;
 		}
 
 		else
@@ -433,7 +416,6 @@ fn add_cube(c: &Cubes, a: Cube)
 			//println("completely enveloping");
 			c.live[i] = false;
 			all_disjoint = all_disjoint0;
-			continue;
 		}
 
 		else if stlx or sthx
@@ -451,10 +433,7 @@ fn add_cube(c: &Cubes, a: Cube)
 			                 xhi=c.xhi[i], yhi=c.yhi[i], zhi=c.zhi[i], };
 			c.set(i, c1);
 			i -= 1;
-			//c.live[i] = false;
-			//c.push(c1);
 			c.push(c2);
-			continue;
 		}
 
 		else if stly or sthy
@@ -470,7 +449,6 @@ fn add_cube(c: &Cubes, a: Cube)
 			c.set(i, c1);
 			i -= 1;
 			c.push(c2);
-			continue;
 		}
 		else if stlz or sthz
 		{
@@ -485,11 +463,12 @@ fn add_cube(c: &Cubes, a: Cube)
 			c.set(i, c1);
 			i -= 1;
 			c.push(c2);
-			continue;
 		}
 
 		else if insx and not envx
 		{
+			// There should be a way to consolidate this with the straddling
+			// case by min/max'ing to push an empty cube
 			let spl1 = a.xlo;
 			let spl2 = a.xhi;
 			const c1 = Cube{ xlo=c.xlo[i], ylo=c.ylo[i], zlo=c.zlo[i], 
@@ -502,7 +481,6 @@ fn add_cube(c: &Cubes, a: Cube)
 			i -= 1;
 			c.push(c2);
 			c.push(c3);
-			continue;
 		}
 		else if insy and not envy
 		{
@@ -518,7 +496,6 @@ fn add_cube(c: &Cubes, a: Cube)
 			i -= 1;
 			c.push(c2);
 			c.push(c3);
-			continue;
 		}
 		else if insz and not envz
 		{
@@ -534,7 +511,6 @@ fn add_cube(c: &Cubes, a: Cube)
 			i -= 1;
 			c.push(c2);
 			c.push(c3);
-			continue;
 		}
 
 		else
@@ -545,8 +521,7 @@ fn add_cube(c: &Cubes, a: Cube)
 	}
 	if all_disjoint
 	{
-		// Simply append the added cube to the list. Non-optimal growth
-		// reallocation
+		// Simply append the added cube to the list
 		c.push(a);
 	}
 	return;
@@ -556,8 +531,8 @@ fn test_cut(c: Cubes, d: Cube)
 {
 	// Remove cube `d` from cubes `c` and verify the volume against the
 	// brute-force method from part 1
-	println();
-	println("Testing deletion of d = ", d);
+
+	//println("Testing deletion of d = ", d);
 	const xlo = min(minval(c.xlo), d.xlo);
 	const ylo = min(minval(c.ylo), d.ylo);
 	const zlo = min(minval(c.zlo), d.zlo);
@@ -574,17 +549,17 @@ fn test_cut(c: Cubes, d: Cube)
 			c.ylo[i] - ylo: c.yhi[i] - ylo,
 			c.zlo[i] - zlo: c.zhi[i] - zlo,
 		] = true;
-	println("count(g) = ", count(g));
+	//println("count(g) = ", count(g));
 	g[
 		d.xlo - xlo: d.xhi - xlo,
 		d.ylo - ylo: d.yhi - ylo,
 		d.zlo - zlo: d.zhi - zlo,
 	] = false;
-	println("count(g) = ", count(g));
+	//println("count(g) = ", count(g));
 	const vol_expect = count(g);
 
 	cut_cube(&c, d);
-	println("c = ", c);
+	//println("c = ", c);
 
 	// Get vol from bounds only (without `g`) and compare to expected vol
 	let vol = 0;
@@ -595,10 +570,10 @@ fn test_cut(c: Cubes, d: Cube)
 			(c.xhi[i] - c.xlo[i]) *
 			(c.yhi[i] - c.ylo[i]) *
 			(c.zhi[i] - c.zlo[i]);
-		println("inc = ", inc);
+		//println("inc = ", inc);
 		vol += inc;
 	}
-	println("vol = ", vol);
+	//println("vol = ", vol);
 	if vol != vol_expect
 	{
 		println(ERROR_STR + "bad volume for cube deletion");
@@ -610,8 +585,8 @@ fn test_add(c: Cubes, a: Cube)
 {
 	// Merge added cube `a` into cubes `c` and verify the volume against the
 	// brute-force method from part 1
-	println();
-	println("Testing addition of a = ", a);
+
+	//println("Testing addition of a = ", a);
 	const xlo = min(minval(c.xlo), a.xlo);
 	const ylo = min(minval(c.ylo), a.ylo);
 	const zlo = min(minval(c.zlo), a.zlo);
@@ -628,17 +603,17 @@ fn test_add(c: Cubes, a: Cube)
 			c.ylo[i] - ylo: c.yhi[i] - ylo,
 			c.zlo[i] - zlo: c.zhi[i] - zlo,
 		] = true;
-	println("count(g) = ", count(g));
+	//println("count(g) = ", count(g));
 	g[
 		a.xlo - xlo: a.xhi - xlo,
 		a.ylo - ylo: a.yhi - ylo,
 		a.zlo - zlo: a.zhi - zlo,
 	] = true;
-	println("count(g) = ", count(g));
+	//println("count(g) = ", count(g));
 	const vol_expect = count(g);
 
 	add_cube(&c, a);
-	println("c = ", c);
+	//println("c = ", c);
 
 	// Get vol from bounds only (without `g`) and compare to expected vol
 	let vol = 0;
@@ -649,10 +624,10 @@ fn test_add(c: Cubes, a: Cube)
 			(c.xhi[i] - c.xlo[i]) *
 			(c.yhi[i] - c.ylo[i]) *
 			(c.zhi[i] - c.zlo[i]);
-		println("inc = ", inc);
+		//println("inc = ", inc);
 		vol += inc;
 	}
-	println("vol = ", vol);
+	//println("vol = ", vol);
 	if vol != vol_expect
 	{
 		println(ERROR_STR + "bad volume for cube addition");
@@ -668,9 +643,9 @@ fn unit_tests()
 		zlo = -10, zhi = 10,
 	};
 	let init_cubes = new_cubes();
-	println("init_cubes = ", init_cubes);
+	//println("init_cubes = ", init_cubes);
 	add_cube(&init_cubes, init_cube);
-	println("init_cubes = ", init_cubes);
+	//println("init_cubes = ", init_cubes);
 
 	// ****************
 	// Subtraction tests
@@ -776,7 +751,7 @@ fn unit_tests()
 		Cube{xlo = -12, xhi = 15, ylo = -14, yhi = 15, zlo = 6, zhi = 17});
 
 	// Interlocked cases, e.g. `stlx and insy and envz`
-	println("interlock 1");
+	//println("interlock 1");
 	test_add(init_cubes,  // stlx and insy and envz
 		Cube{xlo = -12, xhi = 5, ylo = -4, yhi = 5, zlo = -16, zhi = 17});
 	test_add(init_cubes,  // insx and envy and sthz
@@ -809,9 +784,7 @@ fn unit_tests()
 fn part2(args: &const Args): str
 {
 	let sum_ = 0'i64;
-
 	unit_tests();
-	//return "";
 
 	let c = new_cubes();
 	let f = open(args.input_filename, "r");
@@ -819,10 +792,10 @@ fn part2(args: &const Args): str
 	let kk = 0;
 	while not eof(f)
 	{
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let nums = parse_i32_delim(str_, "onff xyz=.,");
-		println("nums = ", nums);
+		//println("nums = ", nums);
 		const xmin = nums[0];
 		const xmax = nums[1]+1;
 		const ymin = nums[2];
@@ -832,9 +805,8 @@ fn part2(args: &const Args): str
 
 		const is_on = starts_with_(str_, "on");
 
-		println();
 		str_ = readln(f);
-		println("kk = ", kk);
+		//println("kk = ", kk);
 		kk += 1;
 
 		let a = Cube{
@@ -858,7 +830,6 @@ fn part2(args: &const Args): str
 			(c.yhi[i] - c.ylo[i]) *
 			(c.zhi[i] - c.zlo[i]);
 	}
-	println();
 
 	println("part 2 = ", sum_);
 	return str(sum_);
@@ -871,7 +842,7 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println(MAGENTA + "Starting AOC syntran main 2025/xx" + RESET);
+	println(MAGENTA + "Starting AOC syntran main 2021/22" + RESET);
 	let args = parse_args();
 
 	let p1 = ""; let p2 = "";
