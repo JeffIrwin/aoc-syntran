@@ -147,9 +147,12 @@ fn part1(args: &const Args): str
 				p[:, ip] = [x, y];
 				const pv = std::reshape(p, [2 * n]);
 
-				// TODO: is it any faster to get updated grid by copying `g` and
-				// swapping 2 chars?
-				const gn = get_grid(&gb, &p);
+				// Swap two chars instead of building from scratch. No perf
+				// difference
+				let gn = g;
+				gn[px,py] = ".";
+				gn[ x, y] = ty;
+				//const gn = get_grid(&gb, &p);
 
 				const key = char_mat_to_str(gn[1:nx-1, 1:ny-1]);
 				const e = energy.get(key);
@@ -401,27 +404,98 @@ fn get_dists(g: &const [str; :,:], p0: &const [i32; :,:], ip: i32): [i32; :,:]
 	const np = i32(size(p0,1));
 	let dists = [-1; nx, ny];
 
-	let q = queue_vec_i32::new();
-	q.push([0, p0[0,ip], p0[1,ip]]); // queue of dist, x, and y
+	// TODO: BFS is overkill. Moves are limited, we only need to calculate start
+	// to top row, and then top row to home
+	const x0 = p0[0,ip];
+	const y0 = p0[1,ip];
+	if y0 >= 2
+	{
+		let y = y0;
+		let d = 0;
+		while true
+		{
+			dists[x0,y] = d;
+			y -= 1;
+			d += 1;
+			if (g[x0,y] != ".") return dists;
+			if (y == 1) break;
+		}
+
+		let x = x0;
+		let d0 = d;
+		while true
+		{
+			dists[x,y] = d;
+			if (x == 1) break;
+			x -= 1;
+			d += 1;
+			if (g[x,y] != ".") break;
+		}
+		x = x0;
+		d = d0;
+		while true
+		{
+			dists[x,y] = d;
+			if (x == nx-2) break;
+			x += 1;
+			d += 1;
+			if (g[x,y] != ".") break;
+		}
+
+		//println("dists = ", dists);
+		return dists;
+	}
+
+	// queue-free BFS for the other case
+	const it = i32(g[x0,y0]) - i32("A"); // type index: 0 for A, 1 for B, ...
+	const xt = 3 + 2 * it;
+	let dx = 1;
+	if (xt < x0) dx = -1;
+	let x = x0;
+	let d = 0;
 	while true
 	{
-		if (q.is_empty) break;
-		const u = q.pop();
-		const d0 = u[0];  // unpack
-		const x0 = u[1];
-		const y0 = u[2];
-		dists[x0,y0] = d0;
-		for id in [0: nd]
-		{
-			const x = x0 + dirs[0,id];
-			const y = y0 + dirs[1,id];
-			const c = g[x,y];
-			if (c != ".") continue;
-			if (dists[x,y] >= 0) continue;
-			q.push([d0+1, x, y]);
-		}
+		dists[x,y0] = d;
+		x += dx;
+		d += 1;
+		if (g[x,y0] != ".") return dists;
+		if (x == xt) break;
 	}
+	let y = y0;
+	while true
+	{
+		if (g[x,y] != ".") break;
+		dists[x,y] = d;
+		y += 1;
+		d += 1;
+	}
+	//print_char_mat(&g);
+	//println("dists = ", dists);
+	//exit(0);
 	return dists;
+
+	//// Queue version. Much simpler but a bit slower
+	//let q = queue_vec_i32::new();
+	//q.push([0, p0[0,ip], p0[1,ip]]); // queue of dist, x, and y
+	//while true
+	//{
+	//	if (q.is_empty) break;
+	//	const u = q.pop();
+	//	const d0 = u[0];  // unpack
+	//	const x0 = u[1];
+	//	const y0 = u[2];
+	//	dists[x0,y0] = d0;
+	//	for id in [0: nd]
+	//	{
+	//		const x = x0 + dirs[0,id];
+	//		const y = y0 + dirs[1,id];
+	//		const c = g[x,y];
+	//		if (c != ".") continue;
+	//		if (dists[x,y] >= 0) continue;
+	//		q.push([d0+1, x, y]);
+	//	}
+	//}
+	//return dists;
 }
 
 //==============================================================================
