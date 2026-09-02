@@ -54,19 +54,17 @@ fn part1(args: &const Args): str
 	println("is_legal = ", is_legal);
 
 	let energy = dict_i64::new();
-	let dist   = dict_i64::new();
 
 	// Energy per step for each amphipod type
 	const eps = [1, 10, 100, 1000];
 
 	// The state is the energy consumed so far, all current positions, and an
 	// integer for whether each piece has moved at all yet
-	const state0 = [[0, 0], pv, [0; n]];
+	const state0 = [[0], pv, [0; n]];
 	const key0 = char_mat_to_str(g0[1:nx-1, 1:ny-1]);
 	println("key0 = ");
 	println(key0);
 	energy.set(key0, 0'i64);
-	dist  .set(key0, 0'i64);
 	let q = minheap_vec_i32::new();
 	q.push(state0);
 	let kk = 0;
@@ -77,20 +75,15 @@ fn part1(args: &const Args): str
 		if (q.len == 0) break;
 		const u = q.pop();
 		const e0 = u[0];
-		const d0 = u[1];
-		//const d0 = u[0];
-		//const e0 = u[1];
-		const p0 = std::reshape(u[2: 2*n+2], [2, n]);  // positions
-		const im0 = u[2*n+2: 2*n+2+n];  // has each piece moved yet?
+		const p0 = std::reshape(u[1: 2*n+1], [2, n]);  // positions
+		const im0 = u[2*n+1: 2*n+1+n];  // has each piece moved yet?
 		kk += 1;
 		const g = get_grid(&gb, &p0);
 		if (kk % 3000 == 0)
 		{
-			println("d0, e0, sum_, nhmax = ", [d0, e0, i32(sum_), nhomemax]);
-			//print_char_mat(&gmax);
+			println("e0, sum_, nhmax = ", [e0, i32(sum_), nhomemax]);
 			print_char_mat(&g);
 		}
-		//println("p0 = ", p0);
 		let all_home = true;
 		let nhome = 0;
 		for ip in [0: n]
@@ -100,8 +93,6 @@ fn part1(args: &const Args): str
 			const py = p0[1,ip];
 			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
 			if (is_home) nhome += 1;
-			//println("is_home = ", is_home);
-			//if (is_home and kk > 100_000) exit(0);
 			all_home = all_home and is_home;
 		}
 		if nhome > nhomemax
@@ -112,8 +103,6 @@ fn part1(args: &const Args): str
 		if all_home
 		{
 			sum_ = min(sum_, i64(e0));
-			//println("all_home = ", all_home);
-			//exit(0);
 			continue;
 		}
 
@@ -124,7 +113,6 @@ fn part1(args: &const Args): str
 			const px = p0[0,ip];
 			const py = p0[1,ip];
 
-			//const is_start = all([px,py] == pinit[:,ip]);  // still at starting pos?
 			const is_start = im0[ip] == 0;
 			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
 			const is_hall  = not (is_start or is_home);    // in hallway?
@@ -132,11 +120,6 @@ fn part1(args: &const Args): str
 				continue;
 
 			const dists = get_dists(&g, &p0, ip);
-
-			//println("ip, it = ", [ip, it]);
-			//println("ty = ", ty);
-			//println("start, home, hall = ", [is_start, is_home, is_hall]);
-			//println("dists = ", dists);
 
 			let im = im0;
 			im[ip] = 1;
@@ -163,34 +146,21 @@ fn part1(args: &const Args): str
 				let p = p0;
 				p[:, ip] = [x, y];
 				const pv = std::reshape(p, [2 * n]);
-				//const key = str(pv); // swapping the two A's are different keys
 
+				// TODO: is it any faster to get updated grid by copying `g` and
+				// swapping 2 chars?
 				const gn = get_grid(&gb, &p);
-				const key = char_mat_to_str(gn[1:nx-1, 1:ny-1]);
 
-				const d = dist  .get(key);
+				const key = char_mat_to_str(gn[1:nx-1, 1:ny-1]);
 				const e = energy.get(key);
-				const dalt = d0 + dists[x,y];
 				const ealt = e0 + dists[x,y] * eps[it];
 
-				//println("x, y = ", [x, y]);
-				//println("p = ", p);
-				//println("key = ", key);
-				//println("e = ", e);
-				//println("ealt = ", ealt);
-				//println();
-
 				if e < 0 or ealt < e
-				//if d < 0 or dalt < d
 				{
-					dist  .set(key, i64(dalt));
 					energy.set(key, i64(ealt));
-					q.push([[ealt, dalt], pv, im]);
-					//q.push([[dalt, ealt], pv, im]);
+					q.push([[ealt], pv, im]);
 				}
 			}
-			//println();
-			//if (ip == 3) break;
 		}
 	}
 	println("part 1 = ", sum_);
@@ -219,9 +189,7 @@ fn part2(args: &const Args): str
 	g0[0: size(v1), 3] = v1;
 	g0[0: size(v2), 4] = v2;
 	g0[:, 5:] = gd;
-
 	print_char_mat(&g0);
-	//exit(0);
 
 	const nx = i32(size(g0,0));
 	const ny = i32(size(g0,1));
@@ -265,19 +233,15 @@ fn part2(args: &const Args): str
 	println("is_legal = ", is_legal);
 
 	let energy = dict_i64::new();
-	let dist   = dict_i64::new();
 
 	// Energy per step for each amphipod type
 	const eps = [1, 10, 100, 1000];
 
 	// The state is the energy consumed so far, all current positions, and an
 	// integer for whether each piece has moved at all yet
-	const state0 = [[0, 0], pv, [0; n]];
+	const state0 = [[0], pv, [0; n]];
 	const key0 = char_mat_to_str(g0[1:nx-1, 1:ny-1]);
-	println("key0 = ");
-	println(key0);
 	energy.set(key0, 0'i64);
-	dist  .set(key0, 0'i64);
 	let q = minheap_vec_i32::new();
 	q.push(state0);
 	let kk = 0;
@@ -288,20 +252,16 @@ fn part2(args: &const Args): str
 		if (q.len == 0) break;
 		const u = q.pop();
 		const e0 = u[0];
-		const d0 = u[1];
-		//const d0 = u[0];
-		//const e0 = u[1];
-		const p0 = std::reshape(u[2: 2*n+2], [2, n]);  // positions
-		const im0 = u[2*n+2: 2*n+2+n];  // has each piece moved yet?
+		const p0 = std::reshape(u[1: 2*n+1], [2, n]);  // positions
+		const im0 = u[2*n+1: 2*n+1+n];  // has each piece moved yet?
 		kk += 1;
 		const g = get_grid2(&gb, &p0);
 		if (kk % 3000 == 0)
 		{
-			println("d0, e0, sum_, nhmax = ", [d0, e0, i32(sum_), nhomemax]);
+			println("e0, sum_, nhmax = ", [e0, i32(sum_), nhomemax]);
 			print_char_mat(&gmax);
 			print_char_mat(&g);
 		}
-		//println("p0 = ", p0);
 		let all_home = true;
 		let nhome = 0;
 		for ip in [0: n]
@@ -311,8 +271,6 @@ fn part2(args: &const Args): str
 			const py = p0[1,ip];
 			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
 			if (is_home) nhome += 1;
-			//println("is_home = ", is_home);
-			//if (is_home and kk > 100_000) exit(0);
 			all_home = all_home and is_home;
 		}
 		if nhome > nhomemax
@@ -323,8 +281,6 @@ fn part2(args: &const Args): str
 		if all_home
 		{
 			sum_ = min(sum_, i64(e0));
-			//println("all_home = ", all_home);
-			//exit(0);
 			continue;
 		}
 
@@ -335,7 +291,6 @@ fn part2(args: &const Args): str
 			const px = p0[0,ip];
 			const py = p0[1,ip];
 
-			//const is_start = all([px,py] == pinit[:,ip]);  // still at starting pos?
 			const is_start = im0[ip] == 0;
 			const is_home  = px == 3 + it * 2 and py >= 2; // at destination?
 			const is_hall  = not (is_start or is_home);    // in hallway?
@@ -343,11 +298,6 @@ fn part2(args: &const Args): str
 				continue;
 
 			const dists = get_dists(&g, &p0, ip);
-
-			//println("ip, it = ", [ip, it]);
-			//println("ty = ", ty);
-			//println("start, home, hall = ", [is_start, is_home, is_hall]);
-			//println("dists = ", dists);
 
 			let im = im0;
 			im[ip] = 1;
@@ -379,34 +329,18 @@ fn part2(args: &const Args): str
 				let p = p0;
 				p[:, ip] = [x, y];
 				const pv = std::reshape(p, [2 * n]);
-				//const key = str(pv); // swapping the two A's are different keys
 
 				const gn = get_grid2(&gb, &p);
 				const key = char_mat_to_str(gn[1:nx-1, 1:ny-1]);
-
-				const d = dist  .get(key);
 				const e = energy.get(key);
-				const dalt = d0 + dists[x,y];
 				const ealt = e0 + dists[x,y] * eps[it];
 
-				//println("x, y = ", [x, y]);
-				//println("p = ", p);
-				//println("key = ", key);
-				//println("e = ", e);
-				//println("ealt = ", ealt);
-				//println();
-
 				if e < 0 or ealt < e
-				//if d < 0 or dalt < d
 				{
-					dist  .set(key, i64(dalt));
 					energy.set(key, i64(ealt));
-					q.push([[ealt, dalt], pv, im]);
-					//q.push([[dalt, ealt], pv, im]);
+					q.push([[ealt], pv, im]);
 				}
 			}
-			//println();
-			//if (ip == 3) break;
 		}
 	}
 	println("part 2 = ", sum_);
@@ -487,8 +421,6 @@ fn get_dists(g: &const [str; :,:], p0: &const [i32; :,:], ip: i32): [i32; :,:]
 			q.push([d0+1, x, y]);
 		}
 	}
-	//println("dists = ", dists);
-
 	return dists;
 }
 
