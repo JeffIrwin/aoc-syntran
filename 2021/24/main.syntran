@@ -1,0 +1,149 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../stack_vec_i32 as stack_vec_i32;
+
+//==============================================================================
+
+fn both_parts(args: &const Args, p1: &str, p2: &str)
+{
+	let sum_ = 0'i64;
+	//println("div = ", div);
+
+	//return GenerateModelNumber(0, 0, 0, new int[] { 9, 8, 7, 6, 5, 4, 3, 2, 1});
+	//sum_ = gen_model_num(0, 0'i64, 0, [9: -1: 0]);  // part 1
+	//sum_ = gen_model_num(0, 0'i64, 0, [1: 10]);  // part 2
+
+	let lines = readlns_(args.input_filename);
+	println("size(lines) = ", size(lines));
+
+	const block_len = 18;
+	const nblock = 14;
+	println(block_len * nblock);
+	if size(lines) != block_len * nblock
+	{
+		println(ERROR_STR + "bad number of lines in input file");
+		exit(1);
+	}
+
+	// I had to cheat today. This solution is straight from google's ai overview
+	//
+	// Initially I ported somebody's c# solution from the reddit but it was
+	// pretty slow (15-20 minutes)
+	let div_z = [-1; nblock];
+	let add_x = [-1; nblock];
+	let add_y = [-1; nblock];
+	let k = 0;
+	for i in [0: size(lines)]
+	{
+		if i % block_len == 4
+		{
+			println("div_z line = ", lines[i]);
+			div_z[k] = parse_i32(split_(lines[i], " ")[2]);
+		}
+		else if i % block_len == 5
+		{
+			add_x[k] = parse_i32(split_(lines[i], " ")[2]);
+		}
+		else if i % block_len == 15
+		{
+			add_y[k] = parse_i32(split_(lines[i], " ")[2]);
+			k += 1;
+		}
+	}
+	println("div_z = ", div_z);
+	println("add_x = ", add_x);
+	println("add_y = ", add_y);
+
+	const CAP = 1024 * 8;
+	//let stack = [-1'i32; 2, CAP];
+	//let sp = 0;
+	let stack = stack_vec_i32::new();
+
+	let max_model = [0; nblock];
+	let min_model = [0; nblock];
+	for i in [0: nblock]
+	{
+		println("i = ", i);
+
+		if div_z[i] == 1
+		{
+			// Push block
+			//stack[:,sp] = [i, add_y[i]];
+			stack.push([i, add_y[i]]);
+			//sp += 1;
+		}
+		else
+		{
+			// Pop block
+			//sp -= 1;
+			const popped = stack.pop();
+			println("popped = ", popped);
+			const j = popped[0];
+			const prev_add_y = popped[1];
+			const diff = prev_add_y + add_x[i];
+
+			if diff > 0
+			{
+				max_model[i] = 9;
+				max_model[j] = 9 - diff;
+				min_model[j] = 1;
+				min_model[i] = 1 + diff;
+			}
+			else
+			{
+				max_model[j] = 9;
+				max_model[i] = 9 + diff;
+				min_model[i] = 1;
+				min_model[j] = 1 - diff;
+			}
+		}
+	}
+	println("min_model = ", min_model);
+	println("max_model = ", max_model);
+
+	let minstr = "";
+	let maxstr = "";
+	for i in [0: nblock]
+	{
+		minstr += str(min_model[i]);
+		maxstr += str(max_model[i]);
+	}
+	p1 = maxstr;
+	p2 = minstr;
+
+	println("part 1 = ", p1);
+	println("part 2 = ", p2);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/24" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	both_parts(&args, &p1, &p2);
+
+	let expect1 = "12934998949199";
+	let expect2 = "11711691612189";
+	let expect1_test = ""; // no sample answer for this day :(
+	let expect2_test = "";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
