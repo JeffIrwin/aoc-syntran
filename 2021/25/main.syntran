@@ -1,0 +1,110 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const g = read_char_mat(args.input_filename);
+	const nx = size(g,0);
+	const ny = size(g,1);
+	//print_char_mat(&g);
+
+	// Encoding as i32 is 5x faster than using strings (arbitrary length because
+	// syntran does not have a single-char type yet)
+	const EMPTY = 1;
+	const EAST  = 2;
+	const SOUTH = 3;
+	let ig = [EMPTY; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if g[x,y] == ">"
+			ig[x,y] = EAST;
+		else if g[x,y] == "v"
+			ig[x,y] = SOUTH;
+	}
+
+	let it = 0;
+	while true
+	{
+		it += 1;
+		//println("it = ", it);
+
+		let is_moving = false;
+		//let g0 = g;
+		let ig0 = ig;
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			// East-facing herd moves first
+			let c = ig0[x,y];
+			let xe = (x+1) % nx;
+			let ce = ig0[xe,y];
+			if c == EAST and ce == EMPTY
+			{
+				ig[x,y] = EMPTY;
+				ig[xe,y] = EAST;
+				is_moving = true;
+			}
+		}
+
+		ig0 = ig;
+		for y in [0: ny]
+		for x in [0: nx]
+		{
+			// South-facing herd moves second
+			let c = ig0[x,y];
+			let ys = (y+1) % ny;
+			let cs = ig0[x,ys];
+			if c == SOUTH and cs == EMPTY
+			{
+				ig[x,y] = EMPTY;
+				ig[x,ys] = SOUTH;
+				is_moving = true;
+			}
+		}
+
+		//print_char_mat(&g);
+		if (not is_moving) break;
+	}
+	sum_ = it;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2021/25" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+
+	let expect1 = "424";
+	let expect2 = "";  // no part 2 for day 25
+	let expect1_test = "58";
+	let expect2_test = "";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
