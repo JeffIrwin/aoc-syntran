@@ -1,0 +1,556 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../minheap_vec_i32_2026 as minheap_vec_i32;
+use ../../queue_vec_i32 as queue_vec_i32;
+
+//==============================================================================
+
+fn split4(i: &const i64): [i32; :]
+{
+	return [
+		i32((i >> 48) & 0xffff'i64),
+		i32((i >> 32) & 0xffff'i64),
+		i32((i >> 16) & 0xffff'i64),
+		i32((i >>  0) & 0xffff'i64),
+	];
+}
+fn pack4(v: &const [i32; :]): i64
+{
+	return i64(v[0])<<48 | i64(v[1])<<32 | i64(v[2])<<16 | i64(v[3]);
+}
+
+let names = [""; 0];
+let important_valves = [0; 0];
+fn part1(args: &const Args): str
+{
+	// Managed to figure out part1 in syntran by myself, but i also managed that
+	// much in fortran four years ago. Not sure why this approach doesn't extend
+	// to part 2 in part2_wrong() below, must be a bug. I'm not surprised that
+	// it doesn't scale but i think it should at least get the test input
+	let sum_ = 0'i64;
+
+	let lines = readlns_(args.input_filename);
+	const n = i32(size(lines));
+	names = [""; n];
+	let rates = [0; n];
+	let adj_names = [""; n];
+	let nadj = [0; n];
+	let ids = dict_i64::new();
+	for i in [0: n]
+	{
+		const words = split_(lines[i], " ");
+		names[i] = words[1];
+		ids.set(names[i], i64(i));
+		rates[i] = parse_i32(split_(lines[i], "=;")[1]);
+		nadj[i] = size(words) - 9;
+		for j in [9: size(words)]
+			adj_names[i] += words[j] ;//+ ",";
+	}
+	const nadj_max = maxval(nadj);
+	//println("names = ", names);
+	//println("rates = ", rates);
+	//println("nadj_max = ", nadj_max);
+	//println("adj_names = ", adj_names);
+	//println("nadj = ", nadj);
+	//ids.print("ids = ");
+
+	let adj = [-1; nadj_max, n];
+	for i in [0: n]
+	{
+		const words = split_(adj_names[i], ",");
+		for j in [0: size(words)]
+			adj[j, i] = ids.get(words[j]);
+	}
+	//println("adj = ", adj);
+
+	let opened = 0'i64;  // bit vector of opened valves
+	for i in [0: n]
+		if rates[i] == 0
+			opened |= 1'i64 << i;
+	//println("opened = ", opened);
+
+	// More than 32 valves in input, so we have to split into multiple 32-bit
+	// ints which fit in our minheap type
+	const ops = split4(opened);
+	//println("ops = ", ops);
+	//println("pack = ", pack4(ops));
+
+	// Start at AA, not necessarily the first valve. Note that time is part of
+	// the minheap queue but not part of the total_release dictionary key
+	//
+	// Dijkstra
+	const id_start = i32(ids.get("AA"));
+	const t_start = 30;  // 30 minutes left initially
+	const state0 = [[id_start, t_start], ops];
+	//const state0 = [[id_start], [t_start], opened]; // TODO: syntran array cat bug if id_start i64
+	let total_release = dict_i64::new();
+	total_release.set(str([[id_start], ops]), 0'i64);
+	let q = minheap_vec_i32::new();
+	q.push([[0], state0]);
+	//println("id_start = ", id_start);
+	//println("state0 = ", state0);
+	let kk = 0;
+	while true
+	{
+		if (q.len == 0) break;
+		const u = q.pop();
+		const d0   = u[0]; // unpack
+		const id0  = u[1];
+		const t0   = u[2];
+		const op0  = pack4(u[3:]);
+
+		kk += 1;
+		if kk % 10_000 == 0
+			//println("kk = ", kk);
+
+		for v in adj[0: nadj[id0], id0]
+		{
+			let t = t0 - 1; // 1 minute to move
+
+			// Sometimes its worthwhile to move without opening. Important for
+			// test input
+			push_state1(d0, v, t, op0, n, &total_release, &q);
+			if (op0 >> v & 1'i64 == 1) continue;
+			if (t <= 2) continue;
+
+			t -= 1;  // 1 minute to open
+			const op = op0 | (1'i64 << v);
+			const inc = rates[v] * t;
+
+			push_state1(d0-inc, v, t, op, n, &total_release, &q);
+		}
+	}
+	sum_ = -minval(total_release.get_vals());
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn both_parts(args: &const Args, p1: &str, p2: &str)
+{
+	let sum_ = 0'i64;
+
+	let lines = readlns_(args.input_filename);
+	const n = i32(size(lines));
+	names = [""; n];
+	let rates = [0; n];
+	let adj_names = [""; n];
+	let nadj = [0; n];
+	let ids = dict_i64::new();
+	for i in [0: n]
+	{
+		const words = split_(lines[i], " ");
+		names[i] = words[1];
+		ids.set(names[i], i64(i));
+		rates[i] = parse_i32(split_(lines[i], "=;")[1]);
+		nadj[i] = size(words) - 9;
+		for j in [9: size(words)]
+			adj_names[i] += words[j] ;//+ ",";
+	}
+	const nadj_max = maxval(nadj);
+	//println("names = ", names);
+	//println("rates = ", rates);
+	//println("nadj_max = ", nadj_max);
+	//println("adj_names = ", adj_names);
+	//println("nadj = ", nadj);
+	//ids.print("ids = ");
+
+	let adj = [-1; nadj_max, n];
+	for i in [0: n]
+	{
+		const words = split_(adj_names[i], ",");
+		for j in [0: size(words)]
+			adj[j, i] = ids.get(words[j]);
+	}
+	//println("adj = ", adj);
+
+	println("positive flow valves = ", count(rates > 0));
+	println("broken valves        = ", count(rates == 0));
+
+	const nimp = count(rates > 0);
+	const nint = nimp + 1;
+	important_valves = [-1; nimp];
+	//let all_nodes_of_interest = [-1; nint];
+	let k = 0;
+	for i in [0: n]
+		if rates[i] > 0 //or names[i] == "AA"
+		{
+			important_valves[k] = i;
+			//all_nodes_of_interest[k] = i;
+			k += 1;
+		}
+	const all_nodes_of_interest = [[i32(ids.get("AA"))], important_valves];
+	//println("important_valves = ", important_valves);
+	//println("all_nodes_of_interest = ", all_nodes_of_interest);
+	println("names of interest = ", names[all_nodes_of_interest]);
+
+	let distances = [-1; n, n];
+
+	// Do a BFS ahead of time to get distances between all pairs of "important"
+	// valves (and the start at least from one-way)
+	let is_important = [false; n];
+	is_important[important_valves] = true;
+	for start in all_nodes_of_interest
+	{
+		let q = queue_vec_i32::new();
+		let visited = [false; n];
+		q.push([0, start]);
+		visited[start] = true;
+		while not q.is_empty
+		{
+			const u = q.pop();
+			const dist = u[0];
+			const curr = u[1];
+			if is_important[curr] and curr != start
+			{
+				//distances[start, curr] = dist;
+				distances[curr, start] = dist;
+			}
+			for nbr in adj[0:nadj[curr], curr]
+				if not visited[nbr]
+				{
+					visited[nbr] = true;
+					q.push([dist+1, nbr]);
+				}
+		}
+	}
+	//println("distances = ", distances);
+
+	// Construct bitmasks
+	let valve_to_bit = [0; n];
+	k = 0;
+	for i in [0: n]
+		if is_important[i]
+		{
+			valve_to_bit[i] = 1 << k;
+			k += 1;
+		}
+	//println("valve_to_bit = ", valve_to_bit);
+
+	// I had to cheat for part 2. Not sure what the hell this dfs is doing :/
+	let max_pressure_for_mask = dict_i64::new();
+	const id_start = i32(ids.get("AA"));
+	dfs
+	(
+		id_start, 30, 0, 0,
+		&max_pressure_for_mask, &valve_to_bit, &distances,
+		&adj, &nadj, &rates,
+	);
+	//max_pressure_for_mask.print("max_pressure_for_mask = ");
+	p1 = str(maxval(max_pressure_for_mask.get_vals()));
+
+	// Do a search for *one* person with a time limit of 26
+	max_pressure_for_mask = dict_i64::new();  // clear/reset dict for new time limit
+	dfs
+	(
+		id_start, 26, 0, 0,
+		&max_pressure_for_mask, &valve_to_bit, &distances,
+		&adj, &nadj, &rates,
+	);
+
+	// From our one-person search above, look at pairs of bitmasks. Find the
+	// best possible sum score1+score2 for perfectly disjoint complementary
+	// bitmasks, i.e. where the one-person search for person 2 only opens up
+	// valves not touched by person 1 and vice-versa
+	let ip2 = 0;
+	const keys = max_pressure_for_mask.get_keys();
+	const vals = max_pressure_for_mask.get_vals();
+	for i in [0: size(keys)]
+	{
+		const mask1  = parse_i32(keys[i]);
+		const score1 = vals[i];
+		for j in [i+1: size(keys)]
+		{
+			const mask2  = parse_i32(keys[j]);
+			const score2 = vals[j];
+			if mask1 & mask2 == 0  // complementary bitmasks
+				ip2 = max(ip2, i32(score1 + score2));
+		}
+	}
+
+	// Tried 2410 -- too low
+	println("part 1 = ", p1);
+	println("part 2 = ", ip2);
+	p2 = str(ip2);
+}
+
+fn dfs
+(
+	curr_valve: i32, time_left: i32, current_pressure: i32, current_mask: i32,
+	max_pressure_for_mask: &dict_i64::dict_i64,
+	valve_to_bit: &const [i32; :],
+	distances: &const [i32; :,:], // TODO: just use global vars :(
+	adj: &const [i32; :,:],
+	nadj: &const [i32; :],
+	rates: &const [i32; :],
+)
+{
+	// idk how the hell this shit scales. with 15 "important" valves isn't this
+	// entiring like 15 factorial times (minus branches where we run out of
+	// time)??
+
+	//println("dfs curr_valve = ", names[curr_valve]);
+	const key = str(current_mask);
+	if current_pressure > max_pressure_for_mask.get(key)
+		max_pressure_for_mask.set(key, i64(current_pressure));
+	//else
+	//	return;  // ok for real input and 2x faster, but wrong for test input!!
+
+	for nbr in important_valves
+	{
+		//const dist = distances[curr_valve, nbr]; // transpose?
+		const dist = distances[nbr, curr_valve]; // transpose?
+		if (dist < 0) continue;
+		const bit = valve_to_bit[nbr];
+		const time_after_opening = time_left - dist - 1;
+
+		if (current_mask & bit) == 0 and time_after_opening > 0
+		{
+			const add_pressure = rates[nbr] * time_after_opening;
+			const pressure = current_pressure + add_pressure;
+			const mask = current_mask | bit;
+			dfs
+			(
+				nbr, time_after_opening, pressure, mask,
+				&max_pressure_for_mask, &valve_to_bit, &distances,
+				&adj, &nadj, &rates,
+			);
+		}
+	}
+	return;
+}
+
+fn part2_wrong(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let lines = readlns_(args.input_filename);
+	const n = i32(size(lines));
+	let names = [""; n];
+	let rates = [0; n];
+	let adj_names = [""; n];
+	let nadj = [0; n];
+	let ids = dict_i64::new();
+	for i in [0: n]
+	{
+		const words = split_(lines[i], " ");
+		names[i] = words[1];
+		ids.set(names[i], i64(i));
+		rates[i] = parse_i32(split_(lines[i], "=;")[1]);
+		nadj[i] = size(words) - 9;
+		for j in [9: size(words)]
+			adj_names[i] += words[j] ;//+ ",";
+	}
+	const nadj_max = maxval(nadj);
+	println("names = ", names);
+	println("rates = ", rates);
+	println("nadj_max = ", nadj_max);
+	println("adj_names = ", adj_names);
+	println("nadj = ", nadj);
+	//ids.print("ids = ");
+
+	let adj = [-1; nadj_max, n];
+	for i in [0: n]
+	{
+		const words = split_(adj_names[i], ",");
+		for j in [0: size(words)]
+			adj[j, i] = ids.get(words[j]);
+	}
+	println("adj = ", adj);
+
+	let opened = 0'i64;  // bit vector of opened valves
+	for i in [0: n]
+		if rates[i] == 0
+			opened |= 1'i64 << i;
+	println("opened = ", opened);
+
+	println("positive flow valves = ", count(rates > 0));
+	println("broken valves        = ", count(rates == 0));
+
+	// More than 32 valves in input, so we have to split into multiple 32-bit
+	// ints which fit in our minheap type
+	const ops = split4(opened);
+	println("ops = ", ops);
+	println("pack = ", pack4(ops));
+
+	// Start at AA, not necessarily the first valve. Note that time is part of
+	// the minheap queue but not part of the total_release dictionary key
+	//
+	// Dijkstra
+	const id_start = i32(ids.get("AA"));
+	const t_start = 26;
+	const state0 = [[id_start, id_start, t_start], ops];
+	let total_release = dict_i64::new();
+	//total_release.set(str([[id_start, id_start], ops]), 0'i64);
+	total_release.set(str([[id_start, id_start, t_start], ops]), 0'i64);
+	let q = minheap_vec_i32::new();
+	q.push([[0], state0]);
+	println("id_start = ", id_start);
+	println("state0 = ", state0);
+	let kk = 0;
+	while true
+	{
+		if (q.len == 0) break;
+		const u = q.pop();
+		const d0   = u[0]; // unpack
+		const id0  = u[1];
+		const id1  = u[2];
+		const t0   = u[3];
+		const op0  = pack4(u[4:]);
+		//println("op0 = ", op0);
+
+		if (t0 <= 0) continue;
+
+		kk += 1;
+		if kk % 10_000 == 0
+			println("kk = ", kk);
+
+		for v0 in adj[0: nadj[id0], id0]
+		for v1 in adj[0: nadj[id1], id1]
+		{
+			//if (v0 == v1) continue;
+			//println("names = ", names[v0], ",", names[v1]);
+			let t = t0 - 1; // 1 minute to move
+			if (t <= 0) continue;
+
+			// Sometimes its worthwhile to move without opening. Important for
+			// test input
+			push_state2(d0, v0, v1, t, op0, n, &total_release, &q);
+			//if (op0 >> v & 1'i64 == 1) continue;
+			//if (op0 >> v0 & 1'i64 == 1) and (op0 >> v1 & 1'i64 == 1) continue;
+			//if (t <= 2) continue;
+
+			t -= 1;  // 1 minute to open
+			if (t <= 0) continue;
+
+			//*************************
+			// Open v0 only
+			if (op0 >> v0 & 1'i64) == 0
+			{
+			const op = op0 | (1'i64 << v0);
+			let inc = 0;
+			//if (op0 >> v0 & 1'i64 == 0) inc += rates[v0] * t;
+			inc += rates[v0] * t;
+			push_state2(d0-inc, v0, v1, t, op, n, &total_release, &q);
+			}
+
+			//*************************
+			// Open v1 only
+			if (op0 >> v1 & 1'i64) == 0
+			{
+			const op = op0 | (1'i64 << v1);
+			let inc = 0;
+			//if (op0 >> v1 & 1'i64 == 0) inc += rates[v1] * t;
+			inc += rates[v1] * t;
+			push_state2(d0-inc, v0, v1, t, op, n, &total_release, &q);
+			}
+
+			//*************************
+			// Open v0 *and* v1
+			//if (op0 >> v1 & 1'i64 == 0)
+			if v0 != v1
+			{
+			const op = op0 | (1'i64 << v0) | (1'i64 << v1);
+			let inc = 0;
+			if ((op0 >> v0 & 1'i64) == 0) inc += rates[v0] * t;
+			if v0 != v1 and ((op0 >> v1 & 1'i64) == 0) inc += rates[v1] * t;
+			push_state2(d0-inc, v0, v1, t, op, n, &total_release, &q);
+			}
+		}
+	}
+	sum_ = -minval(total_release.get_vals());
+
+	// Tried 2410 -- too low
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn push_state2
+(
+	d: i32, v0: i32, v1: i32, t: i32, op: i64, n: i32,
+	total_release: &dict_i64::dict_i64,
+	q: &minheap_vec_i32::minheap_vec_i32,
+)
+{
+	// Swap v0/v1 for symmetry
+	//if v0 > v1
+	//{
+	//	let tmp = v0;
+	//	v0 = v1;
+	//	v1 = tmp;
+	//}
+	const ops = split4(op);
+	const state = [[v0, v1, t], ops];
+	//const key = str([[v0, v1], ops]);
+	const key = str([[v0, v1, t], ops]);
+	const seen = total_release.contains(key);
+	let alt = 1;
+	if (seen) alt = total_release.get(key);
+	if d < alt
+	{
+		total_release.set(key, i64(d));
+		if (count_set_bits64(op) == n) return;
+		//if (t <= 2) return;
+		//if (t <= 0) return;
+		q.push([[d], state]);
+	}
+	return;
+}
+
+fn push_state1
+(
+	d: i32, v: i32, t: i32, op: i64, n: i32,
+	total_release: &dict_i64::dict_i64,
+	q: &minheap_vec_i32::minheap_vec_i32,
+)
+{
+	const ops = split4(op);
+	const state = [[v, t], ops];
+	const key = str([[v], ops]);
+	const seen = total_release.contains(key);
+	let alt = 1;
+	if (seen) alt = total_release.get(key);
+	if d < alt
+	{
+		total_release.set(key, i64(d));
+		if (count_set_bits64(op) == n) return;
+		if (t <= 2) return;
+		q.push([[d], state]);
+	}
+	return;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2022/16" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	//if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+	both_parts(&args, &p1, &p2);
+
+	let expect1 = "1991";
+	let expect2 = "2705";
+	let expect1_test = "1651";
+	let expect2_test = "1707";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
