@@ -1,0 +1,180 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	let k = 0;
+	while not eof(f)
+	{
+		k += 1;
+		println("str_ = ", str_);
+
+		const ngeo = solve1(str_);
+		sum_ += k * ngeo;
+
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+// Resource names are always listed in the same order for each blueprint
+const names = ["ore", "clay", "obsidian", "geode"];
+const n = size(names);
+const eye4 = [
+	1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1,
+	;
+	4, 4
+];
+
+let cache1 = dict_i64::new();
+let max_geo_bots = [0; 25];
+let max_obs_bots = [0; 25];
+fn solve1(str_: str): i32
+{
+	let ids = dict_i64::new();
+	for i in [0: n]
+		ids.set(names[i], i);
+	ids.print("ids = ");
+
+	let mat = [0; n, n];
+	const sentences = split_(str_, ":.");
+	//println("sentences = ", sentences);
+	for i in [1: size(sentences)]
+	{
+		const sent = sentences[i];
+		println("sent = ", sent);
+		const words = split_(sent, " ");
+		for j in [4: size(words)]
+			if is_digit(words[j,0])
+			{
+				const k = ids.get(words[j+1]);
+				mat[k,i-1] = parse_i32(words[j]);
+			}
+	}
+	// Robot i costs mat[:,i] of each resource to produce
+	println("mat = ", mat);
+
+	let bots = [1, 0, 0, 0];  // start with 1 ore robot and 0 of all others
+	let ress = [0, 0, 0, 0];  // start with no resources
+	let t = 24;
+	//t = 19;
+	cache1 = dict_i64::new();  // clear between each blueprint
+	max_geo_bots = 0;
+	max_obs_bots = 0;
+	println("t init = ", t);
+	let ngeo = search1(mat, bots, ress, t);
+
+	println("solve1: ngeo = ", ngeo);
+	println("---------------------");
+	println();
+	return ngeo;
+}
+
+fn search1(
+	mat: &const [i32; :,:],
+	bots0: &const [i32; :],
+	ress0: &const [i32; :],
+	t: i32,
+): i32
+{
+	const key = str(bots0, ress0, t);
+	if (t <= 0)
+	{
+		//if ress0[3] == 19
+		//{
+		//	println("bots0 19 = ", bots0);
+		//	println("ress0    = ", ress0);
+		//}
+		cache1.set(key, i64(ress0[3]));
+		return ress0[3];
+	}
+	if cache1.contains(key)
+	{
+		//println("cache hit");
+		return i32(cache1.get(key));
+	}
+	if bots0[3] < max_geo_bots[t]
+	{
+		// Stop searching if we've had more robots on another search branch at
+		// the same time
+		//
+		// TODO: cache?
+
+		//println("pruning");
+		return ress0[3];
+	}
+	if bots0[3] == max_geo_bots[t] and bots0[2] < max_obs_bots[t]
+	{
+		return ress0[3];
+	}
+	max_geo_bots[t] = max(max_geo_bots[t], bots0[3]);
+	max_obs_bots[t] = max(max_obs_bots[t], bots0[2]);
+
+	t -= 1;
+	let ress = ress0 + bots0;  // each bot produces its respective resource
+	let maxgeos = ress[3];
+
+	// Proceed without building any new robots
+	let a = search1(mat, bots0, ress, t);
+	maxgeos = max(maxgeos, a);
+
+	//println();
+	//println("ress = ", ress);
+	for i in [0: n]
+	{
+		if all(ress >= mat[:,i])
+		{
+			//println("building ", names[i], " robot");
+			let b = search1(mat, bots0 + eye4[:,i], ress - mat[:,i], t);
+			maxgeos = max(maxgeos, b);
+		}
+	}
+	cache1.set(key, i64(maxgeos));
+	return maxgeos;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2022/19" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "REPLACE_ME_P1";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
