@@ -1,0 +1,406 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const g = read_char_mat(args.input_filename);
+	print_char_mat(&g);
+
+	// Make an array of positions `p` from grid `g`
+	const n = count(g == "#");
+	const nx = size(g,0);
+	const ny = size(g,1);
+	let p = [0; 2, n];
+	let k = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+		if g[x,y] == "#"
+		{
+			p[:,k] = [x,y];
+			k += 1;
+		}
+	println("p = ", p);
+
+	// 8 neighbors
+	const n8 = [
+		1, 0,
+		0, 1,
+		-1, 0,
+		0, -1,
+		1, 1,
+		1, -1,
+		-1, 1,
+		-1, -1,
+		;
+		2, 8
+	];
+	println("n8 = ", n8);
+
+	//const nn = [ 0,-1, 1,-1, -1,-1 ;  2, 3 ];  // 3 north neighbors
+	//const ns = [ 0,1 , 1,1 , -1,1  ;  2, 3 ];  // 3 south neighbors
+	//const nw = [ -1,0, -1,1, -1,-1 ;  2, 3 ];  // west
+	//const ne = [ 1,0 , 1,1 ,  1,-1 ;  2, 3 ];  // east
+
+	let dirs = [
+		0,-1, 1,-1, -1,-1 ,
+		0,1 , 1,1 , -1,1  ,
+		-1,0, -1,1, -1,-1 ,
+		1,0 , 1,1 ,  1,-1 ,
+		;
+		2, 3, 4
+	];
+	let ds = [
+		0, -1,
+		0, 1,
+		-1, 0,
+		1, 0,
+		;
+		2, 4
+	];
+	println("dirs = ", dirs);
+	//exit(0);
+
+	for it in [0: 10]
+	{
+		print_pos(p);
+
+		const p0 = p;
+
+		// Make a hash set
+		let s0 = dict_i64::new();
+		for i in [0: n]
+		{
+			const key = str(p0[0,i], ",", p0[1,i]);
+			s0.set(key, 1'i64);
+		}
+
+		for i in [0: n]
+		{
+			// Count neighbors in 8 adjacent positions
+			let c8 = count_nbrs(s0, p0[:,i], n8);
+			println("p0, c8 = ", [p0[:,i], [c8]]);
+
+			if c8 == 0
+			{
+				continue;
+			}
+			if count_nbrs(s0, p0[:,i], dirs[:,:, (0+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(0+it)%4];
+				continue;
+			}
+			if count_nbrs(s0, p0[:,i], dirs[:,:, (1+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(1+it)%4];
+				continue;
+			}
+			if count_nbrs(s0, p0[:,i], dirs[:,:, (2+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(2+it)%4];
+				continue;
+			}
+			if count_nbrs(s0, p0[:,i], dirs[:,:, (3+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(3+it)%4];
+				continue;
+			}
+		}
+
+		//// Cycle the directional check array
+		//dirs = dirs[:,:, [1, 2, 3, 0]];
+		////dirs = dirs[:,:, [3, 0, 1, 2]];
+		//ds = ds[:, [1, 2, 3, 0]];
+
+		// Check that each proposal is unique with a hash map
+		let s = dict_i64::new();
+		for i in [0: n]
+		{
+			// Get counts
+			const key = str(p[0,i], ",", p[1,i]);
+			s.inc(key, 1'i64);
+		}
+		s.print("s = ");
+		for i in [0: n]
+		{
+			// If count is not 1, revert to previous position
+			const key = str(p[0,i], ",", p[1,i]);
+			const c = s.get(key);
+			if c != 1
+				p[:,i] = p0[:,i];
+		}
+	}
+	print_pos(p);
+
+	// Make a hash set (could be DRY)
+	let s = dict_i64::new();
+	for i in [0: n]
+	{
+		const key = str(p[0,i], ",", p[1,i]);
+		s.set(key, 1'i64);
+	}
+
+	// Count the empty spaces in the bounding box
+	const xmin = minval(p[0,:]);
+	const ymin = minval(p[1,:]);
+	const xmax = maxval(p[0,:]) + 1;
+	const ymax = maxval(p[1,:]) + 1;
+	for y in [ymin: ymax]
+	for x in [xmin: xmax]
+	{
+		const key = str(x, ",", y);
+		if not s.contains(key)
+			sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	// This wasn't that hard. Not sure why I couldn't get it 4 years ago in
+	// Fortran. Must've had some stupid little bug
+	let sum_ = 0'i64;
+
+	const g = read_char_mat(args.input_filename);
+	print_char_mat(&g);
+
+	// Make an array of positions `p` from grid `g`
+	const n = count(g == "#");
+	const nx = size(g,0);
+	const ny = size(g,1);
+	let p = [0; 2, n];
+	let k = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+		if g[x,y] == "#"
+		{
+			p[:,k] = [x,y];
+			k += 1;
+		}
+	println("p = ", p);
+
+	// 8 neighbors
+	const n8 = [
+		1, 0,
+		0, 1,
+		-1, 0,
+		0, -1,
+		1, 1,
+		1, -1,
+		-1, 1,
+		-1, -1,
+		;
+		2, 8
+	];
+	println("n8 = ", n8);
+
+	let dirs = [
+		0,-1, 1,-1, -1,-1 ,
+		0,1 , 1,1 , -1,1  ,
+		-1,0, -1,1, -1,-1 ,
+		1,0 , 1,1 ,  1,-1 ,
+		;
+		2, 3, 4
+	];
+	let ds = [
+		0, -1,
+		0, 1,
+		-1, 0,
+		1, 0,
+		;
+		2, 4
+	];
+	//println("dirs = ", dirs);
+
+	let g3 = [false; 3,3];
+	let p0 = p;
+	let it = -1;
+	while true
+	{
+		it += 1;
+		println("it = ", it);
+
+		p0 = p;
+
+		// Make a hash set
+		//
+		// A simple array would probably be feasible and much faster, even for
+		// part 2. Answer is a little under 1000, so grid extents are roughly
+		// 2000x2000. An array of 4 million should fit in memory just fine
+		let s0 = dict_i64::new();
+		for i in [0: n]
+		{
+			const key = str(p0[0,i], ",", p0[1,i]);
+			s0.set(key, 1'i64);
+		}
+
+		for i in [0: n]
+		{
+			// Count neighbors in 8 adjacent positions
+			get_nbrs(s0, p0[:,i], n8, &g3);
+			let c8 = count_nbrs2(g3, p0[:,i], n8);
+
+			// Use a bool array g3 to avoid re-hashing in the other neighbor
+			// counts below
+			if c8 == 0
+				continue;
+			if count_nbrs2(g3, p0[:,i], dirs[:,:, (0+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(0+it)%4];
+				continue;
+			}
+			if count_nbrs2(g3, p0[:,i], dirs[:,:, (1+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(1+it)%4];
+				continue;
+			}
+			if count_nbrs2(g3, p0[:,i], dirs[:,:, (2+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(2+it)%4];
+				continue;
+			}
+			if count_nbrs2(g3, p0[:,i], dirs[:,:, (3+it)%4 ]) == 0
+			{
+				p[:,i] = p0[:,i] + ds[:,(3+it)%4];
+				continue;
+			}
+		}
+
+		// Check that each proposal is unique with a hash map
+		let s = dict_i64::new();
+		for i in [0: n]
+		{
+			// Don't bother checking points that didn't move
+			if all(p0[:,i] == p[:,i]) continue;
+
+			// Get counts
+			const key = str(p[0,i], ",", p[1,i]);
+			s.inc(key, 1'i64);
+		}
+		for i in [0: n]
+		{
+			if all(p0[:,i] == p[:,i]) continue;
+
+			// If count is not 1, revert to previous position
+			//
+			// This is probaly twice as much hashing as optimally necessary
+			const key = str(p[0,i], ",", p[1,i]);
+			const c = s.get(key);
+			if c != 1
+				p[:,i] = p0[:,i];
+		}
+		if all(p == p0) break;
+	}
+	print_pos(p);
+	sum_ = it + 1;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn get_nbrs
+(
+	s: &const dict_i64::dict_i64,
+	p: &const [i32; :],
+	d: &const [i32; :,:],
+	g: &[bool; :,:],
+)
+{
+	g = false;
+	for i in [0: size(d,1)]
+	{
+		const x = p[0] + d[0,i];
+		const y = p[1] + d[1,i];
+		const key = str(x, ",", y);
+		if s.contains(key)
+			g[d[0,i]+1, d[1,i]+1] = true;
+	}
+}
+fn count_nbrs2
+(
+	g: &const [bool; :,:],
+	p: &const [i32; :],
+	d: &const [i32; :,:],
+): i32
+{
+	let c = 0;
+	for i in [0: size(d,1)]
+	{
+		const x = p[0] + d[0,i];
+		const y = p[1] + d[1,i];
+		const key = str(x, ",", y);
+		if g[d[0,i]+1, d[1,i]+1]
+			c += 1;
+	}
+	return c;
+}
+
+fn count_nbrs
+(
+	s: &const dict_i64::dict_i64,
+	p: &const [i32; :],
+	d: &const [i32; :,:],
+): i32
+{
+	let c = 0;
+	for i in [0: size(d,1)]
+	{
+		const x = p[0] + d[0,i];
+		const y = p[1] + d[1,i];
+		const key = str(x, ",", y);
+		if s.contains(key)
+			c += 1;
+	}
+	return c;
+}
+
+fn print_pos(p: &const [i32; :,:])
+{
+	const xmin = minval(p[0,:]);
+	const ymin = minval(p[1,:]);
+	const xmax = maxval(p[0,:]) + 1;
+	const ymax = maxval(p[1,:]) + 1;
+	let g = ["."; xmax-xmin, ymax-ymin];
+	for i in [0: size(p,1)]
+		g[p[0,i]-xmin, p[1,i]-ymin] = "#";
+	print_char_mat(&g);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2022/23" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "3931";
+	let expect2 = "944";
+	let expect1_test = "110";
+	let expect2_test = "20";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
