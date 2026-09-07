@@ -11,7 +11,7 @@ struct Queue_vec_i32
 	is_init : bool, // vec size is set on first push
 	data: [i32; :,:],
 
-	fn push(val: [i32; :])
+	fn push(val: &const [i32; :])
 	{
 		//println("pushing val = ", val);
 		if is_init

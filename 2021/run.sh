@@ -14,7 +14,8 @@ for dir in ${dirs[@]} ; do
 	args="-a"
 
 	#[[ "$dir" == "4" ]] && continue
-	#[[ "$dir" == "18" ]] && args="-a -t -1"
+	[[ "$dir" == "19" ]] && args="-a -t"
+	[[ "$dir" == "23" ]] && args="-a -1"
 
 	pushd "$dir" >/dev/null
 

@@ -1647,6 +1647,20 @@ fn print_char_mat(chars: &const [str; :,:])
 	return;
 }
 
+fn print_bool_mat(b: &const [bool; :,:])
+{
+	// Print a bool matrix with the common AOC convention of "#" for true and
+	// "." for false
+	const nx = size(b,0);
+	const ny = size(b,1);
+	let c = ["."; nx, ny];
+	for y in [0: ny]
+	for x in [0: nx]
+		if b[x,y]
+			c[x,y] = "#";
+	print_char_mat(&c);
+}
+
 fn char_mat_to_str(chars: &const [str; :,:]): str
 {
 	// Concatenate a char matrix with newlines as row delimiters. Non-optimal
@@ -1654,6 +1668,22 @@ fn char_mat_to_str(chars: &const [str; :,:]): str
 	let s = "";
 	for iy in [0: size(chars, 1)]
 		s = s + cat_strs(chars[:,iy]) + NEWLINE_;
+	return s;
+}
+
+fn bool_mat_to_str(b: &const [bool; :,:]): str
+{
+	const nx = size(b,0);
+	const ny = size(b,1);
+	let s = repeat(".", i32(nx*ny));
+	let k = 0;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		if b[x,y]
+			s[k] = "#";
+		k += 1;
+	}
 	return s;
 }
 
@@ -1886,6 +1916,18 @@ fn readlns_(filename: str): [str; :]
 //==============================================================================
 
 fn count_set_bits(n: i32): i32
+{
+	// Kernighan's algorithm, O(set bits)
+	let count = 0;
+	while n > 0
+	{
+		n &= (n - 1);  // clears the lowest set bit
+		count += 1;
+	}
+	return count;
+}
+
+fn count_set_bits64(n: i64): i32
 {
 	// Kernighan's algorithm, O(set bits)
 	let count = 0;
