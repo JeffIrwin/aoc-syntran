@@ -1,0 +1,358 @@
+
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+// Shifted in y so blank lines are at the top, not bottom
+//
+// This makes it easier to set the initial position
+const piece_strs = [
+".
+.
+.
+####
+",
+
+".
+.#.
+###
+.#.
+",
+
+".
+..#
+..#
+###
+",
+
+"#
+#
+#
+#
+",
+
+".
+.
+##
+##
+",
+];
+const nxs = [4, 3, 3, 1, 2];  // widths and heights; just hard-code
+const nys = [1, 3, 3, 4, 2];
+const np = size(piece_strs);
+const npx = 4;
+const npy = 4;
+
+fn part1(args: &const Args): str
+{
+	// I did part 1 in Fortran in 2022 but not part 2. That was before I knew
+	// about the AOC trope of predictable periodic cycles. Also I didn't have
+	// dicts in my toolbelt
+
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	const str_ = readln(f);
+	const nstr = len(str_);
+	//println("str_ = ", str_);
+	close(f);
+
+	//println("piece_strs = ");
+	for s in piece_strs
+		println(s);
+	println("np = ", np);
+
+	// Convert piece strs to a bool array. Y is positive upwards so flip
+	// vertically for array representation
+	let bp = [false; npx, npy, np];
+	for ip in [0: np]
+	{
+		let lines = split_(piece_strs[ip], NEWLINE_);
+		//println("lines = ", lines);
+		const ny = size(lines);
+		for y in [0: ny]
+		for x in [0: len(lines[y])]
+			bp[x, ny-y-1, ip] = lines[y,x] == "#";
+	}
+	//println("bp = ", bp);
+	//for ip in [0: np]
+	//	print_flip(bp[:,:,ip]);
+
+	//const ngy = 1024 * 4;
+	//const ngy = 3069;
+	const ngy = 1024;
+	const ngx = 7;
+	let g = [false; ngx, ngy];
+
+	let it = 0;
+	let ymax = 0;
+	let ymin = 0;
+	let nshift = 0;
+	for ip in [0: 2022]
+	{
+		// Current rock piece, cropped to avoid rows/cols of all empty/false
+		const nx = nxs[ip%np];
+		const ny = nys[ip%np];
+		const p = bp[:nx, :ny, ip%np];
+		//println("p = ");
+		//print_flip(p);
+
+		// Piece position
+		let px = 2;
+		let py = ymax + 3;
+
+		while true
+		{
+			// Move left/right
+			const px0 = px;
+			const jc = str_[it % nstr];
+			it += 1;
+			//println("jc = ", jc);
+			let dx = 1;
+			if (jc == "<") dx = -1;
+			px += dx;
+
+			// Don't move into walls
+			if (px < 0)         px = px0;
+			if (px + nx > ngx) px = px0;
+
+			// Don't move into stopped rock
+			if any(g[px: px+nx, py-ymin: py-ymin+ny] and p) px = px0;
+			//println("px = ", px);
+
+			// Move down
+			const py0 = py;
+			py -= 1;
+			if py < 0  // hit floor
+			{
+				py = py0;
+				break;
+			}
+			if any(g[px: px+nx, py-ymin: py-ymin+ny] and p)  // hit stopped rock
+			{
+				py = py0;
+				break;
+			}
+		}
+		g[px: px+nx, py-ymin: py-ymin+ny] = g[px: px+nx, py-ymin: py-ymin+ny] or p;
+		ymax = max(ymax, py+ny);
+		//print_flip(g);
+		const ybuf = ngy/4;
+		if (ymax - ymin > ngy - 16)
+		{
+			// Shift grid in y, throw out old lower y data
+			//
+			// The shifting logic is unnecessary, even for part 2. You can just
+			// fit the entire space in memory up to the point that a cycle is
+			// detected
+			nshift += 1;
+			const dgy = (ymax - ymin) - (ngy - ybuf);
+			ymin += dgy;
+			//println("shifting dgy = ", dgy);
+			//println("g top before = ");
+			//print_flip(g[:, ngy-24:ngy-24+15]);
+
+			g[:, 0: ymax-ymin] = g[:, dgy: ymax-ymin+dgy];
+			g[:, ymax-ymin:] = false;
+
+			//println("g top after = ");
+			//print_flip(g[:, ngy-24:ngy-24+15]);
+			////exit(0);
+		}
+		//if (ip == 9) break;
+	}
+	println("number of shifts = ", nshift);
+	sum_ = ymax;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	const str_ = readln(f);
+	const nstr = len(str_);
+	close(f);
+
+	// Convert piece strs to a bool array. Y is positive upwards so flip
+	// vertically for array representation
+	let bp = [false; npx, npy, np];
+	for ip in [0: np]
+	{
+		let lines = split_(piece_strs[ip], NEWLINE_);
+		const ny = size(lines);
+		for y in [0: ny]
+		for x in [0: len(lines[y])]
+			bp[x, ny-y-1, ip] = lines[y,x] == "#";
+	}
+
+	const ngy = 1024;
+	const ngx = 7;
+	let g = [false; ngx, ngy];
+
+	const nrock = 1_000_000_000_000;
+	const hash_depth = 8;  // you can get away with 1 in my experience but not 0
+
+	let seen_at = dict_i64::new();
+	let yseen   = dict_i64::new();
+
+	let it = 0;
+	let ymax = 0;
+	let ymin = 0;
+	let yadd = 0'i64;
+	let nshift = 0;
+	let ip = -1'i64;
+	let cycle_detected = false;
+	while true
+	{
+		ip += 1;
+		if (ip >= nrock) break;
+
+		if not cycle_detected
+		{
+			const key =
+				str(ip%np) +
+				"," + str(it%nstr) + 
+				bool_mat_to_str(g[:, max(ymax-hash_depth-ymin, 0): ymax-ymin]);
+			if seen_at.contains(key)
+			{
+				// We've seen this state before back when ip was last_seen and
+				// ymax was last_y
+				println("cycle detected");
+				cycle_detected = true;
+				const last_seen = seen_at.get(key);
+				const last_y    = yseen.get(key);
+				const period = ip - last_seen;
+				println("period = ", period);
+				//println("key = ", key);
+				println("last_y = ", last_y);
+				println("ymax   = ", ymax);
+
+				// It will take this many more whole cyclic periods to get us
+				// almost to 1_000_000_000_000
+				const nperiods = (nrock - ip) / period;
+				println("nperiods = ", nperiods);
+
+				// Tack on this much extra height at the end (don't add it now
+				// to avoid making everything i64)
+				yadd = (ymax - last_y) * nperiods;
+				println("yadd = ", yadd);
+
+				// Fast forward and simulate the last few rock pieces to get the
+				// extra rounding error after yadd
+				println("ip     = ", ip);
+				ip += nperiods * period;
+				println("ip     = ", ip);
+			}
+			seen_at.set(key, ip);
+			yseen.set(key, i64(ymax));
+		}
+
+		// Current rock piece, cropped to avoid rows/cols of all empty/false
+		const nx = nxs[ip%np];
+		const ny = nys[ip%np];
+		const p = bp[:nx, :ny, ip%np];
+		//println("p = ");
+		//print_flip(p);
+
+		// Piece position
+		let px = 2;
+		let py = ymax + 3;
+
+		while true
+		{
+			// Move left/right
+			const px0 = px;
+			const jc = str_[it % nstr];
+			it += 1;
+			//println("jc = ", jc);
+			let dx = 1;
+			if (jc == "<") dx = -1;
+			px += dx;
+
+			// Don't move into walls
+			if (px < 0)         px = px0;
+			if (px + nx > ngx) px = px0;
+
+			// Don't move into stopped rock
+			if any(g[px: px+nx, py-ymin: py-ymin+ny] and p) px = px0;
+			//println("px = ", px);
+
+			// Move down
+			const py0 = py;
+			py -= 1;
+			if py < 0  // hit floor
+			{
+				py = py0;
+				break;
+			}
+			if any(g[px: px+nx, py-ymin: py-ymin+ny] and p)  // hit stopped rock
+			{
+				py = py0;
+				break;
+			}
+		}
+		g[px: px+nx, py-ymin: py-ymin+ny] = g[px: px+nx, py-ymin: py-ymin+ny] or p;
+		ymax = max(ymax, py+ny);
+		//print_flip(g);
+		const ybuf = ngy/4;
+		if (ymax - ymin > ngy - 16)
+		{
+			// Shift grid in y, throw out old lower y data
+			nshift += 1;
+			const dgy = (ymax - ymin) - (ngy - ybuf);
+			ymin += dgy;
+
+			g[:, 0: ymax-ymin] = g[:, dgy: ymax-ymin+dgy];
+			g[:, ymax-ymin:] = false;
+		}
+	}
+	println("number of shifts = ", nshift);
+	sum_ = ymax + yadd;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn print_flip(g: &const [bool; :,:])
+{
+	// Print an array flipped upside down
+	print_bool_mat(g[:, :-1:]);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2022/17" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "3098";
+	let expect2 = "1525364431487";
+	let expect1_test = "3068";
+	let expect2_test = "1514285714288";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
