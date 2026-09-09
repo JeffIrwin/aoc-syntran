@@ -10,7 +10,7 @@ fn part1(args: &const Args): str
 	let sum_ = 0'i64;
 
 	const data = read_i64_mat_delim(args.input_filename, ",@ ");
-	println("data = ", data);
+	//println("data = ", data);
 
 	let xmin = 200_000_000_000_000;
 	let xmax = 400_000_000_000_000;
@@ -28,8 +28,6 @@ fn part1(args: &const Args): str
 	for j in [0: n]
 	for i in [0: j]
 	{
-		println("i, j = ", [i, j]);
-
 		const pix = data[0, i];
 		const piy = data[1, i];
 		const vix = data[3, i];
@@ -38,10 +36,74 @@ fn part1(args: &const Args): str
 		const pjy = data[1, j];
 		const vjx = data[3, j];
 		const vjy = data[4, j];
+
+		let ti = let tj = 0.0;
+		const io = solve1(
+			1.0*[pix, piy], 1.0*[pjx, pjy],
+			1.0*[vix, viy], 1.0*[vjx, vjy],
+			&ti, &tj
+		);
+		if (io != 0) continue;
+		if (ti < 0) continue;  // ignore collisions in the past
+		if (tj < 0) continue;
+
+		// Intersection point
+		const x = pix + ti * vix;
+		const y = piy + ti * viy;
+
+		if
+			xmin <= x and x <= xmax and
+			ymin <= y and y <= ymax
+		{
+			sum_ += 1;
+		}
 	}
 
 	println("part 1 = ", sum_);
 	return str(sum_);
+}
+
+fn solve1(
+	p: [f64; :], q: [f64; :],
+	v: [f64; :], w: [f64; :],
+	t: &f64, s: &f64,
+): i32
+{
+	// Find the intersection between two lines in 2D:
+	//
+	// - line 1: passes through `p` in direction `v`
+	// - line 2: passes through `q` in direction `w`
+	//
+	// Return code 0 if a solution is found and arc-length parameters t for line
+	// 1 and s for line 2. Note these may be negative, which you will want to
+	// ignore for rays
+
+	const mat = std::transpose([
+		v[0], -w[0],
+		v[1], -w[1],
+		;
+		2, 2
+	]);
+	const rhs = [
+		q[0] - p[0],
+		q[1] - p[1],
+	];
+
+	let x = rhs;
+	let copy = mat;
+	numa::lu_invmul_vec_f64(&copy, &x);
+	const eps = mat @ x - rhs;
+
+	//if norm2(eps) > 1.d-9  // counterproductive (bad tol)
+	//	return 1;
+	//if any(eps != eps)     // just unnecessary
+	//	// Lazy NaN check
+	//	return 2;
+
+	// Valid solution
+	t = x[0];
+	s = x[1];
+	return 0;
 }
 
 fn part2(args: &const Args): str
@@ -267,9 +329,9 @@ fn main(): str
 	if (args.do_p1) p1 = part1(&args);
 	if (args.do_p2) p2 = part2(&args);
 
-	let expect1 = "REPLACE_ME_P1";
+	let expect1 = "25261";
 	let expect2 = "549873212220117";
-	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect1_test = "2";
 	let expect2_test = "47";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 

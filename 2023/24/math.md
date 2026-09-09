@@ -45,7 +45,7 @@ p - q1 + t1*v - t1*w1 = 0
 p - q2 + t2*v - t2*w2 = 0
 ```
 
-Take derivatives wrt `p`, `v`, and `t` to obtain a stiffness matrix for Newton-Raphson.
+Take derivatives with respect to `p`, `v`, and `t` to obtain a stiffness matrix for Newton-Raphson
 
 d/dp:
 ```
@@ -108,4 +108,7 @@ Stiffness matrix:
 Expect that this stiffness matrix can be singular for degenarate cases if the
 first two hailstones are parallel. Iterate over triplets of hailstones until a
 non-singular system is found
+
+You are free to order equations or unknowns differently. You will simply get a
+different row/column permutation of my stiffness matrix
 
