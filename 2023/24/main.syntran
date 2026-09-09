@@ -1,288 +1,343 @@
 
-#include("../../utils.syntran");
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../numa as numa;
 
 //==============================================================================
 
-let ifile = 1;
-
-let filenames =
-[
-	"test-input.txt",
-	"input.txt"
-];
-let filename = filenames[ifile];
-
-let xmin = 0.0;
-let ymin = 0.0;
-let xmax = 0.0;
-let ymax = 0.0;
-
-if ifile == 0
+fn part1(args: &const Args): str
 {
-	xmin = 7.0;
-	ymin = 7.0;
-	xmax = 27.0;
-	ymax = 27.0;
-}
-else
-{
-	xmin = 200000000000000.0;
-	ymin = 200000000000000.0;
-	xmax = 400000000000000.0;
-	ymax = 400000000000000.0;
-}
+	let sum_ = 0'i64;
 
-let N3D = 3;
+	const data = read_i64_mat_delim(args.input_filename, ",@ ");
+	println("data = ", data);
 
-//==============================================================================
-
-fn int_ray_ray_2d(p0: [i64; :], v0: [i64; :], p1: [i64; :], v1: [i64; :]): i64
-{
-	// Determine of two rays will intersect.  Return codes:
-	//
-	//     -1: no intersection because the lines intersect on the wrong end of one or both rays
-	//      0: no intersection because rays are parallel
-	//      1: intersection exists and is inside x/y min/max test area bounds!
-	//      2: intersection exists but is outside test area
-	//
-
-	//println("p0 = ", p0);
-	//println("v0 = ", v0);
-	//println("p1 = ", p1);
-	//println("v1 = ", v1);
-
-	// p == p0 + v0 * t0
-	// p == p1 + v1 * t1
-	//
-	// p0 + v0 * t0 == p1 + v1 * t1
-	//
-	// p0x + v0x * t0 == p1x + v1x * t1
-	// p0y + v0y * t0 == p1y + v1y * t1
-	//
-	// v0x * t0 - v1x * t1 == p1x - p0x
-	// v0y * t0 - v1y * t1 == p1y - p0y
-	//
-	// [[ v0x, -v1x ]]   [t0]    [ p1x - p0x ]
-	// [[           ]] * [  ] == [           ]
-	// [[ v0y, -v1y ]]   [t1]    [ p1y - p0y ]
-	//
-	//       A         *  x   ==       b
-
-	let p01 =
-		[
-			p1[0] - p0[0],
-			p1[1] - p0[1]
-		];
-	//println("p01 = ", p01);
-
-	// Matrix A elements
-	let a =  v0[0];
-	let b = -v1[0];
-	let c =  v0[1];
-	let d = -v1[1];
-
-	// RHS b elements
-	let b0 = p1[0] - p0[0];
-	let b1 = p1[1] - p0[1];
-
-	//// Determinant
-	//let det = v0x * (-v1y) - v0y * (-v1x);
-	//let det = v0[0] * (-v1[1]) - v0[1] * (-v1[0]);
-	let det = a * d - b * c;
-
-	let ans = i64(0);
-
-	//println("det = ", det);
-	if det == 0
+	let xmin = 200_000_000_000_000;
+	let xmax = 400_000_000_000_000;
+	let ymin = 200_000_000_000_000;
+	let ymax = 400_000_000_000_000;
+	if args.input_filename == "test-input.txt"
 	{
-		//println("Parallel!");
-		ans = 0;
-	}
-	else
-	{
-		//// Solution x
-		//let t0 = ( d * b0 - b * b1) / det;
-		//let t1 = (-c * b0 + a * b1) / det;
-		////let t0 = 1.0 * ( d * b0 - b * b1) / det;
-		////let t1 = 1.0 * (-c * b0 + a * b1) / det;
-
-		let t0 = 1.0 * ( d * b0 - b * b1) / (1.0 * det);
-		let t1 = 1.0 * (-c * b0 + a * b1) / (1.0 * det);
-
-		if t0 > 0 and t1 > 0
-		{
-			// p == p0 + v0 * t0
-			let px = p0[0] + v0[0] * t0;
-			let py = p0[1] + v0[1] * t0;
-
-			if xmin <= px and px <= xmax and
-			   ymin <= py and py <= ymax
-				ans = +1;
-			else
-				ans = +2;
-
-		}
-		else
-			ans = -1;
-
-		//// Solution x but multiplied by det to avoid floats
-		//let t0det =  d * b0 - b * b1;
-		//let t1det = -c * b0 + a * b1;
-
-		//// Sign of t == sign(tdet) / sign(det) == sign(tdet) * sign(det)
-		//let s0 = sign_64(t0det) * sign_64(det);
-		//let s1 = sign_64(t1det) * sign_64(det);
-
-		//println("t0det = ", t0det);
-		//println("t1det = ", t1det);
-		////println();
-		//println("s0, s1 = ", [s0, s1]);
-		//println("sign_64(t0det) = ", sign_64(t0det));
-		//println("sign_64(det) = ", sign_64(det));
-		//println("sign prod = ", sign_64(t0det) * sign_64(det));
-
-		//if s0 > 0 and s1 > 0
-		//{
-		//	// Intersection point can be calculated by either one of these:
-		//	//
-		//	//     p == p0 + v0 * t0
-		//	//     p == p1 + v1 * t1
-
-		//	// Still avoiding floats :( thanks tsoding for the olivecs training :)
-
-		//// This works for the test input but not the real input.  Overflow
-		//// probably occurs somewhere
-		//
-		//	let pxdet = p0[0] * det + v0[0] * t0det;
-		//	let pydet = p0[1] * det + v0[1] * t0det;
-
-		//	let xmindet = 0;
-		//	let ymindet = 0;
-		//	let xmaxdet = 0;
-		//	let ymaxdet = 0;
-
-		//	//if det > 0
-		//	//{
-		//		xmindet = xmin * det;
-		//		ymindet = ymin * det;
-		//		xmaxdet = xmax * det;
-		//		ymaxdet = ymax * det;
-		//	//}
-		//	//else
-		//	//{
-		//	//	// :ugh:
-		//	//	xmindet = xmax * det;
-		//	//	ymindet = ymax * det;
-		//	//	xmaxdet = xmin * det;
-		//	//	ymaxdet = ymin * det;
-		//	//}
-
-		//	if (det > 0 and
-		//	   (xmindet <= pxdet and pxdet <= xmaxdet and
-		//	    ymindet <= pydet and pydet <= ymaxdet)) or
-		//	   (det < 0 and
-		//	   (-xmindet <= -pxdet and -pxdet <= -xmaxdet and
-		//	    -ymindet <= -pydet and -pydet <= -ymaxdet))
-		//		ans = +1;
-		//	else
-		//		ans = +2;
-		//}
-		//else
-		//	ans = -1;
+		xmin = 7;
+		xmax = 27;
+		ymin = 7;
+		ymax = 27;
 	}
 
-	//let v10 =
-	//	[
-	//		v0[0] - v1[0],
-	//		v0[1] - v1[1]
-	//	];
-	//println("v10 = ", v10);
-
-	//println();
-	return ans;
-}
-
-//==============================================================================
-
-// Brief outline for part 2 (still very open):
-//
-// Find 3 rays such that no pair of rays are parallel.  Such a triplet should be
-// common unless the input is carefully crafted to be difficult
-//
-// Then construct a 4th ray which intersects with all of the other 3.
-
-fn part1(): i32
-{
-	let n = countln_(filename);
-
-	let p = [i64(0); N3D, n];
-	let v = [i64(0); N3D, n];
-
-	let f = open(filename, "r");
-	for i in [0: n]
+	const n = size(data,1);
+	for j in [0: n]
+	for i in [0: j]
 	{
-		let str_ = readln(f);
-		//println("str_ = ", str_);
+		println("i, j = ", [i, j]);
 
-		let vec = parse_i64_delim(str_, ",@ ");
-
-		// Unpack
-		p[0,i] = vec[0];
-		p[1,i] = vec[1];
-		p[2,i] = vec[2];
-
-		v[0,i] = vec[3];
-		v[1,i] = vec[4];
-		v[2,i] = vec[5];
-
-	}
-	close(f);
-
-	//println("p = ", p);
-	//println("v = ", v);
-
-	// Iterate through pairs of hailstones
-	let sum_ = 0;
-	for i in [0: n]
-	for j in [0: i]
-	{
-		//println("i, j = ", [i, j]);
-
-		// Repack
-
-		let p0 = [p[0,i], p[1,i], p[2,i]];
-		let p1 = [p[0,j], p[1,j], p[2,j]];
-
-		let v0 = [v[0,i], v[1,i], v[2,i]];
-		let v1 = [v[0,j], v[1,j], v[2,j]];
-
-		//let int = int_ray_ray_2d(p0, v0, p1, v1);
-		let int = int_ray_ray_2d(p1, v1, p0, v0);
-
-		if int == 1
-			sum_ += 1;
-
+		const pix = data[0, i];
+		const piy = data[1, i];
+		const vix = data[3, i];
+		const viy = data[4, i];
+		const pjx = data[0, j];
+		const pjy = data[1, j];
+		const vjx = data[3, j];
+		const vjy = data[4, j];
 	}
 
 	println("part 1 = ", sum_);
-	return sum_;
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	//const pa = 1.0 * [19, 13, 30]; const va = 1.0 * [ -2, 1, -2];
+	//const pb = 1.0 * [18, 19, 22]; const vb = 1.0 * [ -1, -1, -2];
+	//const pc = 1.0 * [20, 25, 34]; const vc = 1.0 * [ -2, -2, -4];
+	//const pd = 1.0 * [12, 31, 28]; const vd = 1.0 * [ -1, -2, -1];
+	//const pe = 1.0 * [20, 19, 15]; const ve = 1.0 * [ 1, -5, -3];
+
+	//println("pa va = ", pa, va);
+	//println("pb vb = ", pb, vb);
+	//println("pc vc = ", pc, vc);
+
+	//let p = [0.0; 3];
+	//let v = [0.0; 3];
+	//solve2(pa, pb, pc, va, vb, vc, &p, &v);
+	//solve2(pa, pb, pd, va, vb, vd, &p, &v);
+	//solve2(pa, pc, pd, va, vc, vd, &p, &v);
+	//solve2(pa, pb, pe, va, vb, ve, &p, &v);
+	//solve2(pa, pc, pe, va, vc, ve, &p, &v);
+	//solve2(pa, pd, pe, va, vd, ve, &p, &v);
+	//solve2(pb, pc, pe, vb, vc, ve, &p, &v);
+	//solve2(pb, pd, pe, vb, vd, ve, &p, &v);
+
+	const data = read_i64_mat_delim(args.input_filename, ",@ ");
+	const n = size(data,1);
+
+	// Loop through hailstone triplets [i0, i1, i2]
+	for i2 in [0: n]
+	for i1 in [0: i2]
+	for i0 in [0: i1]
+	{
+		const p0 = 1.0 * data[0:3, i0];  // known positions/velocities
+		const p1 = 1.0 * data[0:3, i1];
+		const p2 = 1.0 * data[0:3, i2];
+		const v0 = 1.0 * data[3:6, i0];
+		const v1 = 1.0 * data[3:6, i1];
+		const v2 = 1.0 * data[3:6, i2];
+
+		// Out-args for the pos/vel which we're solving for
+		let p = [0.0; 3];
+		let v = [0.0; 3];
+
+		const io = solve2(p0, p1, p2, v0, v1, v2, &p, &v);
+		if (io != 0) continue;
+
+		println("p = ", p);
+		const ip = i64(p);
+		println("ip = ", ip);
+		//sum_ = sum(ip);
+		const fsum = sum(p);
+		sum_ = i64(fsum);
+		println("fsum = ", fsum);
+
+		// Poor man's nearest integer
+		if (sum_ - fsum < 0.4) sum_ += 1;
+		if (sum_ - fsum > 0.4) sum_ -= 1;
+
+		println("part 2 = ", sum_);
+		return str(sum_);
+	}
+	return "";
+}
+
+// Global hailstone parameters. See note in get_rhs() below
+let qx0_glbl = 0.0;
+let qy0_glbl = 0.0;
+let qz0_glbl = 0.0;
+let qx1_glbl = 0.0;
+let qy1_glbl = 0.0;
+let qz1_glbl = 0.0;
+let qx2_glbl = 0.0;
+let qy2_glbl = 0.0;
+let qz2_glbl = 0.0;
+let wx0_glbl = 0.0;
+let wy0_glbl = 0.0;
+let wz0_glbl = 0.0;
+let wx1_glbl = 0.0;
+let wy1_glbl = 0.0;
+let wz1_glbl = 0.0;
+let wx2_glbl = 0.0;
+let wy2_glbl = 0.0;
+let wz2_glbl = 0.0;
+
+fn get_rhs(x: [f64; :]): [f64; :]
+{
+	// Return the residual for our non-linear root-finding problem
+	//
+	// Unknown ordering convention:
+	//
+	// - px, py, pz, vx, vy, vz, t0, t1, t2
+	//
+	// My Newton-Raphson implemention cannot take other parameters besides the
+	// "solution" vector `x`, so w*_glbl and q*_glbl terms are passed in via
+	// global variables. These are constant for a given triplet of hailstones
+	// which we're trying to intersect (and of course variable if your trying
+	// several different candidate triplets)
+	//
+	const px = x[0];
+	const py = x[1];
+	const pz = x[2];
+	const vx = x[3];
+	const vy = x[4];
+	const vz = x[5];
+	const t0 = x[6];
+	const t1 = x[7];
+	const t2 = x[8];
+	return [
+		px + t0*vx - qx0_glbl - t0*wx0_glbl,
+		py + t0*vy - qy0_glbl - t0*wy0_glbl,
+		pz + t0*vz - qz0_glbl - t0*wz0_glbl,
+		px + t1*vx - qx1_glbl - t1*wx1_glbl,
+		py + t1*vy - qy1_glbl - t1*wy1_glbl,
+		pz + t1*vz - qz1_glbl - t1*wz1_glbl,
+		px + t2*vx - qx2_glbl - t2*wx2_glbl,
+		py + t2*vy - qy2_glbl - t2*wy2_glbl,
+		pz + t2*vz - qz2_glbl - t2*wz2_glbl,
+	];
+}
+
+fn get_stiffness(x: [f64; :]): [f64; :,:]
+{
+	// Return the derivative of the residual wrt to the `x` parameters, i.e. the
+	// stiffness matrix
+	//
+	// Unknown ordering convention:
+	// - px, py, pz, vx, vy, vz, t0, t1, t2
+	//
+	// See math.txt for the derivation of the residual RHS and stiffness matrix
+	const vx = x[3];
+	const vy = x[4];
+	const vz = x[5];
+	const t0 = x[6];
+	const t1 = x[7];
+	const t2 = x[8];
+	//const stiff =
+	return std::transpose([
+		1., 0., 0.,   t0,  0., 0.,     vx-wx0_glbl,      0.,      0.,
+		0., 1., 0.,   0. , t0, 0.,     vy-wy0_glbl,      0.,      0.,
+		0., 0., 1.,   0. , 0., t0,     vz-wz0_glbl,      0.,      0.,
+
+		1., 0., 0.,   t1,  0., 0.,          0., vx-wx1_glbl,      0.,
+		0., 1., 0.,    0., t1, 0.,          0., vy-wy1_glbl,      0.,
+		0., 0., 1.,    0., 0., t1,          0., vz-wz1_glbl,      0.,
+
+		1., 0., 0.,   t2,  0., 0.,          0.,      0., vx-wx2_glbl,
+		0., 1., 0.,    0., t2, 0.,          0.,      0., vy-wy2_glbl,
+		0., 0., 1.,    0., 0., t2,          0.,      0., vz-wz2_glbl,
+		;
+		9, 9
+	]);
+	//return std::transpose(stiff);
+	//return stiff;
+}
+
+fn solve2(
+	q0: [f64; :],
+	q1: [f64; :],
+	q2: [f64; :],
+	w0: [f64; :],
+	w1: [f64; :],
+	w2: [f64; :],
+	p: &[f64; :],
+	v: &[f64; :],
+): i32
+{
+	// Find position `p` and velocity `v` in order to intersect with 3
+	// hailstones with positions q* and velocities w*. Return code 0 if a
+	// solution exists
+	//
+	// Equation ordering convention:
+	//
+	// px + t0*vx - qx0 - t0*wx0 = 0
+	// py + t0*vy - qy0 - t0*wy0 = 0
+	// pz + t0*vz - qz0 - t0*wz0 = 0
+	//
+	// px + t1*vx - qx1 - t1*wx1 = 0
+	// py + t1*vy - qy1 - t1*wy1 = 0
+	// pz + t1*vz - qz1 - t1*wz1 = 0
+	//
+	// px + t2*vx - qx2 - t2*wx2 = 0
+	// py + t2*vy - qy2 - t2*wy2 = 0
+	// pz + t2*vz - qz2 - t2*wz2 = 0
+	qx0_glbl = q0[0];
+	qy0_glbl = q0[1];
+	qz0_glbl = q0[2];
+	qx1_glbl = q1[0];
+	qy1_glbl = q1[1];
+	qz1_glbl = q1[2];
+	qx2_glbl = q2[0];
+	qy2_glbl = q2[1];
+	qz2_glbl = q2[2];
+
+	wx0_glbl = w0[0];
+	wy0_glbl = w0[1];
+	wz0_glbl = w0[2];
+	wx1_glbl = w1[0];
+	wy1_glbl = w1[1];
+	wz1_glbl = w1[2];
+	wx2_glbl = w2[0];
+	wy2_glbl = w2[1];
+	wz2_glbl = w2[2];
+
+	// Unknown ordering convention:
+	// - px, py, pz, vx, vy, vz, t0, t1, t2
+
+	//// Just a sanity check with the sample solution and the first three stones
+	//const expect = 1.0 * [24, 13, 10, -3, 1, 2, 5, 3, 4];
+	//const mat = get_stiffness(expect);
+	//const rhs1 = get_rhs(expect);
+	//println("mat = ", i32(mat));
+	//println("rhs1 = ", rhs1);
+	//println("mat @ expect = ", mat @ expect);
+
+	//const rhs2 = mat @ expect;
+	//let x = rhs2;
+	//let cpy = mat;
+	//numa::lu_invmul_vec_f64(&cpy, &x);
+	//println("x = ", x);
+	//println("e = ", expect);
+	//println("diff = ", norm2(x - expect));
+	////exit(0);
+
+	//*********************
+	// Oddly, starting with a uniform init guess diverges
+	const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, 1.0*[1:10]);
+	//const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, [9.0; 9]);
+	//const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, expect + 100);
+
+	//println("sln = ", sln);
+	//if norm2(sln) < 1e9
+	//{
+	//	println("Found a sane solution!");
+	//	//exit(0);
+	//}
+
+	//println("psum = ", sum(sln[0:3]));
+	const rhs_vrf = get_rhs(sln);
+	//println("rhs_vrf = ", norm2(rhs_vrf));
+
+	// This tolerance, or even the tol/iter settings currently hard-coded inside
+	// of newton_raphson_nd(), may need to be adjusted for other inputs
+	const tol = 1.e-9;
+	if norm2(rhs_vrf) > tol
+	{
+		// This is expected in same degenerate cases, e.g. parallel velocities
+		//
+		// The real solver will have to try multiple triplets until a
+		// well-behaved combination is found
+
+		//println(WARN_STR + "bad solution");
+		////println(ERROR_STR + "bad solution");
+		////exit(2);
+
+		return 1;
+	}
+	//if sln[0] != sln[0] or sln[1] != sln[1]
+	if any(sln != sln)
+	{
+		// Lazy NaN check
+		return 2;
+	}
+
+	// Valid solution
+	p = sln[0:3];
+	v = sln[3:6];
+	return 0;
 }
 
 //==============================================================================
 
-fn main(): i64
+fn main(): str
 {
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2023/24");
+	println(MAGENTA + "Starting AOC syntran main 2023/24" + RESET);
+	let args = parse_args();
 
-	let sum_ = i64(0);
+	let p1 = ""; let p2 = "";
 
-	sum_ += part1();
-	//sum_ += part2();
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
 
-	println("Ending AOC syntran main");
+	let expect1 = "REPLACE_ME_P1";
+	let expect2 = "549873212220117";
+	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect2_test = "47";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
 	println();
-	return sum_;
+	return p1 + ":" + p2;
 }
 
 //==============================================================================

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# Go to every sub dir and run the aoc syntran script
+
+#set -exu
+set -eu
+
+echo "starting run.sh"
+
+dirs=$(ls | grep '^[0-9]' | sort -g)
+
+for dir in ${dirs[@]} ; do
+
+	args="-a"
+
+	#[[ "$dir" == "4" ]] && continue
+	#[[ "$dir" == "19" ]] && args="-a -t"
+	[[ "$dir" == "23" ]] && args="-a -t"
+
+	pushd "$dir" >/dev/null
+
+	main=main.syntran
+	grep 'Expect' "$main" | tr -d '\t'
+
+	time syntran "$main" -- $args
+	#syntran "$main"
+
+	echo
+	popd >/dev/null
+done
+
+echo "ending run.sh"
+

@@ -28,19 +28,6 @@ let ny  = -1;
 
 let cache = new_dict_i64();
 
-fn print_bool_mat(msg: str, b: [bool; :,:])
-{
-	println(msg);
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let c = ["."; nx, ny];
-	for y in [0: ny]
-	for x in [0: nx]
-		if (b[x,y]) c[x,y] = "#";
-	print_char_mat(&c);
-	return;
-}
-
 fn bool_to_str(b: [bool; :,:]): str
 {
 	// Compact bool array to str conversion, for better hashmap keys
@@ -129,15 +116,15 @@ fn part1(): str
 	// Unit test
 	let s0 = shapes[:,:,0];
 	for i in [0: nt]
-		print_bool_mat("s " + str(i) + " = ", trans_(s0, i));
-	//print_bool_mat("s0 = ", s0);
-	//print_bool_mat("tr(s0) = ", transpose_(s0));
-	//print_bool_mat("lr(s0) = ", fliplr_(s0));
-	//print_bool_mat("ud(s0) = ", flipud_(s0));
-	//print_bool_mat("lr ud  = ", fliplr_(flipud_(s0)));
-	//print_bool_mat("lr tr  = ", fliplr_(transpose_(s0)));
-	//print_bool_mat("ud tr  = ", flipud_(transpose_(s0)));
-	//print_bool_mat("lrudtr = ", fliplr_(flipud_(transpose_(s0))));
+		print_bool_mat(trans_(s0, i));
+	//print_bool_mat(s0);
+	//print_bool_mat(transpose_(s0));
+	//print_bool_mat(fliplr_(s0));
+	//print_bool_mat(flipud_(s0));
+	//print_bool_mat(fliplr_(flipud_(s0)));
+	//print_bool_mat(fliplr_(transpose_(s0)));
+	//print_bool_mat(flipud_(transpose_(s0)));
+	//print_bool_mat(fliplr_(flipud_(transpose_(s0))));
 
 	let nblocks = [0; ns];
 	for i in [0: ns]
@@ -229,14 +216,14 @@ fn search(g: [bool; :,:], shapes: &[bool; :,:,:], nsv: [i32; :], state: [i32; :]
 		let isi = state[4];
 
 		let s = trans_(shapes[:,:,ist], t);
-		//print_bool_mat("packing shape", s);
+		//print_bool_mat( s);
 		if any(g[x: x+nsx, y: y+nsx] and s) continue; // not packable
 
 		let gl = g; // local copy
 		let statel = state;
-		//print_bool_mat("before", g);
+		//print_bool_mat( g);
 		gl[x: x+nsx, y: y+nsx] = g[x: x+nsx, y: y+nsx] or s;
-		print_bool_mat("after", gl);
+		print_bool_mat( gl);
 
 		// First increment shape instance `isi`
 		if isi < nsv[ist]-1
