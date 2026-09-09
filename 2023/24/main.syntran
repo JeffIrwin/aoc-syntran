@@ -48,27 +48,6 @@ fn part2(args: &const Args): str
 {
 	let sum_ = 0'i64;
 
-	//const pa = 1.0 * [19, 13, 30]; const va = 1.0 * [ -2, 1, -2];
-	//const pb = 1.0 * [18, 19, 22]; const vb = 1.0 * [ -1, -1, -2];
-	//const pc = 1.0 * [20, 25, 34]; const vc = 1.0 * [ -2, -2, -4];
-	//const pd = 1.0 * [12, 31, 28]; const vd = 1.0 * [ -1, -2, -1];
-	//const pe = 1.0 * [20, 19, 15]; const ve = 1.0 * [ 1, -5, -3];
-
-	//println("pa va = ", pa, va);
-	//println("pb vb = ", pb, vb);
-	//println("pc vc = ", pc, vc);
-
-	//let p = [0.0; 3];
-	//let v = [0.0; 3];
-	//solve2(pa, pb, pc, va, vb, vc, &p, &v);
-	//solve2(pa, pb, pd, va, vb, vd, &p, &v);
-	//solve2(pa, pc, pd, va, vc, vd, &p, &v);
-	//solve2(pa, pb, pe, va, vb, ve, &p, &v);
-	//solve2(pa, pc, pe, va, vc, ve, &p, &v);
-	//solve2(pa, pd, pe, va, vd, ve, &p, &v);
-	//solve2(pb, pc, pe, vb, vc, ve, &p, &v);
-	//solve2(pb, pd, pe, vb, vd, ve, &p, &v);
-
 	const data = read_i64_mat_delim(args.input_filename, ",@ ");
 	const n = size(data,1);
 
@@ -91,13 +70,12 @@ fn part2(args: &const Args): str
 		const io = solve2(p0, p1, p2, v0, v1, v2, &p, &v);
 		if (io != 0) continue;
 
-		println("p = ", p);
+		//println("p = ", p);
 		const ip = i64(p);
-		println("ip = ", ip);
-		//sum_ = sum(ip);
+		//println("ip = ", ip);
 		const fsum = sum(p);
 		sum_ = i64(fsum);
-		println("fsum = ", fsum);
+		//println("fsum = ", fsum);
 
 		// Poor man's nearest integer
 		if (sum_ - fsum < 0.4) sum_ += 1;
@@ -143,6 +121,11 @@ fn get_rhs(x: [f64; :]): [f64; :]
 	// which we're trying to intersect (and of course variable if your trying
 	// several different candidate triplets)
 	//
+	// For an example of how to solve problems like this without global vars,
+	// see this call which uses a "params" fn signature instead:
+	//
+	//     https://github.com/JeffIrwin/numerical-analysis/blob/5218aa8439405dd39fd9e1e2f7e3846850558a51/test/chapter_3.f90#L527
+	//
 	const px = x[0];
 	const py = x[1];
 	const pz = x[2];
@@ -170,17 +153,14 @@ fn get_stiffness(x: [f64; :]): [f64; :,:]
 	// Return the derivative of the residual wrt to the `x` parameters, i.e. the
 	// stiffness matrix
 	//
-	// Unknown ordering convention:
-	// - px, py, pz, vx, vy, vz, t0, t1, t2
+	// See math.md for the derivation of the residual RHS and stiffness matrix
 	//
-	// See math.txt for the derivation of the residual RHS and stiffness matrix
 	const vx = x[3];
 	const vy = x[4];
 	const vz = x[5];
 	const t0 = x[6];
 	const t1 = x[7];
 	const t2 = x[8];
-	//const stiff =
 	return std::transpose([
 		1., 0., 0.,   t0,  0., 0.,     vx-wx0_glbl,      0.,      0.,
 		0., 1., 0.,   0. , t0, 0.,     vy-wy0_glbl,      0.,      0.,
@@ -196,17 +176,11 @@ fn get_stiffness(x: [f64; :]): [f64; :,:]
 		;
 		9, 9
 	]);
-	//return std::transpose(stiff);
-	//return stiff;
 }
 
 fn solve2(
-	q0: [f64; :],
-	q1: [f64; :],
-	q2: [f64; :],
-	w0: [f64; :],
-	w1: [f64; :],
-	w2: [f64; :],
+	q0: [f64; :], q1: [f64; :], q2: [f64; :],
+	w0: [f64; :], w1: [f64; :], w2: [f64; :],
 	p: &[f64; :],
 	v: &[f64; :],
 ): i32
@@ -248,42 +222,10 @@ fn solve2(
 	wy2_glbl = w2[1];
 	wz2_glbl = w2[2];
 
-	// Unknown ordering convention:
-	// - px, py, pz, vx, vy, vz, t0, t1, t2
-
-	//// Just a sanity check with the sample solution and the first three stones
-	//const expect = 1.0 * [24, 13, 10, -3, 1, 2, 5, 3, 4];
-	//const mat = get_stiffness(expect);
-	//const rhs1 = get_rhs(expect);
-	//println("mat = ", i32(mat));
-	//println("rhs1 = ", rhs1);
-	//println("mat @ expect = ", mat @ expect);
-
-	//const rhs2 = mat @ expect;
-	//let x = rhs2;
-	//let cpy = mat;
-	//numa::lu_invmul_vec_f64(&cpy, &x);
-	//println("x = ", x);
-	//println("e = ", expect);
-	//println("diff = ", norm2(x - expect));
-	////exit(0);
-
-	//*********************
-	// Oddly, starting with a uniform init guess diverges
+	// Oddly, starting with a uniform initial guess diverges. So we use [1, 2,
+	// 3, ...]
 	const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, 1.0*[1:10]);
-	//const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, [9.0; 9]);
-	//const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, expect + 100);
-
-	//println("sln = ", sln);
-	//if norm2(sln) < 1e9
-	//{
-	//	println("Found a sane solution!");
-	//	//exit(0);
-	//}
-
-	//println("psum = ", sum(sln[0:3]));
 	const rhs_vrf = get_rhs(sln);
-	//println("rhs_vrf = ", norm2(rhs_vrf));
 
 	// This tolerance, or even the tol/iter settings currently hard-coded inside
 	// of newton_raphson_nd(), may need to be adjusted for other inputs
@@ -296,12 +238,8 @@ fn solve2(
 		// well-behaved combination is found
 
 		//println(WARN_STR + "bad solution");
-		////println(ERROR_STR + "bad solution");
-		////exit(2);
-
 		return 1;
 	}
-	//if sln[0] != sln[0] or sln[1] != sln[1]
 	if any(sln != sln)
 	{
 		// Lazy NaN check

@@ -109,11 +109,6 @@ fn lu_solve_vec_f64(a: &[f64; :,:], bx: &[f64; :], pivot: &[i32; :])
 	{
 		const ip = pivot[i];
 		bx[ip] -= dot(a[ip, :i], bx[pivot[:i]]);
-		//for j in [0: i]
-		//{
-		//	const jp = pivot[j];
-		//	bx[ip] -= a[ip, j] * bx[jp];
-		//}
 	}
 
 	// Back substitution
@@ -124,11 +119,6 @@ fn lu_solve_vec_f64(a: &[f64; :,:], bx: &[f64; :], pivot: &[i32; :])
 		{
 			const ip = pivot[i];
 			bx[ip] -= dot(a[ip, i+1:], bx[pivot[i+1:]]);
-			//for j in [i+1: n]
-			//{
-			//	const jp = pivot[j];
-			//	bx[ip] -= a[ip, j] * bx[jp]; // vectorizable?
-			//}
 			bx[ip] /= a[ip, i];
 		}
 	}

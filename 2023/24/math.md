@@ -1,8 +1,8 @@
 
 ## Part 2
 
-Find position vector p and velocity v such that an intersection occurs at time
-t0 with one stone, t1 with a second stone, and t2 with a third:
+Find position vector `p` and velocity `v` such that an intersection occurs at time
+`t0` with one stone, `t1` with a second stone, and `t2` with a third:
 
 ```
 p + t0*v = q0 + t0*w0
@@ -10,10 +10,10 @@ p + t1*v = q1 + t1*w1
 p + t2*v = q2 + t2*w2
 ```
 
-where q0 and w0 are the known position and velocity of the first stone, q1 and
-w1 for the next stone, etc.
+where `q0` and `w0` are the known position and velocity of the first stone, `q1` and
+`w1` for the next stone, etc.
 
-Expand the vector equations above into scalars of each x, y, and z component:
+Expand the vector equations above into scalars of each `x`, `y`, and `z` component:
 
 ```
 px + t0*vx = qx0 + t0*wx0
@@ -28,14 +28,14 @@ pz + t2*vz = qz2 + t2*wz2
 ```
 
 These are 9 equations with 9 unknowns:
-- px, py, pz
-- vx, vy, vz
-- t0, t1, t2
+- `px, py, pz`
+- `vx, vy, vz`
+- `t0, t1, t2`
 
-All q and w terms are given knowns from the input data
+All `q*` and `w*` terms are given knowns from the input data
 
-Unfortunately this is a non-linear system: unknown t terms are multiplied by
-unknown v terms
+Unfortunately this is a non-linear system: unknown `t*` terms are multiplied by
+unknown `v` terms
 
 Rearrange:
 
@@ -45,7 +45,7 @@ p - q1 + t1*v - t1*w1 = 0
 p - q2 + t2*v - t2*w2 = 0
 ```
 
-Take derivatives wrt p, v, and t to obtain a stiffness matrix for Newton-Raphson.
+Take derivatives wrt `p`, `v`, and `t` to obtain a stiffness matrix for Newton-Raphson.
 
 d/dp:
 ```
@@ -85,7 +85,7 @@ pz + t2*vz - qz2 - t2*wz2 = 0
 ```
 
 Unknown ordering convention:
-- px, py, pz, vx, vy, vz, t0, t1, t2
+- `px, py, pz, vx, vy, vz, t0, t1, t2`
 
 Stiffness matrix:
 
@@ -104,4 +104,8 @@ Stiffness matrix:
 	0, 0, 1,    0,  0, t2,          0,      0, vz-wz2
 ]
 ```
+
+Expect that this stiffness matrix can be singular for degenarate cases if the
+first two hailstones are parallel. Iterate over triplets of hailstones until a
+non-singular system is found
 
