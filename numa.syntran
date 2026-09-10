@@ -18,21 +18,52 @@ const RESET   = ESC + "[0m";
 const WARN_STR  = YELLOW + "Warning" + RESET + ": ";
 const ERROR_STR = RED    + "Error"   + RESET + ": ";
 
+struct nr_args
+{
+	// Input/output args for Newton-Raphson solver. I guess I'm following the
+	// convention of MATLAB's fzero() which puts the exitflag in the args and
+	// returns the solution `x` as the newton_raphson_nd() fn return value.
+	// *Unlike* MATLAB, exitflag of 0 is success
+	//
+	// Syntran can't have fn pointers in structs yet :(. That will be worth a
+	// breaking API change
+	//
+	// May later add neval, niter, etc. stats
+
+	x0: [f64; :],   // input : initial guess
+	tol: f64,       // input : allowable residual tolerance
+	maxiters: i32,  // input : max number of allowed iterations
+	exitflag: i32,  // output: 0 on success
+}
+fn new_nr_args(): nr_args
+{
+	// Constructor
+	return nr_args
+	{
+		x0 = [0.0; 0],
+		tol = 1.e-10,
+		maxiters = 15,
+		exitflag = 0,
+	};
+}
 fn newton_raphson_nd
 (
 	f : fn([f64; :]): [f64; :],
 	df: fn([f64; :]): [f64; :,:],
-	x0: [f64; :],
+	args: &nr_args,
 ): [f64; :]
 {
-	// TODO: args for options. Maybe a struct because there are so many args
-	//
-	// Syntran can't have fn pointers in structs yet :(
-	//
-	const maxiters = 15;
-	const tol = 1.e-10;
+	args.exitflag = 0;
+	const maxiters = args.maxiters;
+	const tol = args.tol;
 
-	let x = x0;
+	let x = args.x0;
+	if size(x) <= 0
+	{
+		args.exitflag = 1;
+		return x;
+	}
+
 	let has_converged = false;
 	for iter in [0: maxiters]
 	{
@@ -48,20 +79,22 @@ fn newton_raphson_nd
 		//println("dfx = ", dfx);
 		const io = lu_invmul_vec_f64(&dfx, &fx);
 		if io != 0
+		{
+			args.exitflag = 2;
 			return x;
-
+		}
 		x -= fx;
 	}
 	if not has_converged
 	{
-		// One last fn eval
+		// One last fn eval, otherwise missed at top of loop
 		let fx = f(x);
 		has_converged = norm2(fx) < tol;
 	}
 	if not has_converged
 	{
 		//println(WARN_STR + "newton_raphson_nd() did not converge");
-		// TODO: return code?
+		args.exitflag = 3;
 	}
 	return x;
 }
@@ -125,20 +158,23 @@ fn lu_solve_vec_f64(a: &[f64; :,:], bx: &[f64; :], pivot: &[i32; :])
 		bx[ip] -= dot(a[ip, :i], bx[pivot[:i]]);
 	}
 
-	// Back substitution
-	// TODO: refactor as standalone fn. Useful for triangular mats
-	{
-		const n = i32(min(size(a,0), size(a,1)));
-		for i in [n-1: -1: -1]
-		{
-			const ip = pivot[i];
-			bx[ip] -= dot(a[ip, i+1:], bx[pivot[i+1:]]);
-			bx[ip] /= a[ip, i];
-		}
-	}
+	backsub_f64(&a, &bx, &pivot);
 
 	// Unpivot
 	bx = bx[pivot];
+}
+
+fn backsub_f64(a: &[f64; :,:], bx: &[f64; :], pivot: &[i32; :])
+{
+	// Back-substitution is a standalone fn because it is useful for
+	// already-triangular matrices
+	const n = i32(min(size(a,0), size(a,1)));
+	for i in [n-1: -1: -1]
+	{
+		const ip = pivot[i];
+		bx[ip] -= dot(a[ip, i+1:], bx[pivot[i+1:]]);
+		bx[ip] /= a[ip, i];
+	}
 }
 
 fn lu_invmul_vec_f64(a: &[f64; :,:], bx: &[f64; :]): i32
@@ -284,7 +320,9 @@ fn test_numa(): i32
 	{
 	const xe = [0.8332816, 3.533462e-002, -0.4985493];  // expected root
 
-	const xn = newton_raphson_nd(f_nr_ex3, df_nr_ex3, [1.d0, 1.d0, 1.d0]);
+	let args = new_nr_args();
+	args.x0 = [1., 1., 1.];
+	const xn = newton_raphson_nd(f_nr_ex3, df_nr_ex3, &args);
 	println("xn = ", xn);
 	nfail += assert_lt_f64(norm2(xn-xe), 1.d-7, "newton_raphson_nd 1");
 

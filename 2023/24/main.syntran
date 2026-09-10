@@ -288,7 +288,11 @@ fn solve2(
 
 	// Oddly, starting with a uniform initial guess diverges. So we use [1, 2,
 	// 3, ...]
-	const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, 1.0*[1:10]);
+	let args = numa::new_nr_args();
+	args.x0 = 1.0 * [1: 10];
+	const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, &args);
+	if args.exitflag != 0
+		return 3;
 	const rhs_vrf = get_rhs(sln);
 
 	// This tolerance, or even the tol/iter settings currently hard-coded inside
