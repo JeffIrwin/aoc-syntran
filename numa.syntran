@@ -26,6 +26,9 @@ fn newton_raphson_nd
 ): [f64; :]
 {
 	// TODO: args for options. Maybe a struct because there are so many args
+	//
+	// Syntran can't have fn pointers in structs yet :(
+	//
 	const maxiters = 15;
 	const tol = 1.e-10;
 
@@ -43,8 +46,9 @@ fn newton_raphson_nd
 
 		let dfx = df(x);
 		//println("dfx = ", dfx);
-		lu_invmul_vec_f64(&dfx, &fx);
-		// TODO: singularity check
+		const io = lu_invmul_vec_f64(&dfx, &fx);
+		if io != 0
+			return x;
 
 		x -= fx;
 	}
@@ -64,10 +68,16 @@ fn newton_raphson_nd
 
 //==============================================================================
 
-fn lu_factor_f64(a: &[f64; :,:], pivot: &[i32; :])
+fn lu_factor_f64(a: &[f64; :,:], pivot: &[i32; :]): i32
 {
 	const n = i32(size(a,0));
-	// TODO: square matrix check, pivot size check
+	if size(a,1) != n
+		// Matrix is not square. Note that in a QR factorization a non-square
+		// matrix can actually be useful, e.g. for least-squares problems
+		return 1;
+
+	if size(pivot) != n
+		return 2;  // pivot is bad size
 
 	for i in [0: n]
 	{
@@ -88,7 +98,10 @@ fn lu_factor_f64(a: &[f64; :,:], pivot: &[i32; :])
 		// Swap rows
 		pivot[[i, max_index]] = pivot[[max_index, i]];
 		ip = pivot[i];
-		// TODO: singularity check
+		if a[ip, i] == 0.0
+			// Singular. It can be useful to suppress this early return, e.g. in
+			// order to get the kernel (null-space) of a matrix
+			return 3;
 
 		for j in [i+1: n]
 		{
@@ -98,6 +111,7 @@ fn lu_factor_f64(a: &[f64; :,:], pivot: &[i32; :])
 		}
 	}
 	//println("a (factored) = ", a);
+	return 0;
 }
 
 fn lu_solve_vec_f64(a: &[f64; :,:], bx: &[f64; :], pivot: &[i32; :])
@@ -127,7 +141,7 @@ fn lu_solve_vec_f64(a: &[f64; :,:], bx: &[f64; :], pivot: &[i32; :])
 	bx = bx[pivot];
 }
 
-fn lu_invmul_vec_f64(a: &[f64; :,:], bx: &[f64; :])
+fn lu_invmul_vec_f64(a: &[f64; :,:], bx: &[f64; :]): i32
 {
 	// Solve the linear algebra problem for `x`:
 	//
@@ -135,24 +149,20 @@ fn lu_invmul_vec_f64(a: &[f64; :,:], bx: &[f64; :])
 	//
 	// Where `bx` is b on input and x on output. Matrix `a` is modified by LU
 	// factorization in the process of solving
-	//
-	// TODO: int return code?
 
 	const n = i32(size(a,0));
 	let pivot = [0: n]; // initialize pivot to identity
 
-	lu_factor_f64(&a, &pivot);
+	const io = lu_factor_f64(&a, &pivot);
 	//println("pivot = ", pivot);
-
-	//// TODO:
-	//if (io /= 0) then
-	//	msg = "lu_factor() failed in lu_invmul_vec()"
-	//	call PANIC(msg, present(iostat))
-	//	iostat = 1
-	//	return
-	//end if
+	if io != 0
+	{
+		//msg = "lu_factor_f64() failed in lu_invmul_vec_f64()"
+		return 1;
+	}
 
 	lu_solve_vec_f64(&a, &bx, &pivot);
+	return 0;
 }
 
 //==============================================================================
@@ -215,7 +225,7 @@ fn test_numa(): i32
 	//println("a@x = ", a @ x);
 	//println("bx1 = ", bx);
 
-	lu_invmul_vec_f64(&a, &bx);
+	const io = lu_invmul_vec_f64(&a, &bx);
 	//println("bx2 = ", bx);
 	nfail += assert_lt_f64(norm2(bx - x), 1.e-6, "lu_invmul_vec_f64 1");
 
@@ -232,7 +242,7 @@ fn test_numa(): i32
 	];
 	const x = [69.d0, 420.d0, 1337.d0, 690.d0, 4200.d0, 13370.d0];
 	let bx = a @ x;
-	lu_invmul_vec_f64(&a, &bx);
+	const io = lu_invmul_vec_f64(&a, &bx);
 
 	nfail += assert_lt_f64(norm2(bx - x), 1.e-6, "lu_invmul_vec_f64 2");
 
@@ -255,7 +265,7 @@ fn test_numa(): i32
 		3, 3
 	]);
 
-	lu_factor_f64(&a, &pivot);
+	let io = lu_factor_f64(&a, &pivot);
 	//println("a = ", a);
 	//println("diff = ", norm2(a - aexp));
 	nfail += assert_lt_f64(norm2(a - aexp), 1.d-11, "lu_factor_f64 3");
@@ -264,7 +274,7 @@ fn test_numa(): i32
 	a = a0;
 	const x = [69.d0, 420.d0, 1337.d0];
 	let bx = a @ x;
-	lu_invmul_vec_f64(&a, &bx);
+	io = lu_invmul_vec_f64(&a, &bx);
 	nfail += assert_lt_f64(norm2(bx - x), 1.d-14, "lu_factor_f64 5");
 	}
 

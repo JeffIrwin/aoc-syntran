@@ -91,7 +91,9 @@ fn solve1(
 
 	let x = rhs;
 	let copy = mat;
-	numa::lu_invmul_vec_f64(&copy, &x);
+	const io = numa::lu_invmul_vec_f64(&copy, &x);
+	if io != 0
+		return 3;
 	const eps = mat @ x - rhs;
 
 	//if norm2(eps) > 1.d-9  // counterproductive (bad tol)
