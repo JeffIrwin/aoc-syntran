@@ -73,10 +73,7 @@ fn part2(args: &const Args): str
 	// Represent ranges as [start, end) instead of [start, len]
 	let r = stack_vec_i64::new();
 	for i in [0: n]
-	{
-		rarray[1,i] = rarray[0,i] + rarray[1,i];
-		r.push(rarray[:,i]);
-	}
+		r.push([rarray[0,i], sum(rarray[:,i])]);
 	//println("r = ", r.vals);
 
 	let iline = 2;
@@ -90,8 +87,7 @@ fn part2(args: &const Args): str
 			iline += 1;
 			if (iline >= nline) break;
 			if (lines[iline] == "") break;
-			const map = parse_i64_delim(lines[iline], " ");
-			maps.push(map);
+			maps.push(parse_i64_delim(lines[iline], " "));
 		}
 		//println("maps = ", maps);
 		//println("r = ", r);
