@@ -82,29 +82,16 @@ fn part2(args: &const Args): str
 	let iline = 2;
 	while true
 	{
-		// Preload all rows for this entire map
-		const il0 = iline;
-		let nmap = 0;
+		// Preload all rows for this entire map. See outer/inner loop nesting
+		// comment below
+		let maps = stack_vec_i64::new();
 		while true
 		{
-			// Count
-			iline += 1;
-			if (iline >= nline) break;
-			if (lines[iline] == "") break;
-			nmap += 1;
-		}
-		iline = il0;
-		let maps = [-1'i64; 3, nmap];
-		nmap = 0;
-		while true
-		{
-			// Load
 			iline += 1;
 			if (iline >= nline) break;
 			if (lines[iline] == "") break;
 			const map = parse_i64_delim(lines[iline], " ");
-			maps[:,nmap] = map;
-			nmap += 1;
+			maps.push(map);
 		}
 		//println("maps = ", maps);
 		//println("r = ", r);
@@ -119,11 +106,11 @@ fn part2(args: &const Args): str
 			// Iterate through input ranges in outer loop and map rows in inner
 			// loop to avoid tracking what has been shifted or swapping r to r0
 			// multiple times per map
-			for im in [0: nmap]
+			for im in [0: maps.len]
 			{
-				const dst = maps[0, im];
-				const src = maps[1, im];
-				const len = maps[2, im];
+				const dst = maps.vals[0, im];
+				const src = maps.vals[1, im];
+				const len = maps.vals[2, im];
 				const end = src + len ;
 				const del = dst - src;
 				//println("src, end = ", [src, end]);
@@ -139,15 +126,13 @@ fn part2(args: &const Args): str
 						r0s.push([r0[0], overlap_min]);
 					if overlap_max < r0[1]
 						r0s.push([overlap_max, r0[1]]);
-					r0 = [-1, -1];
+					r0 = [-1, -1];  // mark empty, nothing to defer
 					break;
 				}
 			}
+			// Disjoint parts deferred from loop above
 			if r0[0] < r0[1]
-			{
-				// Disjoint parts deferred from loop above
 				r.push(r0);
-			}
 		}
 
 		// Don't bother merging overlapping ranges. Perf isn't that critical,
