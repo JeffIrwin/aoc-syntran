@@ -1,186 +1,219 @@
 
-#include("../../utils.syntran");
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
 
 //==============================================================================
 
-// Real input works but it takes too long.  Use test input just for syntran unit
-// testing
-let ifile = 0;
-
-let filenames =
-[
-	"test-input.txt",
-	"input.txt"
-];
-let filename = filenames[ifile];
-
-//==============================================================================
-
-fn part1(): i32
+fn part1(args: &const Args): str
 {
-	// This takes 15 minutes to run!
-	//
-	// I'm thinking it might be better to take the inverse approach:  generate
-	// every combination with the correct length and groupings but ignoring
-	// known `.` and `#` locations, and then filter if the known chars match.
-	// I'm not sure if this would generate any fewer combinations to filter or
-	// if a yet more clever approach is needed
+	let sum_ = 0'i64;
 
-	let sum_ = 0;
-
-	let f = open(filename, "r");
+	let f = open(args.input_filename, "r");
 	let str_ = readln(f);
-	let iline = 0;
+	let iline = 0'i64;
 	while not eof(f)
 	{
-		//println("str_ = ", str_);
-		//println("iline = ", iline);
-
-		let ns = len(str_);
-
-		// Count question marks `?`.  Could split str_ before counting
-		let nq = 0;
-		for i in [0: ns]
-			if (str_[i] == "?") nq += 1;
-
-		//println("nq = ", nq);
-
-		// Count known hashes (question marks don't count here)
-		let nknown_hash = 0;
-		for i in [0: ns]
-			if (str_[i] == "#") nknown_hash += 1;
-
-		// Save indices of every question mark
-		let iqs = [-1; nq];
-		nq = 0;
-		for i in [0: ns]
-			if (str_[i] == "?")
-			{
-				iqs[nq] = i;
-				nq += 1;
-			}
-
-		//println("iqs = ", iqs);
-
-		let groups = parse_i32_delim(str_, ".#? ,");
-		let ng = size(groups,0);
-		//println("groups = ", groups);
-
-		// Sum total number of hashes, including known and unknown locations
-		let nhash = 0;
-		for i in [0: ng]
-			nhash = nhash + groups[i];
-		//println("nhash = ", nhash);
-
-		let nunknown_hash = nhash - nknown_hash;
-		//println("nunknown_hash = ", nunknown_hash);
-
-		// Total number of combinations of unknowns is `nq choose nunknown_hash` (n
-		// choose k)
-		//
-		// Only check combinations that have the correct number of hashes.
-		// Then, filter them down to just the combos that meet the grouping
-		// criteria too
-
-		// First combination is all hashes as far left as possible at the
-		// unknown locations
-		//
-		// Index array of first combo for next combo algorithm
-		let a = [0: nunknown_hash];
-		//println("a = ", a);
-
-		// Iterate through combinations
-		let last = false;
-		while not last
-		{
-			// Reset combo str then fill in hashes from index array `a`
-			//println("setting combo str");
-			let combo = str_;
-			for i in [0: nunknown_hash]
-				//combo[a[iqs[i]]] = "#";
-				combo[iqs[a[i]]] = "#";
-
-			//println("combo = ", combo);
-			//println("a = ", a);
-
-			// Check if the combo str meets the grouping criteria
-			let g = split_(combo, ".?, " + digit_chars);
-			//println("combo = ", combo);
-			//println("g = ", g);
-			if (size(g,0) == ng)
-			{
-				//println("size match");
-
-				let all_eq_ = true;
-				let i = 0;
-				while i < ng and all_eq_
-				{
-					all_eq_ = len(g[i]) == groups[i];
-					i += 1;
-				}
-				if (all_eq_)
-				{
-					//println("valid combo");
-					sum_ += 1;
-				}
-			}
-
-			// Get next combination.  Ref:  https://cp-algorithms.com/combinatorics/generating_combinations.html
-			//
-			// This should be a next_combo() fn but I'm working around mem leaks
-
-			//println("getting next combo");
-			let k = nunknown_hash;
-			let ii = 0;
-			let found = false;
-			while ii < k and not found // ii is unnecessary since i could be decremented directly
-			{
-				let i = k - ii - 1;
-				//println("i = ", i);
-
-				if (a[i] < nq - k + i)
-				{
-					found = true;
-					a[i] += 1;
-					for j in [i + 1: k]
-						a[j] = a[j - 1] + 1;
-				}
-				ii += 1;
-			}
-			if (not found) last = true;
-
-			//println();
-		}
-		//println();
 		iline += 1;
+		println("str_ = ", str_);
+
+		const words = split_(str_, " ");
+		const pattern = words[0];
+		const groups = parse_i32_delim(words[1], ",");
+		println("pattern = ", pattern);
+		println("groups  = ", groups);
+
+		const narr = count_arr1(pattern, groups);
+		sum_ += narr;
+		println("line, count = ", [iline, narr]);
+
+		println();
 		str_ = readln(f);
 	}
 	close(f);
 
-	//// Paranoid unit test for split_()
-	//str_ = "##?.###";
-	//let g = split_(str_, ".?");
-	//println("split_(" + str_ + ") = ", g);
-
 	println("part 1 = ", sum_);
-	return sum_;
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let f = open(args.input_filename, "r");
+	let str_ = readln(f);
+	let iline = 0'i64;
+	while not eof(f)
+	{
+		iline += 1;
+		println("str_ = ", str_);
+
+		const words = split_(str_, " ");
+
+		let pattern = repeat(words[0] + "?", 5);
+		pattern = pattern[0: len(pattern)-1];
+		const groups = parse_i32_delim(repeat(words[1] + ",", 5), ",");
+
+		println("pattern = ", pattern);
+		println("groups  = ", groups);
+
+		const narr = count_arr1(pattern, groups);
+		sum_ += narr;
+		println("line, count = ", [iline, narr]);
+		//if (iline == 8) break;
+		//break;
+
+		println();
+		str_ = readln(f);
+	}
+	close(f);
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+let cache = dict_i64::new();
+fn count_arr1(pattern: str, groups: [i32; :]): i64
+{
+	//// We can just keep building up the same cache across all lines
+	//cache = dict_i64::new();  // reset on each input line?
+
+	return dfs1(pattern, groups);
+}
+
+fn dfs1(pattern: str, groups: [i32; :]): i64
+{
+	const key = str(pattern, groups);
+	const ans = cache.get(key);
+	if ans >= 0
+		return ans;
+
+	let cnt = 0'i64;
+	//println();
+	//println("pattern = ", pattern);
+	const ih0 = scan(pattern, "#");
+	let iq0 = scan(pattern, "?");
+	//println("ih0, iq0 = ", [ih0, iq0]);
+
+	let ng = -1;
+	if ih0 < iq0 or iq0 < 0
+	{
+		// TODO: count_groups only needs to count the first group now that we're
+		// chopping. Might as well inline. Array logic below could be simplified
+		//
+		// I tried for a bit but haven't gotten it right
+
+		const g = count_groups(pattern);
+		//println("g = ", g);
+		ng = size(g);
+
+		if ng > size(groups)
+		{
+			cache.set(key, 0'i64);
+			return 0'i64;
+		}
+		if any(g != groups[:ng])
+		{
+			cache.set(key, 0'i64);
+			return 0'i64;
+		}
+		if ng == size(groups) and iq0 < 0
+			if all(g == groups)
+			{
+				cache.set(key, 1'i64);
+				return 1'i64;
+			}
+		if iq0 < 0
+		{
+			cache.set(key, 0'i64);
+			return 0'i64;
+		}
+
+		// Chop off matched prefix
+		let idl = iq0;
+		while true
+		{
+			if (idl < 0) break;
+			if (pattern[idl] == ".") break;
+			idl -= 1;
+		}
+		//println("idl, ng = ", idl, ", ", ng);
+		pattern = pattern[idl+1:];
+		groups = groups[ng:];
+		iq0 = scan(pattern, "?");
+	}
+
+	pattern[iq0] = ".";
+	const iqn = scan(pattern, "?");
+	cnt += dfs1(pattern, groups);
+
+	pattern[iq0] = "#";
+	cnt += dfs1(pattern, groups);
+	
+	cache.set(key, cnt);
+	return cnt;
+}
+
+fn count_groups(s: &const str): [i32; :]
+{
+	const ns = len(s);
+	let g = [0; ns/2 + 1];
+	let ng = 0;
+
+	let i = 0;
+	while true
+	{
+		while true
+		{
+			if (i == ns) break;
+			if (s[i] != ".") break;
+			i += 1;
+		}
+		if (i == ns) break;
+
+		const i0 = i;
+
+		while true
+		{
+			if (i == ns) break;
+			if (s[i] != "#") break;
+			i += 1;
+		}
+
+		if i<ns
+			if s[i] == "?"
+				return g[0: ng];
+		g[ng] = i - i0;
+		ng += 1;
+
+		if (i >= ns) break;
+	}
+	return g[0: ng];
 }
 
 //==============================================================================
 
-fn main(): i32
+fn main(): str
 {
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2023/12");
+	println(MAGENTA + "Starting AOC syntran main 2023/12" + RESET);
+	let args = parse_args();
 
-	let sum_ = 0;
+	let p1 = ""; let p2 = "";
 
-	sum_ += part1();
-	//sum_ += part2();
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
 
-	println("Ending AOC syntran main");
+	let expect1 = "7307";
+	let expect2 = "3415570893842";
+	let expect1_test = "21";
+	let expect2_test = "525152";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
 	println();
-	return sum_;
+	return p1 + ":" + p2;
 }
 
 //==============================================================================
