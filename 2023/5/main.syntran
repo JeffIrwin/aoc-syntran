@@ -1,19 +1,11 @@
 
 use ../../utils::*;
 //use ../../dict_i64_2026 as dict_i64;
+use ../../stack_vec_i64 as stack_vec_i64;
 
 // c.f. my original part-1-only solution in dir "05" (as opposed to "5")
 
 //==============================================================================
-
-// Use this to break early and debug part 2
-let MAP_DBG = "";
-//MAP_DBG = "soil-to-fertilizer map:";
-//MAP_DBG = "fertilizer-to-water map:";
-//MAP_DBG = "water-to-light map:";
-//MAP_DBG = "light-to-temperature map:";
-//MAP_DBG = "temperature-to-humidity map:";
-//MAP_DBG = "humidity-to-location map:";
 
 fn part1(args: &const Args): str
 {
@@ -33,8 +25,6 @@ fn part1(args: &const Args): str
 	{
 		const v0 = v;
 		//println("map name = " + lines[iline]);
-
-		if (lines[iline] == MAP_DBG) break;
 
 		while true
 		{
@@ -76,20 +66,22 @@ fn part2(args: &const Args): str
 
 	const seeds = parse_i64_delim(lines[0], "seeds: ");
 	//println("seeds = ", seeds);
-	let r = std::reshape(seeds, [2, i32(size(seeds))/2]);
-	let n = size(r,1);
-	//println("r = ", r);
+	let rarray = std::reshape(seeds, [2, i32(size(seeds))/2]);
+	const n = size(rarray,1);
+	//println("rarray = ", rarray);
 
 	// Represent ranges as [start, end) instead of [start, len]
+	let r = stack_vec_i64::new();
 	for i in [0: n]
-		r[1,i] = r[0,i] + r[1,i];
-	//println("r = ", r);
+	{
+		rarray[1,i] = rarray[0,i] + rarray[1,i];
+		r.push(rarray[:,i]);
+	}
+	//println("r = ", r.vals);
 
 	let iline = 2;
 	while true
 	{
-		if (lines[iline] == MAP_DBG) break;
-
 		// Preload all rows for this entire map
 		const il0 = iline;
 		let nmap = 0;
@@ -116,19 +108,12 @@ fn part2(args: &const Args): str
 		}
 		//println("maps = ", maps);
 
-		let nr0 = size(r, 1);
-		let r0 = [-1'i64; 2, nr0*2];
-		r0[:, :nr0] = r;
-
-		let nr = 0;
-		const cap = nr0 * 3 + 4;  // pre-allocate at a conservative size
-		r = [-1; 2, cap];
-		//println("r0 = ", r0);
-
-		let i = -1;
-		while i < nr0
+		let r0s = r;
+		r = stack_vec_i64::new();
+		while not r0s.is_empty()
 		{
-			i += 1;
+			let r0 = r0s.pop();  // a single range from the stack of ranges
+
 			// Iterate through input ranges in outer loop and map rows in inner
 			// loop to avoid tracking what has been shifted or swapping r to r0
 			// multiple times per map
@@ -137,50 +122,43 @@ fn part2(args: &const Args): str
 				const dst = maps[0, im];
 				const src = maps[1, im];
 				const len = maps[2, im];
-				const end = src + len ;//+ 1;
+				const end = src + len ;
 				const del = dst - src;
 				//println("src, end = ", [src, end]);
-				if r0[1,i] < src or r0[0,i] > end
+				if r0[1] < src or r0[0] > end
 				{
 					// disjoint. no-op
 				}
-				else if src <= r0[0,i] and r0[1,i] <= end
+				else if src <= r0[0] and r0[1] <= end
 				{
 					// contained entirely. apply uniform shift on whole range
 					//println("contained");
-					r[:,nr] = r0[:,i] + del;
-					nr += 1;
-					r0[:,i] = [-1, -1];
+					r.push(r0 + del);
+					r0[:] = [-1, -1];
 				}
-				else if r0[0,i] < src and end < r0[1,i]
+				else if r0[0] < src and end < r0[1]
 				{
 					// enveloping
-					let tmp = r0[1,i];
-					r0[:,i] = [r0[0,i], src]; // lower identity part: replace in r0
+					let tmp = r0[1];
+					r0[:] = [r0[0], src]; // lower identity part: replace in r0
 
-					r[:,nr] = [src+del, end+del]; // shifted part
-					nr += 1;
+					r.push([src+del, end+del]);
 
-					r0[:,nr0] = [end, tmp];  // upper identity part: push to r0
-					nr0 += 1;
+					r0[:] = [end, tmp];  // upper identity part: push to r0
 				}
-				else if r0[0,i] < src
+				else if r0[0] < src
 				{
 					// input straddles lower-end of map
 					//println("lower");
-					r[:,nr] = [src + del, r0[1,i] + del];  // shifted part
-					nr += 1;
-
-					r0[:,i] = [r0[0,i], src];  // identity part
+					r.push([src + del, r0[1] + del]);  // shifted part
+					r0[:] = [r0[0], src];  // identity part
 				}
-				else if r0[1,i] > end
+				else if r0[1] > end
 				{
 					// input straddles upper-end of map
 					//println("upper");
-					r[:,nr] = [r0[0,i] + del, end + del];  // shifted part
-					nr += 1;
-
-					r0[:,i] = [end, r0[1,i]];  // identity part
+					r.push([r0[0] + del, end + del]);  // shifted part
+					r0[:] = [end, r0[1]];  // identity part
 				}
 				else
 				{
@@ -188,24 +166,21 @@ fn part2(args: &const Args): str
 					exit(2);
 				}
 			}
-			if r0[0,i] < r0[1,i]
+			if r0[0] < r0[1]
 			{
 				// Disjoint parts deferred from loop above
-				r[:,nr] = r0[:,i];
-				nr += 1;
+				r.push(r0);
 			}
 		}
 
 		// Don't bother merging overlapping ranges. Perf isn't that critical,
 		// this runs in 0.1 s anyway
-		r = r[:, 0:nr];  // trim
-		//println("r = ", r);
 
 		iline += 1;
 		if (iline >= nline) break;
 	}
 	//println("final r = ", r);
-	sum_ = minval(r[0,:]);
+	sum_ = minval(r.vals[0,:r.len]);
 
 	// Tried 47198068 -- too high
 	// Tried 20244680 -- too low
