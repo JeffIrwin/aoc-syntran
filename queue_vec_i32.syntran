@@ -7,10 +7,14 @@ struct Queue_vec_i32
 	beg: i32,
 	end: i32,
 	cap: i32,
-	is_empty: bool,
+	is_empty_m: bool,
 	is_init : bool, // vec size is set on first push
 	data: [i32; :,:],
 
+	const fn is_empty(): bool
+	{
+		return is_empty_m;
+	}
 	fn push(val: &const [i32; :])
 	{
 		//println("pushing val = ", val);
@@ -26,10 +30,9 @@ struct Queue_vec_i32
 
 		// TODO: port this back to syntran samples and scalar version
 
-		//println("beg, end, is_empty = ", beg, end, is_empty);
 		// beg == end is ambiguous between empty and full, so resize only on
 		// the initial allocation (cap == 0) or when genuinely full
-		if cap == 0 or (beg == end and not is_empty)
+		if cap == 0 or (beg == end and not is_empty_m)
 		{
 			//println("resizing");
 			//println("data = ", data);
@@ -63,14 +66,14 @@ struct Queue_vec_i32
 		//println("data = ", data);
 		//end += 1;
 		end = (end+1) % cap;
-		is_empty = false;
+		is_empty_m = false;
 		return;
 	}
 
 	fn pop(): [i32; :]
 	{
 		//println("popping val = ", data[:, beg]);
-		if is_empty
+		if is_empty_m
 		{
 			println("Error: cannot pop empty queue");
 			exit(1);
@@ -78,7 +81,7 @@ struct Queue_vec_i32
 		let beg0 = beg;
 		//beg += 1;
 		beg = (beg+1) % cap;
-		is_empty = beg == end;
+		is_empty_m = beg == end;
 		return data[:, beg0];
 	}
 }
@@ -90,7 +93,7 @@ fn new(): Queue_vec_i32
 		beg = 0,
 		end = 0,
 		cap = 0,
-		is_empty = true,
+		is_empty_m = true,
 		is_init  = false,
 		data = [0; 0,0],
 	};

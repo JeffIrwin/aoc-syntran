@@ -909,9 +909,7 @@ fn gcd64(a: i64, b: i64): i64
 fn lcm64(a: i64, b: i64): i64
 {
 	// Least common multiple
-	let abs_ = a * b;
-	if (abs_ < 0) abs_ = -abs_;
-	return abs_ / gcd64(a, b);
+	return abs(a * b) / gcd64(a, b);
 }
 
 fn abs_i32(a: i32): i32
