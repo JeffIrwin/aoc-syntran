@@ -11,14 +11,17 @@ dirs=$(ls | grep '^[0-9]' | sort -g)
 
 for dir in ${dirs[@]} ; do
 
+	args="-a"
+
 	#[[ "$dir" == "4" ]] && continue
+	[[ "$dir" == "12" ]] && args="-a -t"
 
 	pushd "$dir" >/dev/null
 
 	main=main.syntran
 	grep 'Expect' "$main" | tr -d '\t'
 
-	time syntran "$main"
+	time syntran "$main" -- $args
 	#syntran "$main"
 
 	echo

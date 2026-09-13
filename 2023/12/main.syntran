@@ -8,6 +8,13 @@ fn part1(args: &const Args): str
 {
 	let sum_ = 0'i64;
 
+	// Three years ago I barely managed to get an excruciatingly slow part 1.
+	// It's much easier now with recursion and dicts
+	//
+	// Part 2 was still tricky to figure out how/what to cache and it still
+	// takes 3 minutes to run. There is room for improvement but I'll take it
+	// after being stuck for technically 3 years
+
 	let f = open(args.input_filename, "r");
 	let str_ = readln(f);
 	let iline = 0'i64;
@@ -74,8 +81,8 @@ fn part2(args: &const Args): str
 let cache = dict_i64::new();
 fn count_arr1(pattern: str, groups: [i32; :]): i64
 {
-	//// We can just keep building up the same cache across all lines
-	//cache = dict_i64::new();  // reset on each input line?
+	// We can just keep building up the same cache across all lines
+	cache = dict_i64::new();  // reset on each input line?
 
 	return dfs1(pattern, groups);
 }
@@ -108,28 +115,33 @@ fn dfs1(pattern: str, groups: [i32; :]): i64
 
 		if ng > size(groups)
 		{
+			// We have too many groups
 			cache.set(key, 0'i64);
 			return 0'i64;
 		}
 		if any(g != groups[:ng])
 		{
+			// Groups have wrong number of hashes
 			cache.set(key, 0'i64);
 			return 0'i64;
 		}
 		if ng == size(groups) and iq0 < 0
 			if all(g == groups)
 			{
+				// Complete match found
 				cache.set(key, 1'i64);
 				return 1'i64;
 			}
 		if iq0 < 0
 		{
+			// Options have been exhausted -- no more "?" chars with no match
+			// yet
 			cache.set(key, 0'i64);
 			return 0'i64;
 		}
 
-		// Chop off matched prefix
-		let idl = iq0;
+		// First group matches. Chop off matched prefix
+		let idl = iq0;  // index of last (rightmost) dot before "?"
 		while true
 		{
 			if (idl < 0) break;
@@ -142,8 +154,9 @@ fn dfs1(pattern: str, groups: [i32; :]): i64
 		iq0 = scan(pattern, "?");
 	}
 
+	// Fork two branches and recurse with both possible options for char at
+	// index iq0
 	pattern[iq0] = ".";
-	const iqn = scan(pattern, "?");
 	cnt += dfs1(pattern, groups);
 
 	pattern[iq0] = "#";
@@ -155,6 +168,8 @@ fn dfs1(pattern: str, groups: [i32; :]): i64
 
 fn count_groups(s: &const str): [i32; :]
 {
+	// Count the length of each group of consecutive hashes "#"
+
 	const ns = len(s);
 	let g = [0; ns/2 + 1];
 	let ng = 0;
