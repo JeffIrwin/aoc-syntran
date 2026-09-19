@@ -39,60 +39,6 @@ fn part1(args: &const Args): str
 	sum_ = seq[64 + 1];  // off-by-one convention: step 0 has 0 reachable plots
 	println("part 1 = ", sum_);
 	return str(sum_);
-
-	// TODO: dead code from before part 2 style algo
-
-	println("any x = ", any(g[:, sxy[1]]));
-	println("any y = ", any(g[sxy[0], :]));
-	//exit(0);
-
-	// Array of positions
-	let p = [-1; 2, 1];
-	p[:,0] = sxy;
-	println("p = ", p);
-
-	println("dirs = ", dirs);
-
-	for it in [0: 64]
-	{
-		println("it = ", it);
-		const p0 = p;
-		const np0 = size(p0, 1);
-
-		let fit = 0;
-		fit = it**2 * 2 / 3;
-		fit = it**2 * 21495 / 28224;
-
-		const xmin = minval(p[0,:]);
-		const xmax = maxval(p[0,:]);
-
-		let s = dict_i64::new();  // hash set for deduplication
-		for ip in [0: np0]
-		for id in [0: 4]
-		{
-			// Use module (pmod) for comparison to part 2
-			//
-			// The standard test input breaks assumptions about unobstructed
-			// travel due east/west/north/south, but my crafted input
-			// test-craft.txt should reproduce the same results for part 1 and
-			// part 2 if you set ntt==64 in part 2
-			const xy = p0[:,ip] + dirs[:,id];
-			if not g[pmod(xy[0], nx), pmod(xy[1], ny)]
-				s.set(str(xy[0], ",", xy[1]), 1'i64);
-		}
-		let np = s.len();
-		p = [-1; 2, np];
-		let k = 0;
-		for key in s.get_keys()
-		{
-			p[:,k] = parse_i32_delim(key, ",");
-			k += 1;
-		}
-		sum_ = np;
-	}
-
-	println("part 1 = ", sum_);
-	return str(sum_);
 }
 
 fn part2(args: &const Args): str
@@ -122,16 +68,8 @@ fn part2(args: &const Args): str
 	println("dirs = ", dirs);
 
 	// Get eastern sequence
-	//const eso = get_seq_old(g, [0, sxy[1]]);
 	const es = get_seq(g, [0, sxy[1]]);
-	//println("es old = ", eso);
-	//println("es new = ", es);
-	//if not all(eso == es)
-	//{
-	//	println(ERROR_STR + "bad sequence values");
-	//	exit(1);
-	//}
-	//exit(0);
+	//println("es = ", es);
 
 	// Get northern sequence (maybe actually southern depending on coord system)
 	const ns = get_seq(g, [sxy[0], 0]);
@@ -406,12 +344,8 @@ fn part2(args: &const Args): str
 	//
 	// Variables `nte` and `nto` are below
 
-	let ntt = 64'i64;
-	ntt = 26501365;
-	//ntt = 5000;
-
+	const ntt = 26501365'i64;
 	const it = ntt;
-
 	let cnt = 0'i64;
 
 	// Central cell
@@ -535,13 +469,9 @@ fn part2(args: &const Args): str
 		}
 	}
 	//*************************************************
-
 	println("it, np = ", [it, cnt]);
-	//println("cnt1 = ", [cnt1, es[ixm]]);
-	//if (ixp < nn and ixp >= 0) println("cnt2 = ", [cnt2, es[ixp]]);
 
 	sum_ = cnt;
-
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
@@ -559,12 +489,6 @@ fn get_seq(g: &const [bool; :,:], seed: [i32; :]): [i32; :]
 	let seq = [0; nt];
 
 	let dists = [2_000_000_000; nx, ny];
-
-	//// It's not this simple
-	//for y in [0: ny]
-	//for x in [0: nx]
-	//	if not g[x,y]
-	//		dists[x,y] = sum(abs([x,y] - seed));
 
 	// BFS
 	let q = queue_vec_i32::new();
@@ -593,16 +517,6 @@ fn get_seq(g: &const [bool; :,:], seed: [i32; :]): [i32; :]
 	}
 	//println("dists = ", dists);
 
-	//// Equivalent but marginally slower. Offloading O(nx*ny) task to intrinsic
-	//// `count` is optimal
-	//for y in [0: ny]
-	//for x in [0: nx]
-	//{
-	//	const d = dists[x,y];
-	//	if (d == 2_000_000_000) continue;
-	//	seq[d+1:2:] += 1;
-	//}
-
 	const is_even = dists % 2 == 0;
 	//println("is_even = ", is_even);
 	for it in [1: nt]
@@ -612,51 +526,6 @@ fn get_seq(g: &const [bool; :,:], seed: [i32; :]): [i32; :]
 			seq[it] = count(dists < it and not is_even);
 
 	//println("seq = ", seq);
-	return seq;
-}
-
-fn get_seq_old(g: &const [bool; :,:], seed: [i32; :]): [i32; :]
-{
-	println("getting sequence from ", seed);
-	const nx = size(g,0);
-	const ny = size(g,1);
-	const nt = nx + ny;
-
-	let seq = [0; nt];
-	let b = [false; nx, ny];
-	b[seed[0], seed[1]] = true;
-	let b0 = b;
-
-	for it in [1: nt]
-	{
-		seq[it] = count(b);
-		if it > 2
-			if seq[it] == seq[it-2]
-			{
-				for k in [it+1: nt]
-					seq[k] = seq[k-2];
-				break;
-			}
-
-		b0 = b;
-		for y in [0: ny]
-		for x in [0: nx]
-		{
-			if (not b0[x,y]) continue;
-			b[x, y] = false;
-			const xy0 = [x, y];
-			for d in [0: 4]
-			{
-				const xy = xy0 + dirs[:,d];
-				if (xy[0] < 0) continue;
-				if (xy[1] < 0) continue;
-				if (xy[0] >= nx) continue;
-				if (xy[1] >= ny) continue;
-				if g[xy[0], xy[1]] continue;
-				b[xy[0], xy[1]] = true;
-			}
-		}
-	}
 	return seq;
 }
 
