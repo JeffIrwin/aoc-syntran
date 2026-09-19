@@ -82,8 +82,10 @@ fn part1(args: &const Args): str
 		noutputs[i] = size(dsts);
 		for j in [0: noutputs[i]]
 		{
-			outputs[j,i] = ids.get(dsts[j]);
-			ninputs[outputs[j,i]] += 1;
+			const id = ids.get(dsts[j]);
+			if (id < 0) continue;
+			outputs[j,i] = id;
+			ninputs[id] += 1;
 		}
 	}
 	const max_inputs = maxval(ninputs);
@@ -94,6 +96,7 @@ fn part1(args: &const Args): str
 		for j in [0: noutputs[i]]
 		{
 			const out = outputs[j,i];
+			if (out < 0) continue;
 			inputs[ninputs[out], out] = i;
 			ninputs[out] += 1;
 		}
@@ -129,12 +132,14 @@ fn part1(args: &const Args): str
 			const pulse  = u[0];
 			const module = u[1];
 			const src    = u[2];
-			const type = types[module];
 
 			if pulse == PULSE_LO
 				nlo += 1;
 			else
 				nhi += 1;
+
+			if (module < 0) continue;
+			const type = types[module];
 
 			let src_name = "button";
 			let pls_name = "-low->";
@@ -289,8 +294,10 @@ fn part2(args: &const Args): str
 		noutputs[i] = size(dsts);
 		for j in [0: noutputs[i]]
 		{
-			outputs[j,i] = ids.get(dsts[j]);
-			ninputs[outputs[j,i]] += 1;
+			const id = ids.get(dsts[j]);
+			if (id < 0) continue;
+			outputs[j,i] = id;
+			ninputs[id] += 1;
 		}
 	}
 	const max_inputs = maxval(ninputs);
@@ -301,6 +308,7 @@ fn part2(args: &const Args): str
 		for j in [0: noutputs[i]]
 		{
 			const out = outputs[j,i];
+			if (out < 0) continue;
 			inputs[ninputs[out], out] = i;
 			ninputs[out] += 1;
 		}
@@ -349,6 +357,7 @@ fn part2(args: &const Args): str
 			const pulse  = u[0];
 			const module = u[1];
 			const src    = u[2];
+			if (module < 0) continue;
 			const type = types[module];
 
 			if type == MODULE_BRDC
