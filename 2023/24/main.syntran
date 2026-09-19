@@ -289,8 +289,10 @@ fn solve2(
 	// Oddly, starting with a uniform initial guess diverges. So we use [1, 2,
 	// 3, ...]
 	let args = numa::new_nr_args();
+	args.f  = get_rhs;
+	args.df = get_stiffness;
 	args.x0 = 1.0 * [1: 10];
-	const sln = numa::newton_raphson_nd(get_rhs, get_stiffness, &args);
+	const sln = numa::newton_raphson_nd(&args);
 	if args.exitflag != 0
 		return 3;
 	const rhs_vrf = get_rhs(sln);
