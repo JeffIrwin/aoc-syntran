@@ -139,7 +139,6 @@ fn part1(args: &const Args): str
 				nhi += 1;
 
 			if (module < 0) continue;
-			const type = types[module];
 
 			let src_name = "button";
 			let pls_name = "-low->";
@@ -148,13 +147,14 @@ fn part1(args: &const Args): str
 			////println("pulse ", pulse, " to ", names[module]);
 			//println(src_name + " " + pls_name + " " + names[module]);
 
-			if type == MODULE_BRDC
+			switch types[module] {
+			case MODULE_BRDC
 			{
 				// The broadcaster sends the same pulse to all its destinations
 				for dst in outputs[0: noutputs[module], module]
 					q.push([pulse, dst, module]);
 			}
-			else if type == MODULE_FLIP
+			case MODULE_FLIP
 			{
 				// Nothing happens for high pulse
 
@@ -178,7 +178,7 @@ fn part1(args: &const Args): str
 						q.push([pout, dst, module]);
 				}
 			}
-			else if type == MODULE_CONJ
+			case MODULE_CONJ
 			{
 				// When a pulse is received, the conjunction module first
 				// updates its memory for that input. Then, if it remembers high
@@ -207,7 +207,7 @@ fn part1(args: &const Args): str
 					pout = PULSE_LO;
 				for dst in outputs[0: noutputs[module], module]
 					q.push([pout, dst, module]);
-			}
+			}}
 		}
 		//println();
 	}
