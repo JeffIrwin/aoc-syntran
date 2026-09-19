@@ -1,418 +1,689 @@
 
-#include("../../utils.syntran");
+use ../../utils::*;
+use ../../dict_i64_2026 as dict_i64;
+use ../../queue_vec_i32 as queue_vec_i32;
 
 //==============================================================================
 
-let ifile = 1;
-
-let filenames =
-[
-	"test-input.txt",
-	"input.txt"
+const dirs = [
+	-1, 0,
+	1, 0,
+	0, -1,
+	0, 1
+	;
+	2, 4
 ];
-let filename = filenames[ifile];
 
-// Number of time steps
-let nts =
-[
-	10, //6,
-	64
-];
-let nt = nts[ifile];
-
-//==============================================================================
-
-let NDIM = 2;        // spatial dimensions
-
-let NDIRS = 4;
-
-// Cardinal directions
-let DIRS =
-	[
-		 0, -1, // north
-		-1,  0, // west
-		 0,  1, // south
-		 1,  0  // east
-		 ;
-		 2,  NDIRS
-	];
-//println("DIRS = ", DIRS);
-
-// Note consistent ordering with DIRS array
-let NORTH = 0;
-let WEST  = 1;
-let SOUTH = 2;
-let EAST  = 3;
-
-//****************
-
-// List of reachable positions
-let NPCAP = 1024 * 1024;
-let p = [-1; NDIM, NPCAP];
-let np = 0;
-
-fn push_(x: i32, y: i32)
+fn part1(args: &const Args): str
 {
-	if np >= NPCAP
-	{
-		println();
-		println("Error: NPCAP overflow!");
-		println();
-		exit(-1);
-	}
+	let sum_ = 0'i64;
 
-	p[0, np] = x;
-	p[1, np] = y;
-	np += 1;
-	return;
-}
+	let gc = read_char_mat(args.input_filename);
+	//print_char_mat(&gc);
 
-//==============================================================================
+	const g = gc == "#";
 
-fn qsort(v: [i32; :]): [i32; :]
-{
-	// Quick sort algorithm
+	const nx = i32(size(g,0));
+	const ny = i32(size(g,1));
+	//println("g = ", g);
 
-	//println("starting qsort()");
-	//println("v = ", v);
-
-	let l = 0;
-	let h = size(v,0) - 1;
-
-	if l < h
-	{
-		let stack = [0; h - l + 1];
-
-		let top = -1;
-
-		top += 1;
-		stack[top] = l;
-
-		top += 1;
-		stack[top] = h;
-
-		while top >= 0
-		{
-			//println("h = ", h);
-			h = stack[top];
-			top -= 1;
-
-			l = stack[top];
-			top -= 1;
-
-			//// inlined
-			//let p = partition(v, l, h);
-
-			//let x = v[h];
-
-			// Median-of-three pivot.  40x faster for AOC!
-			let m = (l + h) / 2;
-			if v[m] < v[l]
-			{
-				let tmp = v[m];
-				v[m]    = v[l];
-				v[l]    = tmp;
-			}
-			if v[h] < v[l]
-			{
-				let tmp = v[h];
-				v[h]    = v[l];
-				v[l]    = tmp;
-			}
-			if v[m] < v[h]
-			{
-				let tmp = v[m];
-				v[m]    = v[h];
-				v[h]    = tmp;
-			}
-			let x = v[h];
-
-			let i = (l - 1);
-			for j in [l: h]
-				if v[j] <= x
-				{
-					i += 1;
-					let tmp = v[i];
-					v[i]  = v[j];
-					v[j]  = tmp;
-				}
-			let tmp = v[i+1];
-			v[i+1] = v[h];
-			v[h] = tmp;
-			let p = i + 1;
-
-			if p - 1 > l
-			{
-				top += 1;
-				stack[top] = l;
-
-				top += 1;
-				stack[top] = p - 1;
-			}
-
-			if p + 1 < h
-			{
-				top += 1;
-				stack[top] = p + 1;
-
-				top += 1;
-				stack[top] = h;
-			}
-		}
-	}
-	//println("v = ", v);
-	return v;
-}
-
-// There's another `uniq` fn in utils.  Could probably just use that shared one
-// instead of this copy
-fn uniq_d21(v_in: [i32; :]): [i32; :]
-{
-	let v = qsort(v_in);
-	let u = v;
-
-	u[0] = v[0];
-	let nu = 1;
-	for i in [1: size(v, 0)]
-	{
-		if v[i] != v[i - 1]
-		{
-			u[nu] = v[i];
-			nu += 1;
-		}
-	}
-	//println("u = ", u);
-
-	// Trim
-	let ut = [-1; nu];
-	for i in [0: nu]
-		ut[i] = u[i];
-
-	return ut;
-}
-
-//==============================================================================
-
-fn part1(): i32
-{
-	let ny = countln_(filename);
-
-	let f = open(filename, "r");
-	let str_ = readln(f);
-
-	let nx = i32(len(str_));
-
-	//println("nx, ny = ", [nx, ny]);
-
-	let grid = [""; nx, ny];
-	let xs = -1;
-	let ys = -1;
-
+	let sxy = [-1, -1];
 	for y in [0: ny]
-	{
-		//println("str_ = ", str_);
+	for x in [0: nx]
+		if gc[x,y] == "S"
+			sxy = [x, y];
+	println("nxy = ", [nx, ny]);
+	println("sxy = ", sxy);
 
-		for x in [0: nx]
-		{
-			grid[x, y] = str_[x];
-			if grid[x, y] == "S"
-			{
-				xs = x;
-				ys = y;
-			}
-		}
-
-		str_ = readln(f);
-	}
-	close(f);
-	//println("grid = ", grid);
-	//println("xs, ys = ", [xs, ys]);
-
-	push_(xs, ys);
-
-	for it in [0: nt]
-	{
-		//println("step ", it);
-
-		// Could be optimized by only copying 0: np
-		let p0 = p;
-		let np0 = np;
-
-		np = 0;
-		for ip0 in [0: np0]
-		{
-			for dir in [0: NDIRS]
-			{
-				let x = p0[0, ip0] + DIRS[0, dir];
-				let y = p0[1, ip0] + DIRS[1, dir];
-				if grid[x, y] != "#"
-					push_(x, y);
-			}
-		}
-
-		//println("p dup = ");
-		//for i in [0: np]
-		//	println([p[0,i], p[1,i]]);
-
-		// Convert 2D indices p to 1D indices p1
-		let p1 = [-1; np];
-		for ip in [0: np]
-			p1[ip] = p[0,ip] + nx * p[1,ip];
-		//println("p1 = ", p1);
-
-		//println("sorting points ...");
-		let pu = uniq_d21(p1);
-		//println("done");
-		//println("pu = ", pu);
-
-		// Convert unique 1D indices back to 2D
-		np = 0;
-		for i in [0: size(pu, 0)]
-		{
-			let x = pu[i] % nx;
-			let y = pu[i] / nx;
-			push_(x, y);
-		}
-		//println("np = ", np);
-		//println("p unq = ");
-		//for i in [0: np]
-		//	println([p[0,i], p[1,i]]);
-		//println();
-	}
-
-	let sum_ = np;
+	const seq = get_seq(g, sxy);
+	sum_ = seq[64 + 1];  // off-by-one convention: step 0 has 0 reachable plots
 	println("part 1 = ", sum_);
-	return sum_;
+	return str(sum_);
+
+	// TODO: dead code from before part 2 style algo
+
+	println("any x = ", any(g[:, sxy[1]]));
+	println("any y = ", any(g[sxy[0], :]));
+	//exit(0);
+
+	// Array of positions
+	let p = [-1; 2, 1];
+	p[:,0] = sxy;
+	println("p = ", p);
+
+	println("dirs = ", dirs);
+
+	for it in [0: 64]
+	{
+		println("it = ", it);
+		const p0 = p;
+		const np0 = size(p0, 1);
+
+		let fit = 0;
+		fit = it**2 * 2 / 3;
+		fit = it**2 * 21495 / 28224;
+
+		const xmin = minval(p[0,:]);
+		const xmax = maxval(p[0,:]);
+
+		let s = dict_i64::new();  // hash set for deduplication
+		for ip in [0: np0]
+		for id in [0: 4]
+		{
+			// Use module (pmod) for comparison to part 2
+			//
+			// The standard test input breaks assumptions about unobstructed
+			// travel due east/west/north/south, but my crafted input
+			// test-craft.txt should reproduce the same results for part 1 and
+			// part 2 if you set ntt==64 in part 2
+			const xy = p0[:,ip] + dirs[:,id];
+			if not g[pmod(xy[0], nx), pmod(xy[1], ny)]
+				s.set(str(xy[0], ",", xy[1]), 1'i64);
+		}
+		let np = s.len();
+		p = [-1; 2, np];
+		let k = 0;
+		for key in s.get_keys()
+		{
+			p[:,k] = parse_i32_delim(key, ",");
+			k += 1;
+		}
+		sum_ = np;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
 }
 
-//==============================================================================
-
-fn part2(): i32
+fn part2(args: &const Args): str
 {
-	let ny = countln_(filename);
+	let sum_ = 0'i64;
 
-	let f = open(filename, "r");
-	let str_ = readln(f);
+	let gc = read_char_mat(args.input_filename);
+	//print_char_mat(&gc);
 
-	let nx = i32(len(str_));
+	const g = gc == "#";
+	const nx = i32(size(g,0));
+	const ny = i32(size(g,1));
 
-	println("nx, ny = ", [nx, ny]);
-
-	let grid = [""; nx, ny];
-	let xs = -1;
-	let ys = -1;
-
+	let sxy = [-1, -1];
 	for y in [0: ny]
-	{
-		//println("str_ = ", str_);
+	for x in [0: nx]
+		if gc[x,y] == "S"
+			sxy = [x, y];
+	println("nxy = ", [nx, ny]);
+	println("sxy = ", sxy);
 
+	// Array of positions
+	let p = [-1; 2, 1];
+	p[:,0] = sxy;
+	//println("p = ", p);
+
+	println("dirs = ", dirs);
+
+	// Get eastern sequence
+	//const eso = get_seq_old(g, [0, sxy[1]]);
+	const es = get_seq(g, [0, sxy[1]]);
+	//println("es old = ", eso);
+	//println("es new = ", es);
+	//if not all(eso == es)
+	//{
+	//	println(ERROR_STR + "bad sequence values");
+	//	exit(1);
+	//}
+	//exit(0);
+
+	// Get northern sequence (maybe actually southern depending on coord system)
+	const ns = get_seq(g, [sxy[0], 0]);
+	//println("ns = ", ns);
+
+	// South
+	const ss = get_seq(g, [sxy[0], ny-1]);
+	//println("ss = ", ss);
+
+	// West
+	const ws = get_seq(g, [nx-1, sxy[1]]);
+	//println("ws = ", ws);
+
+	// Get northeast (diagonal) sequence
+	const nes = get_seq(g, [0, 0]);
+	//println("nes = ", nes);
+
+	// Northwest diagonal
+	const nws = get_seq(g, [nx-1, 0]);
+	//println("nws = ", nws);
+
+	// Southeast
+	const ses = get_seq(g, [0, ny-1]);
+	//println("ses = ", ses);
+
+	// Southwest
+	const sws = get_seq(g, [nx-1, ny-1]);
+	//println("sws = ", sws);
+
+	const nn = i32(size(es));
+	println("nn = ", nn);
+
+	// Even and odd filled counts
+	const nfs = es[[nn/2*2-2, nn/2*2-1]];
+	println("nfs = ", nfs);
+
+	// Ignoring even/odd toggling and rocks, the elf's reachable positions
+	// spread like the taxicab norm:
+	//
+	// step 0:
+	// .....
+	// .....
+	// ..O..
+	// .....
+	// .....
+	//
+	// step 1:
+	// .....
+	// ..O..
+	// .OOO.
+	// ..O..
+	// .....
+	//
+	// step 2:
+	// ..O..
+	// .OOO.
+	// OOOOO
+	// .OOO.
+	// ..O..
+	//
+	// Focus on just the row of tiles/cells going east from the initial central
+	// tile, with tile boundaries represented by "|", "-", and "+":
+	//
+	// step k+0:
+	// +---------+---------+---------+
+	// |OOOOOOOOO|OOOOO....|.........|
+	// |OOOOOOOOO|OOOOOO...|.........|
+	// |OOOOOOOOO|OOOOOOO..|.........|
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// |OOOOOOOOO|OOOOOOOOO..........|
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// |OOOOOOOOO|OOOOOOO..|.........|
+	// |OOOOOOOOO|OOOOOO...|.........|
+	// |OOOOOOOOO|OOOOO....|.........|
+	// +---------+---------+---------+
+	//
+	// step k+1:
+	// +---------+---------+---------+
+	// |OOOOOOOOO|OOOOOO...|.........|
+	// |OOOOOOOOO|OOOOOOO..|.........|
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// |OOOOOOOOO|OOOOOOOOO..........|
+	// |OOOOOOOOO|OOOOOOOOOO.........|
+	// |OOOOOOOOO|OOOOOOOOO..........|
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// |OOOOOOOOO|OOOOOOO..|.........|
+	// |OOOOOOOOO|OOOOOO...|.........|
+	// +---------+---------+---------+
+	//
+	// step k+2:
+	// +---------+---------+---------+
+	// |OOOOOOOOO|OOOOOOO..|.........|
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// |OOOOOOOOO|OOOOOOOOO|.........|
+	// |OOOOOOOOO|OOOOOOOOOO.........|
+	// |OOOOOOOOO|OOOOOOOOO|O........|
+	// |OOOOOOOOO|OOOOOOOOOO.........|
+	// |OOOOOOOOO|OOOOOOOOO|.........|
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// |OOOOOOOOO|OOOOOOO..|.........|
+	// +---------+---------+---------+
+	//
+	// step k+3:
+	//  full tile  tile p    tile m
+	// +---------+---------+---------+
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// |OOOOOOOOO|OOOOOOOOO|.........|
+	// |OOOOOOOOO|OOOOOOOOOO.........|
+	// |OOOOOOOOO|OOOOOOOOO|O........|
+	// |OOOOOOOOO|OOOOOOOOOOOO.......|
+	// |OOOOOOOOO|OOOOOOOOO|O........|
+	// |OOOOOOOOO|OOOOOOOOOO.........|
+	// |OOOOOOOOO|OOOOOOOOO|.........|
+	// |OOOOOOOOO|OOOOOOOO.|.........|
+	// +---------+---------+---------+
+	//                     |-> length ixm
+	//           |-----------> length ixp
+	//
+	// Here, the left-most tile is full, tile p is a few steps away from being
+	// filled, and tile m has just begun getting filled
+	//
+	// Length ixm counts how far along tile m is in its sequence `es`, while
+	// length ixp counts how far along tile p is.
+	//
+	// ------------------------
+	//
+	// Diagonal regions are more complicated. Picture the region northeast of
+	// the initial center tile:
+	//
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// |O...|....|
+	// +----+----+
+	//
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |O...|....|
+	// |OO..|....|
+	// +----+----+
+	//
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// +----+----+
+	// |....|....|
+	// |O...|....|
+	// |OO..|....|
+	// |OOO.|....|
+	// +----+----+
+	//
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// +.---+----+
+	// |O...|....|
+	// |OO..|....|
+	// |OOO.|....|
+	// |OOOO.....|
+	// +----+----+
+	//
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// +O.--+----+
+	// |OO..|....|
+	// |OOO.|....|
+	// |OOOO.....|
+	// |OOOOO....|
+	// +----+----+
+	//
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |....|....|
+	// |P...|....|
+	// +OO.-+----+
+	// |OOO.|....|
+	// |OOMO.....|
+	// |OOOOO....|
+	// |OOOOOP...|
+	// +----+----+
+	//
+	// +----+----+
+	// |....|....|
+	// |....|....|
+	// |O...|....|
+	// |PO..|....|
+	// +OOO.+----+
+	// |OOOO.....|
+	// |OOMOO....|
+	// |OOOOOO...|
+	// |OOOOOPO..|
+	// +----+----+
+	//
+	// Here again we have two partially-filled tile states: state M and state P
+	// marked above. M is further along in its sequence than P. Unlike the east
+	// row case, there are in general more than one of each M and P tile. Now
+	// there are two P tiles and one M tile. In a couple more steps when the
+	// next tile is entered, there will be three P tiles and two M tiles (i.e.
+	// the current two P tiles)
+	//
+	// In general there are `nm` M tiles and `np` P tiles. Those variables are
+	// set below
+	//
+	// The full tiles in the diagonal region are also more complicated than the
+	// east row case. Full tiles behind the advancing frontier are in
+	// alternating even/odd states, arranged like colors on a chess board.
+	// Collapsing each tile to a single character, with x for even state tiles
+	// and @ for odd state tiles:
+	//
+	// x@x@x
+	// @x@x@
+	// x@x@x
+	// @x@x@
+	//
+	// As the frontier advances it looks like this:
+	//
+	// .......
+	// .......
+	// .......
+	// x......
+	// @x.....
+	// x@x....
+	// @x@x...
+	//
+	// .......
+	// .......
+	// @......
+	// x@.....
+	// @x@....
+	// x@x@...
+	// @x@x@..
+	//
+	// .......
+	// x......
+	// @x.....
+	// x@x....
+	// @x@x...
+	// x@x@x..
+	// @x@x@x.
+	//
+	// @......
+	// x@.....
+	// @x@....
+	// x@x@...
+	// @x@x@..
+	// x@x@x@.
+	// @x@x@x@
+	//
+	// The number of even x tiles is the sum of even integers: nte = 2 + 4 + 6 + ...
+	//
+	// The number of odd @ tiles is the sum of odd integers: nto = 1 + 3 + 5 + ...
+	//
+	// Variables `nte` and `nto` are below
+
+	let ntt = 64'i64;
+	ntt = 26501365;
+	//ntt = 5000;
+
+	const it = ntt;
+
+	let cnt = 0'i64;
+
+	// Central cell
+	//
+	// I'm not handling the edge case before the center cell is filled, so
+	// this will be wrong in the first several increments until `it` is
+	// large enough
+	cnt += nfs[(it+0)%2];
+
+	//*************************************************
+	// East/west/north/south cardinal rows and columns
+	{
+		const ix  = it - sxy[0];
+		const ixm = ix % nx;
+		const ixp = ixm + nx;
+		const nfec = ix / nx;  // number of full eastern cells
+
+		// Note since pattern size is odd, every pair of full cells has
+		// different counts
+		cnt += 4 * nfs[(it+1)%2] * (nfec/2);         // full odd cells
+		cnt += 4 * nfs[(it+0)%2] * (nfec-nfec/2-1);  // full even cells
+
+		//println("ixm = ", ixm);
+		if ixm >= 0
+		{
+			cnt += es[ixm];
+			cnt += ws[ixm];
+			cnt += ns[ixm];
+			cnt += ss[ixm];
+		}
+		if ixp >= 0
+		{
+			cnt += es[ixp];
+			cnt += ws[ixp];
+			cnt += ns[ixp];
+			cnt += ss[ixp];
+		}
+	}
+	//*************************************************
+	// Diagonals
+	{
+		// Honestly you just have to figure these numbers out through trial
+		// and error, checking against brute force, and starting with a
+		// single diagonal (e.g. northeast only) before one-by-one enabling the
+		// others
+		//
+		// The edge cases begin non-existently as we have not entered any
+		// diagonal regions (not handled by north col and east row above),
+		// then we enter a single diagonal cell and you can hard-code some
+		// coefficients to 1, then it continues getting gradually more
+		// complex
+		//
+		// Attempting to jump straight to step 26501365 would be insane
+
+		// Number of steps into the first diagonal neigbor map tile
+		const id = it - (sxy[0] + sxy[1] + 1);
+
+		// Number of steps into main diagonal frontier tile
+		const idm = id % nn;
+
+		// Number of steps into tile just off the main diagonal
+		const idp = (it - (nx + ny)) % nn;
+
+		const na = id / nn;
+		const nb = (it - nn) / nx;   // "base" length of tri in number of tiles
+		const nt = nb * (nb+1) / 2;  // triangular number formula
+
+		// As the frontier expands, we have na == 1 tile in the state of the
+		// main diagonal, then 3 sharing the same state, then 5, ...
+		const nm = 1 + 2 * na;
+
+		// Number of tiles in the just-off-main-diagonal frontier state
+		const np = 2 + 2 * ((it - (nn)) / nn);
+
+		// Number of completely filled tiles in even state. Even/odd filled
+		// tiles alternate like chess board color in the diagonal region
+		let nte = 0'i64;
+		if nb % 2 == 0 and nb > 0
+		{
+			// 2 == 2
+			// 2 + 4 == 6
+			// 2 + 4 + 6 == 12
+			// ...
+			// Sum of even numbers == doubled triangular numbers
+			nte = (nb/2) * (nb/2+1);
+		}
+		else
+		{
+			// 1 == 1
+			// 1 + 3 == 4
+			// 1 + 3 + 5 == 9
+			// ...
+			// Sum of odd numbers == square numbers
+			nte = ((nb+1)/2) ** 2;
+		}
+		const nto = nt - nte;  // number filled in odd state
+
+		//println("idm, idp, nb, nt = ", [idm, idp, nb, nt]);
+		//println("nes[[idm, idp]] = ", nes[[idm, idp]]);
+		//println("nm, np = ", [nm, np]);
+		//println("nte, nto = ", [nte, nto]);
+
+		// Add full areas of filled even and odd tiles
+		if (nte>0) cnt += 4 * nte * nfs[(it+nb+1)%2];
+		if (nto>0) cnt += 4 * nto * nfs[(it+nb+0)%2];
+
+		// Add partial areas of frontier tiles
+		if idm >= 0
+		{
+			cnt += nm * nes[idm];
+			cnt += nm * nws[idm];
+			cnt += nm * ses[idm];
+			cnt += nm * sws[idm];
+		}
+		if idp >= 0
+		{
+			cnt += np * nes[idp];
+			cnt += np * nws[idp];
+			cnt += np * ses[idp];
+			cnt += np * sws[idp];
+		}
+	}
+	//*************************************************
+
+	println("it, np = ", [it, cnt]);
+	//println("cnt1 = ", [cnt1, es[ixm]]);
+	//if (ixp < nn and ixp >= 0) println("cnt2 = ", [cnt2, es[ixp]]);
+
+	sum_ = cnt;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn get_seq(g: &const [bool; :,:], seed: [i32; :]): [i32; :]
+{
+	// Part 1 is a bit slow actually. Could use something like this to make it
+	// faster
+
+	println("getting sequence from ", seed);
+	const nx = size(g,0);
+	const ny = size(g,1);
+	const nt = nx + ny;
+
+	let seq = [0; nt];
+
+	let dists = [2_000_000_000; nx, ny];
+
+	//// It's not this simple
+	//for y in [0: ny]
+	//for x in [0: nx]
+	//	if not g[x,y]
+	//		dists[x,y] = sum(abs([x,y] - seed));
+
+	// BFS
+	let q = queue_vec_i32::new();
+	q.push(seed);
+	dists[seed[0], seed[1]] = 0;
+	while not q.is_empty()
+	{
+		const u = q.pop();
+		const x0 = u[0];
+		const y0 = u[1];
+		const d0 = dists[x0,y0];
+		for id in [0: 4]
+		{
+			const xy = u + dirs[:,id];
+			const x = xy[0];
+			const y = xy[1];
+			if (x < 0) continue;
+			if (y < 0) continue;
+			if (x >= nx) continue;
+			if (y >= ny) continue;
+			if g[x,y] continue;
+			if (dists[x,y] < 2_000_000_000) continue;
+			q.push(xy);
+			dists[x,y] = d0 + 1;
+		}
+	}
+	//println("dists = ", dists);
+
+	//// Equivalent but marginally slower. Offloading O(nx*ny) task to intrinsic
+	//// `count` is optimal
+	//for y in [0: ny]
+	//for x in [0: nx]
+	//{
+	//	const d = dists[x,y];
+	//	if (d == 2_000_000_000) continue;
+	//	seq[d+1:2:] += 1;
+	//}
+
+	const is_even = dists % 2 == 0;
+	//println("is_even = ", is_even);
+	for it in [1: nt]
+		if it % 2 == 1
+			seq[it] = count(dists < it and is_even);
+		else
+			seq[it] = count(dists < it and not is_even);
+
+	//println("seq = ", seq);
+	return seq;
+}
+
+fn get_seq_old(g: &const [bool; :,:], seed: [i32; :]): [i32; :]
+{
+	println("getting sequence from ", seed);
+	const nx = size(g,0);
+	const ny = size(g,1);
+	const nt = nx + ny;
+
+	let seq = [0; nt];
+	let b = [false; nx, ny];
+	b[seed[0], seed[1]] = true;
+	let b0 = b;
+
+	for it in [1: nt]
+	{
+		seq[it] = count(b);
+		if it > 2
+			if seq[it] == seq[it-2]
+			{
+				for k in [it+1: nt]
+					seq[k] = seq[k-2];
+				break;
+			}
+
+		b0 = b;
+		for y in [0: ny]
 		for x in [0: nx]
 		{
-			grid[x, y] = str_[x];
-			if grid[x, y] == "S"
+			if (not b0[x,y]) continue;
+			b[x, y] = false;
+			const xy0 = [x, y];
+			for d in [0: 4]
 			{
-				xs = x;
-				ys = y;
+				const xy = xy0 + dirs[:,d];
+				if (xy[0] < 0) continue;
+				if (xy[1] < 0) continue;
+				if (xy[0] >= nx) continue;
+				if (xy[1] >= ny) continue;
+				if g[xy[0], xy[1]] continue;
+				b[xy[0], xy[1]] = true;
 			}
 		}
-
-		str_ = readln(f);
 	}
-	close(f);
-	//println("grid = ", grid);
-	println("xs, ys = ", [xs, ys]);
-
-	push_(xs, ys);
-
-	for it in [0: nt]
-	{
-		println("step ", it);
-
-		// Could be optimized by only copying 0: np
-		let p0 = p;
-		let np0 = np;
-
-		// TODO: the points expand outward ~~in a ring~~.  Points in the interior of
-		// the ring just flip-flop between white and black squares like a
-		// checkerboard pattern.  Even steps have all points on white squares,
-		// and and odd steps have all points on black squares
-		//
-		// Nothing new happens on the interior, only points on the frontier of
-		// expansion do anything interesting.  Compare set of points with all
-		// points from two steps ago (e.g. compare black to black and white to
-		// white), maybe using a bisection search on lexicographical ordering.
-		// Only points that expand "outwards" need to be processed in the next
-		// step
-		//
-		// Actually it's not necessarily a ring.  Because of rocks, the
-		// expansion could happen around obstacles but back towards the starting
-		// point
-
-		np = 0;
-		for ip0 in [0: np0]
-		{
-			for dir in [0: NDIRS]
-			{
-				let x = p0[0, ip0] + DIRS[0, dir];
-				let y = p0[1, ip0] + DIRS[1, dir];
-				if grid[pmod(x, nx), pmod(y, ny)] != "#"
-					push_(x, y);
-			}
-		}
-
-		//println("p dup = ");
-		//for i in [0: np]
-		//	println([p[0,i], p[1,i]]);
-
-		// Convert 2D indices p to 1D indices p1
-		//
-		// TODO: this doesn't work for infinitely tiled grids.  Instead of
-		// making p1, sort p directly, lexicographically
-		let p1 = [-1; np];
-		for ip in [0: np]
-			p1[ip] = p[0,ip] + nx * p[1,ip];
-		//println("p1 = ", p1);
-
-		println("sorting points ...");
-		let pu = uniq_d21(p1);
-		println("done");
-		//println("pu = ", pu);
-
-		// Convert unique 1D indices back to 2D
-		np = 0;
-		for i in [0: size(pu, 0)]
-		{
-			let x = pu[i] % nx;
-			let y = pu[i] / nx;
-			push_(x, y);
-		}
-		println("np = ", np);
-		//println("p unq = ");
-		//for i in [0: np]
-		//	println([p[0,i], p[1,i]]);
-		println();
-	}
-
-	let sum_ = np;
-	println("part 2 = ", sum_);
-	return sum_;
+	return seq;
 }
 
 //==============================================================================
 
-fn main(): i64
+fn main(): str
 {
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
 	println();
-	println("Starting AOC syntran main 2023/21");
+	println(MAGENTA + "Starting AOC syntran main 2023/21" + RESET);
+	let args = parse_args();
 
-	let sum_ = i64(0);
+	let p1 = ""; let p2 = "";
 
-	sum_ += part1();
-	//sum_ += part2();
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
 
-	println("Ending AOC syntran main");
+	let expect1 = "3770";
+	let expect2 = "628206330073385";
+	let expect1_test = "";
+	let expect2_test = "470149675032643";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
 	println();
-	return sum_;
+	return p1 + ":" + p2;
 }
 
 //==============================================================================
