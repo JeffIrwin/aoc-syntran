@@ -18,102 +18,93 @@ const RESET   = ESC + "[0m";
 const WARN_STR  = YELLOW + "Warning" + RESET + ": ";
 const ERROR_STR = RED    + "Error"   + RESET + ": ";
 
-struct nr_args
+struct newton_raphson_nd
 {
-	// Input/output args for Newton-Raphson solver. I guess I'm following the
-	// convention of MATLAB's fzero() which puts the exitflag in the args and
-	// returns the solution `x` as the newton_raphson_nd() fn return value.
-	// *Unlike* MATLAB, exitflag of 0 is success
+	// Newton-Raphson solver class for general N-dimensional systems
 	//
-	// Syntran can't have fn pointers in structs yet :(. That will be worth a
-	// breaking API change
+	// I guess I'm following the convention of MATLAB's fzero() which puts the
+	// exitflag in the struct and returns the solution `x` as the
+	// newton_raphson_nd() fn return value. *Unlike* MATLAB, exitflag of 0 is
+	// success
 	//
 	// May later add neval, niter, etc. stats
 
 	f : fn([f64; :]): [f64; :],    // input: function to zero
 	df: fn([f64; :]): [f64; :,:],  // input: derivative of f
-	x0: [f64; :],                  // input : initial guess
-	tol: f64,                      // input : allowable residual tolerance
-	maxiters: i32,                 // input : max number of allowed iterations
+	x0: [f64; :],                  // input: initial guess
+	tol: f64,                      // input: allowable residual tolerance
+	maxiters: i32,                 // input: max number of allowed iterations
 
 	exitflag: i32,                 // output: 0 on success
 
-	// TODO: this interface is ok, but the solver should just be a method now.
-	// `f` and `df` should be required args for new_nr_args so they are never
-	// dummy. `args` name should be removed since they're not just arguments,
-	// they're the whole class
+	//****************************
+	fn solve(): [f64; :]
+	{
+		exitflag = 0;
+		const maxiters = maxiters;
+		const tol = tol;
+
+		let x = x0;
+		if size(x) <= 0
+		{
+			// Maybe x0 should be required in the constructor
+			println(WARN_STR +
+				"initial guess `x0` is empty in newton_raphson_nd.solve()");
+			exitflag = 1;
+			return x;
+		}
+
+		let has_converged = false;
+		for iter in [0: maxiters]
+		{
+			let fx = f(x);
+
+			//println("iter = ", iter, "    eps = ", norm2(fx));
+			if norm2(fx) < tol
+			{
+				has_converged = true;
+				break;
+			}
+
+			let dfx = df(x);
+			//println("dfx = ", dfx);
+			const io = lu_invmul_vec_f64(&dfx, &fx);
+			if io != 0
+			{
+				exitflag = 2;
+				return x;
+			}
+			x -= fx;
+		}
+		if not has_converged
+		{
+			// One last fn eval, otherwise missed at top of loop
+			let fx = f(x);
+			has_converged = norm2(fx) < tol;
+		}
+		if not has_converged
+		{
+			//println(WARN_STR + "newton_raphson_nd() did not converge");
+			exitflag = 3;
+		}
+		return x;
+	}
 }
-fn dummy_fn(x: [f64; :]): [f64; :]
-{
-	return [0.0];
-}
-fn dummy_derivative(x: [f64; :]): [f64; :,:]
-{
-	return [0.0; 1, 1];
-}
-fn new_nr_args(): nr_args
+fn new_newton_raphson_nd(
+	f : fn([f64; :]): [f64; :],
+	df: fn([f64; :]): [f64; :,:],
+): newton_raphson_nd
 {
 	// Constructor
-	return nr_args
+	return newton_raphson_nd
 	{
-		f  = dummy_fn,
-		df = dummy_derivative,
+		f  = f,
+		df = df,
 		x0 = [0.0; 0],
 		tol = 1.e-10,
 		maxiters = 15,
 		exitflag = 0,
 	};
-}
-fn newton_raphson_nd
-(
-	args: &nr_args,
-): [f64; :]
-{
-	args.exitflag = 0;
-	const maxiters = args.maxiters;
-	const tol = args.tol;
-
-	let x = args.x0;
-	if size(x) <= 0
-	{
-		args.exitflag = 1;
-		return x;
-	}
-
-	let has_converged = false;
-	for iter in [0: maxiters]
-	{
-		let fx = args.f(x);
-
-		//println("iter = ", iter, "    eps = ", norm2(fx));
-		if norm2(fx) < tol
-		{
-			has_converged = true;
-			break;
-		}
-
-		let dfx = args.df(x);
-		//println("dfx = ", dfx);
-		const io = lu_invmul_vec_f64(&dfx, &fx);
-		if io != 0
-		{
-			args.exitflag = 2;
-			return x;
-		}
-		x -= fx;
-	}
-	if not has_converged
-	{
-		// One last fn eval, otherwise missed at top of loop
-		let fx = args.f(x);
-		has_converged = norm2(fx) < tol;
-	}
-	if not has_converged
-	{
-		//println(WARN_STR + "newton_raphson_nd() did not converge");
-		args.exitflag = 3;
-	}
-	return x;
 }
 
 //==============================================================================
@@ -361,22 +352,18 @@ fn test_numa(): i32
 	{
 	const xe = [0.8332816, 3.533462e-002, -0.4985493];  // expected root
 
-	let args = new_nr_args();
-	args.f  =  f_nr_ex3;
-	args.df = df_nr_ex3;
-	args.x0 = [1., 1., 1.];
-	const xn = newton_raphson_nd(&args);
+	let newton = new_newton_raphson_nd(f_nr_ex3, df_nr_ex3);
+	newton.x0 = [1., 1., 1.];
+	const xn = newton.solve();
 	println("xn = ", xn);
 	nfail += assert_lt_f64(norm2(xn-xe), 1.d-7, "newton_raphson_nd 1");
 
 	}{
 
 	const xe = [1.0989425808889501d0, 0.36761667884567795d0, 0.14493165687848802d0];
-	let args = new_nr_args();
-	args.f  =  f_nr_ex4;
-	args.df = df_nr_ex4;
-	args.x0 = [0.; 3];
-	const xn = newton_raphson_nd(&args);
+	let newton = new_newton_raphson_nd(f_nr_ex4, df_nr_ex4);
+	newton.x0 = [0.; 3];
+	const xn = newton.solve();
 	println("xn = ", xn);
 	nfail += assert_lt_f64(norm2(xn-xe), 1.d-7, "newton_raphson_nd 2");
 
@@ -385,11 +372,9 @@ fn test_numa(): i32
 	// Same as above but with different initial guess, and thus a different root
 	// solution
 	const xe = [1.; 3];
-	let args = new_nr_args();
-	args.f  =  f_nr_ex4;
-	args.df = df_nr_ex4;
-	args.x0 = [1., 2., 3.];
-	const xn = newton_raphson_nd(&args);
+	let newton = new_newton_raphson_nd(f_nr_ex4, df_nr_ex4);
+	newton.x0 = [1., 2., 3.];
+	const xn = newton.solve();
 	println("xn = ", xn);
 	nfail += assert_lt_f64(norm2(xn-xe), 1.d-7, "newton_raphson_nd 3");
 
