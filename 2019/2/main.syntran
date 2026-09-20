@@ -1,0 +1,146 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+enum opcode
+{
+	add = 1,
+	mul = 2,
+	halt = 99,
+}
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let prog = read_i32_mat_delim(args.input_filename, ",")[:,0];
+	//println("prog = ", prog);
+
+	prog[1] = 12;
+	prog[2] = 2;
+
+	let ip = 0;  // instruction pointer
+
+	while true
+	{
+		switch opcode(prog[ip])
+		{
+			case opcode.add
+			{
+				const res = prog[prog[ip+1]] + prog[prog[ip+2]];
+				prog[prog[ip+3]] = res;
+			}
+			case opcode.mul
+			{
+				const res = prog[prog[ip+1]] * prog[prog[ip+2]];
+				prog[prog[ip+3]] = res;
+			}
+			case opcode.halt
+			{
+				break;
+			}
+			default
+			{
+				println(ERROR_STR, "bad opcode: ", prog[ip]);
+				exit(1);
+			}
+		}
+		ip += 4;
+	}
+	//println("prog = ", prog);
+	sum_ = prog[0];
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const prog0 = read_i32_mat_delim(args.input_filename, ",")[:,0];
+
+	for noun in [0: 100]
+	for verb in [0: 100]
+	{
+
+	let prog = prog0;
+	prog[1] = noun;
+	prog[2] = verb;
+
+	let ip = 0;  // instruction pointer
+
+	while true
+	{
+		switch opcode(prog[ip])
+		{
+			case opcode.add
+			{
+				const res = prog[prog[ip+1]] + prog[prog[ip+2]];
+				prog[prog[ip+3]] = res;
+			}
+			case opcode.mul
+			{
+				const res = prog[prog[ip+1]] * prog[prog[ip+2]];
+				prog[prog[ip+3]] = res;
+			}
+			case opcode.halt
+			{
+				break;
+			}
+			default
+			{
+				println(ERROR_STR, "bad opcode: ", prog[ip]);
+				exit(1);
+			}
+		}
+		ip += 4;
+	}
+
+	//println("prog = ", prog);
+	if prog[0] == 19690720
+	{
+		sum_ = 100 * noun + verb;
+		break;
+	}
+
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2019/2" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "3058646";
+	let expect2 = "8976";
+	let expect1_test = "";
+	let expect2_test = "";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
