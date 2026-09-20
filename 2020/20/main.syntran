@@ -32,9 +32,6 @@ fn part1(args: &const Args): str
 	tiles.set(str(id), s);
 	//tiles.print("tiles = ");
 
-	//println("Tile 3079:");
-	//print_bool_mat(str_to_bool(tiles.get("3079")));
-
 	let keys = tiles.get_keys();
 
 	// Walk from the first tile up/down/left/right to each corner
@@ -133,7 +130,6 @@ fn part2(args: &const Args): str
 		const NX = size(g, 0);
 		const NY = size(g, 1);
 		g = g[1:NX-1, 1:NY-1]; // trim borders
-		//print_bool_mat(g);
 
 		sg[x: x+NX-2, y: y+NY-2] = bool_to_str(g);  // fill-in supergrid
 
@@ -360,21 +356,6 @@ fn walk_left(
 		}
 	}
 	return false;
-}
-
-// Helpers copied from 2025/12
-fn print_bool_mat(b: [bool; :,:])
-{
-	//println(msg);
-	let nx = size(b,0);
-	let ny = size(b,1);
-	let c = ["."; nx, ny];
-	for y in [0: ny]
-	for x in [0: nx]
-		if (b[x,y]) c[x,y] = "#";
-	print_char_mat(&c);
-	//println("Ending print_bool_mat");
-	//return;
 }
 
 fn transpose_(b: [bool; :,:]): [bool; :,:]

@@ -145,7 +145,7 @@ fn part2(args: &const Args): str
 	cnt    [p1, 0, p2, 0, 1, 0] = 1;
 	while true
 	{
-		if (q.is_empty) break;
+		if (q.is_empty()) break;
 		const u = q.pop();
 		const p1   = u[0];  // unpack
 		const s1   = u[1];

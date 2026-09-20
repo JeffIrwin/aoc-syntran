@@ -197,7 +197,7 @@ fn both_parts(args: &const Args, p1: &str, p2: &str)
 		let visited = [false; n];
 		q.push([0, start]);
 		visited[start] = true;
-		while not q.is_empty
+		while not q.is_empty()
 		{
 			const u = q.pop();
 			const dist = u[0];
