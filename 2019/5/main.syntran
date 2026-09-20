@@ -106,6 +106,18 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+fn get_param(
+	prog: &const [i32; :],
+	modes: &const [i32; :],
+	ip: const i32,
+	iparam: i32
+): i32
+{
+	let param = prog[ip+1];
+	if mode1 == 0
+		param1 = prog[param1];
+}
+
 fn part2(args: &const Args): str
 {
 	let sum_ = 0'i64;
@@ -120,9 +132,17 @@ fn part2(args: &const Args): str
 	{
 		const instr = prog[ip];
 		const op = instr % 100;
-		const mode1 = (instr /   100) % 10; // hundreds digit
-		const mode2 = (instr /  1000) % 10; // thousands digit
-		const mode3 = (instr / 10000) % 10;
+
+		const modes = [
+			(instr /   100) % 10, // hundreds digit
+			(instr /  1000) % 10, // thousands digit
+			(instr / 10000) % 10,
+		];
+
+		//const mode1 = (instr /   100) % 10; // hundreds digit
+		//const mode2 = (instr /  1000) % 10; // thousands digit
+		//const mode3 = (instr / 10000) % 10;
+
 		//println();
 		//println("instr = ", instr);
 		//println("modes = ", [mode1, mode2, mode3]);
