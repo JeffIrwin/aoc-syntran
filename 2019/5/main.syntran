@@ -109,13 +109,15 @@ fn part1(args: &const Args): str
 fn get_param(
 	prog: &const [i32; :],
 	modes: &const [i32; :],
-	ip: const i32,
+	ip: i32,
 	iparam: i32
 ): i32
 {
-	let param = prog[ip+1];
-	if mode1 == 0
-		param1 = prog[param1];
+	// Might also want a 'state' struct with prog and ip
+	let param = prog[ip + iparam];
+	if modes[iparam-1] == 0
+		param = prog[param];
+	return param;
 }
 
 fn part2(args: &const Args): str
@@ -139,9 +141,9 @@ fn part2(args: &const Args): str
 			(instr / 10000) % 10,
 		];
 
-		//const mode1 = (instr /   100) % 10; // hundreds digit
-		//const mode2 = (instr /  1000) % 10; // thousands digit
-		//const mode3 = (instr / 10000) % 10;
+		const mode1 = (instr /   100) % 10; // hundreds digit
+		const mode2 = (instr /  1000) % 10; // thousands digit
+		const mode3 = (instr / 10000) % 10;
 
 		//println();
 		//println("instr = ", instr);
@@ -151,33 +153,19 @@ fn part2(args: &const Args): str
 		{
 			case opcode.add
 			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
+				const param1 = get_param(prog, modes, ip, 1);
+				const param2 = get_param(prog, modes, ip, 2);
 				const res = param1 + param2;
 				//println("add ", [param1, param2], " = ", res);
-
 				prog[prog[ip+3]] = res;
 				ip += 4;
 			}
 			case opcode.mul
 			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
+				const param1 = get_param(prog, modes, ip, 1);
+				const param2 = get_param(prog, modes, ip, 2);
 				const res = param1 * param2;
 				//println("mul ", [param1, param2], " = ", res);
-
 				prog[prog[ip+3]] = res;
 				ip += 4;
 			}
@@ -190,25 +178,15 @@ fn part2(args: &const Args): str
 			}
 			case opcode.output
 			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
+				const param1 = get_param(prog, modes, ip, 1);
 				//println("output: ", param1);
 				output = param1;
 				ip += 2;
 			}
 			case opcode.jump_true
 			{
-				// TODO: get_param helper?
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
+				const param1 = get_param(prog, modes, ip, 1);
+				const param2 = get_param(prog, modes, ip, 2);
 				//println("jump_true ", [param1, param2]);
 				if param1 != 0
 					ip = param2;
@@ -217,14 +195,8 @@ fn part2(args: &const Args): str
 			}
 			case opcode.jump_false
 			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
+				const param1 = get_param(prog, modes, ip, 1);
+				const param2 = get_param(prog, modes, ip, 2);
 				//println("jump_false ", [param1, param2]);
 				if param1 == 0
 					ip = param2;
@@ -233,44 +205,30 @@ fn part2(args: &const Args): str
 			}
 			case opcode.less_than
 			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
+				const param1 = get_param(prog, modes, ip, 1);
+				const param2 = get_param(prog, modes, ip, 2);
 				let res = 0;
 				if param1 < param2
 					res = 1;
 				//println("less_than ", [param1, param2], " = ", res);
-
 				prog[prog[ip+3]] = res;
 				ip += 4;
 			}
 			case opcode.equals
 			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
+				const param1 = get_param(prog, modes, ip, 1);
+				const param2 = get_param(prog, modes, ip, 2);
 				let res = 0;
 				if param1 == param2
 					res = 1;
 				//println("equals ", [param1, param2], " = ", res);
-
 				prog[prog[ip+3]] = res;
 				ip += 4;
 			}
 			case opcode.halt
 			{
-				break;
 				ip += 1;
+				break;
 			}
 			default
 			{
