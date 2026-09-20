@@ -1,6 +1,7 @@
 
 use ../../utils::*;
 //use ../../dict_i64_2026 as dict_i64;
+use ../../queue_i32 as queue_i32;
 
 //==============================================================================
 
@@ -16,96 +17,6 @@ enum opcode
 	equals     =  8,
 	halt       = 99,
 }
-
-fn part1(args: &const Args): str
-{
-	let sum_ = 0'i64;
-
-	let prog = read_i32_mat_delim(args.input_filename, ",")[:,0];
-	//println("prog = ", prog);
-
-	let ip = 0;     // instruction pointer
-	let output = 0; // only need to save last output for part 1 today
-
-	while true
-	{
-		const instr = prog[ip];
-		const op = instr % 100;
-		const mode1 = (instr /   100) % 10; // hundreds digit
-		const mode2 = (instr /  1000) % 10; // thousands digit
-		const mode3 = (instr / 10000) % 10;
-		//println("instr = ", instr);
-		//println("modes = ", [mode1, mode2, mode3]);
-
-		switch opcode(op)
-		{
-			case opcode.add
-			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
-				const res = param1 + param2;
-				//println("add ", [param1, param2], " = ", res);
-
-				prog[prog[ip+3]] = res;
-				ip += 4;
-			}
-			case opcode.mul
-			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				let param2 = prog[ip+2];
-				if mode2 == 0
-					param2 = prog[param2];
-
-				const res = param1 * param2;
-				//println("mul ", [param1, param2], " = ", res);
-
-				prog[prog[ip+3]] = res;
-				ip += 4;
-			}
-			case opcode.input
-			{
-				const res = 1;  // only input for part 1 today
-				prog[prog[ip+1]] = res;
-				ip += 2;
-			}
-			case opcode.output
-			{
-				let param1 = prog[ip+1];
-				if mode1 == 0
-					param1 = prog[param1];
-
-				//println("output: ", param1);
-				output = param1;
-				ip += 2;
-			}
-			case opcode.halt
-			{
-				break;
-				ip += 1;
-			}
-			default
-			{
-				println(ERROR_STR, "bad opcode: ", op);
-				exit(1);
-			}
-		}
-	}
-	//println("prog = ", prog);
-	sum_ = output;
-
-	println("part 1 = ", sum_);
-	return str(sum_);
-}
-
 fn get_param(
 	prog: &const [i32; :],
 	modes: &const [i32; :],
@@ -119,17 +30,13 @@ fn get_param(
 		param = prog[param];
 	return param;
 }
-
-fn part2(args: &const Args): str
+fn exec1(
+	prog   : &[i32; :],
+	inputs : &queue_i32::Queue_i32,
+	outputs: &queue_i32::Queue_i32,
+)
 {
-	let sum_ = 0'i64;
-
-	let prog = read_i32_mat_delim(args.input_filename, ",")[:,0];
-	//println("prog = ", prog);
-
 	let ip = 0;     // instruction pointer
-	let output = 0; // only need to save last output for today
-
 	while true
 	{
 		const instr = prog[ip];
@@ -166,7 +73,11 @@ fn part2(args: &const Args): str
 			}
 			case opcode.input
 			{
-				const res = 5;  // only input for today
+				//const res = inputs.pop();
+				let res = 0;
+				if not inputs.is_empty()
+					res = inputs.pop();
+
 				//println("input = ", res);
 				prog[prog[ip+1]] = res;
 				ip += 2;
@@ -175,7 +86,7 @@ fn part2(args: &const Args): str
 			{
 				const param1 = get_param(prog, modes, ip, 1);
 				//println("output: ", param1);
-				output = param1;
+				outputs.push(param1);
 				ip += 2;
 			}
 			case opcode.jump_true
@@ -232,10 +143,62 @@ fn part2(args: &const Args): str
 			}
 		}
 	}
-	//println("prog = ", prog);
-	sum_ = output;
+}
 
-	println("part 2 = ", sum_);
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const prog0 = read_i32_mat_delim(args.input_filename, ",")[:,0];
+	//println("prog0 = ", prog0);
+
+	// Try every combination -- only 5**5 == 3125
+	for i0 in [0: 5]
+	for i1 in [0: 5]
+	for i2 in [0: 5]
+	for i3 in [0: 5]
+	for i4 in [0: 5]
+	{
+		if (i0 == i1) continue;  // :(
+		if (i0 == i2) continue;
+		if (i1 == i2) continue;
+		if (i0 == i3) continue;
+		if (i1 == i3) continue;
+		if (i2 == i3) continue;
+		if (i0 == i4) continue;
+		if (i1 == i4) continue;
+		if (i2 == i4) continue;
+		if (i3 == i4) continue;
+
+		const phases = [i0, i1, i2, i3, i4];
+		//println("phases = ", phases);
+
+		const namp = size(phases);
+		let inputs  = queue_i32::new();
+		let outputs = queue_i32::new();
+		inputs.push(phases[0]);
+		for iamp in [0: namp]
+		{
+			//println("inputs = ", inputs.data);
+			let prog = prog0;
+			outputs = queue_i32::new();
+			exec1(&prog, &inputs, &outputs);
+			//println("outputs = ", outputs.data);
+			if iamp >= namp-1
+				continue;
+
+			inputs = queue_i32::new();
+			inputs.push(phases[iamp+1]);
+			while not outputs.is_empty()
+				inputs.push( outputs.pop() );
+		}
+		sum_ = max(sum_, i64(outputs.pop()));
+	}
+
+	//println("prog = ", prog);
+	//sum_ = outputs.pop();
+
+	println("part 1 = ", sum_);
 	return str(sum_);
 }
 
@@ -246,17 +209,17 @@ fn main(): str
 	// For unit-testing (within the syntran repo), this main fn returns a value
 	// to be compared with expected results
 	println();
-	println(MAGENTA + "Starting AOC syntran main 2019/5" + RESET);
+	println(MAGENTA + "Starting AOC syntran main 2019/7" + RESET);
 	let args = parse_args();
 
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	if (args.do_p2) p2 = part2(&args);
+	//if (args.do_p2) p2 = part2(&args);
 
-	let expect1 = "13087969";
-	let expect2 = "14110739";
-	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect1 = "45730";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "43210";
 	let expect2_test = "REPLACE_ME_P2_TEST";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
