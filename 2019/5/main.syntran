@@ -1,0 +1,300 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+
+//==============================================================================
+
+enum opcode
+{
+	add        =  1,
+	mul        =  2,
+	input      =  3,
+	output     =  4,
+	jump_true  =  5,
+	jump_false =  6,
+	less_than  =  7,
+	equals     =  8,
+	halt       = 99,
+}
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let prog = read_i32_mat_delim(args.input_filename, ",")[:,0];
+	//println("prog = ", prog);
+
+	let ip = 0;     // instruction pointer
+	let output = 0; // only need to save last output for part 1 today
+
+	while true
+	{
+		const instr = prog[ip];
+		const op = instr % 100;
+		const mode1 = (instr /   100) % 10; // hundreds digit
+		const mode2 = (instr /  1000) % 10; // thousands digit
+		const mode3 = (instr / 10000) % 10;
+		//println("instr = ", instr);
+		//println("modes = ", [mode1, mode2, mode3]);
+
+		switch opcode(op)
+		{
+			case opcode.add
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				const res = param1 + param2;
+				//println("add ", [param1, param2], " = ", res);
+
+				prog[prog[ip+3]] = res;
+				ip += 4;
+			}
+			case opcode.mul
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				const res = param1 * param2;
+				//println("mul ", [param1, param2], " = ", res);
+
+				prog[prog[ip+3]] = res;
+				ip += 4;
+			}
+			case opcode.input
+			{
+				const res = 1;  // only input for part 1 today
+				prog[prog[ip+1]] = res;
+				ip += 2;
+			}
+			case opcode.output
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				//println("output: ", param1);
+				output = param1;
+				ip += 2;
+			}
+			case opcode.halt
+			{
+				break;
+				ip += 1;
+			}
+			default
+			{
+				println(ERROR_STR, "bad opcode: ", op);
+				exit(1);
+			}
+		}
+	}
+	//println("prog = ", prog);
+	sum_ = output;
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let prog = read_i32_mat_delim(args.input_filename, ",")[:,0];
+	//println("prog = ", prog);
+
+	let ip = 0;     // instruction pointer
+	let output = 0; // only need to save last output for today
+
+	while true
+	{
+		const instr = prog[ip];
+		const op = instr % 100;
+		const mode1 = (instr /   100) % 10; // hundreds digit
+		const mode2 = (instr /  1000) % 10; // thousands digit
+		const mode3 = (instr / 10000) % 10;
+		//println();
+		//println("instr = ", instr);
+		//println("modes = ", [mode1, mode2, mode3]);
+
+		switch opcode(op)
+		{
+			case opcode.add
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				const res = param1 + param2;
+				//println("add ", [param1, param2], " = ", res);
+
+				prog[prog[ip+3]] = res;
+				ip += 4;
+			}
+			case opcode.mul
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				const res = param1 * param2;
+				//println("mul ", [param1, param2], " = ", res);
+
+				prog[prog[ip+3]] = res;
+				ip += 4;
+			}
+			case opcode.input
+			{
+				const res = 5;  // only input for today
+				//println("input = ", res);
+				prog[prog[ip+1]] = res;
+				ip += 2;
+			}
+			case opcode.output
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				//println("output: ", param1);
+				output = param1;
+				ip += 2;
+			}
+			case opcode.jump_true
+			{
+				// TODO: get_param helper?
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				//println("jump_true ", [param1, param2]);
+				if param1 != 0
+					ip = param2;
+				else
+					ip += 3;
+			}
+			case opcode.jump_false
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				//println("jump_false ", [param1, param2]);
+				if param1 == 0
+					ip = param2;
+				else
+					ip += 3;
+			}
+			case opcode.less_than
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				let res = 0;
+				if param1 < param2
+					res = 1;
+				//println("less_than ", [param1, param2], " = ", res);
+
+				prog[prog[ip+3]] = res;
+				ip += 4;
+			}
+			case opcode.equals
+			{
+				let param1 = prog[ip+1];
+				if mode1 == 0
+					param1 = prog[param1];
+
+				let param2 = prog[ip+2];
+				if mode2 == 0
+					param2 = prog[param2];
+
+				let res = 0;
+				if param1 == param2
+					res = 1;
+				//println("equals ", [param1, param2], " = ", res);
+
+				prog[prog[ip+3]] = res;
+				ip += 4;
+			}
+			case opcode.halt
+			{
+				break;
+				ip += 1;
+			}
+			default
+			{
+				println(ERROR_STR, "bad opcode: ", op);
+				exit(1);
+			}
+		}
+	}
+	//println("prog = ", prog);
+	sum_ = output;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2019/5" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "13087969";
+	let expect2 = "14110739";
+	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
