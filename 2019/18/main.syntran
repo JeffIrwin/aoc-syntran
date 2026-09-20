@@ -69,7 +69,7 @@ fn part1(args: &const Args): str
 		let nbrs = "";
 		while true
 		{
-			if (q.is_empty) break;
+			if (q.is_empty()) break;
 			let u = q.pop();
 			let d = u[0];
 			let x = u[1];
@@ -161,7 +161,7 @@ fn part1(args: &const Args): str
 		let seeni = [false; NX, NY];
 		while true
 		{
-			if qi.is_empty
+			if qi.is_empty()
 				break;
 			let ui = qi.pop();
 			//println("ui = ", ui);
@@ -308,7 +308,7 @@ fn part2(args: &const Args): str
 		let nbrs = "";
 		while true
 		{
-			if (q.is_empty) break;
+			if (q.is_empty()) break;
 			let u = q.pop();
 			let d = u[0];
 			let x = u[1];
@@ -405,7 +405,7 @@ fn part2(args: &const Args): str
 		let seeni = [false; NX, NY];
 		while true
 		{
-			if (qi.is_empty) break;
+			if (qi.is_empty()) break;
 			let ui = qi.pop();
 			let di  = ui[0];
 			let pi  = std::reshape(ui[1:], [2,4]);

@@ -2,8 +2,8 @@
 
 # Go to every sub dir and run the aoc syntran script
 
-#set -exu
-set -eu
+set -exu
+#set -eu
 
 echo "starting run.sh"
 
