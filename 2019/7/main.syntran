@@ -17,6 +17,12 @@ enum opcode
 	equals     =  8,
 	halt       = 99,
 }
+enum status
+{
+	wait_input,
+	halt,
+	abnormal,  // should be unreachable for behaved programs if i don't have bugs
+}
 
 struct Program
 {
@@ -32,14 +38,19 @@ struct Program
 		return param;
 	}
 
-	fn exec1(inputs : &queue_i32::Queue_i32): queue_i32::Queue_i32
+	fn exec2(inputs : &queue_i32::Queue_i32, stat: &status): queue_i32::Queue_i32
 	{
+		// exec2() returns a status out-arg to say whether we are waiting for
+		// more input or if we have halted
+		//
+		// The input queue is never padded
+		stat = status.abnormal;
 		let outputs = queue_i32::new();
 		while true
 		{
 			const instr = prog[ip];
 			const op = instr % 100;
-	
+
 			const modes = [
 				(instr /   100) % 10, // hundreds digit
 				(instr /  1000) % 10, // thousands digit
@@ -48,7 +59,7 @@ struct Program
 			//println();
 			//println("instr = ", instr);
 			//println("modes = ", modes);
-	
+
 			switch opcode(op)
 			{
 				case opcode.add
@@ -71,11 +82,127 @@ struct Program
 				}
 				case opcode.input
 				{
-					//const res = inputs.pop();
+					if inputs.is_empty()
+					{
+						stat = status.wait_input;
+						return outputs;
+					}
+					const res = inputs.pop();
+
+					//println("input = ", res);
+					prog[prog[ip+1]] = res;
+					ip += 2;
+				}
+				case opcode.output
+				{
+					const param1 = get_param(modes, 1);
+					//println("output: ", param1);
+					outputs.push(param1);
+					ip += 2;
+				}
+				case opcode.jump_true
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					//println("jump_true ", [param1, param2]);
+					if param1 != 0
+						ip = param2;
+					else
+						ip += 3;
+				}
+				case opcode.jump_false
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					//println("jump_false ", [param1, param2]);
+					if param1 == 0
+						ip = param2;
+					else
+						ip += 3;
+				}
+				case opcode.less_than
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					let res = 0;
+					if param1 < param2
+						res = 1;
+					//println("less_than ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.equals
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					let res = 0;
+					if param1 == param2
+						res = 1;
+					//println("equals ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.halt
+				{
+					ip += 1;
+					stat = status.halt;
+					return outputs;
+				}
+				default
+				{
+					println(ERROR_STR, "bad opcode: ", op);
+					exit(1);
+				}
+			}
+		}
+		return outputs;  // abnormal
+	}
+
+	fn exec1(inputs : &queue_i32::Queue_i32): queue_i32::Queue_i32
+	{
+		// exec1 pads the input queue with 0's until the program halts
+		let outputs = queue_i32::new();
+		while true
+		{
+			const instr = prog[ip];
+			const op = instr % 100;
+
+			const modes = [
+				(instr /   100) % 10, // hundreds digit
+				(instr /  1000) % 10, // thousands digit
+				(instr / 10000) % 10, // ten-thousands
+			];
+			//println();
+			//println("instr = ", instr);
+			//println("modes = ", modes);
+
+			switch opcode(op)
+			{
+				case opcode.add
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					const res = param1 + param2;
+					//println("add ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.mul
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					const res = param1 * param2;
+					//println("mul ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.input
+				{
+					// Part 1: pad inputs with extra 0's as needed
 					let res = 0;
 					if not inputs.is_empty()
 						res = inputs.pop();
-	
+
 					//println("input = ", res);
 					prog[prog[ip+1]] = res;
 					ip += 2;
@@ -206,6 +333,73 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const prog0 = read_i32_mat_delim(args.input_filename, ",")[:,0];
+	//println("prog0 = ", prog0);
+
+	// Try every combination -- only 5**5 == 3125
+	for i0 in [5: 10]
+	for i1 in [5: 10]
+	for i2 in [5: 10]
+	for i3 in [5: 10]
+	for i4 in [5: 10]
+	{
+		if (i0 == i1) continue;  // :(
+		if (i0 == i2) continue;
+		if (i1 == i2) continue;
+		if (i0 == i3) continue;
+		if (i1 == i3) continue;
+		if (i2 == i3) continue;
+		if (i0 == i4) continue;
+		if (i1 == i4) continue;
+		if (i2 == i4) continue;
+		if (i3 == i4) continue;
+
+		const phases = [i0, i1, i2, i3, i4];
+		const namp = size(phases);
+		//println("phases = ", phases);
+
+		let progs = [new_program(prog0); namp];
+		let is_first = true;
+		let inputs  = queue_i32::new();
+		let outputs = queue_i32::new();
+		let stat = status.abnormal;
+		inputs.push(phases[0]);
+		inputs.push(0);  // to start the process
+		while true
+		{
+			for iamp in [0: namp]
+			{
+				//println("iamp    = ", iamp);
+				//println("inputs  = ", inputs.data);
+				outputs = progs[iamp].exec2(&inputs, &stat);
+				//println("outputs = ", outputs.data);
+				//println();
+
+				// Beware off-by-ones in these conditions
+				if stat == status.halt and iamp == namp-1
+					break;
+				inputs = queue_i32::new();
+				if is_first and iamp < namp-1
+					inputs.push(phases[iamp+1]);
+
+				while not outputs.is_empty()
+					inputs.push( outputs.pop() );
+			}
+			is_first = false;
+			if stat == status.halt
+				break;
+		}
+		sum_ = max(sum_, i64(outputs.pop()));
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
 //==============================================================================
 
 fn main(): str
@@ -219,12 +413,12 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "45730";
-	let expect2 = "REPLACE_ME_P2";
+	let expect2 = "5406484";
 	let expect1_test = "43210";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect2_test = "";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);
