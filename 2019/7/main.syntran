@@ -17,132 +17,140 @@ enum opcode
 	equals     =  8,
 	halt       = 99,
 }
-fn get_param(
-	prog: &const [i32; :],
-	modes: &const [i32; :],
-	ip: i32,
-	iparam: i32
-): i32
+
+struct Program
 {
-	// Might also want a 'state' struct with prog and ip
-	let param = prog[ip + iparam];
-	if modes[iparam-1] == 0
-		param = prog[param];
-	return param;
-}
-fn exec1(
-	prog   : &[i32; :],
-	inputs : &queue_i32::Queue_i32,
-	outputs: &queue_i32::Queue_i32,
-)
-{
-	let ip = 0;     // instruction pointer
-	while true
+	prog: [i32; :],  // the actual intcode program int array
+	ip  : i32,       // instruction pointer
+
+	fn get_param(modes: &const [i32; :], iparam: i32): i32
 	{
-		const instr = prog[ip];
-		const op = instr % 100;
+		// Might also want a 'state' struct with prog and ip
+		let param = prog[ip + iparam];
+		if modes[iparam-1] == 0
+			param = prog[param];
+		return param;
+	}
 
-		const modes = [
-			(instr /   100) % 10, // hundreds digit
-			(instr /  1000) % 10, // thousands digit
-			(instr / 10000) % 10, // ten-thousands
-		];
-		//println();
-		//println("instr = ", instr);
-		//println("modes = ", modes);
-
-		switch opcode(op)
+	fn exec1(inputs : &queue_i32::Queue_i32): queue_i32::Queue_i32
+	{
+		let outputs = queue_i32::new();
+		while true
 		{
-			case opcode.add
+			const instr = prog[ip];
+			const op = instr % 100;
+	
+			const modes = [
+				(instr /   100) % 10, // hundreds digit
+				(instr /  1000) % 10, // thousands digit
+				(instr / 10000) % 10, // ten-thousands
+			];
+			//println();
+			//println("instr = ", instr);
+			//println("modes = ", modes);
+	
+			switch opcode(op)
 			{
-				const param1 = get_param(prog, modes, ip, 1);
-				const param2 = get_param(prog, modes, ip, 2);
-				const res = param1 + param2;
-				//println("add ", [param1, param2], " = ", res);
-				prog[prog[ip+3]] = res;
-				ip += 4;
-			}
-			case opcode.mul
-			{
-				const param1 = get_param(prog, modes, ip, 1);
-				const param2 = get_param(prog, modes, ip, 2);
-				const res = param1 * param2;
-				//println("mul ", [param1, param2], " = ", res);
-				prog[prog[ip+3]] = res;
-				ip += 4;
-			}
-			case opcode.input
-			{
-				//const res = inputs.pop();
-				let res = 0;
-				if not inputs.is_empty()
-					res = inputs.pop();
-
-				//println("input = ", res);
-				prog[prog[ip+1]] = res;
-				ip += 2;
-			}
-			case opcode.output
-			{
-				const param1 = get_param(prog, modes, ip, 1);
-				//println("output: ", param1);
-				outputs.push(param1);
-				ip += 2;
-			}
-			case opcode.jump_true
-			{
-				const param1 = get_param(prog, modes, ip, 1);
-				const param2 = get_param(prog, modes, ip, 2);
-				//println("jump_true ", [param1, param2]);
-				if param1 != 0
-					ip = param2;
-				else
-					ip += 3;
-			}
-			case opcode.jump_false
-			{
-				const param1 = get_param(prog, modes, ip, 1);
-				const param2 = get_param(prog, modes, ip, 2);
-				//println("jump_false ", [param1, param2]);
-				if param1 == 0
-					ip = param2;
-				else
-					ip += 3;
-			}
-			case opcode.less_than
-			{
-				const param1 = get_param(prog, modes, ip, 1);
-				const param2 = get_param(prog, modes, ip, 2);
-				let res = 0;
-				if param1 < param2
-					res = 1;
-				//println("less_than ", [param1, param2], " = ", res);
-				prog[prog[ip+3]] = res;
-				ip += 4;
-			}
-			case opcode.equals
-			{
-				const param1 = get_param(prog, modes, ip, 1);
-				const param2 = get_param(prog, modes, ip, 2);
-				let res = 0;
-				if param1 == param2
-					res = 1;
-				//println("equals ", [param1, param2], " = ", res);
-				prog[prog[ip+3]] = res;
-				ip += 4;
-			}
-			case opcode.halt
-			{
-				ip += 1;
-				break;
-			}
-			default
-			{
-				println(ERROR_STR, "bad opcode: ", op);
-				exit(1);
+				case opcode.add
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					const res = param1 + param2;
+					//println("add ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.mul
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					const res = param1 * param2;
+					//println("mul ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.input
+				{
+					//const res = inputs.pop();
+					let res = 0;
+					if not inputs.is_empty()
+						res = inputs.pop();
+	
+					//println("input = ", res);
+					prog[prog[ip+1]] = res;
+					ip += 2;
+				}
+				case opcode.output
+				{
+					const param1 = get_param(modes, 1);
+					//println("output: ", param1);
+					outputs.push(param1);
+					ip += 2;
+				}
+				case opcode.jump_true
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					//println("jump_true ", [param1, param2]);
+					if param1 != 0
+						ip = param2;
+					else
+						ip += 3;
+				}
+				case opcode.jump_false
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					//println("jump_false ", [param1, param2]);
+					if param1 == 0
+						ip = param2;
+					else
+						ip += 3;
+				}
+				case opcode.less_than
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					let res = 0;
+					if param1 < param2
+						res = 1;
+					//println("less_than ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.equals
+				{
+					const param1 = get_param(modes, 1);
+					const param2 = get_param(modes, 2);
+					let res = 0;
+					if param1 == param2
+						res = 1;
+					//println("equals ", [param1, param2], " = ", res);
+					prog[prog[ip+3]] = res;
+					ip += 4;
+				}
+				case opcode.halt
+				{
+					ip += 1;
+					break;
+				}
+				default
+				{
+					println(ERROR_STR, "bad opcode: ", op);
+					exit(1);
+				}
 			}
 		}
+		return outputs;
 	}
+}
+fn new_program(prog: &const [i32; :]): Program
+{
+	return Program
+	{
+		prog = prog,
+		ip   = 0,
+	};
 }
 
 fn part1(args: &const Args): str
@@ -180,9 +188,8 @@ fn part1(args: &const Args): str
 		for iamp in [0: namp]
 		{
 			//println("inputs = ", inputs.data);
-			let prog = prog0;
-			outputs = queue_i32::new();
-			exec1(&prog, &inputs, &outputs);
+			let prog = new_program(prog0);
+			outputs = prog.exec1(&inputs);
 			//println("outputs = ", outputs.data);
 			if iamp >= namp-1
 				continue;
@@ -194,9 +201,6 @@ fn part1(args: &const Args): str
 		}
 		sum_ = max(sum_, i64(outputs.pop()));
 	}
-
-	//println("prog = ", prog);
-	//sum_ = outputs.pop();
 
 	println("part 1 = ", sum_);
 	return str(sum_);
