@@ -37,33 +37,60 @@ struct Program
 
 	fn set_param(modes: &const [i32; :], iparam: i32, val: i64)
 	{
+		let index = -1;
+		//println("getting index ...");
 		switch modes[iparam-1]
 		{
 			case 0
-				prog[prog[ip + iparam]] = val;
+				index = prog[ip + iparam];
+				//prog[prog[ip + iparam]] = val;
 			case 2
-				prog[rb + prog[ip + iparam]] = val;
+				index = rb + prog[ip + iparam];
+				//prog[rb + prog[ip + iparam]] = val;
 			default
 			{
 				println(ERROR_STR + "bad write mode");
 				exit(3);
 			}
 		}
+		//println("index = ", index);
+		const sz = size(prog);
+		if index >= sz
+		{
+			// Grow by doubling
+			const new_sz = 2'i64 * max(index, 1);
+			//println("sz, new_sz = ", [sz, new_sz]);
+			let new_prog = [0'i64; new_sz];
+			new_prog[0: sz] = prog;
+			prog = new_prog;
+		}
+		prog[index] = val;
 	}
 
 	fn get_param(modes: &const [i32; :], iparam: i32): i64
 	{
+		//println("get_param");
 		let param = prog[ip + iparam];
 		switch modes[iparam-1]
 		{
 			case 0
-				param = prog[param];
+			{
+				if param < size(prog)
+					param = prog[param];
+				else
+					param = 0;
+			}
 			case 1
 			{
 				// no-op. immediate mode already initialized above
 			}
 			case 2
-				param = prog[rb + param];
+			{
+				if rb + param < size(prog)
+					param = prog[rb + param];
+				else
+					param = 0;
+			}
 			default
 			{
 				println(ERROR_STR + "bad intcode parameter mode: ",
@@ -71,6 +98,7 @@ struct Program
 				exit(2);
 			}
 		}
+		//println("return");
 		return param;
 	}
 
