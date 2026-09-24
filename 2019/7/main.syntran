@@ -44,6 +44,9 @@ struct Program
 		// more input or if we have halted
 		//
 		// The input queue is never padded
+		//
+		// Could DRY with exec1() but exec1 is probably throwaway only used for
+		// today
 		stat = status.abnormal;
 		let outputs = queue_i32::new();
 		while true
