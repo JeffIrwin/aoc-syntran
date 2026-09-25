@@ -1761,7 +1761,8 @@ fn read_i32_mat_delim(filename: str, delims: str): [i32; :,:]
 	for y in [0: ny]
 	{
 		//println("str_ = ", str_);
-		mat[:,y] = parse_i32_delim(str_, delims);
+		const vec = parse_i32_delim(str_, delims);
+		mat[:size(vec), y] = vec;
 		str_ = readln(f);
 	}
 	close(f);
