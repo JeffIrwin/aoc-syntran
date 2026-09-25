@@ -1,0 +1,140 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../queue_i64 as queue_i64;
+
+use ../intcode;
+
+//==============================================================================
+
+enum Tile
+{
+	empty  = 0,
+	wall   = 1,
+	block  = 2,
+	paddle = 3,
+	ball   = 4,
+}
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
+	//println("prog0 = ", prog0);
+
+	let prog = intcode::new_program(prog0);
+	let stat = intcode::new_status();
+	let inputs = queue_i64::new();
+
+	let outputs = prog.exec(&inputs, &stat);
+	//println("outputs = ", outputs.data);
+	while not outputs.is_empty()
+	{
+		const x  = outputs.pop();
+		const y  = outputs.pop();
+		const id = outputs.pop();
+		//println("x, y, id = ", [x, y, id]);
+		if Tile(id) == Tile.block
+			sum_ += 1;
+	}
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	let prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
+	//println("prog0 = ", prog0);
+
+	// Memory address 0 represents the number of quarters that have been
+	// inserted; set it to 2 to play for free
+	prog0[0] = 2;
+
+	let prog = intcode::new_program(prog0);
+	let stat = intcode::new_status();
+	let inputs = queue_i64::new();
+
+	let joystick = 0'i64;
+
+	while true
+	{
+		inputs.push(joystick);
+		let outputs = prog.exec(&inputs, &stat);
+
+		//let nblock = 0;
+		let score = -1;
+		let xpaddle = -1;
+		let xball   = -1;
+		//println("outputs = ", outputs.data);
+		while not outputs.is_empty()
+		{
+			const x  = outputs.pop();
+			const y  = outputs.pop();
+			const id = outputs.pop();
+			//println("x, y, id = ", [x, y, id]);
+			switch id
+			{
+				//case i32(Tile.block)
+				//	nblock += 1;
+				case i32(Tile.paddle)
+					xpaddle = x;
+				case i32(Tile.ball)
+					xball = x;
+			}
+			if x == -1 and y == 0
+			{
+				score = id;
+				sum_ = score;
+			}
+		}
+		//println("score, paddle, ball, nblock = ", [score, xpaddle, xball, nblock]);
+		//println("score, paddle, ball, = ", [score, xpaddle, xball]);
+		//println("stat = ", stat);
+		if xpaddle < xball
+			joystick = 1;
+		if xpaddle > xball
+			joystick = -1;
+		//if nblock == 0 and score > 0
+		if stat == intcode::Status.halt
+			break;
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2019/13" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "304";
+	let expect2 = "14747";
+	let expect1_test = "";
+	let expect2_test = "";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+

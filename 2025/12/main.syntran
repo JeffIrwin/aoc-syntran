@@ -96,7 +96,7 @@ fn part1(): str
 	let sum_ = 0'i64;
 
 	let nlines = countln_(filename);
-	println("nlines = ", nlines);
+	//println("nlines = ", nlines);
 
 	let shapes = [false; nsx, nsy, ns];
 
@@ -111,12 +111,12 @@ fn part1(): str
 		}
 		str_ = readln(f); // skip blank line
 	}
-	println("shapes = ", shapes);
+	//println("shapes = ", shapes);
 
-	// Unit test
-	let s0 = shapes[:,:,0];
-	for i in [0: nt]
-		print_bool_mat(trans_(s0, i));
+	//// Unit test
+	//let s0 = shapes[:,:,0];
+	//for i in [0: nt]
+	//	print_bool_mat(trans_(s0, i));
 	//print_bool_mat(s0);
 	//print_bool_mat(transpose_(s0));
 	//print_bool_mat(fliplr_(s0));
@@ -129,21 +129,21 @@ fn part1(): str
 	let nblocks = [0; ns];
 	for i in [0: ns]
 		nblocks[i] = count(shapes[:,:,i]);
-	println("nblocks = ", nblocks);
+	//println("nblocks = ", nblocks);
 
 	for iproblem in [0: nlines - 5 * ns]
 	{
 		let str_ = readln(f);
-		println("str_ = ", str_);
+		//println("str_ = ", str_);
 
 		let nums = parse_i32_delim(str_, "x: ");
-		println("nums = ", nums);
+		//println("nums = ", nums);
 
 		nx = nums[0]; // global size vars
 		ny = nums[1];
 		let nsv = nums[2: ns+2];
-		println("nx, ny = ", [nx, ny]);
-		println("nsv = ", nsv);
+		//println("nx, ny = ", [nx, ny]);
+		//println("nsv = ", nsv);
 
 		let g = [false; nx, ny];
 
@@ -159,13 +159,13 @@ fn part1(): str
 		let ist = 0;
 		while (nsv[ist] == 0) ist += 1;
 		state[3] = ist;
-		println("ist = ", ist);
+		//println("ist = ", ist);
 
 		// ARe you fucking kidding me rn
 		//
 		// Test input is not solvable like this but real input is
 		let nb = sum(nblocks * nsv);
-		println("nb = ", nb);
+		//println("nb = ", nb);
 
 		if nb <= nx * ny
 			sum_ += 1;
@@ -186,7 +186,7 @@ fn part1(): str
 		//	sum_ += 1;
 		//exit(0);
 
-		println();
+		//println();
 	}
 	close(f);
 
