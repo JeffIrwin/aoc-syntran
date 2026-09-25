@@ -1,233 +1,11 @@
 
 use ../../utils::*;
 use ../../dict_i64_2026 as dict_i64;
+use ../../queue_i64 as queue_i64;
+
+use ../intcode;
 
 //==============================================================================
-
-use ../../queue_i64 as queue_i64;
-enum Opcode
-{
-	add        =  1,
-	mul        =  2,
-	input      =  3,
-	output     =  4,
-	jump_true  =  5,
-	jump_false =  6,
-	less_than  =  7,
-	equals     =  8,
-	inc_rb     =  9,
-	halt       = 99,
-}
-enum Status
-{
-	wait_input,
-	halt,
-	abnormal,  // should be unreachable for behaved programs if i don't have bugs
-}
-fn new_status(): Status
-{
-	return Status.abnormal;  // abnormal essentially means uninitialized
-}
-
-struct Program
-{
-	prog: [i64; :],  // the actual intcode program int array
-	ip  : i32,       // instruction pointer
-	rb  : i32,       // relative base
-
-	fn set_param(modes: &const [i32; :], iparam: i32, val: i64)
-	{
-		let index = -1;
-		switch modes[iparam-1]
-		{
-			case 0
-				index = prog[ip + iparam];
-			case 2
-				index = rb + prog[ip + iparam];
-			default
-			{
-				println(ERROR_STR + "bad write mode");
-				exit(3);
-			}
-		}
-		const sz = size(prog);
-		if index >= sz
-		{
-			// Grow by doubling
-			const new_sz = 2'i64 * max(index, 1);
-			let new_prog = [0'i64; new_sz];
-			new_prog[0: sz] = prog;
-			prog = new_prog;
-		}
-		prog[index] = val;
-	}
-
-	fn get_param(modes: &const [i32; :], iparam: i32): i64
-	{
-		let param = prog[ip + iparam];
-		switch modes[iparam-1]
-		{
-			case 0
-			{
-				if param < size(prog)
-					param = prog[param];
-				else
-					param = 0;
-			}
-			case 1
-			{
-				// no-op. immediate mode already initialized above
-			}
-			case 2
-			{
-				if rb + param < size(prog)
-					param = prog[rb + param];
-				else
-					param = 0;
-			}
-			default
-			{
-				println(ERROR_STR + "bad intcode parameter mode: ",
-					modes[iparam-1]);
-				exit(2);
-			}
-		}
-		return param;
-	}
-
-	fn exec(inputs : &queue_i64::Queue_i64, stat: &Status): queue_i64::Queue_i64
-	{
-		// exec() returns a status out-arg to say whether we are waiting for
-		// more input or if we have halted
-		//
-		// The input queue is never padded
-		stat = Status.abnormal;
-		let outputs = queue_i64::new();
-		while true
-		{
-			const instr = prog[ip];
-			const op = instr % 100;
-
-			const modes = i32([
-				(instr /   100) % 10, // hundreds digit
-				(instr /  1000) % 10, // thousands digit
-				(instr / 10000) % 10, // ten-thousands
-			]);
-			//println();
-			//println("instr = ", instr);
-			//println("modes = ", modes);
-
-			switch Opcode(op)
-			{
-				case Opcode.add
-				{
-					const param1 = get_param(modes, 1);
-					const param2 = get_param(modes, 2);
-					const res = param1 + param2;
-					//println("add ", [param1, param2], " = ", res);
-					set_param(modes, 3, res);
-					ip += 4;
-				}
-				case Opcode.mul
-				{
-					const param1 = get_param(modes, 1);
-					const param2 = get_param(modes, 2);
-					const res = param1 * param2;
-					//println("mul ", [param1, param2], " = ", res);
-					set_param(modes, 3, res);
-					ip += 4;
-				}
-				case Opcode.input
-				{
-					if inputs.is_empty()
-					{
-						stat = Status.wait_input;
-						return outputs;
-					}
-					const res = inputs.pop();
-					set_param(modes, 1, res);
-					ip += 2;
-				}
-				case Opcode.output
-				{
-					const param1 = get_param(modes, 1);
-					//println("output: ", param1);
-					outputs.push(param1);
-					ip += 2;
-				}
-				case Opcode.jump_true
-				{
-					const param1 = get_param(modes, 1);
-					const param2 = get_param(modes, 2);
-					//println("jump_true ", [param1, param2]);
-					if param1 != 0
-						ip = param2;
-					else
-						ip += 3;
-				}
-				case Opcode.jump_false
-				{
-					const param1 = get_param(modes, 1);
-					const param2 = get_param(modes, 2);
-					//println("jump_false ", [param1, param2]);
-					if param1 == 0
-						ip = param2;
-					else
-						ip += 3;
-				}
-				case Opcode.less_than
-				{
-					const param1 = get_param(modes, 1);
-					const param2 = get_param(modes, 2);
-					let res = 0'i64;
-					if param1 < param2
-						res = 1;
-					//println("less_than ", [param1, param2], " = ", res);
-					set_param(modes, 3, res);
-					ip += 4;
-				}
-				case Opcode.equals
-				{
-					const param1 = get_param(modes, 1);
-					const param2 = get_param(modes, 2);
-					let res = 0'i64;
-					if param1 == param2
-						res = 1;
-					//println("equals ", [param1, param2], " = ", res);
-					set_param(modes, 3, res);
-					ip += 4;
-				}
-				case Opcode.inc_rb
-				{
-					const param1 = get_param(modes, 1);
-					rb += param1;
-					ip += 2;
-				}
-				case Opcode.halt
-				{
-					ip += 1;
-					stat = Status.halt;
-					return outputs;
-				}
-				default
-				{
-					println(ERROR_STR, "bad opcode: ", op);
-					exit(1);
-				}
-			}
-		}
-		return outputs;  // abnormal
-	}
-}
-fn new_program(prog: &const [i64; :]): Program
-{
-	return Program
-	{
-		prog = prog,
-		ip   = 0,
-		rb   = 0,
-	};
-}
 
 enum Heading
 {
@@ -243,8 +21,8 @@ fn part1(args: &const Args): str
 	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
 	//println("prog0 = ", prog0);
 
-	let prog = new_program(prog0);
-	let stat = new_status();
+	let prog = intcode::new_program(prog0);
+	let stat = intcode::new_status();
 	let inputs  = queue_i64::new();
 	let x = let y = 0;
 	let colors = dict_i64::new();
@@ -258,7 +36,7 @@ fn part1(args: &const Args): str
 
 		inputs.push(color);
 		let outputs = prog.exec(&inputs, &stat);
-		if stat == Status.halt
+		if stat == intcode::Status.halt
 			break;
 		//println("x, y, color, outputs = ", x, ", ", y, ", ", color, outputs.data);
 
@@ -294,8 +72,8 @@ fn part2(args: &const Args): str
 	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
 	//println("prog0 = ", prog0);
 
-	let prog = new_program(prog0);
-	let stat = new_status();
+	let prog = intcode::new_program(prog0);
+	let stat = intcode::new_status();
 	let inputs  = queue_i64::new();
 	let x = let y = 0;
 	let colors = dict_i64::new();
@@ -310,7 +88,7 @@ fn part2(args: &const Args): str
 
 		inputs.push(color);
 		let outputs = prog.exec(&inputs, &stat);
-		if stat == Status.halt
+		if stat == intcode::Status.halt
 			break;
 		//println("x, y, color, outputs = ", x, ", ", y, ", ", color, outputs.data);
 
