@@ -106,23 +106,7 @@ fn part2(args: &const Args): str
 	let g = ["."; nx, ny];
 	g[1: nx-1, 1: ny-1] = g0;
 
-	print_char_mat(&g);
-
-	//for y in [1: ny-1]
-	//for x in [1: nx-1]
-	//{
-	//	// Current char and neighbors up, down, left, and right
-	//	const c  = g[x,y];
-	//	const cu = g[x,y-1];
-	//	const cd = g[x,y+1];
-	//	const cl = g[x-1,y];
-	//	const cr = g[x+1,y];
-	//	if all([c, cu, cd, cl, cr] == "#")
-	//	{
-	//		//println("x, y = ", [x, y]);
-	//		sum_ += (x-1) * (y-1);  // minus 1 to account for padding
-	//	}
-	//}
+	//print_char_mat(&g);
 
 	// Find initial robot position "^"
 	//
@@ -137,7 +121,7 @@ fn part2(args: &const Args): str
 			rx = x;
 			ry = y;
 		}
-	println("rx, ry = ", [rx, ry]);
+	//println("rx, ry = ", [rx, ry]);
 	let x = rx;
 	let y = ry;
 
@@ -149,8 +133,7 @@ fn part2(args: &const Args): str
 	if (g[x+1,y] == "#") heading = Heading.right;
 	if (g[x,y-1] == "#") heading = Heading.up;
 	if (g[x,y+1] == "#") heading = Heading.down;
-
-	println("heading = ", heading);
+	//println("heading = ", heading);
 
 	while true
 	{
@@ -198,14 +181,12 @@ fn part2(args: &const Args): str
 					break;  // terminus
 			}
 		}
-		println("heading = ", heading);
-		//break;
+		//println("heading = ", heading);
 	}
+	//println("pl = ", pl.vals[:, :pl.len]);
 
-	println("pl = ", pl.vals[:, :pl.len]);
-
-	// TODO: re-draw grid from polyline alone. Verify that it matches the
-	// original grid, otherwise we have failed to visit every scaffold point
+	// Re-draw grid from polyline alone. Verify that it matches the original
+	// grid, otherwise we have failed to visit every scaffold point
 	let g2 = ["."; nx, ny];
 	for ip in [0: pl.len-1]
 	{
@@ -241,8 +222,8 @@ fn part2(args: &const Args): str
 	}
 	// Draw initial position
 	g2[rx, ry] = "^";
-	print_char_mat(&g2);
-	println("g == g2 = ", all(g == g2));
+	//print_char_mat(&g2);
+	//println("g == g2 = ", all(g == g2));
 	if not all(g == g2)
 	{
 		println(ERROR_STR + "naive walk failed to visit all points");
@@ -278,34 +259,14 @@ fn part2(args: &const Args): str
 					instr_str += "R," + str(dist) + ",";
 		}
 	}
-	println("instr_str = ", instr_str);
+	//println("instr_str = ", instr_str);
 
 	// Finally, compress the instruction str as 3 functions (may be able
 	// to do this part manually more easily first than programmatically)
-	let a_fn = "L,4,L,4,L,10,R,4,";
-	let b_fn = "R,4,L,4,L,4,R,8,R,10,";
-	let c_fn = "R,4,L,10,R,10,";
-	const main_routine = ["A", "B", "A", "C", "A", "C", "B", "C", "C", "B",];
-
-	// Check myself
-	let test_str = "";
-	for f in main_routine
-		switch f
-		{
-			case "A"
-				test_str += a_fn;
-			case "B"
-				test_str += b_fn;
-			case "C"
-				test_str += c_fn;
-		}
-	println("test_str = ", test_str);
-	println("test_str == instr_str = ", test_str == instr_str);
-	if test_str != instr_str
-	{
-		println(ERROR_STR + "main routine does not compose to correct instructions");
-		exit(3);
-	}
+	let a_fn = "";
+	let b_fn = "";
+	let c_fn = "";
+	let main_routine = compress_str3(instr_str, &a_fn, &b_fn, &c_fn);
 
 	let main_str = cat_strs(main_routine + ",");
 	main_str = main_str[0: len(main_str)-1];  // trim trailing comma
@@ -317,7 +278,6 @@ fn part2(args: &const Args): str
 	println("b_fn = ", b_fn);
 	println("c_fn = ", c_fn);
 
-	//let input_str = "";
 	const input_str =
 		main_str + NEWLINE_ +
 		a_fn + NEWLINE_ +
@@ -325,13 +285,13 @@ fn part2(args: &const Args): str
 		c_fn + NEWLINE_ +
 		"n" + NEWLINE_  // y/n for continuous video feed debugging
 	;
-	println("input_str = ");
-	println(input_str);
+	//println("input_str = ");
+	//println(input_str);
 
 	inputs = queue_i64::new();
 	for c in input_str
 		inputs.push(i64(i32(c)));
-	println("inputs = ", inputs);
+	//println("inputs = ", inputs);
 
 	// Force the vacuum robot to wake up by changing the value in your ASCII
 	// program at address 0 from 1 to 2
@@ -339,7 +299,7 @@ fn part2(args: &const Args): str
 	prog = intcode::new_program(prog0);
 
 	outputs = prog.exec(&inputs, &status);
-	println("outputs = ", outputs);
+	//println("outputs = ", outputs);
 
 	// I forgot how my queue worked and thought I had to debug this. The final
 	// queue value isn't usually at the end of the queue array!
@@ -351,13 +311,112 @@ fn part2(args: &const Args): str
 		s[i] = char(i32(sum_));
 		i += 1;
 	}
-	println("final s = ");
-	println(s);
+	//println("final s = ");
+	//println(s);
 
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
 
+fn compress_str3(s: str, a: &str, b: &str, c: &str): [str; :]
+{
+	// Special-purpose brute force str compressor
+	//
+	// Find substrings `a`, `b`, and `c` such that input string `s` can be built
+	// as a concatenation like regex a[abc]*c
+	//
+	// Return out-args a, b, c, and return encoded string array [A, [ABC],
+	// [ABC], ..., C]
+
+	const n = len(s);
+	//println("s = ", s);
+	//println("n = ", n);
+
+	let found = false;
+
+	// The hard-coded 22's are what makes this special-purpose for this
+	// particular AOC problem
+	//
+	// Strings can be length 21 instead of 20 because they can have a trailing
+	// comma which is removed later. The bound is 22 and not 21 because upper
+	// bounds are exclusive in syntran (like most languages)
+	for na in [1: 22]
+	for nc in [1: 22]
+	{
+		if (found) break;
+		let s = s; // local shadow
+		a = s[0: na];
+		c = s[n-nc: n];
+		//println("a = ", a);
+		//println("c = ", c);
+
+		rm_all_substrs(&s, a);  // perf could be better with this in outer loop
+		rm_all_substrs(&s, c);
+		//println("removed = ", s);
+
+		// This is not correct in general. String `b` could be built out of
+		// nonconsecutive chunks due to removal of `a` and `c` substrings
+		//
+		// For robustness, the encoding (below this loop) should be attempted
+		// here, and if it fails to match the whole input, we should continue to
+		// the next abc combination instead of breaking
+		for nb in [1: 22]
+		{
+			b = s[0: nb];
+			let s = s;  // local shadow
+			rm_all_substrs(&s, b);
+			if len(s) == 0
+			{
+				found = true;
+				break;
+			}
+		}
+	}
+	//println("found = ", found);
+	//println("a = ", a);
+	//println("b = ", b);
+	//println("c = ", c);
+	//println("s = ", s);
+	if not found
+	{
+		println(ERROR_STR + "failed to decompose compressed string");
+		exit(4);
+	}
+
+	// Build the encoding
+	const na = len(a);
+	const nb = len(b);
+	const nc = len(c);
+	let encoding = [""; 0];
+	let i = 0;
+	while len(s) > 0
+	{
+		i += 1;
+		if starts_with_(s, a)
+		{
+			s = s[na:];
+			encoding = [encoding, ["A"]];
+		}
+		if starts_with_(s, b)
+		{
+			s = s[nb:];
+			encoding = [encoding, ["B"]];
+		}
+		if starts_with_(s, c)
+		{
+			s = s[nc:];
+			encoding = [encoding, ["C"]];
+		}
+		if i > n
+		{
+			// In worst case we should match 1 char per loop iteration
+			println(ERROR_STR + "failed to encode compressed string");
+			exit(5);
+		}
+	}
+	//println("encoding = ", encoding);
+	return encoding;
+}
 
 //==============================================================================
 
@@ -374,10 +433,10 @@ fn main(): str
 	if (args.do_p1) p1 = part1(&args);
 	if (args.do_p2) p2 = part2(&args);
 
-	let expect1 = "REPLACE_ME_P1";
-	let expect2 = "REPLACE_ME_P2";
-	let expect1_test = "REPLACE_ME_P1_TEST";
-	let expect2_test = "REPLACE_ME_P2_TEST";
+	let expect1 = "3336";
+	let expect2 = "597517";
+	let expect1_test = "";
+	let expect2_test = "";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
 
 	println(GREEN + "Ending AOC syntran main" + RESET);

@@ -816,6 +816,22 @@ fn parse_i64_delim(str_: &const str, delims: &const str): [i64; :]
 
 //==============================================================================
 
+fn rm_all_substrs(str_: &str, sub: str)
+{
+	// Remove all occurences of a substring
+	//
+	// TODO: adapt to a general replace_all() fn
+	let nsub = len(sub);
+	let i = 0;
+	while i < len(str_)
+	{
+		if starts_with_(str_[i:], sub)
+			str_ = str_[:i] + str_[i+nsub:];
+		else
+			i += 1;
+	}
+}
+
 fn rm_char(str_: &const str, char_: str): str
 {
 	// Remove all occurences of a char from a str
