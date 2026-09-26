@@ -2,9 +2,9 @@
 
 # Go to every sub dir and run the subdir script
 
-#set -exu
+set -exu
 #set -eu
-set -x
+#set -x
 
 echo "starting top-level run.sh"
 

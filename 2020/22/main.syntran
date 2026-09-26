@@ -40,13 +40,13 @@ fn part1(args: &const Args): str
 	let n = 0;
 	while true
 	{
-		if q1.is_empty
+		if q1.is_empty()
 		{
 			println("player 2 wins");
 			w = q2;
 			break;
 		}
-		if q2.is_empty
+		if q2.is_empty()
 		{
 			println("player 1 wins");
 			w = q1;
@@ -70,7 +70,7 @@ fn part1(args: &const Args): str
 	let coef = w.len();
 	while true
 	{
-		if w.is_empty
+		if w.is_empty()
 			break;
 		let wp = w.pop();
 		sum_ += coef * wp;
@@ -151,9 +151,9 @@ fn play_game(q1: &queue_i32::Queue_i32, q2: &queue_i32::Queue_i32, is_main: bool
 			return 1;
 		seen.set(key, 1'i64);
 
-		if q1.is_empty
+		if q1.is_empty()
 			return 2;
-		if q2.is_empty
+		if q2.is_empty()
 			return 1;
 		let i1 = q1.pop();
 		let i2 = q2.pop();

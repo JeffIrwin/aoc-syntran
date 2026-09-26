@@ -9,7 +9,7 @@ fn part1(args: &const Args): str
 	let sum_ = 0'i64;
 
 	const g = read_char_mat(args.input_filename);
-	print_char_mat(&g);
+	//print_char_mat(&g);
 
 	// Make an array of positions `p` from grid `g`
 	const n = count(g == "#");
@@ -24,7 +24,7 @@ fn part1(args: &const Args): str
 			p[:,k] = [x,y];
 			k += 1;
 		}
-	println("p = ", p);
+	//println("p = ", p);
 
 	// 8 neighbors
 	const n8 = [
@@ -39,7 +39,7 @@ fn part1(args: &const Args): str
 		;
 		2, 8
 	];
-	println("n8 = ", n8);
+	//println("n8 = ", n8);
 
 	//const nn = [ 0,-1, 1,-1, -1,-1 ;  2, 3 ];  // 3 north neighbors
 	//const ns = [ 0,1 , 1,1 , -1,1  ;  2, 3 ];  // 3 south neighbors
@@ -62,12 +62,11 @@ fn part1(args: &const Args): str
 		;
 		2, 4
 	];
-	println("dirs = ", dirs);
-	//exit(0);
+	//println("dirs = ", dirs);
 
 	for it in [0: 10]
 	{
-		print_pos(p);
+		//print_pos(p);
 
 		const p0 = p;
 
@@ -83,7 +82,7 @@ fn part1(args: &const Args): str
 		{
 			// Count neighbors in 8 adjacent positions
 			let c8 = count_nbrs(s0, p0[:,i], n8);
-			println("p0, c8 = ", [p0[:,i], [c8]]);
+			//println("p0, c8 = ", [p0[:,i], [c8]]);
 
 			if c8 == 0
 			{
@@ -124,7 +123,7 @@ fn part1(args: &const Args): str
 			const key = str(p[0,i], ",", p[1,i]);
 			s.inc(key, 1'i64);
 		}
-		s.print("s = ");
+		//s.print("s = ");
 		for i in [0: n]
 		{
 			// If count is not 1, revert to previous position
@@ -134,7 +133,7 @@ fn part1(args: &const Args): str
 				p[:,i] = p0[:,i];
 		}
 	}
-	print_pos(p);
+	//print_pos(p);
 
 	// Make a hash set (could be DRY)
 	let s = dict_i64::new();
@@ -168,7 +167,7 @@ fn part2(args: &const Args): str
 	let sum_ = 0'i64;
 
 	const g = read_char_mat(args.input_filename);
-	print_char_mat(&g);
+	//print_char_mat(&g);
 
 	// Make an array of positions `p` from grid `g`
 	const n = count(g == "#");
@@ -183,7 +182,7 @@ fn part2(args: &const Args): str
 			p[:,k] = [x,y];
 			k += 1;
 		}
-	println("p = ", p);
+	//println("p = ", p);
 
 	// 8 neighbors
 	const n8 = [
@@ -198,7 +197,7 @@ fn part2(args: &const Args): str
 		;
 		2, 8
 	];
-	println("n8 = ", n8);
+	//println("n8 = ", n8);
 
 	let dirs = [
 		0,-1, 1,-1, -1,-1 ,
@@ -224,7 +223,7 @@ fn part2(args: &const Args): str
 	while true
 	{
 		it += 1;
-		println("it = ", it);
+		//println("it = ", it);
 
 		p0 = p;
 
@@ -297,7 +296,7 @@ fn part2(args: &const Args): str
 		}
 		if all(p == p0) break;
 	}
-	print_pos(p);
+	//print_pos(p);
 	sum_ = it + 1;
 
 	println("part 2 = ", sum_);

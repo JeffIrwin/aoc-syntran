@@ -131,7 +131,8 @@ fn part2(args: &const Args): str
 	let t = [0; nf, TCAP];
 	while not eof(f)
 	{
-		t[:,nt] = parse_i32_delim(readln(f), ",");
+		const vec = parse_i32_delim(readln(f), ",");
+		t[:size(vec), nt] = vec;
 		if eof(f) continue;
 
 		// Filter out invalid rows
