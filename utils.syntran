@@ -1669,6 +1669,28 @@ fn char_mat_to_str(chars: &const [str; :,:]): str
 	return s;
 }
 
+fn str_to_char_mat(s: &const str, line_delim: str): [str; :,:]
+{
+	// Split a string, with rows delimited by a `line_delim` such as NEWLINE_,
+	// into a matrix of characters
+	const lines = split_(s, line_delim);
+	const nx = len(lines[0]);
+	const ny = size(lines);
+	let mat = [" "; nx, ny];
+	let y = 0;
+	for line in lines
+	{
+		let x = 0;
+		for c in line
+		{
+			mat[x,y] = c;
+			x += 1;
+		}
+		y += 1;
+	}
+	return mat;
+}
+
 fn bool_mat_to_str(b: &const [bool; :,:]): str
 {
 	const nx = size(b,0);
