@@ -76,7 +76,7 @@ fn part2(args: &const Args): str
 {
 	let sum_ = 0'i64;
 
-	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
+	let prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
 	//println("prog0 = ", prog0);
 
 	let prog = intcode::new_program(prog0);
@@ -143,8 +143,8 @@ fn part2(args: &const Args): str
 
 	// Find the path as a polyline. TODO: just push heading to polyline too?
 	let pl = stack_vec_i32::new();
-	pl.push([x, y]);
 	let heading = Heading.up;
+	pl.push([x, y, i32(heading)]);
 	if (g[x-1,y] == "#") heading = Heading.left;
 	if (g[x+1,y] == "#") heading = Heading.right;
 	if (g[x,y-1] == "#") heading = Heading.up;
@@ -174,7 +174,7 @@ fn part2(args: &const Args): str
 		// Corner. Backup and change heading
 		x = x0;
 		y = y0;
-		pl.push([x, y]);
+		pl.push([x, y, i32(heading)]);
 		const cu = g[x,y-1];
 		const cd = g[x,y+1];
 		const cl = g[x-1,y];
@@ -249,11 +249,110 @@ fn part2(args: &const Args): str
 		exit(2);
 	}
 
-	// TODO: edit code above to save headings. Then build instruction str from
-	// polyline (with headings) as move+walk instructions
-	//
-	// Finally, compress the instruction str as 3 functions (may be able to do
-	// this part manually more easily first than programmatically)
+	// Build instruction str from polyline (with headings) as turn+walk
+	// instructions
+	let instr_str = "";
+	for ip in [0: pl.len-1]
+	{
+		let x0 = pl.vals[0, ip];
+		let y0 = pl.vals[1, ip];
+		let h0 = Heading(pl.vals[2, ip]);
+		let x1 = pl.vals[0, ip+1];
+		let y1 = pl.vals[1, ip+1];
+		let h1 = Heading(pl.vals[2, ip+1]);
+		const dist = sum(abs([x0,y0] - [x1,y1]));
+		//println("h0, h1 = ", [h0, h1]);
+		switch [h0, h1]
+		{
+			case
+				[Heading.up   , Heading.left ],
+				[Heading.left , Heading.down ],
+				[Heading.down , Heading.right],
+				[Heading.right, Heading.up   ]
+					instr_str += "L," + str(dist) + ",";
+			case
+				[Heading.left , Heading.up   ],
+				[Heading.down , Heading.left ],
+				[Heading.right, Heading.down ],
+				[Heading.up   , Heading.right]
+					instr_str += "R," + str(dist) + ",";
+		}
+	}
+	println("instr_str = ", instr_str);
+
+	// Finally, compress the instruction str as 3 functions (may be able
+	// to do this part manually more easily first than programmatically)
+	let a_fn = "L,4,L,4,L,10,R,4,";
+	let b_fn = "R,4,L,4,L,4,R,8,R,10,";
+	let c_fn = "R,4,L,10,R,10,";
+	const main_routine = ["A", "B", "A", "C", "A", "C", "B", "C", "C", "B",];
+
+	// Check myself
+	let test_str = "";
+	for f in main_routine
+		switch f
+		{
+			case "A"
+				test_str += a_fn;
+			case "B"
+				test_str += b_fn;
+			case "C"
+				test_str += c_fn;
+		}
+	println("test_str = ", test_str);
+	println("test_str == instr_str = ", test_str == instr_str);
+	if test_str != instr_str
+	{
+		println(ERROR_STR + "main routine does not compose to correct instructions");
+		exit(3);
+	}
+
+	let main_str = cat_strs(main_routine + ",");
+	main_str = main_str[0: len(main_str)-1];  // trim trailing comma
+	a_fn = a_fn[0: len(a_fn)-1];
+	b_fn = b_fn[0: len(b_fn)-1];
+	c_fn = c_fn[0: len(c_fn)-1];
+	println("main_str = ", main_str);
+	println("a_fn = ", a_fn);
+	println("b_fn = ", b_fn);
+	println("c_fn = ", c_fn);
+
+	//let input_str = "";
+	const input_str =
+		main_str + NEWLINE_ +
+		a_fn + NEWLINE_ +
+		b_fn + NEWLINE_ +
+		c_fn + NEWLINE_ +
+		"n" + NEWLINE_  // y/n for continuous video feed debugging
+	;
+	println("input_str = ");
+	println(input_str);
+
+	inputs = queue_i64::new();
+	for c in input_str
+		inputs.push(i64(i32(c)));
+	println("inputs = ", inputs);
+
+	// Force the vacuum robot to wake up by changing the value in your ASCII
+	// program at address 0 from 1 to 2
+	prog0[0] = 2;
+	prog = intcode::new_program(prog0);
+
+	outputs = prog.exec(&inputs, &status);
+	println("outputs = ", outputs);
+
+	// I forgot how my queue worked and thought I had to debug this. The final
+	// queue value isn't usually at the end of the queue array!
+	s = repeat(" ", outputs.len());
+	i = 0;
+	while not outputs.is_empty()
+	{
+		sum_ = outputs.pop();
+		s[i] = char(i32(sum_));
+		i += 1;
+	}
+	println("final s = ");
+	println(s);
 
 	println("part 2 = ", sum_);
 	return str(sum_);
