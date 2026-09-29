@@ -261,8 +261,13 @@ fn part2(args: &const Args): str
 	}
 	//println("instr_str = ", instr_str);
 
-	// Finally, compress the instruction str as 3 functions (may be able
-	// to do this part manually more easily first than programmatically)
+	// Finally, compress the instruction str as 3 functions
+	//
+	// I did this part manually on my first solve because it seemed small enough
+	// to be tractable and easier than automating compress_str3(). Probably the
+	// right call although it did take several minutes of staring at strings in
+	// vim and playing around with different substrings. I wouldn't recommend
+	// that if you're not comfortable with regex in your text editor
 	let a_fn = "";
 	let b_fn = "";
 	let c_fn = "";
