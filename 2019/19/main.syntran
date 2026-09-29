@@ -12,12 +12,9 @@ fn part1(args: &const Args): str
 	let sum_ = 0'i64;
 
 	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
-	//println("prog0 = ", prog0);
-
 	let status = intcode::new_status();
 
 	const nx = const ny = 50'i64;
-	//const nx = const ny = 10'i64;
 	let g = ["."; nx, ny];
 	for y in [0: ny]
 	for x in [0: nx]
@@ -27,9 +24,7 @@ fn part1(args: &const Args): str
 		inputs.push(y);
 		let prog = intcode::new_program(prog0);
 		let outputs = prog.exec(&inputs, &status);
-		//println("outputs = ", outputs.data);
 		if outputs.pop() == 1
-		//if outputs.pop() != 0
 		{
 			g[x,y] = "#";
 			sum_ += 1;
@@ -41,6 +36,217 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+let prog0_glbl = [0'i64; 0];
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	prog0_glbl = read_i64_mat_delim(args.input_filename, ",")[:,0];
+
+	//let status = intcode::new_status();
+	////const nx = 60'i64;
+	////const ny = 100'i64;
+	//const xmin = 40;
+	//const xmax = 100;
+	//const ymin = 100;
+	//const ymax = 200;
+
+	//const nx = xmax - xmin;
+	//const ny = ymax - ymin;
+	//let g = ["."; nx, ny];
+	//for y in [ymin: ymax]
+	//for x in [xmin: xmax]
+	//{
+	//	let inputs = queue_i64::new();
+	//	inputs.push(i64(x));
+	//	inputs.push(i64(y));
+	//	let prog = intcode::new_program(prog0_glbl);
+	//	let outputs = prog.exec(&inputs, &status);
+	//	//println("outputs = ", outputs.data);
+	//	if outputs.pop() == 1
+	//	//if outputs.pop() != 0
+	//	{
+	//		g[x-xmin, y-ymin] = "#";
+	//		sum_ += 1;
+	//	}
+	//}
+	//print_char_mat(&g);
+
+	// Probe everything in row 50 to get average slope at midpoint of beam
+	const y50 = 50;
+	let o0 = 0;
+	let xmin50 = let xmax50 = 0;
+	for x in [0: 50]
+	{
+		let o = probe_point(x, y50);
+		if o0 == 0 and o == 1
+			xmin50 = x;
+		if o0 == 1 and o == 0
+			xmax50 = x-1;
+		o0 = o;
+	}
+	println("x min/max 50 = ", [xmin50, xmax50]);
+
+	const midslope = 2.0 * y50 / (xmin50 + xmax50);
+	println("midslope = ", midslope);
+
+	println("bisect 1 = ", bisect_edge(0, 24, 50));
+	println("bisect 2 = ", bisect_edge(24, 48, 50));
+
+	// slope = y / x
+	// x = y / slope
+	let ytest = 2000;
+	//let ytest = 50;
+	let xmid = i32(ytest / midslope);
+	println("bisect 1a = ", bisect_edge(0, xmid, ytest));
+	println("bisect 2a = ", bisect_edge(xmid, 2*xmid, ytest));
+
+	let test = true;
+	test = test_square(50, midslope);
+	test = test_square(100000, midslope);
+
+	const yans = bisect_100(midslope);
+	const y100 = yans + 100 - 1;
+	println("yans = ", yans);
+
+	// Bit of duplication here with test_square
+	const x1m = i32(yans / midslope);
+	const x1l = bisect_edge(0, x1m, yans);
+	const x1r = bisect_edge(x1m, 2*x1m, yans);
+	println("xans l/r = ", [x1l, x1r]);
+
+	const x2m = i32(y100 / midslope);
+	const x2l = bisect_edge(0, x2m, y100);
+	const x2r = bisect_edge(x2m, 2*x2m, y100);
+	println("x100 l/r = ", [x2l, x2r]);
+
+	const xans = x2l;
+
+	sum_ = xans * 10_000 + yans;
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn test_square(yrow: i32, midslope: f64): bool
+{
+	// Test if we can fit a 100x100 square starting at row `yrow`
+
+	// Get left/right edges at row yrow
+	//
+	// slope = y / x
+	// x = y / slope
+	const x1m = i32(yrow / midslope);
+	const x1l = bisect_edge(0, x1m, yrow);  // TODO: unused
+	const x1r = bisect_edge(x1m, 2*x1m, yrow);
+
+	// Get left right edges 100 rows below
+	const y2 = yrow + 100 - 1;
+	const x2m = i32(y2 / midslope);
+	const x2l = bisect_edge(0, x2m, y2);
+	const x2r = bisect_edge(x2m, 2*x2m, y2);  // TODO: unused
+
+	//const ans = x2l + 100 > x1r;
+	const ans = x2l + 100 - 1 <= x1r;
+
+	println();
+	println("yrow = ", yrow);
+	println("x1l, x1r = ", [x1l, x1r]);
+	println("x2l, x2r = ", [x2l, x2r]);
+	println("ans = ", ans);
+
+	return ans;
+}
+
+//fn bisect_100(midslope: f64): [i32; :]
+fn bisect_100(midslope: f64): i32
+{
+	// Use bisection and return the y value of the smallest row where we can fit
+	// a 100x100 square
+	let ylo = 50;
+	let yhi = 100_000;  // could find this dynamically by doubling
+
+	let olo = test_square(ylo, midslope);
+	let ohi = test_square(yhi, midslope);
+	if olo == ohi
+	{
+		println(ERROR_STR + "bad initial bisect_100 bound");
+		exit(3);
+	}
+	while true
+	{
+		if ylo + 1 >= yhi
+		{
+			if (olo) return ylo;
+			return yhi;
+		}
+		const ymd = (ylo + yhi) / 2;
+		const omd = test_square(ymd, midslope);
+		if olo == omd
+		{
+			ylo = ymd;
+			olo = omd;
+		}
+		else
+		{
+			yhi = ymd;
+			ohi = omd;
+		}
+	}
+	return -1;
+}
+
+fn bisect_edge(xlo: i32, xhi: i32, y: i32): i32
+{
+	let olo = probe_point(xlo, y);
+	let ohi = probe_point(xhi, y);
+	if olo == ohi
+	{
+		println(ERROR_STR + "bad initial bisection bound");
+		exit(1);
+	}
+	while true
+	{
+		if xlo + 1 >= xhi
+		{
+			if (olo == 1) return xlo;
+			return xhi;
+		}
+		const xmd = (xlo + xhi) / 2;
+		const omd = probe_point(xmd, y);
+		if
+			(olo == 1 and omd == 1 and ohi == 0) or
+			(olo == 0 and omd == 0 and ohi == 1)
+		{
+			xlo = xmd;
+			olo = omd;
+		}
+		else if
+			(olo == 0 and omd == 1 and ohi == 1) or
+			(olo == 1 and omd == 0 and ohi == 0)
+		{
+			xhi = xmd;
+			ohi = omd;
+		}
+		else
+		{
+			println(ERROR_STR + "bad bisection");
+			exit(2);
+		}
+	}
+	return -1;
+}
+
+fn probe_point(x: i32, y: i32): i32
+{
+	let inputs = queue_i64::new();
+	inputs.push(i64(x));
+	inputs.push(i64(y));
+	let prog = intcode::new_program(prog0_glbl);
+	let status = intcode::new_status();
+	let outputs = prog.exec(&inputs, &status);
+	return(i32(outputs.pop()));
+}
 
 //==============================================================================
 
@@ -55,10 +261,10 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "181";
-	let expect2 = "REPLACE_ME_P2";
+	let expect2 = "4240964";
 	let expect1_test = "";
 	let expect2_test = "";
 	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
