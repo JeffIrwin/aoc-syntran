@@ -30,7 +30,7 @@ fn part1(args: &const Args): str
 			sum_ += 1;
 		}
 	}
-	print_char_mat(&g);
+	//print_char_mat(&g);
 
 	println("part 1 = ", sum_);
 	return str(sum_);
@@ -42,35 +42,6 @@ fn part2(args: &const Args): str
 	let sum_ = 0'i64;
 
 	prog0_glbl = read_i64_mat_delim(args.input_filename, ",")[:,0];
-
-	//let status = intcode::new_status();
-	////const nx = 60'i64;
-	////const ny = 100'i64;
-	//const xmin = 40;
-	//const xmax = 100;
-	//const ymin = 100;
-	//const ymax = 200;
-
-	//const nx = xmax - xmin;
-	//const ny = ymax - ymin;
-	//let g = ["."; nx, ny];
-	//for y in [ymin: ymax]
-	//for x in [xmin: xmax]
-	//{
-	//	let inputs = queue_i64::new();
-	//	inputs.push(i64(x));
-	//	inputs.push(i64(y));
-	//	let prog = intcode::new_program(prog0_glbl);
-	//	let outputs = prog.exec(&inputs, &status);
-	//	//println("outputs = ", outputs.data);
-	//	if outputs.pop() == 1
-	//	//if outputs.pop() != 0
-	//	{
-	//		g[x-xmin, y-ymin] = "#";
-	//		sum_ += 1;
-	//	}
-	//}
-	//print_char_mat(&g);
 
 	// Probe everything in row 50 to get average slope at midpoint of beam
 	const y50 = 50;
@@ -85,40 +56,19 @@ fn part2(args: &const Args): str
 			xmax50 = x-1;
 		o0 = o;
 	}
-	println("x min/max 50 = ", [xmin50, xmax50]);
+	//println("x min/max 50 = ", [xmin50, xmax50]);
 
 	const midslope = 2.0 * y50 / (xmin50 + xmax50);
-	println("midslope = ", midslope);
-
-	println("bisect 1 = ", bisect_edge(0, 24, 50));
-	println("bisect 2 = ", bisect_edge(24, 48, 50));
-
-	// slope = y / x
-	// x = y / slope
-	let ytest = 2000;
-	//let ytest = 50;
-	let xmid = i32(ytest / midslope);
-	println("bisect 1a = ", bisect_edge(0, xmid, ytest));
-	println("bisect 2a = ", bisect_edge(xmid, 2*xmid, ytest));
-
-	let test = true;
-	test = test_square(50, midslope);
-	test = test_square(100000, midslope);
+	//println("midslope = ", midslope);
 
 	const yans = bisect_100(midslope);
 	const y100 = yans + 100 - 1;
-	println("yans = ", yans);
+	//println("yans = ", yans);
 
 	// Bit of duplication here with test_square
-	const x1m = i32(yans / midslope);
-	const x1l = bisect_edge(0, x1m, yans);
-	const x1r = bisect_edge(x1m, 2*x1m, yans);
-	println("xans l/r = ", [x1l, x1r]);
-
 	const x2m = i32(y100 / midslope);
 	const x2l = bisect_edge(0, x2m, y100);
-	const x2r = bisect_edge(x2m, 2*x2m, y100);
-	println("x100 l/r = ", [x2l, x2r]);
+	//println("x100 l/r = ", [x2l, x2r]);
 
 	const xans = x2l;
 
@@ -137,28 +87,24 @@ fn test_square(yrow: i32, midslope: f64): bool
 	// slope = y / x
 	// x = y / slope
 	const x1m = i32(yrow / midslope);
-	const x1l = bisect_edge(0, x1m, yrow);  // TODO: unused
 	const x1r = bisect_edge(x1m, 2*x1m, yrow);
 
 	// Get left right edges 100 rows below
 	const y2 = yrow + 100 - 1;
 	const x2m = i32(y2 / midslope);
 	const x2l = bisect_edge(0, x2m, y2);
-	const x2r = bisect_edge(x2m, 2*x2m, y2);  // TODO: unused
 
-	//const ans = x2l + 100 > x1r;
 	const ans = x2l + 100 - 1 <= x1r;
 
-	println();
-	println("yrow = ", yrow);
-	println("x1l, x1r = ", [x1l, x1r]);
-	println("x2l, x2r = ", [x2l, x2r]);
-	println("ans = ", ans);
+	//println();
+	//println("yrow = ", yrow);
+	//println("x1l, x1r = ", [x1l, x1r]);
+	//println("x2l, x2r = ", [x2l, x2r]);
+	//println("ans = ", ans);
 
 	return ans;
 }
 
-//fn bisect_100(midslope: f64): [i32; :]
 fn bisect_100(midslope: f64): i32
 {
 	// Use bisection and return the y value of the smallest row where we can fit
