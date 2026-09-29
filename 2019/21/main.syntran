@@ -1,0 +1,149 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../queue_i64 as queue_i64;
+
+use ../intcode;
+
+//==============================================================================
+
+let prog0_glbl = [0'i64; 0];
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	prog0_glbl = read_i64_mat_delim(args.input_filename, ",")[:,0];
+
+	let script = "";
+	sum_ = run_script(script);
+
+	script =
+"NOT D J
+WALK
+";
+	sum_ = run_script(script);
+
+	script =
+"NOT A J
+NOT B T
+AND T J
+NOT C T
+AND T J
+AND D J
+WALK
+";
+	sum_ = run_script(script);
+
+	script =
+"NOT A J
+WALK
+";
+	sum_ = run_script(script);
+
+	script =
+"NOT D T
+NOT T J
+WALK
+";
+	sum_ = run_script(script);
+
+	script =
+"NOT D T
+NOT T J
+NOT C T
+AND T J
+WALK
+";
+	sum_ = run_script(script);
+
+	script =
+"NOT D T
+NOT T J
+NOT C T
+AND T J
+OR A J
+WALK
+";
+	sum_ = run_script(script);
+
+	// Jump if D is solid and there's a hole at C.
+	// Jump also if there's a hole at A.
+	// Otherwise don't jump.
+	script =
+"NOT D T
+NOT T J
+NOT C T
+AND T J
+NOT A T
+OR T J
+WALK
+";
+	sum_ = run_script(script);
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn run_script(script: &const str): i64
+{
+	let inputs = queue_i64::new();
+	for c in script
+		inputs.push(i64(i32(c)));
+
+	let ans = -1'i64;
+	let status = intcode::new_status();
+	let prog = intcode::new_program(prog0_glbl);
+	let outputs = prog.exec(&inputs, &status);
+	//println("outputs = ", outputs.data);
+	let out_str = repeat(" ", outputs.len());
+	let i = 0;
+	while true
+	{
+		const out = outputs.pop();
+		out_str[i] = char(i32(out));
+		//if (i == 0) println("int = ", out);
+		if outputs.is_empty()
+		{
+			//println("int = ", out);
+			ans = out;
+			break;
+		}
+		i += 1;
+	}
+	println("out_str = ");
+	println(out_str);
+	return ans;
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2019/21" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	//if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "19357544";
+	let expect2 = "REPLACE_ME_P2";
+	let expect1_test = "REPLACE_ME_P1_TEST";
+	let expect2_test = "REPLACE_ME_P2_TEST";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
