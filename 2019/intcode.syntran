@@ -31,6 +31,10 @@ struct Program
 	ip  : i32,       // instruction pointer
 	rb  : i32,       // relative base
 
+	// Number of instructions (lines) executed by a program. Helpful for day 21
+	// where we're trying to find a program that runs as long as possible
+	instr_count: i64,
+
 	fn set_param(modes: &const [i32; :], iparam: i32, val: i64)
 	{
 		let index = -1;
@@ -101,6 +105,7 @@ struct Program
 		let outputs = queue_i64::new();
 		while true
 		{
+			instr_count += 1;
 			const instr = prog[ip];
 			const op = instr % 100;
 
@@ -222,5 +227,6 @@ fn new_program(prog: &const [i64; :]): Program
 		prog = prog,
 		ip   = 0,
 		rb   = 0,
+		instr_count = 0'i64,
 	};
 }
