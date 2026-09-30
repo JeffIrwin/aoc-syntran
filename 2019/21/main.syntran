@@ -14,81 +14,13 @@ fn part1(args: &const Args): str
 
 	prog0_glbl = read_i64_mat_delim(args.input_filename, ",")[:,0];
 
-	let script = "";
-	sum_ = run_script(script);
-
-	script =
-"NOT D J
-WALK
-";
-	sum_ = run_script(script);
-
-	script =
-"NOT A J
-NOT B T
-AND T J
-NOT C T
-AND T J
-AND D J
-WALK
-";
-	sum_ = run_script(script);
-
-	script =
-"NOT A J
-WALK
-";
-	sum_ = run_script(script);
-
-	script =
-"NOT D T
-NOT T J
-WALK
-";
-	sum_ = run_script(script);
-
-	script =
-"NOT D T
-NOT T J
-NOT C T
-AND T J
-WALK
-";
-	sum_ = run_script(script);
-
-	script =
-"NOT D T
-NOT T J
-NOT C T
-AND T J
-OR A J
-WALK
-";
-	sum_ = run_script(script);
-
-	// Jump if D is solid and there's a hole at C.
-	// Jump also if there's a hole at A.
-	// Otherwise don't jump.
-	script =
-"NOT D T
-NOT T J
-NOT C T
-AND T J
-NOT A T
-OR T J
-WALK
-";
-	//sum_ = run_script(script);
-
 	// Jump if D is solid and there's a hole at C.
 	// Jump also if there's a hole at A.
 	// Otherwise don't jump.
 	//
-	// Equivalent to above. Register J starts as false, so we can just use OR to
+	// Register J starts as false, so we can just use OR to
 	// copy from D to J instead of two NOT operations
-	//
-	// Different instruction count but same final score
-	script =
+	const script =
 "OR D J
 NOT C T
 AND T J
@@ -108,67 +40,8 @@ fn part2(args: &const Args): str
 
 	prog0_glbl = read_i64_mat_delim(args.input_filename, ",")[:,0];
 
-	let script = "";
-	sum_ = run_script(script);
-
-//	// Jump if D is solid and there's a hole at C.
-//	// Jump also if there's a hole at A.
-//	// Otherwise don't jump.
-//	//
-//	// (part 1 solution)
-//	script =
-//"NOT D T
-//NOT T J
-//NOT C T
-//AND T J
-//NOT A T
-//OR T J
-//RUN
-//";  // count 112191
-//	sum_ = run_script(script);
-
-//	script =
-//"NOT D T
-//NOT T J
-//NOT C T
-//AND T J
-//NOT A T
-//OR T J
-//AND H J
-//RUN
-//";  // count 68447
-//	sum_ = run_script(script);
-
-	//----------------------------------
-
-	// #####@###########
-	// #####.#.@########
-	// #####.#.#.@######
-
-	script =
-"NOT A J
-RUN
-";
-	sum_ = run_script(script);
-
-	// eqv part 1 solution
-	script =
-"OR D J
-NOT C T
-AND T J
-NOT A T
-OR T J
-RUN
-";  // count 100253
-	sum_ = run_script(script);
-
-	// ..@..............
-	// #####.#.#..######
-	//    ABCDEFGHI
-
-
 	// Copied from ozthrox on reddit:
-	script =
+	const script =
 "OR A J
 AND B J
 AND C J
@@ -181,46 +54,9 @@ RUN
 ";
 	sum_ = run_script(script);
 
-	script =
-"NOT H J
-OR  C J
-AND B J
-AND A J
-NOT J J
-AND D J
-RUN
-";
-	//sum_ = run_script(script);
-
-	script =
-"OR D J
-NOT C T
-AND T J
-NOT A T
-OR T J
-NOT G T
-AND T J
-NOT H T
-AND T J
-RUN
-";  // count ???
-	//sum_ = run_script(script);
-
-//	script =
-//"NOT D T
-//NOT T J
-//NOT C T
-//AND T J
-//NOT A T
-//OR T J
-//RUN
-//";  // count ???
-//	//sum_ = run_script(script);
-
 	println("part 2 = ", sum_);
 	return str(sum_);
 }
-
 
 fn run_script(script: &const str): i64
 {
@@ -248,16 +84,16 @@ fn run_script(script: &const str): i64
 		}
 		i += 1;
 	}
-	println("out_str = ");
-	println(out_str);
-	println("instr_count = ", prog.instr_count);
-	if ans > 255
-	{
-		println("-----------------------");
-		println("FOUND SOLUTION!");
-		println("ans = ", ans);
-		//exit(0);
-	}
+	//println("out_str = ");
+	//println(out_str);
+	//println("instr_count = ", prog.instr_count);
+	//if ans > 255
+	//{
+	//	println("-----------------------");
+	//	println("FOUND SOLUTION!");
+	//	println("ans = ", ans);
+	//	//exit(0);
+	//}
 	return ans;
 }
 
