@@ -65,6 +65,89 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
+	let status = intcode::new_status();
+
+	const n = 50'i64;
+	let inputs = queue_i64::new();
+	let progs = [intcode::new_program(prog0); n];
+	let packets = queue_i64::new();
+
+	// When each computer boots up, it will request its network address via a
+	// single input instruction
+	for addr in [0: n]
+	{
+		inputs.push(addr);
+		let outputs = progs[addr].exec(&inputs, &status);
+		while not outputs.is_empty()
+			packets.push( outputs.pop() );
+
+		println("outputs = ", outputs.data);
+		println("status  = ", status);
+		println();
+		//break;
+	}
+
+	// The data in each packet it receives overwrites the NAT's packet memory
+	// with the new packet's X and Y values
+	let natx  = -1;
+	let naty  = -1;
+	let naty0 = -1;
+
+	// Process packet queue
+	//while not packets.is_empty()
+	while true
+	{
+		let addr = 0;
+		let x = -1'i64;
+		let y = -1'i64;
+		if packets.is_empty()
+		{
+			if naty == naty0
+			{
+				sum_ = naty;
+				break;
+			}
+			naty0 = naty;
+			x = natx;
+			y = naty;
+		}
+		else
+		{
+			addr = packets.pop();
+		}
+
+		if not packets.is_empty() x = packets.pop();
+		if not packets.is_empty() y = packets.pop();
+
+		println("addr = ", addr);
+
+		if addr == 255
+		{
+			natx = x;
+			naty = y;
+			//sum_ = y;
+			//break;
+		}
+
+		if (addr < 0 ) continue;
+		if (addr >= n) continue;
+
+		inputs.push(x);
+		inputs.push(y);
+		let outputs = progs[addr].exec(&inputs, &status);
+		while not outputs.is_empty()
+			packets.push( outputs.pop() );
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
 //==============================================================================
 
 fn main(): str
@@ -78,7 +161,7 @@ fn main(): str
 	let p1 = ""; let p2 = "";
 
 	if (args.do_p1) p1 = part1(&args);
-	//if (args.do_p2) p2 = part2(&args);
+	if (args.do_p2) p2 = part2(&args);
 
 	let expect1 = "15416";
 	let expect2 = "REPLACE_ME_P2";
