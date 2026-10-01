@@ -1,0 +1,314 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../dict_str_2026 as dict_str;
+use ../../queue_i64 as queue_i64;
+
+use ../intcode;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
+	let prog = intcode::new_program(prog0);
+
+	//intcode_ascii_repl(prog0);
+	//let out0 = run_command(&prog, "");
+	////let out0 = run_command(&prog, "north");
+	//println(out0);
+
+	//----------------------------------
+
+	// These commands could be automated with DFS but it was also kinda fun to
+	// just play the text adventure
+	const commands = [
+		// hull breach:
+		// - north to passages
+		// - east to stables
+		"north",
+
+		// passages:
+		// - north to navigation
+		// - east to corridor
+		// - south to hull breach
+		"take wreath",
+		"north",
+
+		// navigation:
+		// - east to security checkpoint
+		// - south to passages
+		//"take photons",  // completely dark; eaten by grue
+		"east",
+
+		// security checkpoint:
+		// - south to pressure-sensitive floor
+		// - west to navigation
+		"south",
+		"west",
+		"south",
+		"east",
+
+		// corridor:
+		// - east to hot chocolate fountain
+		// - west to passages
+		//"take escape pod",  // launched into space
+		"east",
+
+		// hot chocolate fountain
+		// - west to corridor
+		//"take molten lava",  // too hot; you melt
+		"west",
+		"west",
+		"south",
+		"east",
+
+		// stables
+		// - east to science lab
+		// - south to warp drive maintenance
+		// - west to hull breach
+		"take loom",
+		"east",
+
+		// science lab
+		// - north to storage
+		// - west to stables
+		"take fixed point",
+		"north",
+
+		// storage
+		// - north to gift wrapping center
+		// - south to science lab
+		// - west to sick bay
+		"take spool of cat6",
+		"north",
+
+		// gift wrapping center
+		// - south to storage
+		"take weather machine",
+		"south",
+		"west",
+
+		// sick bay
+		// - east to storage
+		"take shell",
+		"east",
+		"south",
+		"west",
+		"south",
+
+		// warp drive maintenance
+		// - north to stables
+		// - east to crew quarters
+		// - west to hallway
+		"take ornament",
+		"east",
+
+		// crew quarters
+		// - south to holodeck
+		// - west to warp drive maintenance
+		"south",
+
+		// holodeck
+		// - north to crew quarters
+		// - east to engineering
+		// - south to arcade
+		"east",
+
+		// engineering
+		// - west to holodeck
+		//"take infinite loop",  // yep
+		"west",
+		"south",
+
+		// arcade
+		// - north to holodeck
+		//"take giant electromagnet",  // stuck, can't move
+		"north",
+		"north",
+		"west",
+		"west",
+
+		// hallway
+		// - north to observatory
+		// - east to warp drive maintenance
+		"north",
+
+		// observatory
+		// - north to kitchen
+		// - south to hallway
+		"take candy cane",
+		"north",
+
+		// kitchen
+		// - south to observatory
+		"south",
+		"south",
+		"east",
+		"north",
+		"west",
+		"north",
+		"north",
+		"east",
+
+		"inv",
+
+		//"drop ornament",
+		//"drop loom",
+		//"drop spool of cat6",
+		//"drop wreath",
+		//"drop fixed point",
+		//"drop shell",
+		//"drop candy cane",
+		//"drop weather machine",  // definitely too heavy
+
+		//"south",
+	];
+	const command = cat_strs(commands + NEWLINE_);
+	println(run_command(&prog, command));
+
+	// Use brute force to figure out which items we need to drop from our
+	// inventory
+	const items = [
+		"weather machine",
+		"ornament",
+		"loom",
+		"wreath",
+		"spool of cat6",
+		"fixed point",
+		"shell",
+		"candy cane",
+	];
+	const ni = i32(size(items));
+	const too_heavy = "Droids on this ship are lighter than the detected";
+	const too_light = "Droids on this ship are heavier than the detected";
+	const success_msg = "should be able to get in";
+
+	for mask in [0: 2 ** ni]
+	{
+		let drop = "";
+		for i in [0: ni]
+			if (1 << i) & mask != 0
+				drop += "drop " + items[i] + NEWLINE_;
+		println("drop = ");
+		println(drop);
+		let out = run_command(&prog, drop);
+		println(out);
+
+		out = run_command(&prog, "south" + NEWLINE_);
+		println(out);
+
+		if index_(out, too_heavy) < 0 and index_(out, too_light) < 0
+		{
+			println("FOUND THE RIGHT WEIGHT");
+			println("out = ", out);
+			const lines = split_(out, NEWLINE_);
+			for line in lines
+				if index_(line, success_msg) >= 0
+				{
+					println("line = ");
+					println(line);
+					sum_ = parse_i64(split_(line, " ")[11]);
+				}
+			break;
+		}
+
+		// Pick back up what we just dropped
+		let take = "";
+		for i in [0: ni]
+			if (1 << i) & mask != 0
+				take += "take " + items[i] + NEWLINE_;
+		println("take = ");
+		println(take);
+		out = run_command(&prog, take);
+		println(out);
+	}
+
+	//// Build map of where each room is relative to its neighbors
+	//let map  = dict_str::new();
+	//let seen = dict_str::new();
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn run_command(prog: &intcode::Program, input: str): str
+{
+	let status = intcode::new_status();
+	let inputs = queue_i64::new();
+	//for c in (input + NEWLINE_)
+	for c in input
+		inputs.push(i64(i32(c)));
+	println(">>> " + input);
+	let outputs = prog.exec(&inputs, &status);
+	let output = repeat(" ", outputs.len());
+	for i in [0: outputs.len()]
+		output[i] = char(i32(outputs.pop()));
+	return output;
+}
+
+fn intcode_ascii_repl(prog0: &const [i64; :])
+{
+	// Read-eval-print-loop for ASCII intcode programs
+	//
+	// More EPLR and REPL because program can start with a prompt before any
+	// input
+	let status = intcode::new_status();
+	let inputs = queue_i64::new();
+	let prog = intcode::new_program(prog0);
+
+	// Loop
+	while true
+	{
+		// Eval
+		let outputs = prog.exec(&inputs, &status);
+		let output = repeat(" ", outputs.len());
+		for i in [0: outputs.len()]
+			output[i] = char(i32(outputs.pop()));
+		if (output[len(output)-1] == NEWLINE_) output = output[:len(output)-1];
+
+		// Print
+		println(output);
+
+		// Read
+		let input = readln() + NEWLINE_;
+		//println("input = ", input);
+		for c in input
+			inputs.push(i64(i32(c)));
+	}
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2019/25" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	// no part 2 today
+
+	let expect1 = "352325632";
+	let expect2 = "";
+	let expect1_test = "";
+	let expect2_test = "";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
