@@ -144,8 +144,6 @@ struct Program
 					let res = -1'i64;  // pad inputs with -1
 					if inputs.is_empty()
 					{
-						//stat = Status.wait_input;
-						//return outputs;
 						npad += 1;
 
 						// Magic npad threshold to run all NICs concurrently
@@ -159,15 +157,14 @@ struct Program
 					{
 						res = inputs.pop();
 					}
-					println("input = ", res);
+					//println("input = ", res);
 					set_param(modes, 1, res);
 					ip += 2;
 				}
 				case Opcode.output
 				{
 					const param1 = get_param(modes, 1);
-					println("output: ", param1);
-					//exit(0);
+					//println("output: ", param1);
 					outputs.push(param1);
 					ip += 2;
 				}
