@@ -1277,6 +1277,12 @@ fn sort_index_f64(v: &const [f64; :]): [i32; :]
 	return ix;
 }
 
+fn sort_inplace_str(v: &const [str; :]): [str; :]
+{
+	const idx = sort_index_str(&v);
+	return v[idx];
+}
+
 fn sort_index_str(v: &const [str; :]): [i32; :]
 {
 	// Quick sort algorithm.  Return index array instead of modifying the input
