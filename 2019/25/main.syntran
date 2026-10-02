@@ -1,14 +1,15 @@
 
 use ../../utils::*;
-//use ../../dict_i64_2026 as dict_i64;
+use ../../dict_i64_2026 as dict_i64;
 use ../../dict_str_2026 as dict_str;
 use ../../queue_i64 as queue_i64;
+use ../../queue_str as queue_str;
 
 use ../intcode;
 
 //==============================================================================
 
-fn part1(args: &const Args): str
+fn part1_manual(args: &const Args): str
 {
 	let sum_ = 0'i64;
 
@@ -234,6 +235,202 @@ fn part1(args: &const Args): str
 	return str(sum_);
 }
 
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
+	let prog = intcode::new_program(prog0);
+
+	// Out-args for output string parsing
+	let name  = "";
+	let doors = [""; 0];
+
+	let out = run_command(&prog, "");
+	//println(out);
+	parse_output(out, &name, &doors);
+
+	println("name = '", name, "'");
+	println("doors = ", doors);
+
+	// Build map of where each room is relative to its neighbors
+	let map  = dict_str::new();
+	let seen = dict_i64::new();
+	//let unmapped = [name];
+	//println("unmapped = ", unmapped);
+	let unmapped = dict_i64::new();
+	unmapped.set(name, 1'i64);
+	println("unmapped = ", unmapped.get_keys());
+
+	let opp_dir = dict_str::new();
+	opp_dir.set("north", "south");
+	opp_dir.set("south", "north");
+	opp_dir.set("east" , "west" );
+	opp_dir.set("west" , "east" );
+
+	let curr = name;
+	while true
+	{
+		if all(unmapped.get_vals() == 0) break;
+		let next = "";
+		for key in unmapped.get_keys()
+			if unmapped.get(key) == 1
+			{
+				next = key;
+				break;
+			}
+		println("curr, next = ", curr, next);
+
+		// TODO:
+		// - if next is security checkpoint, skip because we won't be able to
+		//   get through door yet. mark as mapped to not infinite loop
+		// - take items in each room, except for blocklisted game-ending items
+		// - finally, bfs from wherever we end up to the security checkpoint
+		// - brute drop item combos until we can get through pressure-sensitive
+		//   floor (this code already is already automated from "manual"
+		//   implementation)
+
+		if curr != next
+		{
+			const path = bfs(&map, curr, next);
+			println("path = ", path);
+			//println(ERROR_STR + "unimplemented in-memory search");
+			//exit(1);
+
+			// Traverse the path
+			for p in path
+				out = run_command(&prog, p + NEWLINE_);
+
+			doors = [""; 0];  // reset
+			parse_output(out, &name, &doors);
+			println("new doors = ", doors);
+			curr = next;
+		}
+
+		for door in doors
+		{
+			// Go through the door
+			println("door = ", door);
+			let out = run_command(&prog, door + NEWLINE_);
+
+			let nbr = "";
+			let ndoors = [""; 0];
+			parse_output(out, &nbr, &ndoors);
+
+			let curr_map = map.get(curr);
+			map.set(curr, curr_map + door + ":" + nbr + ",");
+			if not unmapped.contains(nbr)
+				unmapped.set(nbr, 1'i64);
+
+			// Go back to curr for the next iteration
+			const opp = opp_dir.get(door);
+			out = run_command(&prog, opp + NEWLINE_);
+		}
+		// curr_map = north: Passages ,east: Stables ,
+		println("curr_map = ", map.get(curr));
+
+		seen    .set(curr, 1'i64);
+		unmapped.set(curr, 0'i64);
+		//break;  // TODO
+	}
+	println("seen = ", seen.get_keys());
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+//fn bfs(map: &const dict_str::dict_str, curr: str, next: str): str
+fn bfs(map: &const dict_str::dict_str, curr: str, next: str): [str; :]
+{
+	// BFS in-memory (without executing intcode) to get the path of movement
+	// commands from curr to next
+	let q = queue_str::new();
+	println("bfs curr = ", curr);
+	q.push(curr);
+	println("pushed");
+	println("q = ", q.get_vals());
+
+	let prev = dict_str::new();
+	let move = dict_str::new();
+	let seen = dict_i64::new();
+	while true
+	{
+		if (q.is_empty()) break;
+		const u = q.pop();
+		if (u == next) break;
+		//if seen.contains(u) continue;
+		seen.set(u, 1'i64);
+
+		const dir_nbrs = map.get(u);
+		println();
+		println("u = ", u);
+		//println("dir_nbrs = ", dir_nbrs);
+		for dir_nbr in split_(dir_nbrs, ",")
+		{
+			//println("dir_nbr = ", dir_nbr);
+			const words = split_(dir_nbr, ":");
+			const dir = words[0];
+			const nbr = words[1];
+			if seen.contains(nbr) continue;
+			q.push(nbr);
+			prev.set(nbr, u);
+			move.set(nbr, dir);
+			println("dir, nbr = ", [dir, nbr]);
+		}
+	}
+
+	// Backtrack to set (reversed) path
+	let path = [""; 0];
+	let u = next;
+	println("Backtracking ...");
+	while true
+	{
+		const p = prev.get(u);
+		println("p = '", p, "'");
+		//if (p == "") break;
+		path = [path, [move.get(u)]];
+		if (p == curr) break;
+		u = p;
+	}
+
+	return path[:-1:];
+}
+
+fn parse_output
+(
+	output: &const str,  // input to this fn
+	name: &str,          // output: name of room we're in
+	doors: &[str; :],    // output:
+)
+{
+	const lines = split_(output, NEWLINE_);
+	//println("lines = ", lines);
+	let i = 0;
+	while i < size(lines)
+	{
+		let line = lines[i];
+		//println("line = '", line, "'");
+		if starts_with_(line, "==")
+			name = split_(line, "=")[0];
+		else if starts_with_(line, "Doors here lead:")
+		{
+			while true
+			{
+				// Beware split_() by NEWLINE_ combines consecutive NEWLINE_
+				// delimiters, so it ignores blank lines
+				i += 1;
+				line = lines[i];
+				//println("    line = '", line, "'");
+				if not starts_with_(line, "- ") break;
+				//if (line == "Command?") break;
+				//if (line == "") break;
+				doors = [doors, [split_(line, "- ")]];
+			}
+		}
+		i += 1;
+	}
+}
+
 fn run_command(prog: &intcode::Program, input: str): str
 {
 	let status = intcode::new_status();
@@ -246,6 +443,7 @@ fn run_command(prog: &intcode::Program, input: str): str
 	let output = repeat(" ", outputs.len());
 	for i in [0: outputs.len()]
 		output[i] = char(i32(outputs.pop()));
+	println(output);
 	return output;
 }
 
