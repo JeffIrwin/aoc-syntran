@@ -159,6 +159,10 @@ fn part1(args: &const Args): str
 		}
 
 		// Pick back up what we just dropped
+		//
+		// Apparently a "Gray code sequence" is the way to optimize this by only
+		// taking/dropping one item at a time in a different mask iteration
+		// order, instead of re-taking the whole mask every time
 		let take = "";
 		for i in [0: ni]
 			if (1 << i) & mask != 0
