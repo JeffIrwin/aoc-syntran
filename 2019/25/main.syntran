@@ -9,232 +9,6 @@ use ../intcode;
 
 //==============================================================================
 
-fn part1_manual(args: &const Args): str
-{
-	let sum_ = 0'i64;
-
-	const prog0 = read_i64_mat_delim(args.input_filename, ",")[:,0];
-	let prog = intcode::new_program(prog0);
-
-	//intcode_ascii_repl(prog0);
-	//let out0 = run_command(&prog, "");
-	////let out0 = run_command(&prog, "north");
-	//println(out0);
-
-	//----------------------------------
-
-	// These commands could be automated with DFS but it was also kinda fun to
-	// just play the text adventure
-	const commands = [
-		// hull breach:
-		// - north to passages
-		// - east to stables
-		"north",
-
-		// passages:
-		// - north to navigation
-		// - east to corridor
-		// - south to hull breach
-		"take wreath",
-		"north",
-
-		// navigation:
-		// - east to security checkpoint
-		// - south to passages
-		//"take photons",  // completely dark; eaten by grue
-		"east",
-
-		// security checkpoint:
-		// - south to pressure-sensitive floor
-		// - west to navigation
-		"south",
-		"west",
-		"south",
-		"east",
-
-		// corridor:
-		// - east to hot chocolate fountain
-		// - west to passages
-		//"take escape pod",  // launched into space
-		"east",
-
-		// hot chocolate fountain
-		// - west to corridor
-		//"take molten lava",  // too hot; you melt
-		"west",
-		"west",
-		"south",
-		"east",
-
-		// stables
-		// - east to science lab
-		// - south to warp drive maintenance
-		// - west to hull breach
-		"take loom",
-		"east",
-
-		// science lab
-		// - north to storage
-		// - west to stables
-		"take fixed point",
-		"north",
-
-		// storage
-		// - north to gift wrapping center
-		// - south to science lab
-		// - west to sick bay
-		"take spool of cat6",
-		"north",
-
-		// gift wrapping center
-		// - south to storage
-		"take weather machine",
-		"south",
-		"west",
-
-		// sick bay
-		// - east to storage
-		"take shell",
-		"east",
-		"south",
-		"west",
-		"south",
-
-		// warp drive maintenance
-		// - north to stables
-		// - east to crew quarters
-		// - west to hallway
-		"take ornament",
-		"east",
-
-		// crew quarters
-		// - south to holodeck
-		// - west to warp drive maintenance
-		"south",
-
-		// holodeck
-		// - north to crew quarters
-		// - east to engineering
-		// - south to arcade
-		"east",
-
-		// engineering
-		// - west to holodeck
-		//"take infinite loop",  // yep
-		"west",
-		"south",
-
-		// arcade
-		// - north to holodeck
-		//"take giant electromagnet",  // stuck, can't move
-		"north",
-		"north",
-		"west",
-		"west",
-
-		// hallway
-		// - north to observatory
-		// - east to warp drive maintenance
-		"north",
-
-		// observatory
-		// - north to kitchen
-		// - south to hallway
-		"take candy cane",
-		"north",
-
-		// kitchen
-		// - south to observatory
-		"south",
-		"south",
-		"east",
-		"north",
-		"west",
-		"north",
-		"north",
-		"east",
-
-		"inv",
-
-		//"drop ornament",
-		//"drop loom",
-		//"drop spool of cat6",
-		//"drop wreath",
-		//"drop fixed point",
-		//"drop shell",
-		//"drop candy cane",
-		//"drop weather machine",  // definitely too heavy
-
-		//"south",
-	];
-	const command = cat_strs(commands + NEWLINE_);
-	println(run_command(&prog, command));
-
-	// Use brute force to figure out which items we need to drop from our
-	// inventory
-	const items = [
-		"weather machine",
-		"ornament",
-		"loom",
-		"wreath",
-		"spool of cat6",
-		"fixed point",
-		"shell",
-		"candy cane",
-	];
-	const ni = i32(size(items));
-	const too_heavy = "Droids on this ship are lighter than the detected";
-	const too_light = "Droids on this ship are heavier than the detected";
-	const success_msg = "should be able to get in";
-
-	for mask in [0: 2 ** ni]
-	{
-		let drop = "";
-		for i in [0: ni]
-			if (1 << i) & mask != 0
-				drop += "drop " + items[i] + NEWLINE_;
-		println("drop = ");
-		println(drop);
-		let out = run_command(&prog, drop);
-		println(out);
-
-		out = run_command(&prog, "south" + NEWLINE_);
-		println(out);
-
-		if index_(out, too_heavy) < 0 and index_(out, too_light) < 0
-		{
-			println("FOUND THE RIGHT WEIGHT");
-			println("out = ", out);
-			const lines = split_(out, NEWLINE_);
-			for line in lines
-				if index_(line, success_msg) >= 0
-				{
-					println("line = ");
-					println(line);
-					sum_ = parse_i64(split_(line, " ")[11]);
-				}
-			break;
-		}
-
-		// Pick back up what we just dropped
-		let take = "";
-		for i in [0: ni]
-			if (1 << i) & mask != 0
-				take += "take " + items[i] + NEWLINE_;
-		println("take = ");
-		println(take);
-		out = run_command(&prog, take);
-		println(out);
-	}
-
-	//// Build map of where each room is relative to its neighbors
-	//let map  = dict_str::new();
-	//let seen = dict_str::new();
-
-	println("part 1 = ", sum_);
-	return str(sum_);
-}
-
 fn part1(args: &const Args): str
 {
 	let sum_ = 0'i64;
@@ -248,20 +22,24 @@ fn part1(args: &const Args): str
 	let citems = [""; 0];
 
 	let out = run_command(&prog, "");
-	//println(out);
 	parse_output(out, &name, &doors, &citems);
 
-	println("name = '", name, "'");
-	println("doors = ", doors);
+	//println("name = '", name, "'");
+	//println("doors = ", doors);
 
 	// Build map of where each room is relative to its neighbors
+
+	// Graph of rooms for which all neighbors are known
 	let map  = dict_str::new();
+
+	// Set of all rooms
 	let seen = dict_i64::new();
-	//let unmapped = dict_i64::new();
-	//unmapped.set(name, 1'i64);
+
+	// Queue of rooms which we have seen but not yet mapped neighbors
 	let unmapped = queue_str::new();
+
 	unmapped.push(name);
-	println("unmapped = ", unmapped.get_vals());
+	//println("unmapped = ", unmapped.get_vals());
 
 	let opp_dir = dict_str::new();
 	opp_dir.set("north", "south");
@@ -269,61 +47,36 @@ fn part1(args: &const Args): str
 	opp_dir.set("east" , "west" );
 	opp_dir.set("west" , "east" );
 
-	// Do not take these game-ending items
-	//
-	// idk if these differ by user, i just set the list by trial and error.
-	// Could automate output parsing or halt status
-	let blocklist = dict_i64::new();
-	blocklist.set("photons"            , 1'i64);
-	blocklist.set("infinite loop"      , 1'i64);
-	blocklist.set("giant electromagnet", 1'i64);
-	blocklist.set("molten lava"        , 1'i64);
-	blocklist.set("escape pod"         , 1'i64);
-
 	const pressure_name = " Pressure-Sensitive Floor ";
 
+	println("Searching rooms and taking items ...");
 	let items = [""; 0];
 	let curr = name;
 	while true
 	{
-		//if all(unmapped.get_vals() == 0) break;
+		// This alrogithm is probably not optimal. Instead of popping the first
+		// unmapped room, we could do one BFS to *all* unmapped rooms and pick
+		// whichever is closest for better performance
+		//
+		// The weight brute-forcing stage is slower anyway
 		if unmapped.is_empty() break;
 		const next = unmapped.pop();
-		if next == pressure_name
-		{
-			//unmapped.set(next, 0'i64);
-			continue;
-		}
-		println("curr, next = ", [curr, next]);
+		if (next == pressure_name) continue;
 
-		// TODO:
-		// - brute drop item combos until we can get through pressure-sensitive
-		//   floor (this code already is already automated from "manual"
-		//   implementation)
+		const path = bfs(&map, curr, next);
+		//println("path = ", path);
 
+		// Traverse the path
+		for p in path
+			out = run_command(&prog, p + NEWLINE_);
 
-		// TODO: no condition here. path will just be empty no-op if curr ==
-		// next
-		if curr != next
-		{
-			const path = bfs(&map, curr, next);
-			println("path = ", path);
-			//println(ERROR_STR + "unimplemented in-memory search");
-			//exit(1);
-
-			// Traverse the path
-			for p in path
-				out = run_command(&prog, p + NEWLINE_);
-
-			parse_output(out, &name, &doors, &citems);
-			println("new doors = ", doors);
-			curr = next;
-		}
+		parse_output(out, &name, &doors, &citems);
+		//println("new doors = ", doors);
+		curr = next;
 
 		for door in doors
 		{
 			// Go through the door
-			println("door = ", door);
 			let out = run_command(&prog, door + NEWLINE_);
 
 			let nbr = "";
@@ -331,80 +84,77 @@ fn part1(args: &const Args): str
 			let nitems = [""; 0];
 			parse_output(out, &nbr, &ndoors, &nitems);
 			for item in nitems
-				if not blocklist.contains(item)
+			{
+				//println("item = ", item);
+
+				// Actually an infinite loop. No status return
+				if (item == "infinite loop") continue;
+
+				// Stuck. Subsequent movement commands do nothing
+				if (item == "giant electromagnet") continue;
+
+				let status = intcode::new_status();
+				const p0 = prog;  // save state
+				out = run_command_stat(&prog, "take " + item + NEWLINE_, &status);
+				//println(out);
+				//println("status = ", status);
+				if status == intcode::Status.halt
 				{
-					out = run_command(&prog, "take " + item + NEWLINE_);
-					items = [items, [item]];
+					// Reset program state after game-ending items
+					prog = p0;
 				}
+				else
+					items = [items, [item]];
+			}
 
 			let curr_map = map.get(curr);
 			map.set(curr, curr_map + door + ":" + nbr + ",");
 
-			//if not unmapped.contains(nbr)
-			//	unmapped.set(nbr, 1'i64);
 			if not seen.contains(nbr)
 				unmapped.push(nbr);
 
+			// Pressure floor automatically kicks us out
 			if nbr == pressure_name
-			{
-				println("skipping pressure_name");
 				continue;
-			}
 
 			// Go back to curr for the next iteration
 			const opp = opp_dir.get(door);
 			out = run_command(&prog, opp + NEWLINE_);
 		}
-		// curr_map = north: Passages ,east: Stables ,
-		println("curr_map = ", map.get(curr));
+		//println("curr_map = ", map.get(curr));
 
-		seen    .set(curr, 1'i64);
-		//unmapped.set(curr, 0'i64);
+		seen.set(curr, 1'i64);
 	}
-	//println("seen = ", seen.get_keys());
-	println("seen = ", sort_inplace_str(seen.get_keys()));
-
-	//out = run_command(&prog, "inv" + NEWLINE_);
+	//println("seen = ", sort_inplace_str(seen.get_keys()));
 
 	// Travel from wherever we ended up to the security checkpoint
 	for p in bfs(&map, curr, " Security Checkpoint ")
 		out = run_command(&prog, p + NEWLINE_);
 	const path = bfs(&map, curr, pressure_name);
 
-	println("items = ", items);
+	//println("items = ", items);
 
-	//out = run_command(&prog, path[0] + NEWLINE_);
 	const ni = i32(size(items));
 	const too_heavy = "Droids on this ship are lighter than the detected";
 	const too_light = "Droids on this ship are heavier than the detected";
 	const success_msg = "should be able to get in";
 
+	println("Brute-forcing key weight ...");
 	for mask in [0: 2 ** ni]
 	{
 		let drop = "";
 		for i in [0: ni]
 			if (1 << i) & mask != 0
 				drop += "drop " + items[i] + NEWLINE_;
-		//println("drop = ");
-		//println(drop);
 		let out = run_command(&prog, drop);
-		//println(out);
-
 		out = run_command(&prog, path[0] + NEWLINE_);
-		//println(out);
 
 		if index_(out, too_heavy) < 0 and index_(out, too_light) < 0
 		{
-			//println("FOUND THE RIGHT WEIGHT");
-			//println("out = ", out);
 			const lines = split_(out, NEWLINE_);
 			for line in lines
 				if index_(line, success_msg) >= 0
-				{
-					//println("line = ");
-					//println(line);
 					sum_ = parse_i64(split_(line, " ")[11]);
-				}
 			break;
 		}
 
@@ -413,26 +163,21 @@ fn part1(args: &const Args): str
 		for i in [0: ni]
 			if (1 << i) & mask != 0
 				take += "take " + items[i] + NEWLINE_;
-		//println("take = ");
-		//println(take);
 		out = run_command(&prog, take);
-		//println(out);
 	}
 
 	println("part 1 = ", sum_);
 	return str(sum_);
 }
 
-//fn bfs(map: &const dict_str::dict_str, curr: str, next: str): str
 fn bfs(map: &const dict_str::dict_str, curr: str, next: str): [str; :]
 {
 	// BFS in-memory (without executing intcode) to get the path of movement
 	// commands from curr to next
+	if curr == next
+		return [""; 0];
 	let q = queue_str::new();
-	//println("bfs curr = ", curr);
 	q.push(curr);
-	//println("pushed");
-	//println("q = ", q.get_vals());
 
 	let prev = dict_str::new();
 	let move = dict_str::new();
@@ -442,16 +187,11 @@ fn bfs(map: &const dict_str::dict_str, curr: str, next: str): [str; :]
 		if (q.is_empty()) break;
 		const u = q.pop();
 		if (u == next) break;
-		//if seen.contains(u) continue;
 		seen.set(u, 1'i64);
 
 		const dir_nbrs = map.get(u);
-		//println();
-		//println("u = ", u);
-		//println("dir_nbrs = ", dir_nbrs);
 		for dir_nbr in split_(dir_nbrs, ",")
 		{
-			//println("dir_nbr = ", dir_nbr);
 			const words = split_(dir_nbr, ":");
 			const dir = words[0];
 			const nbr = words[1];
@@ -459,24 +199,19 @@ fn bfs(map: &const dict_str::dict_str, curr: str, next: str): [str; :]
 			q.push(nbr);
 			prev.set(nbr, u);
 			move.set(nbr, dir);
-			//println("dir, nbr = ", [dir, nbr]);
 		}
 	}
 
 	// Backtrack to set (reversed) path
 	let path = [""; 0];
 	let u = next;
-	//println("Backtracking ...");
 	while true
 	{
 		const p = prev.get(u);
-		//println("p = '", p, "'");
-		//if (p == "") break;
-		path = [path, [move.get(u)]];
+		path = [path, [move.get(u)]];  // non-optimal array growth
 		if (p == curr) break;
 		u = p;
 	}
-
 	return path[:-1:];
 }
 
@@ -509,77 +244,49 @@ fn parse_output
 				// delimiters, so it ignores blank lines
 				i += 1;
 				line = lines[i];
-				println("    line = '", line, "'");
+				//println("    line = '", line, "'");
 				if not starts_with_(line, "- ") break;
-				//if (line == "Command?") break;
-				//if (line == "") break;
 				doors = [doors, [split_(line, "- ")]];
 			}
 			i -= 1;
 		}
 		else if starts_with_(line, "Items here:")
 		{
-			println("starts with items");
 			while true
 			{
 				i += 1;
 				line = lines[i];
 				if not starts_with_(line, "- ") break;
-				//items = [items, [split_(line, "- ")]];
 				items = [items, [line[2:]]];
 			}
 			i -= 1;
 		}
 		i += 1;
 	}
-	println("items = ", items);
+	//println("items = ", items);
 }
 
 fn run_command(prog: &intcode::Program, input: str): str
 {
+	// Simple wrapper with no status arg exposed
 	let status = intcode::new_status();
+	return run_command_stat(&prog, input, &status);
+}
+
+fn run_command_stat(prog: &intcode::Program, input: str,
+	status: &intcode::Status): str
+{
+	// Return status out-arg
 	let inputs = queue_i64::new();
-	//for c in (input + NEWLINE_)
 	for c in input
 		inputs.push(i64(i32(c)));
-	println(">>> " + input);
+	//println(">>> " + input);
 	let outputs = prog.exec(&inputs, &status);
 	let output = repeat(" ", outputs.len());
 	for i in [0: outputs.len()]
 		output[i] = char(i32(outputs.pop()));
-	println(output);
+	//println(output);
 	return output;
-}
-
-fn intcode_ascii_repl(prog0: &const [i64; :])
-{
-	// Read-eval-print-loop for ASCII intcode programs
-	//
-	// More EPLR and REPL because program can start with a prompt before any
-	// input
-	let status = intcode::new_status();
-	let inputs = queue_i64::new();
-	let prog = intcode::new_program(prog0);
-
-	// Loop
-	while true
-	{
-		// Eval
-		let outputs = prog.exec(&inputs, &status);
-		let output = repeat(" ", outputs.len());
-		for i in [0: outputs.len()]
-			output[i] = char(i32(outputs.pop()));
-		if (output[len(output)-1] == NEWLINE_) output = output[:len(output)-1];
-
-		// Print
-		println(output);
-
-		// Read
-		let input = readln() + NEWLINE_;
-		//println("input = ", input);
-		for c in input
-			inputs.push(i64(i32(c)));
-	}
 }
 
 //==============================================================================
