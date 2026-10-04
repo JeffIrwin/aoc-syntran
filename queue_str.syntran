@@ -33,24 +33,7 @@ struct Queue_str
 
 			// Note syntran cannot move yet, so we need two copies here where
 			// other languages could optimally do only one copy
-			//let new_data = [0; new_cap];
-
-			//let new_data = [data[beg: cap], data[:end], [0; new_cap-cap]];
-			//data = new_data;
-			//println("copying");
-
-			//// TODO: syntran crash (wrong types in padded end of array
-			//data = [data[beg: cap], data[:end], [0; new_cap-cap]];
 			data = [data[beg: cap], data[:end], [""; new_cap-cap]];
-
-			//let new_data = [""; new_cap];
-			//let k = 0;
-			//for i in [[beg: cap], [0: end], 
-			//{
-			//	new_data[k] = data[i];
-			//}
-
-			//println("done copying");
 
 			//println("new_cap, size = ", new_cap, size(data));
 			beg = 0;

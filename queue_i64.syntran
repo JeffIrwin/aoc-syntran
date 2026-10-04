@@ -37,7 +37,7 @@ struct Queue_i64
 
 			//let new_data = [data[beg: cap], data[:end], [0; new_cap-cap]];
 			//data = new_data;
-			data = [data[beg: cap], data[:end], [0; new_cap-cap]];
+			data = [data[beg: cap], data[:end], [0'i64; new_cap-cap]];
 
 			//println("new_cap, size = ", new_cap, size(data));
 			beg = 0;
