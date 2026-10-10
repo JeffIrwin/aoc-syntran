@@ -258,8 +258,12 @@ fn try_explode(v: &[i32; :]): bool
 			// Concatenate result
 			const prefix    = v[0: ill];
 			const left_pad  = v[ill+1: ilb];
-			const left_add  = v[ill] + v[ilv];
-			const right_add = v[irr] + v[irv];
+			// Only index v if there is a regular number to add to, otherwise
+			// these reads would be out of bounds
+			let left_add  = 0;
+			let right_add = 0;
+			if (ill >= 0) left_add  = v[ill] + v[ilv];
+			if (irr < nv) right_add = v[irr] + v[irv];
 			const right_pad = v[irb+1: irr];
 			const suffix    = v[irr+1:];
 			//println("prefix    = ", vec_to_str(&prefix));

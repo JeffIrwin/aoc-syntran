@@ -18,7 +18,7 @@ for dir in ${dirs[@]} ; do
 	main=main.syntran
 	grep 'Expect' "$main" | tr -d '\t'
 
-	time syntran "$main"
+	time ../../run-syntran.sh "$main"
 	#syntran "$main"
 
 	echo

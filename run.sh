@@ -15,6 +15,14 @@ echo "starting top-level run.sh"
 #
 #export SYNTRAN_BACKEND=ast
 
+# Test transpiling: if true, each main.syntran is transpiled to Fortran, compiled
+# with gfortran, and the Fortran binary is run, instead of interpreting the
+# syntran source.  This is passed to children via an env var, see
+# run-syntran.sh
+transpile=false
+transpile=true
+export SYNTRAN_TRANSPILE="$transpile"
+
 dirs=$(ls | grep '^2' | sort -g)
 #dirs=$( \
 #	find . -maxdepth 1 -name "2*" -type d -printf '%P\n' \
