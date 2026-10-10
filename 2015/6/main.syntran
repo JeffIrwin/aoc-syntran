@@ -93,7 +93,7 @@ fn part2(): i64
 	close(f);
 	let sum_ = i64(sum(lights));
 
-	println("part 1 = ", sum_);
+	println("part 2 = ", sum_);
 	return sum_;
 }
 

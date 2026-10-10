@@ -99,7 +99,7 @@ fn part2(): str
 	//println("pc = ", pc);
 	print_char_mat(&pc);
 
-	println("part 1 = ", sum_);
+	println("part 2 = ", sum_);
 	return str(sum_);
 }
 

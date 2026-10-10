@@ -95,7 +95,7 @@ fn part1(): str
 	//println("scores = ", scores);
 	sum_ = maxval(scores);
 
-	println("part 2 = ", sum_);
+	println("part 1 = ", sum_);
 	return str(sum_);
 }
 

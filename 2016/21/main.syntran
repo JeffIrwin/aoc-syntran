@@ -255,7 +255,7 @@ fn part2(): str
 		//str_ = readln(f);
 	}
 
-	println("part 1 = ", password_str);
+	println("part 2 = ", password_str);
 	return password_str;
 }
 

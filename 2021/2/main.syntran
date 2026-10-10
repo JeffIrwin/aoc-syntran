@@ -60,7 +60,7 @@ fn part2(args: &const Args): str
 	close(f);
 	sum_ = x * y;
 
-	println("part 1 = ", sum_);
+	println("part 2 = ", sum_);
 	return str(sum_);
 }
 

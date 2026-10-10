@@ -95,7 +95,7 @@ fn part2(): str
 		i += 1;
 	}
 
-	println("part 1 = ", ans);
+	println("part 2 = ", ans);
 	return ans;
 }
 
