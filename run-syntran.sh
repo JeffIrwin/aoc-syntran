@@ -12,6 +12,14 @@ main="$1"
 shift
 [[ "${1:-}" == "--" ]] && shift
 
+# As of 2026-10-11:
+# - default profile runs everything in 172 s
+# - release (-O3) runs everything in 267 s
+# - clearly the longer compile times of O3 do not make up for faster run times.
+#   obviously if we linked to a utils/runtime lib instead of recompiling similar
+#   code every day this would change. individual days on "difficult" problems
+#   might even currently be better with O3
+
 if [[ "${SYNTRAN_TRANSPILE:-false}" == "true" ]] ; then
 
 	mkdir -p build
