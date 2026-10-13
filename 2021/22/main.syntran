@@ -153,7 +153,7 @@ fn cut_cube(c: &Cubes, d: Cube)
 		// Careful! This loop appends and grows c.n, so it can't be a for loop
 		// which stops at initial `c.n` before growth!
 		i += 1;
-		if (i > c.n) break;
+		if (i >= c.n) break;
 		if (not c.live[i]) continue;
 
 		// Are dimensions disjoint?
@@ -272,7 +272,7 @@ fn add_cube(c: &Cubes, a: Cube)
 	while true
 	{
 		i += 1;
-		if (i > c.n) break;
+		if (i >= c.n) break;
 		if (not c.live[i]) continue;
 
 		// Are dimensions disjoint?
