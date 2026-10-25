@@ -5,6 +5,9 @@ use ../../dict_str_2026 as dict_str;
 use ../../queue_vec_i32;
 use ../../minheap_vec_i32_2026 as minheap_vec_i32;
 
+// TODO: use throughout
+#include("../../std_fns.syntran");
+
 //==============================================================================
 
 let ALL_SET = 0;
@@ -367,7 +370,7 @@ fn part2(args: &const Args): str
 		let d  = u[0];  // unpack distance
 		let ks = u[1];  // key mask state
 		let po = u[2:]; // unpack position
-		let ps = std::reshape(po, [2,4]);
+		let ps = reshape(po, [2,4]);
 
 		for ip in [0: 4]
 		{
@@ -408,7 +411,7 @@ fn part2(args: &const Args): str
 			if (qi.is_empty()) break;
 			let ui = qi.pop();
 			let di  = ui[0];
-			let pi  = std::reshape(ui[1:], [2,4]);
+			let pi  = reshape(ui[1:], [2,4]);
 			for ip in [0: 4]
 			{
 				let xi = pi[0,ip]; let yi = pi[1,ip];
