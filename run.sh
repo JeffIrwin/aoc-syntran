@@ -20,7 +20,7 @@ echo "starting top-level run.sh"
 # syntran source.  This is passed to children via an env var, see
 # run-syntran.sh
 transpile=false
-#transpile=true
+transpile=true
 export SYNTRAN_TRANSPILE="$transpile"
 
 dirs=$(ls | grep '^2' | sort -g)

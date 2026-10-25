@@ -1,0 +1,8 @@
+
+// std imports for succinctness
+//
+// stop short of global 'use std::*' to avoid polluting namespace against future
+// syntran updates
+
+use std::reshape;
+
