@@ -15,13 +15,24 @@ echo "starting top-level run.sh"
 #
 #export SYNTRAN_BACKEND=ast
 
-# Test transpiling: if true, each main.syntran is transpiled to Fortran, compiled
-# with gfortran, and the Fortran binary is run, instead of interpreting the
-# syntran source.  This is passed to children via an env var, see
-# run-syntran.sh
-transpile=false
-transpile=true
-export SYNTRAN_TRANSPILE="$transpile"
+# Backend that runs each main.syntran.  This is passed to children via an env
+# var, see run-syntran.sh:
+#
+#   - vm:        interpret with the bytecode VM
+#   - transpile: transpile to Fortran, compile with gfortran, run the binary
+#   - native:    compile ahead of time with LLVM (--native), run the binary
+#   - jit:       compile with LLVM in memory and run right away (--jit)
+#
+# native and jit need a syntran built with LLVM.  Set SYNTRAN to its path if
+# the one on PATH doesn't have LLVM, e.g.
+#
+#   export SYNTRAN=~/git/syntran/build/native/bin/syntran
+#
+backend=vm
+backend=transpile
+backend=native
+backend=jit
+export SYNTRAN_RUN_BACKEND="$backend"
 
 dirs=$(ls | grep '^2' | sort -g)
 #dirs=$( \
