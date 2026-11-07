@@ -1,0 +1,261 @@
+
+use ../../utils::*;
+//use ../../dict_i64_2026 as dict_i64;
+use ../../queue_vec_i32 as queue_vec_i32;
+
+//==============================================================================
+
+fn part1(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const g = read_char_mat(args.input_filename);
+	//print_char_mat(&g);
+	const nx = i32(size(g,0));
+	const ny = i32(size(g,1));
+	//println("nx, ny = ", [nx, ny]);
+
+	// Find the start "S" and end "E" positions
+	let sx = -1;
+	let sy = -1;
+	let ex = -1;
+	let ey = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		switch g[x,y]
+		{
+		case "S"
+		{
+			sx = x;
+			sy = y;
+		}
+		case "E"
+		{
+			ex = x;
+			ey = y;
+		}
+		}
+	}
+	//println("sx, sy = ", [sx, sy]);
+	//println("ex, ey = ", [ex, ey]);
+
+	const dirs = [
+		0, 1,
+		0, -1,
+		1, 0,
+		-1, 0
+		;
+		2, 4
+	];
+	//println("dirs = ", dirs);
+
+	let seen = [false; nx, ny];
+	let dist = [-1; nx, ny];
+
+	// BFS
+	let q = queue_vec_i32::new();
+	q.push([0, sx, sy]);
+	dist[sx, sy] = 0;
+	seen[sx, sy] = true;
+	while true
+	{
+		if q.is_empty()
+		{
+			println(ERROR_STR + "queue is empty!");
+			exit(1);
+		}
+		const u = q.pop();
+		//println("u = ", u);
+
+		// Unpack from vector u
+		const d = u[0];
+		const x = u[1];
+		const y = u[2];
+		dist[x, y] = d;
+		const e = get_elevation(g[x,y]);
+		//println("e = ", e);
+
+		if g[x,y] == "E"
+		{
+			// Finished!
+			break;
+		}
+		//println("g[x,y] = ", g[x,y]);
+
+		// Visit neighbors
+		for id in [0: 4]
+		{
+			const dir = dirs[:,id];
+
+			// Neighbor position
+			const xn = x + dir[0];
+			const yn = y + dir[1];
+			if (xn < 0) continue;  // bounds check
+			if (xn >= nx) continue;
+			if (yn < 0) continue;
+			if (yn >= ny) continue;
+			//println("    g[xn,yn] = ", g[xn,yn]);
+			//println("dir = ", dir);
+
+			const en = get_elevation(g[xn, yn]);
+			//println("    e, en = ", [e, en]);
+			if (en > e + 1) continue;
+			//println("en = ", en);
+
+			if (seen[xn, yn]) continue;
+			seen[xn, yn] = true;
+
+			q.push([d+1, xn, yn]);
+		}
+	}
+	sum_ = dist[ex, ey];
+
+	println("part 1 = ", sum_);
+	return str(sum_);
+}
+
+fn part2(args: &const Args): str
+{
+	let sum_ = 0'i64;
+
+	const g = read_char_mat(args.input_filename);
+	const nx = i32(size(g,0));
+	const ny = i32(size(g,1));
+
+	// Find the start "S" and end "E" positions
+	let sx = -1;
+	let sy = -1;
+	let ex = -1;
+	let ey = -1;
+	for y in [0: ny]
+	for x in [0: nx]
+	{
+		switch g[x,y]
+		{
+		case "S"
+		{
+			sx = x;
+			sy = y;
+		}
+		case "E"
+		{
+			ex = x;
+			ey = y;
+		}
+		}
+	}
+
+	const dirs = [
+		0, 1,
+		0, -1,
+		1, 0,
+		-1, 0
+		;
+		2, 4
+	];
+
+	let seen = [false; nx, ny];  // redundant, could just use `dist` with -1 sentinel value
+	let dist = [-1; nx, ny];
+
+	// BFS
+	let q = queue_vec_i32::new();
+	//q.push([0, sx, sy]); // part 1
+	q.push([0, ex, ey]); // part 2 -- start at the end and search backwards
+	dist[ex, ey] = 0;
+	seen[ex, ey] = true;
+	while true
+	{
+		if q.is_empty()
+		{
+			println(ERROR_STR + "queue is empty!");
+			exit(1);
+		}
+		const u = q.pop();
+
+		// Unpack from vector u
+		const d = u[0];
+		const x = u[1];
+		const y = u[2];
+		dist[x, y] = d;
+		const e = get_elevation(g[x,y]);
+
+		if g[x,y] == "a"
+		{
+			// Finished!
+			sum_ = dist[x, y];
+			break;
+		}
+
+		// Visit neighbors
+		for id in [0: 4]
+		{
+			const dir = dirs[:,id];
+
+			// Neighbor position
+			const xn = x + dir[0];
+			const yn = y + dir[1];
+			if (xn < 0) continue;  // bounds check
+			if (xn >= nx) continue;
+			if (yn < 0) continue;
+			if (yn >= ny) continue;
+
+			const en = get_elevation(g[xn, yn]);
+			if (en < e - 1) continue;
+
+			if (seen[xn, yn]) continue;
+			seen[xn, yn] = true;
+
+			q.push([d+1, xn, yn]);
+		}
+	}
+
+	println("part 2 = ", sum_);
+	return str(sum_);
+}
+
+fn get_elevation(c: str): i32
+{
+	switch c
+	{
+		case "S"
+			return 0;
+		case "E"
+			return i32("z") - i32("a");
+		default
+			return i32(c) - i32("a");
+	}
+}
+
+//==============================================================================
+
+fn main(): str
+{
+	// For unit-testing (within the syntran repo), this main fn returns a value
+	// to be compared with expected results
+	println();
+	println(MAGENTA + "Starting AOC syntran main 2025/12" + RESET);
+	let args = parse_args();
+
+	let p1 = ""; let p2 = "";
+
+	if (args.do_p1) p1 = part1(&args);
+	if (args.do_p2) p2 = part2(&args);
+
+	let expect1 = "420";
+	let expect2 = "414";
+	let expect1_test = "31";
+	let expect2_test = "29";
+	check_aoc_results(args, p1, p2, expect1, expect2, expect1_test, expect2_test);
+
+	println(GREEN + "Ending AOC syntran main" + RESET);
+	println();
+	return p1 + ":" + p2;
+}
+
+//==============================================================================
+
+return main();
+
+//==============================================================================
+
