@@ -138,8 +138,8 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 
 	// Form augmented matrix tableau
 	let t = [0.0'f32; m, n+1];
-	t[0:m, 0:n] = a;
-	t[0:m, n] = b;
+	t[0:m, 0:n] = f32(a);
+	t[0:m, n] = f32(b);
 
 	// Gaussian elimination to (reduced?) row echelon form
 	let inonz = [-1; m];  // list of first (left-most) non-zero index in each row after reduction
@@ -239,7 +239,7 @@ fn solve_ilp(a: [i32; :,:], b: [i32; :]): [i32; :]
 		{
 			let is_valid = true;
 			x = 0.0'f32;
-			x[ifree] = combos;
+			x[ifree] = f32(combos);
 			//println("combos = ", combos);
 			//println("x[ifree] = ", x[ifree]);
 
