@@ -4,7 +4,7 @@
 #
 #   - vm (default): interpret it with the bytecode VM
 #   - transpile:    transpile to Fortran, compile with gfortran, run the binary
-#   - native:       compile ahead of time with LLVM (--native), run the binary
+#   - native:       compile ahead of time with LLVM (--aot), run the binary
 #   - jit:          compile with LLVM in memory and run right away (--jit)
 #
 # native and jit need a syntran built with LLVM.  SYNTRAN overrides which
@@ -49,7 +49,7 @@ transpile)
 native)
 	mkdir -p build
 
-	"$syntran" "$main" --native build/main
+	"$syntran" "$main" --aot build/main
 
 	./build/main "$@"
 	;;
